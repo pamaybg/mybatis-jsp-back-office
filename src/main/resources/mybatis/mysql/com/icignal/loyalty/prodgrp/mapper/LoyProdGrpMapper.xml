@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.prodgrp.mapper.LoyProdGrpMapper">
+
+	<select id="selectProdGrpList" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="com.icignal.loyalty.prodgrp.dto.response.LoyProdGrpListResDto">
+    	/* LoyProdGrpMapper.selectProdGrpList */
+    	SELECT
+    		  lpg.TGT_GRP_NO			AS tgtGrpNo
+    		, lpg.TGT_GRP_NM			AS tgtGrpNm
+    		, lpg.TGT_TYPE_CD			AS tgtTypeCd
+    		, lpg.GRP_CNT				AS grpCnt
+    		, lpg.STAT_CD				AS statCd
+    		, em.name					AS name
+    		, TO_CHAR(lpg.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS')			AS createDate
+    		, lpg.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_PROD_GRP lpg
+    	LEFT OUTER JOIN com.crm_user us on lpg.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em on us.id_employee = em.id AND em.FLAG = 1
+    	WHERE lpg.FLAG = 1
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+
+
+	<select id="selectProdGrpDetail" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="com.icignal.loyalty.prodgrp.dto.response.LoyProdGrpDetailResDto">
+    	/* LoyProdGrpMapper.selectProdGrpDetail */
+    	SELECT
+    		  lpg.TGT_GRP_NO			AS tgtGrpNo
+    		, lpg.TGT_GRP_NM			AS tgtGrpNm
+    		, lpg.DESC_TEXT				AS descText
+    		, lpg.TGT_TYPE_CD			AS tgtTypeCd
+    		, lpg.STAT_CD				AS statCd
+    		, lpg.GRP_CNT				AS grpCnt
+    		, lpg.RID					AS rid
+    	FROM  LOY.LOY_PROD_GRP lpg
+    	WHERE lpg.FLAG = 1
+    	AND   lpg.RID = #{rid}
+    </select>
+    
+    <insert id="insertProdGrpDetail" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpDetailReqDto">
+    	/* LoyProdGrpMapper.insertProdGrpDetail */
+    	INSERT INTO LOY.LOY_PROD_GRP
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, TGT_GRP_NO
+    		, TGT_GRP_NM
+    		, DESC_TEXT
+    		, TGT_TYPE_Cd
+    		, STAT_CD
+    	)
+ 		VALUES
+ 		(
+ 			  #{rid}
+ 			, #{createBy}
+ 			, #{modifyBy}
+ 			, LOY.FN_GET_PRODGRP_NO()
+ 			, #{tgtGrpNm}
+ 			, #{descText}
+ 			, #{tgtTypeCd}
+ 			, #{statCd}
+ 		)
+    </insert>
+    
+    <update id="updateProdGrpDetail" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpDetailReqDto">
+    	/* LoyProdGrpMapper.updateProdGrpDetail */
+    	UPDATE LOY.LOY_PROD_GRP
+    	SET   MODIFY_DATE		= sysdate
+    		, MODIFY_BY			= #{modifyBy}
+    		, TGT_GRP_NM		= #{tgtGrpNm}
+    		, DESC_TEXT			= #{descText}
+    		, TGT_TYPE_Cd		= #{tgtTypeCd}
+    		, STAT_CD			= #{statCd}
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectProdItemList" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="com.icignal.loyalty.prodgrp.dto.response.LoyProdGrpItemListResDto">
+    	/* LoyProdGrpMapper.selectProdItemList */
+    	SELECT
+              lp.PRODID                            AS prodId                          
+            , lp.MMZZSTDITEMCD           AS mmZzstdItemCd
+            , lp.MMZZITEMCD                 AS mmZzItemCd   
+            , lp.MMZZREPCD1                 AS mmZzRepCd1   
+            , lp.MMZZREPCD2                AS mmZzRepCd2   
+             ,lp.MMSKUCD                          AS mmSkuCd
+            , lp.PRODNM                      AS prodNm       
+            , lp.SHGOODSCODE             AS shGoodsCode  
+            , lp.SHGOODSNAME            AS shGoodsName  
+            , lp.LCTG                              AS mmCate1      
+            , lp.MCTG                             AS mmCate2      
+            , lp.SCTG                              AS mmCate3      
+            , em.name                             AS name
+            , TO_CHAR(lpgx.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+            , lpgx.RID                             AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_PROD_GRP_XM lpgx
+        JOIN LOY.LOY_PROD_XM lp ON lpgx.RID_PROD = lp.RID
+    	LEFT OUTER JOIN com.crm_user us on lpgx.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em on us.id_employee = em.id AND em.FLAG = 1
+    	WHERE lpgx.FLAG = 1
+    	AND   lpgx.RID_PROD_GRP = #{prodGrpRid}
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <update id="deleteProdItem" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteProdItem */
+    	UPDATE LOY.LOY_PROD_GRP_XM
+    	SET   MODIFY_DATE		= sysdate
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= flag + 1
+		WHERE rid = #{rid}
+    </update>
+    
+    <update id="deleteAllTProdItem" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteAllTProdItem */
+    	UPDATE LOY.LOY_PROD_GRP_XM
+    	SET   MODIFY_DATE		= sysdate
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= flag + 1
+    	WHERE RID_PROD_GRP = #{prodGrpRid}
+    	AND   RID_CATEGORY IS NULL
+    </update>
+    
+    <select id="selectProdIdCheck" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="java.lang.Integer">
+    	/* LoyProdGrpMapper.selectProdIdCheck */
+    	SELECT   count(1)
+    	FROM LOY.LOY_PROD_GRP_XM lpgx
+    	WHERE lpgx.RID_PROD_GRP = #{prodGrpRid}
+    	AND   lpgx.RID_PROD     = #{prodRid}
+    	AND   lpgx.FLAG = 1
+    </select>
+    
+    <select id="selectCatIdCheck" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyCategoryGrpListReqDto" resultType="java.lang.Integer">
+    	/* LoyProdGrpMapper.selectCatIdCheck */
+    	SELECT   count(1)
+    	FROM LOY.LOY_PROD_GRP_XM lpgx
+    	WHERE lpgx.RID_PROD_GRP = #{prodGrpRid}
+    	AND   lpgx.RID_CATEGORY = #{catRid}
+    	AND   lpgx.FLAG = 1
+    </select>
+    
+    <insert id="insertProdItem" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto">
+    	/* LoyProdGrpMapper.insertProdItem */
+    	INSERT INTO LOY.LOY_PROD_GRP_XM
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, RID_PROD_GRP
+    		, RID_PROD
+    		, DESC_TEXT
+    	)
+ 		VALUES
+ 		(
+ 			  #{rid}
+ 			, #{createBy}
+ 			, #{modifyBy}
+			, #{prodGrpRid}
+			, #{prodRid}
+			, #{descText}
+ 		)
+    </insert>
+    
+    <select id="selectProdRidCheck" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="java.lang.String">
+    	/* LoyProdGrpMapper.selectProdRidCheck */
+    	SELECT   rid	
+    	FROM LOY.LOY_PROD lp
+    	WHERE lp.PROD_ID = #{prodId}
+    	AND lp.FLAG = 1
+    </select>
+    
+    <select id="selectCatRidCheck" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="java.lang.String">
+    	/* LoyProdGrpMapper.selectProdRidCheck */
+    	SELECT   rid	
+    	FROM LOY.LOY_PROD_category lpc
+    	WHERE lpc.CAT_ID = #{catId}
+    	AND   lpc.FLAG = 1
+    </select>
+    
+    
+    
+    <update id="updateProdXmCnt" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto">
+    	/* LoyProdGrpMapper.updateProdXmCnt */
+    	UPDATE LOY.LOY_PROD_GRP
+    	SET   MODIFY_DATE		= sysdate
+    		, MODIFY_BY			= #{modifyBy}
+    		, GRP_CNT 			= #{grpCnt}
+    	WHERE RID = #{prodRid}
+    </update>
+    
+    <select id="selectCategoryList" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="com.icignal.loyalty.prodgrp.dto.response.LoyCategoryListResDto">
+    	/* LoyProdGrpMapper.selectCategoryList */
+    	SELECT
+    		  lpc.CAT_ID				AS catId
+    		, lpc.CAT_NM				AS catNm
+    		, em.name					AS name
+    		, TO_CHAR(lpgx.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+    		, lpgx.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_PROD_GRP_XM lpgx
+    	JOIN LOY.LOY_PROD_CATEGORY lpc ON lpgx.RID_CATEGORY = lpc.RID AND lpc.FLAG = 1
+    	LEFT OUTER JOIN com.crm_user us on lpgx.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em on us.id_employee = em.id AND em.FLAG = 1
+    	WHERE lpgx.FLAG = 1
+    	AND   lpgx.RID_PROD_GRP = #{prodGrpRid}
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <update id="deleteCategory" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteProdItem */
+    	UPDATE LOY.LOY_PROD_GRP_XM
+    	SET   MODIFY_DATE		= sysdate
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= flag + 1
+		WHERE rid = #{rid}
+    </update>
+    
+    <update id="deleteAllTCategory" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteAllTProdItem */
+    	UPDATE LOY.LOY_PROD_GRP_XM
+    	SET   MODIFY_DATE		= sysdate
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= flag + 1
+    	WHERE RID_PROD_GRP = #{prodGrpRid}
+    	AND   RID_PROD IS NULL
+    </update>
+    
+    <insert id="insertCategoryItem" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyCategoryGrpListReqDto">
+    	/* LoyProdGrpMapper.insertCategoryItem */
+    	INSERT INTO LOY.LOY_PROD_GRP_XM
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, RID_PROD_GRP
+    		, RID_CATEGORY
+    		, DESC_TEXT
+    	)
+ 		VALUES
+ 		(
+ 			  #{rid}
+ 			, #{createBy}
+ 			, #{modifyBy}
+			, #{prodGrpRid}
+			, #{catRid}
+			, #{descText}
+ 		)
+    </insert>
+    
+    <update id="deleteProdGrp" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteProdGrp */
+    	UPDATE LOY.LOY_PROD_GRP
+    	SET   MODIFY_DATE		= sysdate
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= flag + 1
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="getProdListItemPop" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="com.icignal.loyalty.prodgrp.dto.response.LoyProdGrpItemListResDto">
+        /* LoyProdGrpMapper.selectProdItemList */
+        SELECT
+              lp.PRODID                            AS prodId                          
+            , lp.MMZZSTDITEMCD           AS mmZzstdItemCd
+            , lp.MMZZITEMCD                 AS mmZzItemCd   
+            , lp.MMZZREPCD1                 AS mmZzRepCd1   
+            , lp.MMZZREPCD2                AS mmZzRepCd2 
+            , lp.MMSKUCD                    AS mmSkucd
+            , lp.PRODNM                      AS prodNm       
+            , lp.SHGOODSCODE             AS shGoodsCode  
+            , lp.SHGOODSNAME            AS shGoodsName  
+            , lp.LCTG                              AS mmCate1      
+            , lp.MCTG                             AS mmCate2      
+            , lp.SCTG                               AS  mmCate3      
+            , lp.RID                                  AS rid
+            , ${strColumn}
+        FROM LOY.LOY_PROD_XM lp 
+        WHERE 1=1
+        AND ${strCondWhere}
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+         <select id="getGiftsPopList" parameterType="com.icignal.loyalty.prodgrp.dto.request.LoyProdGrpListReqDto" resultType="com.icignal.loyalty.prodgrp.dto.response.LoyProdGrpItemListResDto">
+        /* LoyProdGrpMapper.getGiftsPopList */
+        SELECT
+              lp.PRODID                            AS prodId                          
+            , lp.MMZZSTDITEMCD           AS mmZzstdItemCd
+            , lp.MMZZITEMCD                 AS mmZzItemCd   
+            , lp.MMZZREPCD1                 AS mmZzRepCd1   
+            , lp.MMZZREPCD2                AS mmZzRepCd2   
+            , lp.MMSKUCD                    AS mmSkuCd
+            , lp.PRODNM                      AS prodNm       
+            , lp.SHGOODSCODE             AS shGoodsCode  
+            , lp.SHGOODSNAME            AS shGoodsName  
+            , lp.LCTG                              AS mmCate1      
+            , lp.MCTG                             AS mmCate2      
+            , lp.SCTG                              AS mmCate3  
+            , ${strColumn}
+        FROM LOY.LOY_PROD_XM lp
+        WHERE 1=1
+        AND ${strCondWhere}
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+</mapper>

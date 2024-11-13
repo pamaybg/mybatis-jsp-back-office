@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.menu.mapper.SystemMenuMapper">
+
+ <resultMap id="MenuListResultMap" type="com.icignal.systemmanagement.menu.dto.response.SystemMenuListResDto">
+		<result property="id" column="id"/>
+		<result property="parentMenuId" column="parentMenuId"/>
+		<result property="sortSeq" column="sortSeq"/>
+		<result property="menuName" column="menuName"/>
+		<result property="imageId" column="imageId"/>
+		<result property="menuLevel" column="menuLevel"/>
+		<result property="imgFile" column="imgFile"/>
+		<result property="imgURL" column="imgURL"/>
+		<result property="progId" column="progId" />
+		<result property="privacyFlg" column="privacyFlg" />
+		<association property="menuNameLang" select="MKTAuth.getMenuNames" column="{id=id,accountId=accountId,appServiceId=appServiceId,country=country,lang=lang}"/>
+	</resultMap>
+
+	<!-- <select id="getMenuNames" parameterType="java.util.HashMap" resultType="MKTAuthMenuNameLangResponse">
+	/* SystemMenuMapper.getMenuNames */
+		select
+		menu_nm as langName
+		, lang as langCode
+		from com.menu_acc_rel
+		where
+		menu_id = #{id}
+		and accnt_id = #{accountId}
+		and app_service_type = #{appServiceId}
+		and country = #{country}
+		and flag = 1
+	</select> -->
+	
+    <select id="getMenuList" parameterType="com.icignal.auth.dto.request.MenuListReqDto" 
+    								resultType="com.icignal.auth.dto.response.MenuListResDto">
+		/* SystemMenuMapper.getMenuList */
+        SELECT distinct
+			m.id as id
+			, m.prnts_menu_id as parentMenuId
+			, m.sort_odgr as sortSeq
+			<!-- , nvl(mar.menu_nm, m.menu_nm) as menuName -->
+			, m.menu_nm as menuName
+			, i.id as imageId
+			, m.menu_lvl as menuLevel
+			, i.image_file_name || i.image_file_type as imgFile
+			, i.image_folder || i.image_file_name || i.image_file_type as imgURL
+			<!-- , #{accountId} as accountId -->
+			<!-- , #{appServiceId} as appServiceId -->
+			<!-- , #{country} as country -->
+			, #{lang} as lang
+			, m.privacy_flg as privacyFlg
+			<if test="lang != null and lang.equals('en')">
+			, m.menu_nm_en as langName
+			</if>
+			<if test="lang != null and lang.equals('ko')">
+			, m.menu_nm as langName
+			</if>
+			, m.lang as langCode
+        from com.menu m
+        	left outer join com.image i on m.id = i.parent_id and i.image_type = 'MENU_ICON'
+        where 1=1
+        	<!-- and m.app_service_type = #{appServiceId} -->
+        	and m.flag = 1
+        order by m.sort_odgr   
+	</select> 
+	
+
+
+	<select id="getAuthMenuProgList" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto" 
+													resultType="com.icignal.systemmanagement.menu.dto.response.SystemMenuListResDto">
+	/* SystemMenuMapper.getAuthMenuProgList */
+		select 
+			mpr.id 				as id
+			, p.pgm_no 			as progNum
+			, p.pgm_nm 			as progName
+			, p.pgm_path 		as progPath
+			, cc.mark_name 		as progType
+			, case
+				when p.pgm_type_cd = 'LIST'
+				then 1
+				else 0
+			end 				as progTypeCheck
+			, ${strColumn}
+		from com.program p
+			join com.menu_pgm_rel mpr on mpr.pgm_id = p.id and p.flag = 1
+			join com.menu m on mpr.menu_id = m.id
+			join com.comm_code cc on cc.code_name = p.pgm_type_cd and cc.lang = #{lang} and group_code = 'ADMIN_PROG_TYPE' and cc.flag = 1
+		where
+			m.id = #{menuId}
+			and mpr.flag = 1
+			and ${strWhere}
+	</select>
+
+	<update id="deleteMenuList" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto">
+	/* SystemMenuMapper.deleteMenuList */
+		update com.menu m
+		set
+		flag = flag + 1
+		, modify_by = #{empId}
+		, modify_date = sysdate
+		where
+		m.id = #{menuId}
+	</update>
+
+	<update id="deleteMenuProgRel" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto">
+	/* SystemMenuMapper.deleteMenuProgRel */
+		update
+		com.menu_pgm_rel
+		set
+		modify_by = #{empId}
+		, modify_date = sysdate
+		, flag = flag + 1
+		where
+		menu_id = #{menuId}
+	</update>
+
+	<delete id="deleteMenuImage" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto">
+	/* SystemMenuMapper.deleteMenuImage */
+		delete
+		from com.image
+		where
+		${strSVCType}
+		and parent_id = #{menuId}
+	</delete>
+
+	<insert id="addAuthMenuList" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto" 
+											useGeneratedKeys="false">
+	/* SystemMenuMapper.addAuthMenuList */
+		insert into com.menu
+		(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			, lang
+			<!-- , app_service_type -->
+			, menu_nm
+			, prnts_menu_id
+			, menu_lvl
+			, sort_odgr
+			, privacy_flg
+		)
+		values(
+			#{memId}
+			, #{empId}
+			, #{empId}
+			, sysdate
+			, sysdate
+			, 1
+			<!-- , #{country} -->
+			, #{lang}
+			<!-- , #{appServiceId} -->
+			, #{menuName}
+			, #{parentMenuId}
+			, #{menuLevel}
+			, (select max(me.sort_odgr + 1) from com.menu me)
+			, #{privacyFlg}
+		)
+
+
+	</insert>
+
+	<update id="updateMenuList" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto">
+	/* SystemMenuMapper.updateMenuList */
+		update com.menu
+		set
+		menu_nm = #{menuName}
+		, modify_date = sysdate
+		, modify_by = #{empId}
+		, privacy_flg = #{privacyFlg}
+		where
+		id = #{menuId}
+		and flag = 1
+	</update>
+
+	<select id="getAuthMenuListPop" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto" 
+												resultType="com.icignal.systemmanagement.menu.dto.response.SystemMenuListResDto">
+	/* SystemMenuMapper.getAuthMenuListPop */
+		select 
+		p.id as progId
+		, p.type as applyType
+		, p.pgm_no as progNum
+		, p.pgm_nm as progName
+		, p.pgm_path as progPath
+		, cc.mark_name as progType
+		, p.create_date as createDate
+		, case
+		when p.MENU_CHK_YN = 'Y'
+<!-- 		when p.pgm_type_cd = 'LIST' -->
+		then 1
+		else 0
+		end as progTypeCheck
+		, ${strColumn}
+		from com.program p
+		join com.comm_code cc on cc.code_name = p.pgm_type_cd and cc.lang = #{lang}
+		and group_code = 'ADMIN_PROG_TYPE'
+		where p.flag = 1
+		<!-- and cc.code_name = 'LIST' -->
+		and p.MENU_CHK_YN = 'Y'
+		<if test="progTypeCheck != null and progTypeCheck != ''">
+			and p.id not in (
+			select
+			mpr.pgm_id
+			from com.menu_pgm_rel mpr
+			where
+			menu_id = #{menuId}
+			and mpr.flag = 1
+			<!-- and mpr.country = #{country} -->
+			and mpr.lang = #{lang}
+			<!-- and mpr.app_service_type = #{appServiceId} -->
+			)
+			and p.MENU_CHK_YN != 'Y'
+<!-- 			and p.pgm_type_cd != 'LIST' -->
+		</if>
+		<if test="progTypeCheck == null or progTypeCheck == ''">
+			and p.id not in (
+			select
+			mpr.pgm_id
+			from com.menu_pgm_rel mpr
+			where
+			menu_id = #{menuId}
+			and mpr.flag = 1
+			<!-- and mpr.country = #{country} -->
+			and mpr.lang = #{lang}
+			<!-- and mpr.app_service_type = #{appServiceId} -->
+			)
+		</if>
+		and ${strSVCType}
+		and ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<insert id="addAuthMenuListProg" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto" 
+													useGeneratedKeys="false">
+	/* SystemMenuMapper.addAuthMenuListProg */
+		<foreach collection="array" item="item">
+		MERGE INTO com.menu_pgm_rel MPR
+			USING 
+			(
+				SELECT 
+					#{item.progId} AS progId
+					, #{item.menuId} AS menuId
+				FROM DUAL
+			) A
+			ON
+			( 
+				MPR.PGM_ID = A.progId AND MPR.menu_id = A.menuId AND MPR.FLAG = 1
+			)
+			WHEN MATCHED THEN 
+				UPDATE
+				SET
+					MPR.modify_by = #{empId}
+				  , MPR.modify_date = sysdate
+			WHEN NOT MATCHED THEN
+				INSERT 
+				(
+					id
+					, create_by
+					, modify_by
+					, create_date
+					, modify_date
+					, flag
+					<!-- , country -->
+					, lang
+					<!-- , app_service_type -->
+					, menu_id
+					, pgm_id
+				)
+				values
+				(
+					com.getNewID('A')
+					, #{empId}
+					, #{empId}
+					, sysdate
+					, sysdate
+					, 1
+					<!-- , #{country} -->
+					, #{lang}
+					<!-- , #{appServiceId} -->
+					, #{item.menuId}
+					, #{item.progId}
+				)
+		</foreach>
+	</insert>
+
+	<update id="delAuthMenuListProg" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto">
+	/* SystemMenuMapper.delAuthMenuListProg */
+		update com.menu_pgm_rel
+		set
+		flag = flag + 1
+		, modify_by = #{empId}
+		, modify_date = sysdate
+		where
+		${strSVCType}
+		<if test="array.size!=0">
+		and id in
+		 <foreach collection="array" item="item" separator="," close=")" open="(">
+			#{item.progId}
+		</foreach>
+		</if>
+	</update>
+
+	<insert id="updateSortMenu" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto" useGeneratedKeys="false">
+	/* SystemMenuMapper.updateSortMenu */
+		<if test="array.size != 0">
+		{ call
+		declare
+		begin
+			<foreach collection="array" item="item" separator="" close="" open="">
+			merge into com.menu
+			using dual
+			on 			(id = #{item.menuId})
+			when matched then
+				update 
+				set 	sort_odgr = #{item.sortSeq}
+						, menu_lvl = #{item.menuLevel}
+						, modify_date = sysdate
+						, prnts_menu_id = #{item.parentMenuId};
+			</foreach>		
+		end
+		}
+		
+		</if>
+	</insert>
+	
+	<update id="updateMenuIcon" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto">
+	/* SystemMenuMapper.updateMenuIcon */
+	UPDATE com.MENU
+	SET 
+		MODIFY_BY = #{empId}
+		, MODIFY_DATE = SYSDATE
+		, ICON_IMG = #{iconImg}
+	WHERE ID = #{menuId}
+	</update>
+	
+	<update id="deleteMenuIcon" parameterType="com.icignal.systemmanagement.menu.dto.request.SystemMenuListReqDto">
+	/* SystemMenuMapper.deleteMenuIcon */
+	UPDATE com.MENU
+	SET 
+		MODIFY_BY = #{empId}
+		, MODIFY_DATE = SYSDATE
+		, ICON_IMG = NULL
+	WHERE ID = #{menuId}
+	</update>
+	
+	
+
+</mapper>

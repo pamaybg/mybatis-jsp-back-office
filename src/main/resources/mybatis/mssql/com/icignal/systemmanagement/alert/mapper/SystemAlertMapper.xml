@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.alert.mapper.SystemAlertMapper">
+
+	<select id="selectSystemAlertList" parameterType="com.icignal.systemmanagement.alert.dto.request.SystemAlertListReqDto"
+														resultType="com.icignal.systemmanagement.alert.dto.response.SystemAlertListResDto">
+	/* SystemAlertMapper.selectSystemAlertList */
+	SELECT com.TO_CHAR(sa.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS createDate
+				, sa.RID  AS rid
+				, sa.ALERT_TYPE_CD AS alertTypeCd
+				, sa.TITLE AS title
+-- 				, sa.EMAIL_SND_YN AS emailSndYn
+-- 				, sa.EMAIL_SND_STAT_CD AS emailSndStatCd
+-- 				, sa.SMS_SND_YN AS smsSndYn
+-- 				, sa.SMS_SND_STAT_CD AS smsSndStatCd
+				, sa.SRC_SYSTEM AS srcSystem
+				, ${strColumn}
+	FROM com.SYS_ALERT sa
+	WHERE ${strCondWhere}
+    AND sa.FLAG = 1
+    AND ${strWhere}
+	ORDER BY ${strOrderby}
+      ${strEndPaging}
+	</select>
+	
+	<select id="selectSystemAlertDetail" parameterType="com.icignal.systemmanagement.alert.dto.request.SystemAlertListReqDto"
+															resultType="com.icignal.systemmanagement.alert.dto.response.SystemAlertDetailResDto">
+	/* SystemAlertMapper.selectSystemAlertList */
+	SELECT com.TO_CHAR(sa.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS createDate
+				, sa.ALERT_TYPE_CD AS alertTypeCd
+				, concat(sa.TITLE, '-', sa.SRC_SYSTEM) AS title
+-- 				, sa.EMAIL_SND_YN AS emailSndYn
+-- 				, sa.EMAIL_SND_STAT_CD AS emailSndStatCd
+-- 				, sa.SMS_SND_YN AS smsSndYn
+-- 				, sa.SMS_SND_STAT_CD AS smsSndStatCd
+				, sa.CONTENTS AS contents
+	FROM com.SYS_ALERT sa
+	WHERE sa.FLAG = 1
+	AND sa.RID = #{rid}
+	</select>
+	
+</mapper>

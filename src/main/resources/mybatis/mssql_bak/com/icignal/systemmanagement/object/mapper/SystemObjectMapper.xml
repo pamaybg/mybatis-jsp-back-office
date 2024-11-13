@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.object.mapper.SystemObjectMapper">
+	<!-- /************************************** - 관련 파일 : MKTAuthDAO.java (getObjectList)
+		============================================ - 제목 : 오브젝트 리스트 조회 - 설명 : 오브젝트
+		리스트 조회 - 결과형태 : 복수 ============================================ - 입력 : -
+		출력 : ============================================ - 작성자 : jun.lee - 작성일 :
+		2017.03.13 ***************************************/ -->
+	<select id="getObjectList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemObjectListReqDto" 
+										resultType="com.icignal.systemmanagement.program.dto.response.SystemObjectListResDto">
+		/* SystemObjectMapper.getObjectList */
+		SELECT 
+			cc.mark_name as objTypeCd /* 오브젝트 유형*/
+			, o.OBJ_CD as objCd /* 오브젝트 코드*/
+			, o.OBJ_NM as objNm /* 오브젝트 명*/
+			, o.OBJ_DESC as objDesc /* 설명 */
+			, e.name as modifyBy /* 등록자 */
+			, CONVERT(varchar, o.modify_date, 120) as modifyDate /* 등록일시 */
+			, o.id as id /* id */
+			, ${strColumn}
+		FROM com.object o WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = o.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee and o.lang = #{lang} and o.flag	= '1'
+			join com.comm_code cc WITH (NOLOCK) on o.OBJ_TYPE_CD = cc.code_name and cc.lang = #{lang} and cc.flag = '1' and group_code = 'OBJ_TYPE_CD'
+		WHERE ${strSVCType}
+			and ${strWhere}
+			and o.flag = '1'
+		order by ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (isObjCdExist)
+	============================================
+	- 제목 : 오브젝트 코드 중복체크
+	- 설명 : 오브젝트 코드 중복체크
+	- 결과형태 : 단수
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.13
+	***************************************/ -->
+	<select id="isObjCdExist" parameterType="com.icignal.systemmanagement.object.dto.request.SystemInsertObjectDetailReqDto" resultType="java.lang.Integer">
+		/* SystemObjectMapper.isObjCdExist */
+		SELECT
+			COUNT(*)
+		FROM com.object o
+		WHERE o.flag = 1
+			and o.lang = #{lang}
+			and o.obj_cd = #{objCd}
+			AND o.id != COALESCE(#{id}, '')
+	</select>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (insertObjectDetail, updateObjectDetail)
+	============================================
+	- 제목 : 오브젝트 추가
+	- 설명 : 오브젝트 추가
+	- 결과형태 : 단수
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.13
+	***************************************/ -->
+	<insert id="insertObjectDetail" parameterType="com.icignal.systemmanagement.object.dto.request.SystemInsertObjectDetailReqDto" useGeneratedKeys="false">
+		/* SystemObjectMapper.insertObjectDetail */
+		insert into com.object
+		(
+			id
+			, obj_type_cd
+			, obj_cd
+			, obj_nm
+			, obj_desc
+			, create_by
+			, create_date
+			, modify_by
+			, modify_date
+			, flag
+			<!-- , country -->
+			, lang
+			<!-- , app_service_type -->
+		)
+		values
+		(
+			#{id}
+			, #{objTypeCd}
+			, #{objCd}
+			, #{objNm}
+			, #{objDesc}
+			, #{empId}
+			, getdate()
+			, #{empId}
+			, getdate()
+			, '1'
+			<!-- , #{country} -->
+			, #{lang}
+			<!-- , #{appServiceId} -->
+		)
+	</insert>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getObjectDetail)
+	============================================
+	- 제목 : 오브젝트 상세 조회
+	- 설명 : 오브젝트 상세 조회
+	- 결과형태 : 단수
+	============================================
+	- 입력 : id
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.13
+	***************************************/ -->
+	<select id="getObjectDetail" parameterType="com.icignal.systemmanagement.object.dto.request.SystemGetObjectDetailReqDto" resultType="com.icignal.systemmanagement.object.dto.response.SystemGetObjectDetailResDTO">
+		/* SystemObjectMapper.getObjectDetail */
+		SELECT
+			o.OBJ_TYPE_CD as objTypeCd /* 오브젝트 유형*/
+			, o.OBJ_CD as objCd /* 오브젝트 코드*/
+			, o.OBJ_NM as objNm /* 오브젝트 명*/
+			, o.OBJ_DESC as objDesc /* 설명 */
+			, o.id as id /* id */
+		FROM
+			com.object o
+		where
+			id = #{id}
+	</select>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (updateObjectDetail)
+	============================================
+	- 제목 : 오브젝트 수정
+	- 설명 : 오브젝트 수정
+	- 결과형태 : 단수
+	============================================
+	- 입력 : id - 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.13
+	***************************************/ -->
+	<update id="updateObjectDetail" parameterType="com.icignal.systemmanagement.object.dto.request.SystemInsertObjectDetailReqDto">
+		/* SystemObjectMapper.updateObjectDetail */
+		update com.object
+		set
+			obj_type_cd = #{objTypeCd}
+			, obj_cd = #{objCd}
+			, obj_nm = #{objNm}
+			, obj_desc = #{objDesc}
+			, modify_by = #{empId}
+			, modify_date = getdate()
+		where
+			id = #{id}
+	</update>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (deleteObjectList)
+	============================================
+	- 제목 : 오브젝트 리스트 삭제
+	- 설명 : 오브젝트 리스트 삭제
+	- 결과형태 : 단수, 복수
+	============================================
+	- 입력 : id, ids
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.13
+	***************************************/ -->
+	<update id="deleteObjectList" parameterType="com.icignal.systemmanagement.object.dto.request.SystemDeleteObjectListReqDto">
+		/* SystemObjectMapper.deleteObjectList */
+		update com.object
+		set
+			flag = flag + 1
+			, modify_by = #{empId}
+			, modify_date = getdate()
+		where
+			${strSVCType}
+			<if test="ids.size!=0">
+			and id in
+				 <foreach collection="ids" item="item" separator="," close=")" open="(">
+					#{item}
+				</foreach>
+			</if>
+	</update>
+
+	<update id="deleteUIObjectListByObjectList" parameterType="com.icignal.systemmanagement.object.dto.request.SystemDeleteObjectListReqDto">
+		/* SystemObjectMapper.deleteUIObjectListByObjectList */
+		update com.ui_object
+		set
+			flag = flag + 1
+			, use_flag = flag + 1
+			, modify_by = #{empId}
+			, modify_date = getdate()
+		where
+			${strSVCType}
+			<if test="ids.size!=0">
+			and obj_id in
+				 <foreach collection="ids" item="item" separator="," close=")" open="(">
+					#{item}
+				</foreach>
+			</if>
+	</update>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getUIObjectList)
+	============================================
+	- 제목 : UI오브젝트 리스트 조회
+	- 설명 : UI오브젝트 리스트 조회
+	- 결과형태 : 복수
+	============================================
+	- 입력 : progId
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<select id="getUIObjectList" parameterType="com.icignal.systemmanagement.object.dto.request.SystemUIObjectListReqDto" 
+	resultType="com.icignal.systemmanagement.object.dto.response.SystemUIObjectListResDto">
+		/* SystemObjectMapper.getUIObjectList */
+		select 
+			cc.mark_name as objTypeCd /* 오브젝트 유형 */
+			, o.obj_nm as objNm /* 오브젝트 명*/
+			, o.obj_cd as objCd /* 오브젝트 코드*/
+			, uo.UI_OBJ_nm as uiObjNm /* UI 오브젝트명*/
+			, uo.UI_OBJ_DESC as uiObjDesc /* UI 설명 */
+			, e.name as modifyBy /* 등록자 */
+			, CONVERT(varchar, uo.modify_date, 120) as modifyDate /* 등록일시 */
+			, uo.id as id
+			, uo.pgm_id as pgmId
+			, ${strColumn}
+		from com.ui_object uo WITH (NOLOCK)
+			join com.object o WITH (NOLOCK) on uo.OBJ_ID = o.id and o.flag = 1 <!-- and o.country = #{country} --> and o.lang = #{lang}
+			join com.crm_user u WITH (NOLOCK) on u.rid = uo.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee and uo.lang = #{lang} and uo.flag = 1
+			join com.comm_code cc WITH (NOLOCK) on uo.OBJ_TYPE_CD = cc.code_name and cc.lang = #{lang} and cc.flag = 1 and group_code = 'OBJ_TYPE_CD'
+			join com.program p WITH (NOLOCK) on uo.pgm_id = p.id
+		WHERE ${strWhere}
+			and uo.flag = '1'
+			and uo.pgm_id = #{pgmId}
+		order by ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getObjectCode)
+	============================================
+	- 제목 : UI오브젝트 상세
+	- 오브젝트 코드 조회
+	- 설명 : UI오브젝트 상세 - 오브젝트 코드 조회
+	- 결과형태 : 복수
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<select id="getObjectCode" parameterType="com.icignal.systemmanagement.object.dto.request.SystemUIObjectListReqDto" 
+	resultType="com.icignal.systemmanagement.object.dto.response.SystemUIObjectListResDto">
+		/* SystemObjectMapper.getObjectCode */
+		select
+			o.id as objId /* 오브젝트 id */
+			, o.obj_Nm as objNm /* 오브젝트 코드 */
+		from com.object o
+		where
+			o.flag = '1'
+			and o.lang = #{lang}
+			<!-- and o.country = #{country} -->
+			and o.obj_type_cd = #{objTypeCd}
+	</select>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (insertUIObjectDetail)
+	============================================
+	- 제목 : UI오브젝트 추가
+	- 설명 : UI오브젝트 추가
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<insert id="insertUIObjectDetail" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertUIObjectDetailReqDto" useGeneratedKeys="false">
+		/* SystemObjectMapper.insertUIObjectDetail */
+		insert into com.ui_object
+		(
+			id
+			, obj_type_cd
+			, obj_id
+			, ui_obj_nm
+			, ui_obj_desc
+			, use_flag
+			, create_by
+			, create_date
+			, modify_by
+			, modify_date
+			, flag
+			<!-- , country -->
+			, lang
+			<!-- , app_service_type -->
+			, pgm_id
+		)
+		values
+		(
+			#{id}
+			, #{objTypeCd}
+			, #{objId}
+			, #{uiObjNm}
+			, #{uiObjDesc}
+			, #{useFlag}
+			, #{empId}
+			, getdate()
+			, #{empId}
+			, getdate()
+			, '1'
+			<!-- , #{country} -->
+			, #{lang}
+			<!-- , #{appServiceId} -->
+			, #{pgmId}
+		)
+	</insert>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (updateUIObjectDetail)
+	============================================
+	- 제목 : UI오브젝트 수정
+	- 설명 : UI오브젝트 수정
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<update id="updateUIObjectDetail" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertUIObjectDetailReqDto">
+		/* SystemObjectMapper.updateUIObjectDetail */
+		update com.ui_object
+		set
+			obj_type_cd = #{objTypeCd}
+			, obj_id = #{objId}
+			, ui_obj_nm = #{uiObjNm}
+			, ui_obj_desc = #{uiObjDesc}
+			, use_flag = #{useFlag}
+			, modify_by = #{empId}
+			, modify_date = getdate()
+			, pgm_id = #{pgmId}
+		where
+			id = #{id}
+	</update>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getUIObjectDetail)
+	============================================
+	- 제목 : UI오브젝트 상세
+	- 설명 : UI오브젝트 상세
+	- 결과형태 : 단수
+	============================================
+	- 입력 : id(UI오브젝트)
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<select id="getUIObjectDetail" parameterType="com.icignal.systemmanagement.object.dto.request.SystemGetUIObjectDetailReqDto" 
+												resultType="com.icignal.systemmanagement.object.dto.response.SystemGetUIObjectDetailResDto">
+		/* SystemObjectMapper.getUIObjectDetail */
+		select
+			uo.obj_type_cd as objTypeCd /* 오브젝트 유형 */
+			, uo.obj_id as objId /* UI오브젝트 id */
+			, o.obj_cd as objCd /* 오브젝트 코드*/
+			, uo.UI_OBJ_nm as uiObjNm /* UI 오브젝트명*/
+			, uo.UI_OBJ_DESC as uiObjDesc /* UI 설명 */
+			, uo.use_flag as useFlag /* UI useFlag */
+		from com.ui_object uo WITH (NOLOCK)
+			join com.object o WITH (NOLOCK) on uo.OBJ_ID = o.id and o.flag = 1 and o.lang = #{lang}
+			join com.comm_code cc WITH (NOLOCK) on o.OBJ_TYPE_CD = cc.code_name and cc.lang = #{lang} and cc.flag = 1 and group_code = 'OBJ_TYPE_CD'
+		WHERE uo.id = #{id}
+	</select>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (deleteUIObjectList)
+	============================================
+	- 제목 : UI오브젝트 삭제
+	- 설명 : UI오브젝트 삭제
+	- 결과형태 :
+	============================================
+	- 입력 : empId, id ,ids(UI오브젝트)
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<update id="deleteUIObjectList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemDeleteUIObjectListReqDto">
+		/* SystemObjectMapper.deleteUIObjectList */
+		update com.ui_object
+		set
+			flag = flag + 1
+			, modify_by = #{empId}
+			, modify_date = getdate()
+		where
+			${strSVCType}
+			<if test="ids.size != 0">
+			and id in
+				 <foreach collection="ids" item="item" separator="," close=")" open="(">
+					#{item}
+				</foreach>
+			</if>
+	</update>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (deleteUIObjectListByPgmId)
+	============================================
+	- 제목 : UI오브젝트 삭제(프로그램 삭제 시 작동)
+	- 설명 : UI오브젝트 삭제(프로그램 삭제 시 작동)
+	- 결과형태 :
+	============================================
+	- 입력 : progId
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+<!-- 	<update id="deleteUIObjectListByPgmId" parameterType="MKTProgListRequest">
+		/* SystemObjectMapper.deleteUIObjectListByPgmId */
+		update com.ui_object
+		set
+		use_flag = flag + 1
+		where
+		pgm_id in
+		 <foreach collection="progId" item="item" separator="," close=")" open="(">
+			
+			#{item}
+			
+		</foreach>
+	</update> -->
+
+</mapper>

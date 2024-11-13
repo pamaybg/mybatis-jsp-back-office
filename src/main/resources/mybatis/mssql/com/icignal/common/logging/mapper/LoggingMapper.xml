@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.common.logging.mapper.LoggingMapper">
+
+
+ <!-- /**************************************
+    -   관련 파일            : LOYCustDAO.java (insertCustMaskReleaLog)
+    ============================================
+    -   제목                   : 고객정보 마스킹정보 해제 로깅
+    -   설명                   : 고객정보 마스킹정보 해제 로깅
+    -   결과형태             :
+    ============================================
+    -   입력			  : custRequest
+    -	출력			  :
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.12.15.
+    ***************************************/ -->
+    <insert id="insertCustMaskReleaLog" parameterType="com.icignal.common.logging.dto.request.LOYCustMaskReleaLogReqDto">
+		/* LoggingMapper.insertCustMaskReleaLog */
+		insert into LOY.loy_cust_mask_relea_log
+			(
+			 rid
+			,page_info
+			,info_type
+			,reas_desctxt
+			,info_rid
+			,create_date
+			,create_by
+			,modify_by
+			)
+			values(
+			com.getNewID('A')
+			, #{pageInfo}
+			, #{infoType}
+			, #{reasDesctxt}
+			, #{infoRid}
+			, GETDATE()
+			, #{createBy}
+			, #{modifyBy}
+			)
+		<selectKey keyProperty="" resultType="java.lang.String">
+			select 1 from dual
+		</selectKey>
+
+    </insert>
+    
+    <!-- 서비스 요청 로그 등록 -->
+    <insert id="insertServiceReqLog" parameterType="com.icignal.common.logging.dto.request.ServiceReqLogReqDto">
+        /* LoggingMapper.insertServiceReqLog */
+		insert into com.com_service_req_log (
+			 id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, req_dt
+			, req_type_cd
+			, req_url
+			, req_ip
+			, req_sessn_id
+			, req_login_id
+			, req_params )
+		values (
+			 #{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, #{lang} 
+			, GETDATE()
+			, #{reqTypeCd} 
+			, #{reqUrl} 
+			, #{reqIp} 
+			, #{reqSessnId} 
+			, #{reqLoginId} 
+			, #{reqParams} )
+			
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from com.com_service_req_log where id = #{id} limit 0, 1
+        </selectKey> 
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일            : LOYCommonPopupDAO.java (getMbrMstListPop)
+    ============================================
+    -   제목                   : 공통 팝업 (회원마스터 마스킹 해제 로그 저장)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, pgm_rid
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.13
+    ***************************************/ -->
+	 <insert id="insertMaskReleaLog" parameterType="com.icignal.common.logging.request.LOYMaskReleaLogReqDto">
+		/* LoggingMapper.insertMaskReleaLog */
+		insert into LOY.loy_cust_mask_relea_log
+			(
+			 rid
+			,page_info
+			,info_type
+			,reas_desctxt
+			,info_rid
+			,create_date
+			,create_by
+			,modify_by
+			)
+			values(
+			com.getNewID('A')
+			, #{pageInfo}
+			, #{infoType}
+			, #{reasDesctxt}
+			, #{infoRid}
+			, GETDATE()
+			, #{createBy}
+			, #{modifyBy}
+			)
+    
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : ICNLogDAO.java (addExcelDownloadLog)
+    ============================================
+    -   제목                  : 엑셀 다운로드 로그 등록
+    -   설명                  : 엑셀 다운로드 로그 등록
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2017.06.07
+    ***************************************/ -->
+    <insert id="insertExcelDownloadLog" parameterType="com.icignal.common.logging.dto.request.ExcelDownloadLogReqDto">
+        /* LoggingMapper.insertExcelDownloadLog */
+		insert into com.com_excel_downl_log (
+			 id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, req_dt
+			, req_type_cd
+			, req_url
+			, req_ip
+			, req_sessn_id
+			, req_login_id
+			, target_id 
+			, DOWN_FILE_PATH
+			, COND_WHERE
+			)
+		values (
+			 #{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, #{lang} 
+			, GETDATE()
+			, #{reqTypeCd} 
+			, #{reqUrl} 
+			, #{reqIp} 
+			, #{reqSessnId} 
+			, #{reqLoginId} 
+			, #{targetId} 
+			, #{downFilePath}
+			, #{condWhere}
+			)
+			
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from com.com_excel_downl_log where id = #{id} limit 0, 1
+        </selectKey> 
+	</insert>
+
+</mapper>

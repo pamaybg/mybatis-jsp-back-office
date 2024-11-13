@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://www.ehcache.org/ehcache.xsd"
+         updateCheck="true"
+         monitoring="autodetect"
+         dynamicConfig="true">
+	<!-- 
+		임시저장경로 설정 DiskStore 는 스풀링 공간을 제공한다.(옵션) 
+		아무것도 설정되지 않으면 java.io.tmpdir 을 사용하면서 경고메시지를 띄운다.
+	-->
+    <diskStore path="java.io.tmpdir"/>
+    
+	<!-- 
+		naem=캐시의 이름
+		maxElementsInMemory=메모리에 생성될 최대 객체 갯수
+        eternal=저장될 캐시를 삭제할 것인가에 대한 설정 
+        		단,true로 할시 timeToIdleSeconds와timeToLiveSeconds는 무시된다.
+        timeToIdleSeconds= 해당 초 동안 캐시가 사용 되지 않으면 캐시를 삭제
+        timeToLiveSeconds= 해당 초가 지나면 캐시를 삭제
+        overflowToDisk=메모리에 저장된 객체 개수가 maxElementsInMemory에서 지정한 값에 다다를 경우 디스크에 오버플로우 되는 객체는 저장할 지의 여부를 지정
+        maxElementsOnDisk= 디스크에 생성될 최대 객체 갯수
+        diskPersistent=	VM이 재 가동할 때 디스크 저장소에 캐싱된 객체를 저장할지의 여부를 지정, 기본값은 false이다.
+        diskExpiryThreadIntervalSeconds=Disk Expiry 스레드의 작업 수행 간격 설정
+        memoryStoreEvictionPolicy=객체의 갯수가 maxEntriesLocalHeap에 도달하면 객체를 제거하고 새로 추가하는 정책을 정의
+        						    종류(LRU,FIFO,LFU)
+	-->
+	<!-- 캐시 기본설정 -->
+    <defaultCache
+            maxElementsInMemory="10000"
+            eternal="false"
+            timeToIdleSeconds="120"
+            timeToLiveSeconds="120"
+            overflowToDisk="true"
+            maxElementsOnDisk="10000"
+            diskPersistent="false"
+            diskExpiryThreadIntervalSeconds="120"
+            memoryStoreEvictionPolicy="LRU" /> 
+            
+	<!-- 각 캐시마다필요한 태그 -->
+    <cache name="messagePropertyCache"
+           maxElementsInMemory="10000"
+           maxElementsOnDisk="100"
+           eternal="true"
+           overflowToDisk="true"
+           memoryStoreEvictionPolicy="LRU" />
+           
+     <cache name="commCodeCache"
+           maxElementsInMemory="10000"
+           maxElementsOnDisk="100"
+           eternal="true"
+           overflowToDisk="true"
+           memoryStoreEvictionPolicy="LRU" />
+           
+     <cache name="ProgramCache"
+           maxElementsInMemory="10000"
+           maxElementsOnDisk="100"
+           eternal="true"
+           overflowToDisk="true"
+           memoryStoreEvictionPolicy="LRU" />
+
+</ehcache>

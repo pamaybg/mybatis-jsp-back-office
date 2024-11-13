@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.executionStatus.mapper.MktexecutionStatusMapper">
+
+    <!-- /**************************************
+    -   관련 파일             : MktexecutionStatusMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_CAM_MST 목록 전체 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.07.27
+    ***************************************/ -->
+    <select id="selectCampaignListForExecResult" parameterType="com.icignal.marketing.executionStatus.dto.request.MktexecutionStatusSelectCampaignListForExecResultReqDto" 
+    							resultType="com.icignal.marketing.executionStatus.dto.response.MktexecutionStatusSelectCampaignListForExecResultResDto">
+    	/* MktexecutionStatusMapper.selectCampaignListForExecResult */
+		SELECT T1.ID as id
+			 , T1.DISP_NO as dispNo
+			 , T1.CAM_NM as camNm 
+			 , TO_CHAR(T1.CAM_START_DD,'YYYY-MM-DD') as camStartDd
+			 , TO_CHAR(T1.CAM_END_DD,'YYYY-MM-DD') as camEndDd
+			 , C1.MARK_NAME as c1markName
+			 , C2.MARK_NAME as c2markName
+			 , E1.NAME as name
+			 , TO_CHAR(T1.CREATE_DATE,'YYYY-MM-DD HH24:MI') as createDate
+			 , ${strColumn}
+		FROM MKT.MKT_CAM_MST T1
+			LEFT OUTER JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = #{lang} AND C1.GROUP_CODE = 'MKT_CAM_STAT' AND C1.CODE_NAME = T1.CAM_STATUS_CD 
+			LEFT OUTER JOIN COM.COMM_CODE C2 ON C2.FLAG = 1 AND C2.LANG = #{lang} AND C2.GROUP_CODE = 'MKT_CAM_TYPE_CD' AND C2.CODE_NAME = T1.CAM_TYPE_CD
+			LEFT OUTER JOIN COM.EMPLOYEE E1 ON E1.ID = T1.CAM_PLNER
+		WHERE 1=1
+			   AND ${strCondWhere}<!-- 공통조회조건 파라미터 -->
+          	   AND  ${strWhere}<!-- 그리드 검색 파라미터 -->
+			   AND T1.FLAG = 1
+			   AND T1.TYPE != 'RUL'
+			   AND T1.CAM_STATUS_CD != 'W'
+		ORDER  BY ${strOrderby}<!-- 그리드에서 파라미터를 받아서 order by를 함. -->
+       	${strEndPaging}<!-- 그리드 페이징1,2,3,... -->
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : MktexecutionStatusMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_CAM_MST 특정 목록 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.07.27
+    ***************************************/ -->
+    <select id="selectCampaignListForExecResultOfList" parameterType="com.icignal.marketing.executionStatus.dto.request.MktexecutionStatusSelectCampaignListForExecResultOfListReqDto" 
+    							resultType="com.icignal.marketing.executionStatus.dto.response.MktexecutionStatusSelectCampaignListForExecResultOfListResDto">
+    	/* MktexecutionStatusMapper.selectCampaignListForExecResultOfList */
+   		SELECT T1.ID as t1Id
+ 			 , T2.ID as t2Id
+ 			 , NVL(T2.EXE_SEQ, T1.EXE_SEQ) as exeSeq
+ 			 , NVL(TO_CHAR(T2.EXE_DT,'YYYY-MM-DD HH24:MI'), TO_CHAR(T1.EXE_DT,'YYYY-MM-DD HH24:MI')) as exeDt
+ 			 , C1.MARK_NAME as c1markName
+ 			 , NVL(C3.MARK_NAME, C2.MARK_NAME) as c2markName
+ 			 , NVL(C5.MARK_NAME, C4.MARK_NAME) as c3markName
+			 , T1.EXE_TGT_AMT as exeTgtAmt
+			 , T1.CTRL_GROUP_CNT as ctrlGroupCnt
+			 , T1.DUP_RMV_CNT as dupRmvCnt
+			 , T2.CHNL_SEND_CNT as chnlSendCnt
+			 , T2.PRMS_CHK_RMV_CNT as prmsChkRmvCnt
+			 , T2.FATI_CHK_RMV_CNT as fatiChkRmv
+			 , T2.EXCEPT_RMV_CNT as exceptRmvCnt
+			 , T2.SEND_SUCES_CNT as sendSucesCnt
+			 , T2.SEND_FAIL_CNT as sendFailCnt
+			 , T2.REV_SUCES_CNT as revSucesCnt
+			 , T2.READ_SUCES_CNT as readSucesCnt
+			 , ${strColumn}
+  		FROM MKT.MKT_TGT_HAD T0
+  		  JOIN MKT.MKT_EXE_INFO_ITEM T1 ON T1.FLAG = 1 AND T1.CAM_ID = T0.CAM_ID 
+		  LEFT OUTER JOIN MKT.MKT_EXE_INFO_CHNL T2 ON T2.FLAG = 1 AND T2.EXE_INFO_ITEM_ID = T1.ID
+		  LEFT OUTER JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = #{lang} AND C1.GROUP_CODE = 'MKT_CAM_CHNL_TYPE_CD' AND C1.CODE_NAME = T2.CHNL_TYPE_CD 
+		  LEFT OUTER JOIN COM.COMM_CODE C2 ON C2.FLAG = 1 AND C2.LANG = #{lang} AND C2.GROUP_CODE = 'MKT_EXEC_STATUS' AND C2.CODE_NAME = T1.EXE_INFO_STATUS_CD 
+		  LEFT OUTER JOIN COM.COMM_CODE C3 ON C3.FLAG = 1 AND C3.LANG = #{lang} AND C3.GROUP_CODE = 'MKT_EXEC_STATUS' AND C3.CODE_NAME = T2.EXE_INFO_STATUS_CD 
+		  LEFT OUTER JOIN COM.COMM_CODE C4 ON C4.FLAG = 1 AND C4.LANG = #{lang} AND C4.GROUP_CODE = 'MKT_EXEC_STATUS_BAT_DETAIL' AND C4.CODE_NAME = T1.EXE_INFO_STATUS_BAT_DTL_CD 
+		  LEFT OUTER JOIN COM.COMM_CODE C5 ON C5.FLAG = 1 AND C5.LANG = #{lang} AND C5.GROUP_CODE = 'MKT_EXEC_STATUS_BAT_DETAIL' AND C5.CODE_NAME = T2.EXE_INFO_STATUS_BAT_DTL_CD 
+ 		WHERE 1=1
+ 		AND ${strCondWhere}<!-- 공통조회조건 파라미터 -->
+        AND  ${strWhere}<!-- 그리드 검색 파라미터 -->
+ 		AND T0.CAM_ID = #{camId}
+ 		AND T0.FLAG = 1
+ 		ORDER  BY ${strOrderby}<!-- 그리드에서 파라미터를 받아서 order by를 함. -->
+       	${strEndPaging}<!-- 그리드 페이징1,2,3,... -->
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : MktexecutionStatusMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_TGT_DTL 특정 목록 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.07.27
+    ***************************************/ -->
+    <select id="selectCampaignDetailForExecResultOfList" parameterType="com.icignal.marketing.executionStatus.dto.request.MktexecutionStatusSelectCampaignDetailForExecResultOfListReqDto" 
+    							resultType="com.icignal.marketing.executionStatus.dto.response.MktexecutionStatusSelectCampaignDetailForExecResultOfListResDto">
+    	/* MktexecutionStatusMapper.selectCampaignDetailForExecResultOfList */
+	 SELECT T1.ID as id
+	   , T1.MEM_ID as memId
+	   , T1.CTRL_GROUP_YN as ctrlGroupYn
+		<if test='@com.icignal.common.util.StringUtil@isNotEmpty(chnlId)'>
+		   <!-- 'S'이면 'Y' 아니면 'N' -->
+		   , CASE WHEN T2.BAT_SEND_STATUS = 'S' THEN 'Y' ELSE 'N' END as batSendStatus
+		   , T2.SEND_SUCES_YN as sendSucesYn
+		   , T2.SEND_FAIL_YN as sendFailYn
+		   <if test="dataType == 'SMS' or dataType == 'LMS' or dataType == 'MMS'">
+		   , NULL AS readSucesYn
+		   , NULL AS revSucesYn
+		   </if>
+		   <if test="dataType == 'EMAIL'">
+		   , T2.OPEN_SUCES_YN AS readSucesYn
+		   , NULL AS revSucesYn
+		   </if>
+		   <if test="dataType == 'KAKAO'">
+		   , NULL AS readSucesYn
+		   , NULL AS revSucesYn
+		   </if>
+		</if>
+		<if test='@com.icignal.common.util.StringUtil@isEmpty(chnlId)'>
+	      	, 'N' AS batSendStatus
+	      	, NULL AS sendSucesYn
+			, NULL AS sendFailYn
+			, NULL AS readSucesYn
+			, NULL AS revSucesYn
+		</if>
+	   , ${strColumn} 
+	   FROM MKT.MKT_TGT_DTL T1
+		<if test='@com.icignal.common.util.StringUtil@isNotEmpty(chnlId)'>
+			LEFT OUTER JOIN
+			<if test="dataType == 'SMS' or dataType == 'LMS' or dataType == 'MMS'">
+				MKT.MKT_MSG_SEND_LOG T2
+			</if>
+			<if test="dataType == 'EMAIL'">
+				MKT.MKT_EMAIL_SEND_LOG T2
+			</if>
+			<if test="dataType == 'KAKAO'">
+				MKT.MKT_KAKAO_SEND_LOG T2
+			</if>
+				ON T2.FLAG = 1 AND T2.CAM_TGT_DTL_ID = T1.ID AND T2.MKT_EXE_INFO_ITEM_ID = #{itemId} AND T2.MKT_EXE_INFO_CHNL_ID = #{chnlId}
+		</if>
+	   WHERE 1=1
+ 		AND ${strCondWhere}<!-- 공통조회조건 파라미터 -->
+        AND  ${strWhere}<!-- 그리드 검색 파라미터 -->
+	  	AND T1.FLAG = 1
+	    AND T1.EXE_INFO_ITEM_ID = #{itemId}
+ 		ORDER  BY ${strOrderby}<!-- 그리드에서 파라미터를 받아서 order by를 함. -->
+       	${strEndPaging}<!-- 그리드 페이징1,2,3,... -->
+    </select>
+    
+        <!-- /**************************************
+    -   관련 파일             : MktexecutionStatusMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_TGT_DTL PUSH 특정 목록 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.07.27
+    ***************************************/ -->
+    <select id="selectPushCampaignDetailForExecResultOfList" parameterType="com.icignal.marketing.executionStatus.dto.request.MktexecutionStatusSelectCampaignDetailForExecResultOfListReqDto" 
+    							resultType="com.icignal.marketing.executionStatus.dto.response.MktexecutionStatusSelectCampaignDetailForExecResultOfListResDto">
+    	/* MktexecutionStatusMapper.selectPushCampaignDetailForExecResultOfList */
+		  SELECT T3.RID
+		     , T1.ID as id
+			 , T1.MEM_ID as memId
+			 , T1.CTRL_GROUP_YN as ctrlGroupYn
+			 , CASE WHEN T4.BAT_SEND_STATUS = 'S' THEN 'Y' ELSE 'N' END as batSendStatus
+			 , T4.SEND_SUCES_YN as sendSucesYn
+			 , T4.SEND_FAIL_YN as sendFailYn
+			 , T4.READ_SUCES_YN AS readSucesYn
+			 , T4.REV_SUCES_YN AS revSucesYn
+			 , T3.DEVICE_UUID as deviceUuId
+			 , T3.DEVICE_AGRE_YN as deviceAgreYn
+			 , ${strColumn} 
+		  FROM MKT.MKT_TGT_DTL T1
+		  LEFT OUTER JOIN LOY.LOY_MBR T2 ON T2.MBR_NO = T1.MEM_ID
+		  LEFT OUTER JOIN LOY.LOY_CUST_APP_TOKEN T3 ON T3.RID_CUST = T2.RID_CUST
+		  LEFT OUTER JOIN MKT.MKT_PUSH_SEND_LOG T4 ON T4.FLAG = 1 AND T4.MKT_EXE_INFO_ITEM_ID = T1.EXE_INFO_ITEM_ID AND T4.RECV_DEVICE_UUID = T3.DEVICE_UUID
+		  WHERE 1=1
+		    AND T1.FLAG = 1
+		    AND T1.EXE_INFO_ITEM_ID = #{itemId}
+	 		AND ${strCondWhere}<!-- 공통조회조건 파라미터 -->
+	        AND  ${strWhere}<!-- 그리드 검색 파라미터 -->
+	 		ORDER  BY ${strOrderby}<!-- 그리드에서 파라미터를 받아서 order by를 함. -->
+	       	${strEndPaging}<!-- 그리드 페이징1,2,3,... -->
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktexecutionStatusMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_TGT_DTL_RMV 채널 실패 사유 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.07.28
+    ***************************************/ -->
+    <select id="selectCampaignDetailForExecResultErrorReason" parameterType="com.icignal.marketing.executionStatus.dto.request.MktexecutionStatusSelectCampaignDetailForExecResultErrorReasonReqDto" 
+    							resultType="com.icignal.marketing.executionStatus.dto.response.MktexecutionStatusSelectCampaignDetailForExecResultErrorReasonResDto">
+    	/* MktexecutionStatusMapper.selectCampaignDetailForExecResultErrorReason */
+    	 SELECT
+			 T1.MBR_NO as mbrNo
+			 , T1.FATI_CHK_RMV_YN as fatiChkRmvYn 
+			 , T1.INFO_UTIL_YN  as infoUtilYn
+			 , T1.MKT_UTIL_YN  as mktUtilYn
+			 , T1.SMS_CONSENT_YN as smsConsentyn
+			 , T1.PUSH_CONSENT_YN as pushConsentyn
+			 , T1.EMAIL_CONSENT_YN as emailConsentyn
+			 <if test="dataType == 'PUSH'">
+			    , lcat.DEVICE_UUID AS deviceUuId
+			 	, lcat.DEVICE_AGRE_YN AS deviceAgreYn
+			 </if>
+			 , T1.HP_YN as hpYn
+			 , T1.EMAIL_YN as emailYn
+		 FROM MKT.MKT_TGT_DTL_RMV T1
+		 <if test="dataType == 'PUSH'">
+	 		 LEFT OUTER JOIN loy.LOY_MBR lm ON T1.MBR_NO = lm.MBR_NO AND lm.FLAG =1
+			 LEFT OUTER JOIN loy.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG =1
+			 LEFT OUTER JOIN loy.LOY_CUST_APP_TOKEN lcat ON lc.RID = lcat.RID_CUST AND lcat.FLAG =1
+		 </if>
+		 WHERE T1.FLAG = 1
+		   AND T1.TGT_DTL_ID = #{id}
+		   AND T1.EXE_INFO_CHNL_ID  = #{chnlId}
+		 ORDER  BY ${strOrderby}<!-- 그리드에서 파라미터를 받아서 order by를 함. -->
+    </select>            
+</mapper>

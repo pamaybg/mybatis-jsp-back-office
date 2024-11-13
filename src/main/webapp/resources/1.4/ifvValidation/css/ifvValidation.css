@@ -1,0 +1,13 @@
+.ifv_validation .valieTxt{
+	color:red; font-size:11px; clear:both; text-align: center; padding-bottom:10px;
+}
+.ifv_vali_wrong{border:1px solid #c04848 !important;}
+
+.ifv_validation_valieTxt2{
+	color:red; font-size:11px; padding:5px 10px;
+	position:absolute; left:0; top:0; z-index:9999999;
+}
+
+.vali_tooltip {position: absolute; max-width: 200px; background-color: #c04848; border: 1px solid #c04848; border-radius: 8px; padding: 10px; box-sizing: border-box; z-index: 99999999999999999999;}
+.vali_content {width: 100%; color: #fff; text-align: left;}
+.vali_arrow {position: absolute; width: 0; height: 0; top: 100%; left: 20%; margin-left: -8px; border: 8px solid; border-color: #c04848 transparent transparent; display: block;}

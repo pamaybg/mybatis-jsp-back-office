@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:56:19 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.logicalComponent.mapper.KprLogicalComponentEngineMapper">
+
+    <select id="selectLgcCompColList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentEngineDetailReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentEngineDetailResDto">
+		/* KPRLogicalComponentEngine.selectLgcCompColList */
+    	SELECT CASE WHEN agc.cal_col_yn = '1' THEN (agc.cal_dtl || ' AS ' || agc.col_alias)
+    				ELSE (agc.tbl_alias_col_nm || ' AS ' || agc.col_alias)
+			   END	AS tblAliasColNm
+    	  FROM anl.anl_lgc_comp_mst			lcm
+    	  JOIN anl.anl_atrib_group			aag ON	lcm.id		= aag.lgc_comp_id
+    	  										AND	aag.flag	= 1
+    	  JOIN anl.anl_atrib_group_column	agc ON	aag.id		= agc.atrib_group_id
+												AND	agc.flag	= 1
+    	 WHERE lcm.flag	= 1
+    	   AND lcm.id	= #{lgcCompId}
+	  ORDER BY agc.col_alias asc
+    </select>
+    
+	<select id="selectLgcCompTblList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentEngineDetailReqDto"
+	 resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentEngineDetailResDto" flushCache="true">
+	 /* KPRLogicalComponentEngine.selectLgcCompTblList */
+	 
+	 SELECT ltr.id						AS tblRelId
+			 , ltr.tbl_id					AS tblId
+			 , ltr.schma_tbl_nm				AS schmaTblNm
+			 , ltr.tbl_alias				AS tblAlias
+		  FROM anl.anl_lgc_comp_mst			lcm
+		  JOIN anl.anl_lgc_comp_table_rel	ltr ON	lcm.id			= ltr.lgc_comp_id
+		  										AND	ltr.flag		= 1
+		  JOIN anl.anl_table_mst			atm ON	ltr.tbl_id		= atm.id
+		  										AND	atm.flag		= 1
+	 LEFT JOIN com.comm_code				tcd ON	atm.tbl_type_cd	= tcd.code_name
+		  										AND	tcd.group_code	= 'ANL_TABLE_TYPE_CD'
+		  										AND	tcd.flag		= 1
+		  										AND	tcd.lang		= #{lang}
+		 WHERE lcm.flag	= 1
+		   AND lcm.id	= #{lgcCompId}
+		 ORDER BY tcd.seq, ltr.tbl_alias
+	</select>
+
+	<select id="selectLgcCompTblJoinColList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentEngineDetailReqDto" 
+	resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentEngineDetailResDto" flushCache="true"> 
+		/* KPRLogicalComponentEngine.selectLgcCompTblJoinColList */
+		SELECT jcd.mark_name				AS joinTypeCode
+			 , ltr.id						AS leftTblRelId
+			 , ltr.tbl_id					AS leftTblId
+			 , ltr.schma_tbl_nm				AS leftSchmaTblNm
+			 , ltr.tbl_alias				AS leftTblAlias
+			 , ljc.left_col_id				AS leftColId
+			 , ljc.left_tbl_alias_col_nm	AS leftTblAliasColNm
+			 , NVL(lgc.group_cnt, 0)	AS leftGroupCnt
+			 , ljc.join_oprt_cd				AS joinOprtCode
+			 , ocd.mark_name				AS joinOprtCodeName
+			 , rtr.id						AS rightTblRelId
+			 , rtr.tbl_id					AS rightTblId
+			 , rtr.schma_tbl_nm				AS rightSchmaTblNm
+			 , rtr.tbl_alias				AS rightTblAlias
+			 , ljc.right_col_id				AS rightColId
+			 , ljc.right_tbl_alias_col_nm	AS rightTblAliasColNm
+			 , NVL(rgc.group_cnt, 0)		AS rightGroupCnt
+		  FROM anl.anl_lgc_join_column		ljc
+		  JOIN anl.anl_lgc_comp_table_rel	ltr ON	ljc.left_lgc_comp_tbl_rel_id	= ltr.id
+		  										AND	ltr.flag						= 1
+		  JOIN anl.anl_lgc_comp_table_rel	rtr ON	ljc.right_lgc_comp_tbl_rel_id	= rtr.id
+												AND	rtr.flag						= 1
+		  JOIN anl.anl_table_mst			ltm ON	ltr.tbl_id						= ltm.id
+		  										AND	ltm.flag						= 1
+		  JOIN anl.anl_table_mst			rtm ON	rtr.tbl_id						= rtm.id
+		  										AND	rtm.flag						= 1
+	 LEFT JOIN com.comm_code				ocd ON	ljc.join_oprt_cd				= ocd.code_name
+		  										AND	ocd.group_code					= 'ANL_JOIN_OPRT_TYPE_CD'
+		  										AND	ocd.flag						= 1
+		  										AND	ocd.lang						= #{lang}
+	 LEFT JOIN com.comm_code				lcd ON	ltm.tbl_type_cd					= lcd.code_name
+		  										AND	lcd.group_code					= 'ANL_TABLE_TYPE_CD'
+		  										AND	lcd.flag						= 1
+		  										AND	lcd.lang						= #{lang}
+	 LEFT JOIN com.comm_code				rcd ON	rtm.tbl_type_cd					= rcd.code_name
+		  										AND	rcd.group_code					= 'ANL_TABLE_TYPE_CD'
+		  										AND	rcd.flag						= 1
+		  										AND	rcd.lang						= #{lang}
+	 LEFT JOIN com.comm_code				jcd ON	ljc.join_type_cd				= jcd.code_name
+	 											AND	jcd.group_code					= 'ANL_JOIN_TYPE_CD'
+	 											AND	jcd.flag						= 1
+	 											AND	jcd.lang						= #{lang}
+	 LEFT JOIN (
+			SELECT lgc.lgc_comp_tbl_rel_id			AS lgc_comp_tbl_rel_id
+				 , COUNT(lgc.lgc_comp_tbl_rel_id)	AS group_cnt
+			  FROM anl.anl_lgc_group_column	lgc
+			 WHERE lgc.flag = 1
+			 GROUP BY lgc.lgc_comp_tbl_rel_id
+		  )									lgc ON	ltr.id			= lgc.lgc_comp_tbl_rel_id
+	 LEFT JOIN (
+			SELECT lgc.lgc_comp_tbl_rel_id			AS lgc_comp_tbl_rel_id
+				 , COUNT(lgc.lgc_comp_tbl_rel_id)	AS group_cnt
+			  FROM anl.anl_lgc_group_column	lgc
+			 WHERE lgc.flag = 1
+			 GROUP BY lgc.lgc_comp_tbl_rel_id
+		  )									rgc ON	rtr.id			= rgc.lgc_comp_tbl_rel_id
+		 WHERE ljc.flag		= 1
+		   AND (
+			   ltr.id		= #{tblRelId}
+		    OR rtr.id		= #{tblRelId}
+		   )
+	  ORDER BY lcd.seq
+	  		 , rcd.seq
+	  		 , ltr.tbl_alias
+	  		 , rtr.tbl_alias
+			 , ljc.seq
+	</select>
+	
+	<select id="selectLgcCompGrpColList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentEngineDetailReqDto"
+	 resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentEngineDetailResDto">
+		/* KPRLogicalComponentEngine.selectLgcCompGrpColList */
+		SELECT lgc.group_func_type_cd	AS grpFuncTypeCode
+			 , acm.col_nm				AS colNm
+		  FROM anl.anl_lgc_comp_table_rel	ctr
+		  JOIN anl.anl_lgc_group_column		lgc ON	ctr.id					= lgc.lgc_comp_tbl_rel_id
+		  										AND	lgc.flag				= 1
+		  JOIN anl.anl_column_mst			acm ON	lgc.col_id				= acm.id
+		  										AND	acm.flag				= 1
+	 LEFT JOIN com.comm_code				gcd ON	lgc.group_func_type_cd	= gcd.code_name
+		  										AND	gcd.group_code			= 'ANL_GROUP_FUNC_TYPE'
+		  										AND	gcd.lang				= #{lang}
+		 WHERE ctr.flag	= 1
+		   AND ctr.id	= #{tblRelId}
+	</select>
+	
+	<select id="selectLgcCompGrpByColList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentEngineDetailReqDto" 
+	resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentEngineDetailResDto">
+		/* KPRLogicalComponentEngine.selectLgcCompGrpColList */
+		SELECT DISTINCT acm.col_nm	AS colNm
+		  FROM anl.anl_lgc_join_column	ljc
+		  JOIN anl.anl_column_mst		acm ON	CASE WHEN ljc.left_lgc_comp_tbl_rel_id = #{tblRelId} THEN ljc.left_col_id
+													 ELSE ljc.right_col_id
+												END			= acm.id
+		  									AND	acm.flag	= 1
+		 WHERE ljc.flag							= 1
+		   AND (
+			   ljc.left_lgc_comp_tbl_rel_id		= #{tblRelId}
+			OR ljc.right_lgc_comp_tbl_rel_id	= #{tblRelId}
+		   )
+	</select>
+</mapper>

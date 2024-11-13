@@ -1,0 +1,1134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.survey.mapper.LoySurveyMapper">
+
+	<select id="selectSurveyList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyListResDto">
+		/* LoySurveyMapper.selectSurveyList */
+		SELECT LSM.RID                                                                                         AS ridSurvey
+		, LSM.SURV_NO                                                                                     AS surveyNo
+		, LSM.SURV_NM                                                                                     AS surveyName
+		, TO_CHAR(LSM.VALID_START_DATE, 'YYYY-MM-DD') || '~' || TO_CHAR(LSM.VALID_END_DATE, 'YYYY-MM-DD') AS validDate
+		, TO_CHAR(LSM.VALID_START_DATE, 'YYYY-MM-DD')                                                     AS validStartDate
+		, TO_CHAR(LSM.VALID_END_DATE, 'YYYY-MM-DD')                                                       AS validEndDate
+		, LSM.STAT_CD                                                                                     AS statusCode
+		, EM.NAME                                                                                         AS createBy
+		, TO_CHAR(LSM.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS')                                               AS createDate
+		, COALESCE(LTV.CNT, 0)                                                                            AS targetCount
+		, COALESCE(LMV.CNT, 0)                                                                            AS surveyCount
+		, ${strColumn}
+		FROM LOY.LOY_SURV_MST LSM
+		LEFT JOIN (
+		SELECT LSST.RID_SURV_MST            AS RID_SURV_MST
+		, COUNT(DISTINCT LSST.RID_MBR) AS CNT
+		FROM LOY.LOY_SURV_SEND_TGT LSST
+		WHERE LSST.FLAG = 1
+		GROUP BY LSST.RID_SURV_MST
+		)                       LTV ON LSM.RID = LTV.RID_SURV_MST
+		LEFT JOIN (
+		SELECT LSM.RID_SURV_MST            AS RID_SURV_MST
+		, COUNT(DISTINCT LSM.RID_MBR) AS CNT
+		FROM LOY.LOY_SURV_MBR LSM
+		WHERE LSM.FLAG = 1
+		GROUP BY LSM.RID_SURV_MST
+		)                       LMV ON LSM.RID = LMV.RID_SURV_MST
+		LEFT JOIN COM.CRM_USER     CU  ON LSM.CREATE_BY = CU.RID AND CU.FLAG = 1
+		LEFT JOIN COM.EMPLOYEE     EM  ON CU.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+		WHERE LSM.FLAG = 1
+		<if test="existsCheckType != null and existsCheckType != ''">
+			AND LSM.STAT_CD = 'A'
+			<choose>
+				<when test="'LOY'.equals(existsCheckType)">
+					AND NOT EXISTS (
+					SELECT LPA.RID_SURV
+					FROM LOY.LOY_PRUL_AC2SUR LPA
+					WHERE LPA.FLAG = 1
+					AND LPA.RID_SURV = LSM.RID
+					)
+				</when>
+				<when test="'MKT'.equals(existsCheckType)">
+					AND NOT EXISTS (
+					SELECT MCM.RID_SURV_MST
+					FROM MKT.MKT_CAM_MST MCM
+					WHERE MCM.FLAG = 1
+					AND MCM.RID_SURV_MST = LSM.RID
+					)
+				</when>
+			</choose>
+		</if>
+		AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectSurveyDetail" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyDetailResDto">
+		/* LoySurveyMapper.selectSurveyDetail */
+		SELECT LSM.RID              AS ridSurvey
+			 , LSM.SURV_NO          AS surveyNo
+			 , LSM.SURV_NM          AS surveyName
+			 , LSM.STAT_CD          AS statusCode
+			 , LSM.VALID_START_DATE AS validStartDate
+			 , LSM.VALID_END_DATE   AS validEndDate
+			 , LSM.CONTENTS         AS contents
+			 , LSM.URL_WEB          AS urlWeb
+			 , LSM.START_INFO_MSG   AS startMessage
+			 , LSM.END_INFO_MSG     AS endMessage
+			 , EM.NAME              AS createBy
+			 , TO_CHAR(LSM.CREATE_DATE, 'YYYY-MM-DD HH24:Mi:SS') AS createDate
+		FROM LOY.LOY_SURV_MST LSM
+				 LEFT JOIN COM.CRM_USER     CU  ON LSM.CREATE_BY = CU.RID AND CU.FLAG = 1
+				 LEFT JOIN COM.EMPLOYEE     EM  ON CU.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+		WHERE LSM.FLAG = 1
+		  AND LSM.RID  = #{ridSurvey}
+	</select>
+
+	<insert id="insertSurveyDetail">
+		<selectKey keyProperty="ridSurvey,surveyNo" resultType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto" order="BEFORE">
+			/* LoySurveyMapper.insertSurveyDetail#selectKey */
+			SELECT COM.GETNEWID('A')    AS ridSurvey
+			, LOY.FN_GET_SURV_NO() AS surveyNo
+			FROM DUAL
+		</selectKey>
+
+		/* LoySurveyMapper.insertSurveyDetail */
+		INSERT INTO LOY.LOY_SURV_MST (
+		RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, SURV_NO
+		, SURV_NM
+		, STAT_CD
+		, VALID_START_DATE
+		, VALID_END_DATE
+		, RID_PGM
+		, CONTENTS
+		, URL_WEB
+		, START_INFO_MSG
+		, END_INFO_MSG
+		) VALUES (
+		#{ridSurvey}
+		, #{empId}
+		, #{empId}
+		, SYSDATE
+		, SYSDATE
+		, '1'
+		, #{surveyNo}
+		, #{surveyName}
+		, #{statusCode}
+		, TO_DATE(#{validStartDate}, 'YYYY-MM-DD HH24:MI:SS')
+		, TO_DATE(#{validEndDate}, 'YYYY-MM-DD HH24:MI:SS')
+		, (SELECT P.RID FROM LOY.LOY_PGM P WHERE P.FLAG = 1 AND P.REP_YN = 'Y' AND ROWNUM = 1)
+		, #{contents}
+		, #{urlWeb}
+		, #{startMessage}
+		, #{endMessage}
+		)
+	</insert>
+
+	<update id="updateSurveyDetail">
+		/* LoySurveyMapper.updateSurveyDetail */
+		UPDATE LOY.LOY_SURV_MST
+		SET MODIFY_BY        = #{empId}
+		  , MODIFY_DATE      = SYSDATE
+		  , SURV_NM          = #{surveyName}
+		  , STAT_CD          = #{statusCode}
+		  , VALID_START_DATE = TO_DATE(#{validStartDate}, 'yyyy-mm-dd hh24:mi:ss')
+		  , VALID_END_DATE   = TO_DATE(#{validEndDate}, 'yyyy-mm-dd hh24:mi:ss')
+		  , CONTENTS         = #{contents}
+		  , URL_WEB          = #{urlWeb}
+		  , START_INFO_MSG   = #{startMessage}
+		  , END_INFO_MSG     = #{endMessage}
+		WHERE RID = #{ridSurvey}
+	</update>
+
+	<update id="deleteSurveyDetail">
+		/* LoySurveyMapper.deleteSurveyDetail */
+		UPDATE LOY.LOY_SURV_MST
+		SET MODIFY_BY   = #{modifyBy}
+		  , MODIFY_DATE = SYSDATE
+		  , FLAG        = '0'
+		WHERE RID = #{ridSurvey}
+	</update>
+
+	<select id="selectSurveySectionList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveySectionListResDto">
+		/* LoySurveyMapper.selectSurveyItemList */
+		SELECT LSS.RID                                           AS ridSurveySection
+			 , LSS.SECT_NO                                       AS sectionNo
+			 , LSS.SECT_CONTENTS                                 AS sectionContents
+			 , LSS.LAST_YN                                       AS lastFlag
+			 , E.NAME                                            AS modifyBy
+			 , TO_CHAR(LSS.MODIFY_DATE, 'YYYY-MM-DD HH24:MI:SS') AS modifyDate
+			 , ${strColumn}
+		FROM LOY.LOY_SURV_MST  LSM
+				 JOIN LOY.LOY_SURV_SECT LSS ON LSM.RID = LSS.RID_SURV_MST AND LSS.FLAG = 1
+				 LEFT JOIN COM.CRM_USER      CU  ON LSS.MODIFY_BY = CU.RID AND CU.FLAG = 1
+				 LEFT JOIN COM.EMPLOYEE      E   ON CU.ID_EMPLOYEE = E.ID AND E.FLAG = 1
+		WHERE LSS.FLAG = 1
+		  AND LSS.RID_SURV_MST = #{ridSurvey}
+		  AND ${strCondWhere}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectSurveySectionDetail" resultType="com.icignal.loyalty.survey.dto.response.LoySurveySectionListResDto">
+		/* LoySurveyMapper.selectSurveyItemDetail */
+		SELECT LSS.RID           AS ridSurveySection
+			 , LSS.SECT_NO       AS sectionNo
+			 , LSS.SECT_CONTENTS AS sectionContents
+			 , LSS.LAST_YN       AS lastFlag
+		FROM LOY.LOY_SURV_SECT LSS
+		WHERE LSS.FLAG = 1
+		  AND LSS.RID  = #{ridSurveySection}
+	</select>
+
+	<insert id="insertSurveySectionDetail">
+		<selectKey keyProperty="ridSurveySection" resultType="java.lang.String" order="BEFORE">
+			/* LoySurveyMapper.insertSurveySectionDetail#selectKey */
+			SELECT COM.GETNEWID('A')    AS ridSurveySection
+			FROM DUAL
+		</selectKey>
+
+		/* LoySurveyMapper.insertSurveySectionDetail */
+		INSERT INTO LOY.LOY_SURV_SECT (
+		RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_SURV_MST
+		, SECT_NO
+		, SECT_CONTENTS
+		, LAST_YN
+		) VALUES (
+		#{ridSurveySection}
+		, #{empId}
+		, #{empId}
+		, SYSDATE
+		, SYSDATE
+		, 1
+		, #{ridSurvey}
+		, #{sectionNo}
+		, #{sectionContents}
+		, #{lastFlag}
+		)
+	</insert>
+
+	<update id="updateSurveySectionDetail">
+		/* LoySurveyMapper.updateSurveySectionDetail */
+		UPDATE LOY.LOY_SURV_SECT
+		SET MODIFY_BY     = #{empId}
+		  , MODIFY_DATE   = SYSDATE
+		  , SECT_NO       = #{sectionNo}
+		  , SECT_CONTENTS = #{sectionContents}
+		  , LAST_YN       = COALESCE(#{lastFlag}, 'N')
+		WHERE RID = #{ridSurveySection}
+	</update>
+
+	<update id="deleteSurveySectionDetail">
+		/* LoySurveyMapper.deleteSurveySectionDetail */
+		UPDATE LOY.LOY_SURV_SECT
+		SET MODIFY_BY     = #{empId}
+		, MODIFY_DATE   = SYSDATE
+		, FLAG          = 0
+		WHERE 1 = 1
+		<if test="ridSurvey != null">
+			AND RID_SURV_MST = #{ridSurvey}
+		</if>
+
+		<if test="ridSurveySection != null">
+			AND RID = #{ridSurveySection}
+		</if>
+	</update>
+
+	<select id="selectSurveyItemList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemListResDto">
+		/* LoySurveyMapper.selectSurveyItemList */
+		SELECT LSI.RID                                           AS ridSurveyItem
+			 , LSI.ITEM_NO                                       AS itemNo
+			 , LSI.ITEM_TITLE                                    AS itemTitle
+			 , LSI.FIELD_TYPE_CD                                 AS fieldTypeCode
+			 , LSI.GIVE_OFR_YN                                   AS giveOfferFlag
+			 , LSI.OPT_YN                                        AS optionalFlag
+			 , E.NAME                                            AS modifyBy
+			 , TO_CHAR(LSI.MODIFY_DATE, 'YYYY-MM-DD HH24:MI:SS') AS modifyDate
+			 , ${strColumn}
+		FROM LOY.LOY_SURV_ITEM LSI
+				 LEFT JOIN COM.CRM_USER      CU  ON LSI.MODIFY_BY = CU.RID AND CU.FLAG = 1
+				 LEFT JOIN COM.EMPLOYEE      E   ON CU.ID_EMPLOYEE = E.ID AND E.FLAG = 1
+		WHERE LSI.FLAG          = 1
+		  AND LSI.RID_SURV_SECT = #{ridSurveySection}
+		  AND ${strCondWhere}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectSurveyItemDetail" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemListResDto">
+		/* LoySurveyMapper.selectSurveyItemDetail */
+		SELECT LSI.RID           AS ridSurveyItem
+			 , LSI.ITEM_NO       AS itemNo
+			 , LSI.ITEM_TITLE    AS itemTitle
+			 , LSI.FIELD_TYPE_CD AS fieldTypeCode
+			 , LSI.USE_NA        AS naFlag
+			 , LSI.START_NUM     AS startNum
+			 , LSI.END_NUM       AS endNum
+			 , LSI.IMAGE_DESC    AS imageContents
+			 , LSI.GIVE_OFR_YN   AS giveOfferFlag
+			 , LSI.OPT_YN        AS optionalFlag
+			 , I.ID              AS ridImage
+			 , I.IMAGE_FOLDER    AS imageFolder
+			 , I.IMAGE_FILE_NAME AS imageFileName
+			 , I.IMAGE_FILE_TYPE AS imageFileType
+		FROM LOY.LOY_SURV_ITEM LSI
+				 LEFT JOIN COM.IMAGE         I   ON LSI.RID = I.PARENT_ID AND I.FLAG = 1
+		WHERE LSI.FLAG = 1
+		  AND LSI.RID = #{ridSurveyItem}
+	</select>
+
+	<select id="selectExistsGiveOfferFlagItem" resultType="java.lang.Integer">
+		/* LoySurveyMapper.selectExistsGiveOfferFlagItem */
+		SELECT COUNT(LSI.RID) AS cnt
+		FROM LOY.LOY_SURV_ITEM LSI
+		WHERE LSI.FLAG        = 1
+		  AND LSI.RID         = #{ridSurveyItem}
+		  AND LSI.GIVE_OFR_YN = 'Y'
+	</select>
+
+	<insert id="insertSurveyItemDetail">
+		<selectKey keyProperty="ridSurveyItem" resultType="java.lang.String" order="BEFORE">
+			/* LoySurveyMapper.insertSurveyItemDetail#selectKey */
+			SELECT COM.GETNEWID('A')    AS ridSurveyItem
+			FROM DUAL
+		</selectKey>
+
+		/* LoySurveyMapper.insertSurveyItemDetail */
+		INSERT INTO LOY.LOY_SURV_ITEM (
+		RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_SURV_SECT
+		, ITEM_NO
+		, ITEM_TITLE
+		, FIELD_TYPE_CD
+		, USE_NA
+		, START_NUM
+		, END_NUM
+		, IMAGE_DESC
+		, GIVE_OFR_YN
+		, OPT_YN
+		) VALUES (
+		#{ridSurveyItem}
+		, #{empId}
+		, #{empId}
+		, SYSDATE
+		, SYSDATE
+		, 1
+		, #{ridSurveySection}
+		, #{itemNo}
+		, #{itemTitle}
+		, #{fieldTypeCode}
+		, #{naFlag}
+		, #{startNum}
+		, #{endNum}
+		, #{imageContents}
+		, #{giveOfferFlag}
+		, #{optionalFlag}
+		)
+	</insert>
+
+	<update id="updateSurveyItemDetail">
+		/* LoySurveyMapper.updateSurveyItemDetail */
+		UPDATE LOY.LOY_SURV_ITEM
+		SET MODIFY_BY     = #{empId}
+		  , MODIFY_DATE   = SYSDATE
+		  , ITEM_NO       = #{itemNo}
+		  , ITEM_TITLE    = #{itemTitle}
+		  , FIELD_TYPE_CD = #{fieldTypeCode}
+		  , USE_NA        = #{naFlag}
+		  , START_NUM     = #{startNum}
+		  , END_NUM       = #{endNum}
+		  , IMAGE_DESC    = #{imageContents}
+		  , GIVE_OFR_YN   = #{giveOfferFlag}
+		  , OPT_YN        = #{optionalFlag}
+		WHERE RID = #{ridSurveyItem}
+	</update>
+
+	<update id="deleteSurveyItemDetail">
+		/* LoySurveyMapper.deleteSurveyItemDetail */
+		UPDATE LOY.LOY_SURV_ITEM
+		SET MODIFY_BY   = #{empId}
+		  , MODIFY_DATE = SYSDATE
+		  , FLAG        = '0'
+		WHERE RID = #{ridSurveyItem}
+	</update>
+
+	<update id="deleteSurveyItemAll">
+		/* LoySurveyMapper.deleteSurveyItemDetail */
+		UPDATE LOY.LOY_SURV_ITEM
+		SET MODIFY_BY   = #{empId}
+		, MODIFY_DATE = SYSDATE
+		, FLAG        = '0'
+		WHERE 1 = 1
+		<if test="ridSurvey != null">
+			AND RID_SURV_SECT IN (
+			SELECT RID
+			FROM LOY.LOY_SURV_SECT
+			WHERE FLAG = 1
+			AND RID_SURV_MST = #{ridSurvey}
+			)
+		</if>
+
+		<if test="ridSurveySection != null">
+			AND RID_SURV_SECT IN (
+			SELECT RID
+			FROM LOY.LOY_SURV_SECT
+			WHERE RID = #{ridSurveySection}
+			)
+		</if>
+	</update>
+
+	<select id="selectSurveyItemAttrList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemAttrListResDto">
+		/* LoySurveyMapper.selectSurveyItemAttrList */
+		SELECT LSA.RID                                           AS ridSurveyItemAttr
+			 , LSA.ATTR_NO                                       AS itemAttrNo
+			 , LSA.ATTR_VAL                                      AS itemAttrValue
+			 , LSA.TGT_SECT_NO                                   AS targetSectionNo
+			 , E.NAME                                            AS modifyBy
+			 , TO_CHAR(LSA.MODIFY_DATE, 'YYYY-MM-DD HH24:MI:SS') AS modifyDate
+			 , ${strColumn}
+		FROM LOY.LOY_SURV_ATTR LSA
+				 LEFT JOIN COM.CRM_USER      CU ON LSA.MODIFY_BY = CU.RID AND CU.FLAG = 1
+				 LEFT JOIN COM.EMPLOYEE      E  ON CU.ID_EMPLOYEE = E.ID AND E.FLAG = 1
+		WHERE LSA.FLAG = 1
+		  AND LSA.RID_SURV_ITEM = #{ridSurveyItem}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectSurveyItemAttrDetail" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemAttrListResDto">
+		/* LoySurveyMapper.selectSurveyItemAttrDetail */
+		SELECT LSA.RID         AS ridSurveyItemAttr
+			 , LSA.ATTR_NO     AS itemAttrNo
+			 , LSA.ATTR_VAL    AS itemAttrValue
+			 , LSA.TGT_SECT_NO AS targetSectionNo
+			 , CASE LSI.FIELD_TYPE_CD
+				   WHEN 'DROP_SCORE' THEN 'Y'
+				   ELSE 'N'
+			END             AS readonlyFlag
+		FROM LOY.LOY_SURV_ITEM LSI
+				 JOIN LOY.LOY_SURV_ATTR LSA ON LSI.RID = LSA.RID_SURV_ITEM AND LSA.FLAG = 1
+				 LEFT JOIN COM.CRM_USER      CU  ON LSA.MODIFY_BY = CU.RID AND CU.FLAG = 1
+				 LEFT JOIN COM.EMPLOYEE      E   ON CU.ID_EMPLOYEE = E.ID AND E.FLAG = 1
+		WHERE LSI.FLAG = 1
+		  AND LSA.RID  = #{ridSurveyItemAttr}
+	</select>
+
+	<select id="selectExistsNaItemAttr" resultType="java.lang.Integer">
+		/* LoySurveyMapper.selectExistsNaItemAttr */
+		SELECT COUNT(LSA.RID) AS cnt
+		FROM LOY.LOY_SURV_ITEM LSI
+				 JOIN LOY.LOY_SURV_ATTR LSA ON LSI.RID = LSA.RID_SURV_ITEM AND LSA.FLAG = 1
+		WHERE LSI.FLAG    = 1
+		  AND LSI.RID     = #{ridSurveyItem}
+		  AND LSA.ATTR_NO = '99'
+	</select>
+
+	<select id="selectExistsGiveOfferFlagItemAttr" resultType="java.lang.Integer">
+		/* LoySurveyMapper.selectExistsGiveOfferFlagItemAttr */
+		SELECT COUNT(LSA.RID) AS cnt
+		FROM LOY.LOY_SURV_ITEM LSI
+				 JOIN LOY.LOY_SURV_ATTR LSA ON LSI.RID = LSA.RID_SURV_ITEM AND LSA.FLAG = 1
+		WHERE LSI.FLAG        = 1
+		  AND LSI.RID         = #{ridSurveyItem}
+		  AND LSA.GIVE_OFR_YN = 'Y'
+	</select>
+
+	<insert id="insertSurveyItemAttrDetail">
+		<selectKey keyProperty="ridSurveyItemAttr" resultType="java.lang.String" order="BEFORE">
+			/* LoySurveyMapper.insertSurveyItemAttrDetail#selectKey */
+			SELECT COM.GETNEWID('A') AS ridSurveyItemAttr
+			FROM DUAL
+		</selectKey>
+
+		/* LoySurveyMapper.insertSurveyItemAttrDetail */
+		INSERT INTO LOY.LOY_SURV_ATTR (
+		RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_SURV_ITEM
+		, ATTR_NO
+		, ATTR_VAL
+		, TGT_SECT_NO
+		, GIVE_OFR_YN
+		) VALUES (
+		#{ridSurveyItemAttr}
+		, #{empId}
+		, #{empId}
+		, SYSDATE
+		, SYSDATE
+		, 1
+		, #{ridSurveyItem}
+		, #{itemAttrNo}
+		, #{itemAttrValue}
+		, #{targetSectionNo}
+		, #{giveOfferFlag}
+		)
+	</insert>
+
+	<update id="insertSurveyItemAttrAll">
+		/* LoySurveyMapper.insertSurveyItemAttrAll */
+		INSERT ALL
+		<foreach collection="list" item="item" separator=" ">
+			INTO LOY.LOY_SURV_ATTR (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, RID_SURV_ITEM
+			, ATTR_NO
+			, ATTR_VAL
+			, TGT_SECT_NO
+			, GIVE_OFR_YN
+			) VALUES (
+			COM.GETNEWID('A')
+			, #{item.empId}
+			, #{item.empId}
+			, SYSDATE
+			, SYSDATE
+			, 1
+			, #{item.ridSurveyItem}
+			, #{item.itemAttrNo}
+			, #{item.itemAttrValue}
+			, #{item.targetSectionNo}
+			, #{item.giveOfferFlag}
+			)
+		</foreach>
+		SELECT 1
+		FROM DUAL
+	</update>
+
+	<update id="updateSurveyItemAttrDetail">
+		/* LoySurveyMapper.updateSurveyItemAttrDetail */
+		UPDATE LOY.LOY_SURV_ATTR
+		SET MODIFY_BY   = #{empId}
+		  , MODIFY_DATE = SYSDATE
+		  , ATTR_NO     = #{itemAttrNo}
+		  , ATTR_VAL    = #{itemAttrValue}
+		  , TGT_SECT_NO = #{targetSectionNo}
+		  , GIVE_OFR_YN = #{giveOfferFlag}
+		WHERE RID = #{ridSurveyItemAttr}
+	</update>
+
+	<update id="deleteSurveyItemAttrDetail">
+		/* LoySurveyMapper.deleteSurveyItemAttrDetail */
+		UPDATE LOY.LOY_SURV_ATTR
+		SET MODIFY_BY   = #{empId}
+		  , MODIFY_DATE = SYSDATE
+		  , FLAG        = '0'
+		WHERE RID = #{ridSurveyItemAttr}
+	</update>
+
+	<update id="deleteSurveyItemAttrAll">
+		/* LoySurveyMapper.deleteSurveyItemAttrAll */
+		UPDATE LOY.LOY_SURV_ATTR
+		SET MODIFY_BY   = #{empId}
+		, MODIFY_DATE = SYSDATE
+		, FLAG        = '0'
+		WHERE 1 = 1
+		<if test="ridSurvey != null">
+			AND RID_SURV_ITEM IN (
+			SELECT LSI.RID
+			FROM LOY.LOY_SURV_SECT LSS
+			JOIN LOY.LOY_SURV_ITEM LSI ON LSS.RID = LSI.RID_SURV_SECT AND LSI.FLAG = 1
+			WHERE LSS.FLAG = 1
+			AND LSS.RID_SURV_MST = #{ridSurvey}
+			)
+		</if>
+
+		<if test="ridSurveySection != null">
+			AND RID_SURV_ITEM IN (
+			SELECT RID
+			FROM LOY.LOY_SURV_ITEM
+			WHERE RID_SURV_SECT = #{ridSurveySection}
+			)
+		</if>
+
+		<if test="ridSurveyItem != null">
+			AND RID_SURV_ITEM = #{ridSurveyItem}
+		</if>
+	</update>
+
+	<select id="selectSurveyMemberList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyMemberListResDto">
+		/* LoySurveyMapper.selectSurveyMemberList */
+		WITH VW_SURV_MBR AS (
+			SELECT LSM.RID              AS RID_SURV_MST
+				 , LSB.RID_MBR          AS RID_MBR
+				 , MAX(LSB.CREATE_DATE) AS CREATE_DATE
+			FROM LOY.LOY_SURV_MST LSM
+					 JOIN LOY.LOY_SURV_MBR LSB ON LSM.RID = LSB.RID_SURV_MST AND LSB.FLAG = 1
+			WHERE LSM.FLAG = 1
+			  AND LSM.RID = #{ridSurvey}
+			GROUP BY LSM.RID, LSB.RID_MBR
+		)
+		SELECT Z.RID_MBR AS ridSurveyMember
+			 , Z.MBR_NO  AS memberNo
+			 , Z.CUST_NM AS customerName
+			 , Z.HHP     AS mobilePhoneNumber
+			 , Z.SLTD_DT AS selectedDate
+			 , Z.JOIN_YN AS joinedFlag
+			 , Z.JOIN_DT AS joinedDate
+			 , ${strColumn}
+		FROM (
+				 SELECT LSST.RID_MBR                                            AS RID_MBR
+					  , LM.MBR_NO                                               AS MBR_NO
+					  , LC.CUST_NM                                              AS CUST_NM
+					  , LC.HHP                                                  AS HHP
+					  , TO_CHAR(LSST.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS')      AS SLTD_DT
+					  , CASE WHEN VSM.CREATE_DATE IS NULL THEN 'N' ELSE 'Y' END AS JOIN_YN
+					  , TO_CHAR(VSM.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS')       AS JOIN_DT
+				 FROM LOY.LOY_SURV_MST      LSM
+						  JOIN LOY.LOY_SURV_SEND_TGT LSST ON LSM.RID = LSST.RID_SURV_MST AND LSST.FLAG = 1
+						  JOIN LOY.LOY_MBR           LM   ON LSST.RID_MBR = LM.RID AND LM.FLAG = 1
+						  JOIN LOY.LOY_CUST          LC   ON LM.RID_CUST = LC.RID AND LC.FLAG = 1
+						  LEFT JOIN VW_SURV_MBR           VSM  ON LSM.RID = VSM.RID_SURV_MST AND LSST.RID_MBR = VSM.RID_MBR
+				 WHERE LSM.RID = #{ridSurvey}
+			 ) Z
+		WHERE ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="clearSurveyMemberMaskingDetail" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyMemberListResDto">
+		/* LoySurveyMapper.clearSurveyMemberMaskingDetail */
+		SELECT LC.CUST_NM AS unmaskingCustomerName
+			 , LC.HHP     AS unmaskingMobilePhoneNumber
+		FROM LOY.LOY_MBR  LM
+				 JOIN LOY.LOY_CUST LC ON LM.RID_CUST = LC.RID AND LC.FLAG = 1
+		WHERE LM.FLAG = 1
+		  AND LM.RID = #{ridMember}
+	</select>
+
+	<select id="selectSurveyOfferList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyOfferListResDto">
+		/* LoySurveyMapper.selectSurveyOfferList */
+		SELECT LSB.RID         AS ridSurveyOffer
+			 , LO.RID          AS ridOffer
+			 , LSB.TITLE       AS offerTitle
+			 , LO.OFR_NO       AS offerNo
+			 , LO.OFR_NM       AS offerName
+			 , LSB.OFR_CNT     AS offerCount
+			 , LSB.VALID_ST_DD AS offerValidStartDate
+			 , E.NAME          AS createBy
+			 , TO_CHAR(LSB.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS createDate
+			 , ${strColumn}
+		FROM LOY.LOY_SURV_BENF LSB
+				 JOIN LOY.LOY_OFR       LO ON LSB.RID_OFR = LO.RID AND LO.FLAG = 1
+				 LEFT JOIN COM.CRM_USER      CU ON CU.RID = LSB.CREATE_BY AND CU.FLAG = 1
+				 LEFT JOIN COM.EMPLOYEE      E  ON E.ID = CU.ID_EMPLOYEE AND E.FLAG = 1
+		WHERE LSB.FLAG = 1
+		  AND LSB.RID_SURV_MST = #{ridSurvey}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectSurveyOfferDetail" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyOfferListResDto">
+		/* LoySurveyMapper.selectSurveyOfferDetail */
+		SELECT LSB.RID         AS ridSurveyOffer
+			 , LO.RID          AS ridOffer
+			 , LSB.TITLE       AS offerTitle
+			 , LO.OFR_NO       AS offerNo
+			 , LO.OFR_NM       AS offerName
+			 , LSB.OFR_CNT     AS offerCount
+			 , LSB.VALID_ST_DD AS offerValidStartDate
+		FROM LOY.LOY_SURV_BENF LSB
+				 JOIN LOY.LOY_OFR       LO ON LSB.RID_OFR = LO.RID AND LO.FLAG = 1
+		WHERE LSB.FLAG = 1
+		  AND LSB.RID  = #{ridSurveyOffer}
+	</select>
+
+	<insert id="insertSurveyOfferDetail">
+		<selectKey keyProperty="ridSurveyOffer" resultType="java.lang.String" order="BEFORE">
+			/* LoySurveyMapper.insertSurveyOfferDetail#selectKey */
+			SELECT COM.GETNEWID('A') AS ridSurveyItemAttr
+			FROM DUAL
+		</selectKey>
+
+		/* LoySurveyMapper.insertSurveyOfferDetail */
+		INSERT INTO LOY.LOY_SURV_BENF (
+		RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, RID_SURV_MST
+		, TITLE
+		, RID_OFR
+		, OFR_CNT
+		, VALID_ST_DD
+		) VALUES (
+		#{ridSurveyOffer}
+		, #{empId}
+		, #{empId}
+		, SYSDATE
+		, SYSDATE
+		, #{ridSurvey}
+		, #{offerTitle}
+		, #{ridOffer}
+		, #{offerCount}
+		, #{offerValidStartDate}
+		)
+	</insert>
+
+	<update id="updateSurveyOfferDetail">
+		/* LoySurveyMapper.updateSurveyOfferDetail */
+		UPDATE LOY.LOY_SURV_BENF
+		SET MODIFY_BY   = #{empId}
+		  , MODIFY_DATE = SYSDATE
+		  , TITLE       = #{offerTitle}
+		  , RID_OFR     = #{ridOffer}
+		  , OFR_CNT     = #{offerCount}
+		  , VALID_ST_DD = #{offerValidStartDate}
+		WHERE RID = #{ridSurveyOffer}
+	</update>
+
+	<update id="deleteSurveyOfferDetail">
+		/* LoySurveyMapper.deleteSurveyOfferDetail */
+		UPDATE LOY.LOY_SURV_BENF
+		SET MODIFY_BY   = #{empId}
+		  , MODIFY_DATE = SYSDATE
+		  , FLAG        = '0'
+		WHERE RID = #{ridSurveyOffer}
+	</update>
+
+	<update id="deleteSurveyOfferAll">
+		/* LoySurveyMapper.deleteSurveyOfferDetail */
+		UPDATE LOY.LOY_SURV_BENF
+		SET MODIFY_BY   = #{empId}
+		  , MODIFY_DATE = SYSDATE
+		  , FLAG        = '0'
+		WHERE RID_SURV_MST = #{ridSurvey}
+	</update>
+
+	<update id="deleteSurveyMemberAll">
+		/* LoySurveyMapper.deleteSurveyMemberAll */
+		UPDATE LOY.LOY_SURV_MBR
+		SET MODIFY_BY   = #{empId}
+		  , MODIFY_DATE = SYSDATE
+		  , FLAG        = '1'
+		WHERE RID_SURV_MST = #{ridSurvey}
+	</update>
+
+	<select id="selectSurveyResultSummary" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyResultSummaryResDto">
+		/* LoySurveyMapper.selectSurveyResultSummary */
+		SELECT Z.TOT_CNT                   AS totalCount
+			 , Z.ENT_CNT                   AS enterCount
+			 , CASE WHEN Z.TOT_CNT = 0 THEN 0
+					ELSE Z.ENT_CNT / Z.TOT_CNT
+			END                         AS enterRate
+		FROM (
+				 SELECT (SELECT COUNT(RID_MBR) FROM LOY.LOY_SURV_SEND_TGT WHERE RID_SURV_MST = SM.RID)     AS TOT_CNT
+					  , (SELECT COUNT(DISTINCT RID_MBR) FROM LOY.LOY_SURV_MBR WHERE RID_SURV_MST = SM.RID) AS ENT_CNT
+				 FROM LOY.LOY_SURV_MST SM
+				 WHERE SM.FLAG = 1
+				   AND SM.RID  = #{rid}
+			 ) Z
+	</select>
+
+	<select id="selectSurveyResultList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyResultListResDto">
+		/* LoySurveyMapper.selectSurveyResultList */
+		SELECT S.SECT_NO         AS sectionNo
+			 , I.ITEM_NO         AS itemNo
+			 , IA.ATTR_NO        AS itemAttrNo
+			 , I.ITEM_TITLE      AS itemTitle
+			 , I.FIELD_TYPE_CD   AS fieldTypeCode
+			 , IA.ATTR_VAL       AS answerValue
+			 , COUNT(MR.RID_MBR) AS answerCount
+			 , ${strColumn}
+		FROM LOY.LOY_SURV_MST  MT
+				 JOIN LOY.LOY_SURV_SECT S  ON MT.RID = S.RID_SURV_MST AND S.FLAG = 1
+				 JOIN LOY.LOY_SURV_ITEM I  ON S.RID = I.RID_SURV_SECT AND I.FLAG = 1
+				 LEFT JOIN LOY.LOY_SURV_ATTR IA ON I.RID = IA.RID_SURV_ITEM AND IA.FLAG = 1
+				 LEFT JOIN LOY.LOY_SURV_MBR  MR ON MT.RID = MR.RID_SURV_MST AND MR.FLAG = 1 AND S.RID = MR.RID_SURV_SECT AND I.RID = MR.RID_SURV_ITEM AND COALESCE(IA.RID, 'X') = COALESCE(MR.RID_SURV_ATTR, 'X')
+		WHERE MT.FLAG = 1
+		  AND MT.RID  = #{rid}
+		GROUP BY S.SECT_NO, I.ITEM_NO, IA.ATTR_NO, I.ITEM_TITLE, I.FIELD_TYPE_CD, IA.ATTR_VAL
+		ORDER BY S.SECT_NO, I.ITEM_NO, IA.ATTR_NO
+			${strEndPaging}
+	</select>
+
+	<select id="selectSurveyOfferType" resultType="java.lang.String">
+		/* LoySurveyMapper.selectSurveyOfferType */
+		SELECT O.OFR_TYPE AS offerType
+		FROM LOY.LOY_SURV_MST    M
+				 JOIN LOY.LOY_PRUL_AC2SUR PAS ON M.RID = PAS.RID_SURV AND PAS.FLAG = 1
+				 JOIN LOY.LOY_PROM        P   ON PAS.RID_PROM = P.RID AND P.FLAG = 1
+				 JOIN LOY.LOY_OFR         O   ON P.RID_OFR = O.RID AND O.FLAG = 1
+		WHERE M.FLAG = 1
+		  AND M.RID  = #{rid}
+	</select>
+
+	<select id="selectSurveyResultDetailHeaderList" resultType="com.icignal.loyalty.survey.dto.vo.LoySurveyResultDetailHeaderVo">
+		/* LoySurveyMapper.selectSurveyResultDetailHeaderList */
+		SELECT 'HEADER_' || S.SECT_NO || '_' || I.ITEM_NO AS headerKey
+			 , I.ITEM_TITLE                               AS headerTitle
+		FROM LOY.LOY_SURV_MST  M
+				 JOIN LOY.LOY_SURV_SECT S ON M.RID = S.RID_SURV_MST AND S.FLAG = 1
+				 JOIN LOY.LOY_SURV_ITEM I ON S.RID = I.RID_SURV_SECT AND I.FLAG = 1
+		WHERE M.FLAG = 1
+		  AND M.RID  = #{rid}
+		ORDER BY S.SECT_NO, I.ITEM_NO
+	</select>
+
+	<select id="selectSurveyResultDetailList" resultType="com.icignal.loyalty.survey.dto.response.LoySurveyResultDetailListResDto">
+		/* LoySurveyMapper.selectSurveyResultDetailHeaderList */
+		WITH VW_SURV_RST AS (
+		SELECT ROW_NUMBER() OVER (ORDER BY Z.REG_DATE) AS ORDER_NO
+		, Z.RID_SURV_MST                          AS RID_SURV_MST
+		, Z.RID_MBR                               AS RID_MBR
+		, Z.REG_DATE                              AS REG_DATE
+		<foreach collection="headerList" item="headerDetail">
+			, ${headerDetail.headerKey} AS ${headerDetail.headerKey}
+		</foreach>
+		FROM (
+		SELECT Z.RID_SURV_MST  AS RID_SURV_MST
+		, Z.RID_MBR       AS RID_MBR
+		, MIN(Z.REG_DATE) AS REG_DATE
+		<foreach collection="headerList" item="headerDetail">
+			, MAX(CASE WHEN HDR_KEY = #{headerDetail.headerKey} THEN ANS_VALUE END) AS ${headerDetail.headerKey}
+		</foreach>
+		FROM (
+		SELECT M.RID                                                                              AS RID_SURV_MST
+		, MR.RID_MBR                                                                         AS RID_MBR
+		, 'HEADER_' || S.SECT_NO || '_' || I.ITEM_NO                                         AS HDR_KEY
+		, MIN(MR.CREATE_DATE)                                                                AS REG_DATE
+		, LISTAGG(MR.ANS_VALUE, ',') WITHIN GROUP (ORDER BY S.SECT_NO, I.ITEM_NO, A.ATTR_NO) AS ANS_VALUE
+		FROM LOY.LOY_SURV_MST  M
+		JOIN LOY.LOY_SURV_MBR  MR ON M.RID = MR.RID_SURV_MST AND MR.FLAG = 1
+		JOIN LOY.LOY_SURV_SECT S  ON M.RID = S.RID_SURV_MST AND MR.RID_SURV_SECT = S.RID AND S.FLAG = 1
+		JOIN LOY.LOY_SURV_ITEM I  ON S.RID = I.RID_SURV_SECT AND MR.RID_SURV_ITEM = I.RID AND I.FLAG = 1
+		LEFT JOIN LOY.LOY_SURV_ATTR A  ON I.RID = A.RID_SURV_ITEM AND MR.RID_SURV_ATTR = A.RID AND A.FLAG = 1
+		WHERE M.FLAG = 1
+		AND M.RID = #{rid}
+		GROUP BY M.RID, MR.RID_MBR, S.SECT_NO, I.ITEM_NO
+		) Z
+		GROUP BY Z.RID_SURV_MST, Z.RID_MBR, Z.REG_DATE
+		) Z
+		)
+		, VW_PROD AS (
+		SELECT M.RID                                 AS RID_SURV_MST
+		, SST.RID_MBR                           AS RID_MBR
+		, COALESCE(Z.PROD_NM, '--')             AS PROD_NM
+		, PH.TOT_SALE_AMT                       AS TOT_SALE_AMT
+		, PH.SALE_ACT_AMT                       AS SALE_ACT_AMT
+		, CAI.FG_STO_NM                         AS FG_STO_NM
+		, CAI.AREA1_NM                          AS AREA1_NM
+		, CAI.AREA2_NM                          AS AREA2_NM
+		, CAI.COMMRCL_NM                        AS COMMRCL_NM
+		, CAI.CHNL_NM                           AS CHNL_NM
+		, TO_CHAR(PH.SALE_END_DT, 'YYYY-MM-DD') AS SALES_DT
+		, CASE WHEN TO_CHAR(PH.SALE_END_DT, 'D') IN ('1', '7') THEN '주말'
+		ELSE '평일'
+		END                                   AS SALES_WEEKEND_TYPE
+		, TO_CHAR(PH.SALE_END_DT, 'DY')         AS SALES_WEEKEND
+		, TO_CHAR(PH.SALE_END_DT, 'HH24')
+		|| '시 ~ '
+		|| TO_CHAR(PH.SALE_END_DT + INTERVAL '1' HOUR, 'HH24')
+		|| '시'                               AS SALES_DATETIME_TYPE
+		, TO_CHAR(PH.SALE_END_DT, 'HH24:MI:SS') AS SALES_DATETIME
+		, SCD.MARK_NAME                         AS SALES_TYPE
+		FROM LOY.LOY_SURV_MST      M
+		JOIN LOY.LOY_SURV_SEND_TGT SST ON M.RID = SST.RID_SURV_MST AND SST.FLAG = 1
+		JOIN LOY.LOY_PUR_HEAD      PH ON SST.RID_MBR = PH.RID_MBR AND SST.RCPT_NO = PH.RCPT_NO AND PH.FLAG = 1
+		JOIN LOY.LOY_CHNL_ADD_INF  CAI ON PH.CHNL_NO = CAI.CHNL_NO AND CAI.FLAG = 1
+		JOIN (
+		SELECT PI.RID_PUR_HEAD AS RID_PUR_HEAD
+		, LISTAGG(P.PROD_NM, ',') WITHIN GROUP ( ORDER BY TO_NUMBER(PI.SEQ_NO) ) AS PROD_NM
+		FROM LOY.LOY_PUR_ITEM PI
+		LEFT JOIN LOY.LOY_PROD     P ON PI.RID_PROD = P.RID AND P.FLAG = 1
+		GROUP BY PI.RID_PUR_HEAD
+		)                            Z ON PH.RID = Z.RID_PUR_HEAD
+		LEFT JOIN COM.COMM_CODE         SCD ON PH.SALE_CHNL_TYPE_CD = SCD.CODE_NAME AND SCD.GROUP_CODE = 'LOY_SALE_CHNL_TYPE_CD' AND SCD.FLAG = 1 AND SCD.LANG = #{lang}
+		WHERE M.FLAG = 1
+		AND M.RID = #{rid}
+		)
+		<choose>
+			<when test='"P".equals(offerType)'>
+				, VW_HRT AS (
+				SELECT M.RID                                               AS RID_SURV_MST
+				, SST.RID_MBR                                         AS RID_MBR
+				, COALESCE(OPT.PNT_AMT, 0) - COALESCE(BPT.PNT_AMT, 0) AS PNT_AMT
+				FROM LOY.LOY_SURV_MST      M
+				JOIN LOY.LOY_SURV_SEND_TGT SST ON M.RID = SST.RID_SURV_MST AND SST.FLAG = 1
+				JOIN LOY.LOY_PNT_TXN       OPT ON SST.RID_MBR = OPT.RID_MBR AND SST.RCPT_NO = OPT.RCPT_NO AND OPT.FLAG = 1
+				LEFT JOIN LOY.LOY_PNT_TXN       BPT ON OPT.ORGN_APPR_NO = BPT.APPR_NO AND BPT.FLAG = 1
+				WHERE M.FLAG = 1
+				AND M.RID  = #{rid}
+				)
+			</when>
+			<when test='"D".equals(offerType)'>
+				, VW_CPN AS (
+				SELECT M.RID       AS RID_SURV_MST
+				, SST.RID_MBR AS RID_MBR
+				, CM.CPN_NO   AS CPN_NO
+				, C.CPN_NM    AS CPN_NM
+				FROM LOY.LOY_SURV_MST      M
+				JOIN LOY.LOY_SURV_SEND_TGT SST ON M.RID = SST.RID_SURV_MST AND SST.FLAG = 1
+				JOIN LOY.LOY_PRUL_AC2SUR   PAS ON M.RID = PAS.RID_SURV AND PAS.FLAG = 1
+				JOIN LOY.LOY_PROM          P   ON PAS.RID_PROM = P.RID AND P.FLAG = 1
+				JOIN LOY.LOY_OFR           O   ON P.RID_OFR = O.RID AND O.FLAG = 1
+				JOIN LOY.LOY_CPN_MBR       CM  ON SST.RID_MBR = CM.RID_MBR AND O.RID = CM.RID_OFR AND CM.FLAG = 1
+				JOIN LOY.LOY_CPN           C   ON CM.RID_CPN_M = C.RID AND C.FLAG = 1
+				WHERE M.FLAG = 1
+				AND M.RID  = #{rid}
+				)
+			</when>
+		</choose>
+		SELECT R.ORDER_NO                                                                     AS "no"
+		, M.MBR_NO                                                                       AS "memberNo"
+		, TO_CHAR(R.REG_DATE, 'YYYY-MM-DD HH24:MI:SS')                                   AS "joinDate"
+		, GCD.MARK_NAME                                                                  AS "genderCodeName"
+		, TO_CHAR(SYSDATE, 'YYYY') - TO_CHAR(TO_DATE(C.BIRTHDT, 'YYYYMMDD'), 'YYYY') + 1 AS "age"
+		, T.TIER_NM                                                                      AS "tierName"
+		, P.PROD_NM                                                                      AS "productNames"
+		, P.TOT_SALE_AMT                                                                 AS "salesTotalAmount"
+		, P.SALE_ACT_AMT                                                                 AS "salesActualAmount"
+		, P.FG_STO_NM                                                                    AS "storeType"
+		, P.AREA1_NM                                                                     AS "area1Name"
+		, P.AREA2_NM                                                                     AS "area2Name"
+		, P.COMMRCL_NM                                                                   AS "commercialName"
+		, P.CHNL_NM                                                                      AS "storeName"
+		, P.SALES_DT                                                                     AS "salesDate"
+		, P.SALES_WEEKEND_TYPE                                                           AS "salesWeekendType"
+		, P.SALES_WEEKEND                                                                AS "salesWeekend"
+		, P.SALES_DATETIME_TYPE                                                          AS "salesDateTimeType"
+		, P.SALES_DATETIME                                                               AS "salesDateTime"
+		, P.SALES_TYPE                                                                   AS "salesType"
+		<choose>
+			<when test='"P".equals(offerType)'>
+				, HRT.PNT_AMT                                                                    AS "heartAmount"
+				, NULL                                                                           AS "couponName"
+				, NULL                                                                           AS "couponNo"
+			</when>
+			<when test='"D".equals(offerType)'>
+				, NULL                                                                           AS "heartAmount"
+				, CPN.CPN_NM                                                                     AS "couponName"
+				, CPN.CPN_NO                                                                     AS "couponNo"
+			</when>
+		</choose>
+		<foreach collection="headerList" item="headerDetail">
+			, R.${headerDetail.headerKey}                                                    AS ${headerDetail.headerKey}
+		</foreach>
+		FROM VW_SURV_RST   R
+		JOIN LOY.LOY_MBR   M ON R.RID_MBR = M.RID AND M.FLAG = 1
+		JOIN LOY.LOY_CUST  C ON M.RID_CUST = C.RID AND C.FLAG = 1
+		JOIN LOY.LOY_TIERS T ON M.RID_TIER = T.RID AND T.FLAG = 1
+		LEFT JOIN VW_PROD       P ON R.RID_SURV_MST = P.RID_SURV_MST AND R.RID_MBR = P.RID_MBR
+		<choose>
+			<when test='"P".equals(offerType)'>
+				LEFT JOIN VW_HRT HRT ON R.RID_SURV_MST = HRT.RID_SURV_MST AND R.RID_MBR = HRT.RID_MBR
+			</when>
+			<when test='"D".equals(offerType)'>
+				LEFT JOIN VW_CPN CPN ON R.RID_SURV_MST = CPN.RID_SURV_MST AND R.RID_MBR = CPN.RID_MBR
+			</when>
+		</choose>
+		LEFT JOIN COM.COMM_CODE         GCD ON C.GEN_CD = GCD.CODE_NAME AND GCD.GROUP_CODE = 'LOY_GEN_CD' AND GCD.FLAG = 1 AND GCD.LANG = #{lang}
+		ORDER BY R.ORDER_NO
+		${strEndPaging}
+	</select>
+
+	<update id="insertSurveyDetailCopy">
+		<selectKey keyProperty="ridSurveyCopy,surveyNo" resultType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto" order="BEFORE">
+			/* LoySurveyMapper.insertSurveyDetail#selectKey */
+			SELECT COM.GETNEWID('A')    AS ridSurveyCopy
+			, LOY.FN_GET_SURV_NO() AS surveyNo
+			FROM DUAL
+		</selectKey>
+
+		/* LoySurveyMapper.insertSurveyDetailCopy */
+		INSERT INTO LOY.LOY_SURV_MST (
+		RID
+		, CREATE_BY
+		, CREATE_DATE
+		, MODIFY_BY
+		, MODIFY_DATE
+		, FLAG
+		, SURV_NO
+		, SURV_NM
+		, STAT_CD
+		, VALID_START_DATE
+		, VALID_END_DATE
+		, RID_PGM
+		, CONTENTS
+		, URL_WEB
+		, START_INFO_MSG
+		, END_INFO_MSG
+		)
+		SELECT #{ridSurveyCopy}     AS RID
+		, #{createBy}          AS CREATE_BY
+		, SYSDATE              AS CREATE_DATE
+		, #{modifyBy}          AS MODIFY_BY
+		, SYSDATE              AS MODIFY_DATE
+		, FLAG                 AS FLAG
+		, #{surveyNo}          AS SURV_NO
+		, (SURV_NM || ' Copy') AS SURV_NM
+		, 'W'
+		, VALID_START_DATE
+		, VALID_END_DATE
+		, RID_PGM
+		, CONTENTS
+		, NULL
+		, START_INFO_MSG
+		, END_INFO_MSG
+		FROM LOY.LOY_SURV_MST
+		WHERE FLAG = 1
+		AND RID = #{ridSurvey}
+	</update>
+
+	<select id="selectSurveySectionCopyRidList" resultType="com.icignal.loyalty.survey.dto.vo.LoySurveyCopyVo">
+		/* LoySurveyMapper.selectSurveySectionCopyRidList */
+		SELECT RID               AS originRid
+			 , COM.GETNEWID('A') AS copyRid
+		FROM LOY.LOY_SURV_SECT
+		WHERE FLAG         = 1
+		  AND RID_SURV_MST = #{ridSurvey}
+	</select>
+
+	<update id="insertSurveySectionCopy">
+		/* LoySurveyMapper.insertSurveySectionCopy */
+		INSERT INTO LOY.LOY_SURV_SECT (
+		CREATE_BY
+		, CREATE_DATE
+		, MODIFY_BY
+		, MODIFY_DATE
+		, FLAG
+		, RID
+		, RID_SURV_MST
+		, SECT_NO
+		, SECT_CONTENTS
+		, LAST_YN
+		)
+		SELECT #{createBy}      AS CREATE_BY
+		, SYSDATE          AS CREATE_DATE
+		, #{modifyBy}      AS MODIFY_BY
+		, SYSDATE          AS MDDIFY_DATE
+		, FLAG             AS FLAG
+		<foreach collection="ridSurveySectionCopyList" item="sectionCopyVo" open=", CASE" separator=" " close="END AS RID">
+			WHEN RID = #{sectionCopyVo.originRid} THEN #{sectionCopyVo.copyRid}
+		</foreach>
+		, #{ridSurveyCopy} AS RID_SURV_MST
+		, SECT_NO          AS SECT_NO
+		, SECT_CONTENTS    AS SECT_CONTENTS
+		, LAST_YN          AS LAST_YN
+		FROM LOY.LOY_SURV_SECT
+		WHERE FLAG         = 1
+		AND RID_SURV_MST = #{ridSurvey}
+	</update>
+
+	<select id="selectSurveyItemCopyRidList" resultType="com.icignal.loyalty.survey.dto.vo.LoySurveyCopyVo">
+		/* LoySurveyMapper.selectSurveyItemCopyRidList */
+		SELECT RID               AS originRid
+		, COM.GETNEWID('A') AS copyRid
+		FROM LOY.LOY_SURV_ITEM
+		WHERE FLAG = 1
+		<foreach collection="ridSurveySectionCopyList" item="sectionCopyVo" open="AND RID_SURV_SECT IN (" separator="," close=")">
+			#{sectionCopyVo.originRid}
+		</foreach>
+	</select>
+
+	<update id="insertSurveyItemCopy">
+		/* LoySurveyMapper.insertSurveyItemCopy */
+		INSERT INTO LOY.LOY_SURV_ITEM (
+		CREATE_BY
+		, CREATE_DATE
+		, MODIFY_BY
+		, MODIFY_DATE
+		, FLAG
+		, RID
+		, RID_SURV_SECT
+		, ITEM_NO
+		, ITEM_TITLE
+		, FIELD_TYPE_CD
+		, USE_NA
+		, START_NUM
+		, END_NUM
+		, IMAGE_DESC
+		, GIVE_OFR_YN
+		, OPT_YN
+		)
+		SELECT #{createBy} AS CREATE_BY
+		, SYSDATE     AS CREATE_DATE
+		, #{modifyBy} AS MODIFY_BY
+		, SYSDATE     AS MODIFY_DATE
+		, FLAG
+		<foreach collection="ridSurveyItemCopyList" item="itemCopyVo" open=", CASE" separator=" " close="END AS RID">
+			WHEN RID = #{itemCopyVo.originRid} THEN #{itemCopyVo.copyRid}
+		</foreach>
+		<foreach collection="ridSurveySectionCopyList" item="sectionCopyVo" open=", CASE" separator=" " close="END AS RID_SURV_SECT">
+			WHEN RID_SURV_SECT = #{sectionCopyVo.originRid} THEN #{sectionCopyVo.copyRid}
+		</foreach>
+		, ITEM_NO
+		, ITEM_TITLE
+		, FIELD_TYPE_CD
+		, USE_NA
+		, START_NUM
+		, END_NUM
+		, IMAGE_DESC
+		, GIVE_OFR_YN
+		, OPT_YN
+		FROM LOY.LOY_SURV_ITEM
+		WHERE FLAG = 1
+		<foreach collection="ridSurveySectionCopyList" item="sectionCopyVo" open="AND RID_SURV_SECT IN (" separator="," close=")">
+			#{sectionCopyVo.originRid}
+		</foreach>
+	</update>
+
+	<update id="insertSurveyItemAttrCopy">
+		/* LoySurveyMapper.insertSurveyItemAttrCopy */
+		INSERT INTO LOY.LOY_SURV_ATTR (
+		RID
+		, CREATE_BY
+		, CREATE_DATE
+		, MODIFY_BY
+		, MODIFY_DATE
+		, FLAG
+		, RID_SURV_ITEM
+		, ATTR_NO
+		, ATTR_VAL
+		, TGT_SECT_NO
+		, GIVE_OFR_YN
+		)
+		SELECT COM.GETNEWID('A') AS RID
+		, #{createBy}       AS CREATE_BY
+		, SYSDATE           AS CREATE_DATE
+		, #{modifyBy}       AS MODIFY_BY
+		, SYSDATE           AS MODIFY_DATE
+		, FLAG
+		<foreach collection="ridSurveyItemCopyList" item="itemCopyVo" open=", CASE" separator=" " close="END AS RID_SURV_ITEM">
+			WHEN RID_SURV_ITEM = #{itemCopyVo.originRid} THEN #{itemCopyVo.copyRid}
+		</foreach>
+		, ATTR_NO
+		, ATTR_VAL
+		, TGT_SECT_NO
+		, GIVE_OFR_YN
+		FROM LOY.LOY_SURV_ATTR
+		WHERE FLAG = 1
+		<foreach collection="ridSurveyItemCopyList" item="itemCopyVo" open="AND RID_SURV_ITEM IN (" separator="," close=")">
+			#{itemCopyVo.originRid}
+		</foreach>
+	</update>
+
+</mapper>

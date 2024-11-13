@@ -1,0 +1,1 @@
+package com.icignal.common.channelsend.dto.request;

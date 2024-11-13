@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:14:07 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.operation.mapper.KprDrillDownGroupMapper">
+	<!-- Drill Down Group DTO -->
+	<!--
+		Sorry, I can`t migrate	com.icignal.kepler.operation.dto.request.KprDrillDownGroupReqDto
+		See console output for further details 
+	-->
+	<!--
+		Sorry, I can`t migrate	com.icignal.kepler.operation.dto.response.KprDrillDownGroupResDto
+		See console output for further details 
+	-->
+
+	<select id="selectMetaServiceList" parameterType="com.icignal.kepler.operation.dto.request.KprDrillDownGroupReqDto" 
+													resultType="com.icignal.kepler.operation.dto.response.KprDrillDownGroupResDto">
+		/* KPRDrillDownGroup.selectMetaServiceList */
+		select id						as nodeId
+			 , coalesce(service_nm, '')	as nodeName
+			 , ''						as nodeParentId
+		  from anl.anl_db_inform
+		 where ${strSVCType}
+		   and flag		= 1
+	</select>
+
+	<select id="selectMetaTableColumnList" parameterType="com.icignal.kepler.operation.dto.request.KprDrillDownGroupReqDto" 
+														resultType="com.icignal.kepler.operation.dto.response.KprDrillDownGroupResDto">
+		/* KPRDrillDownGroup.selectMetaTableColumnList */
+		select tcl.node_id					as nodeId
+			 , coalesce(tcl.node_name, '')	as nodeName
+			 , tcl.node_par_id				as nodeParentId
+			 , tcl.node_type				as nodeType
+			 , tcl.table_column_id			as tableColumnId
+			 , tcl.tbl_id					as tableId
+		  from (
+			<!-- Schema 조회 -->
+			select atm.schma_nm	as node_id
+				 , atm.schma_nm as node_name
+				 , ''			as node_par_id
+				 , 'S'			as node_type
+				 , ''			as table_column_id
+				 , ''			as tbl_id
+			  from anl.anl_table_mst			atm
+			  join anl.anl_subject_db_rel	asd on atm.subject_db_rel_id = asd.id and asd.flag = 1
+			  join anl.anl_db_inform			adi on asd.db_id = adi.id and adi.flag = 1
+			 where ${strSVCType}
+			   and atm.flag			= 1
+			   and atm.tbl_type_cd	= 'DIM'
+			   and adi.id			= #{databaseId}
+			 group by atm.schma_nm
+
+			union all
+
+			<!-- Table 조회 -->
+			select t1.node_id			as node_id
+				 , t1.node_name			as node_name
+				 , t1.node_par_id		as node_par_id
+				 , t1.node_type			as node_type
+				 , t1.table_column_id	as table_column_id
+				 , t1.tbl_id			as tbl_id
+			  from (
+				select atm.id		as node_id
+					 , coalesce(atm.dp_nm, '')
+					   || ' ('
+					   || coalesce(atm.tbl_nm, '')
+					   || ')'		as node_name
+					 , atm.schma_nm	as node_par_id
+					 , 'T'			as node_type
+					 , atm.id		as table_column_id
+					 , atm.id		as tbl_id
+				  from anl.anl_table_mst		atm
+				  join anl.anl_subject_db_rel	asd on atm.subject_db_rel_id = asd.id and asd.flag = 1
+				  join anl.anl_db_inform		adi on asd.db_id = adi.id and adi.flag = 1
+				 where ${strSVCType}
+				   and atm.flag			= 1
+				   and atm.tbl_type_cd	= 'DIM'
+				   and adi.id			= #{databaseId}
+				 order by atm.tbl_nm asc
+			) t1
+
+			union all
+
+			<!-- Column 조회 -->
+			select t2.node_id			as node_id
+				 , t2.node_name			as node_name
+				 , t2.node_par_id		as node_par_id
+				 , t2.node_type			as node_type
+				 , t2.table_column_id	as table_column_id
+				 , t2.tbl_id			as tbl_id
+			  from (
+				select acm.id		as node_id
+					 , coalesce(acm.dp_nm, '')
+					   || ' ('
+					   || coalesce(acm.col_nm, '')
+					   || ')'		as node_name
+					 , atm.id		as node_par_id
+					 , 'C'			as node_type
+					 , acm.id		as table_column_id
+					 , atm.id		as tbl_id
+				  from anl.anl_column_mst		acm
+				  join anl.anl_table_mst		atm on acm.tbl_id = atm.id and atm.flag = 1
+				  join anl.anl_subject_db_rel	asd on atm.subject_db_rel_id = asd.id and asd.flag = 1
+				  join anl.anl_db_inform		adi on asd.db_id = adi.id and adi.flag = 1
+				 where ${strSVCType}
+				   and acm.flag			= 1
+				   and atm.tbl_type_cd	= 'DIM'
+				   and adi.id			= #{databaseId}
+				 order by acm.seq asc
+			) t2
+		) tcl
+	</select>
+
+	<select id="selectDrillDownGroupList" parameterType="com.icignal.kepler.operation.dto.request.KprDrillDownGroupReqDto" 
+														resultType="com.icignal.kepler.operation.dto.response.KprDrillDownGroupResDto">
+		/* KPRDrillDownGroup.selectDrillDownGroupList */
+		select dgc.node_id				as nodeId
+			 , coalesce(dgc.node_name, '')	as nodeName
+			 , dgc.node_par_id			as nodeParentId
+			 , dgc.node_lvl				as nodeLevel
+			 , dgc.drilldown_group_id	as drillDownGroupId
+			 , dgc.tbl_col_id			as tableColumnId
+			 , dgc.tbl_id				as tableId
+		  from (
+			select '' || '_' || adg.id		as node_id
+				 , adg.drilldown_group_nm	as node_name
+				 , ''						as node_par_id
+				 , 0						as node_lvl
+				 , adg.id					as drilldown_group_id
+				 , ''						as tbl_col_id
+				 , adg.tbl_id				as tbl_id
+			  from anl.anl_drilldown_group	adg
+		 	 where ${strSVCType}
+		 	   and adg.flag		= 1
+		 	   and adg.tbl_id	= #{tableId}
+
+			union all
+
+			select adg.id || '_' || adg.lv1_col_id	as node_id
+				 , coalesce(acm.dp_nm, '') || ' (' || coalesce(acm.col_nm, '') || ')'				as node_name
+				 , '' || '_' || adg.id			as node_par_id
+				 , 1					as node_lvl
+				 , adg.id				as drilldown_group_id
+				 , adg.lv1_col_id		as tbl_col_id
+				 , adg.tbl_id			as tbl_id
+			  from anl.anl_drilldown_group	adg
+			  join anl.anl_column_mst		acm on adg.lv1_col_id = acm.id and acm.flag = 1
+		 	 where ${strSVCType}
+		 	   and adg.flag		= 1
+		 	   and adg.tbl_id	= #{tableId}
+
+			union all
+
+			select adg.lv1_col_id
+				   || '_'
+				   || adg.lv2_col_id	as node_id
+				 , coalesce(acm.dp_nm, '')
+				   || ' ('
+				   || coalesce(acm.col_nm, '')
+				   || ')'				as node_name
+				 , adg.id
+				   || '_'
+				   || adg.lv1_col_id	as node_par_id
+				 , 2					as node_lvl
+				 , adg.id				as drilldown_group_id
+				 , adg.lv2_col_id		as tbl_col_id
+				 , adg.tbl_id			as tbl_id
+			  from anl.anl_drilldown_group	adg
+			  join anl.anl_column_mst		acm on adg.lv2_col_id = acm.id and acm.flag = 1
+		 	 where ${strSVCType}
+		 	   and adg.flag		= 1
+		 	   and adg.tbl_id	= #{tableId}
+
+			union all
+
+			select adg.lv2_col_id
+				   || '_'
+				   || adg.lv3_col_id	as node_id
+				 , coalesce(acm.dp_nm, '')
+				   || ' ('
+				   || coalesce(acm.col_nm, '')
+				   || ')'				as node_name
+				 , adg.lv1_col_id
+				   || '_'
+				   || adg.lv2_col_id	as node_par_id
+				 , 3					as node_lvl
+				 , adg.id				as drilldown_group_id
+				 , adg.lv3_col_id		as tbl_col_id
+				 , adg.tbl_id			as tbl_id
+			  from anl.anl_drilldown_group	adg
+			  join anl.anl_column_mst		acm on adg.lv3_col_id = acm.id and acm.flag = 1
+		 	 where ${strSVCType}
+		 	   and adg.flag		= 1
+		 	   and adg.tbl_id	= #{tableId}
+
+			union all
+
+			select adg.lv3_col_id
+				   || '_'
+				   || adg.lv4_col_id	as node_id
+				 , coalesce(acm.dp_nm, '')
+				   || ' ('
+				   || coalesce(acm.col_nm, '')
+				   || ')'				as node_name
+				 , adg.lv2_col_id
+				   || '_'
+				   || adg.lv3_col_id	as node_par_id
+				 , 4					as node_lvl
+				 , adg.id				as drilldown_group_id
+				 , adg.lv4_col_id		as tbl_col_id
+				 , adg.tbl_id			as tbl_id
+			  from anl.anl_drilldown_group	adg
+		 	  join anl.anl_column_mst		acm on adg.lv4_col_id = acm.id and acm.flag = 1
+		 	 where ${strSVCType}
+		 	   and adg.flag		= 1
+		 	   and adg.tbl_id	= #{tableId}
+
+			union all
+
+			select adg.lv4_col_id
+				   || '_'
+				   || adg.lv5_col_id	as node_id
+				 , coalesce(acm.dp_nm, '')
+				   || ' ('
+				   || coalesce(acm.col_nm, '')
+				   || ')'				as node_name
+				 , adg.lv3_col_id
+				   || '_'
+				   || adg.lv4_col_id	as node_par_id
+				 , 5					as node_lvl
+				 , adg.id				as drilldown_group_id
+				 , adg.lv5_col_id		as tbl_col_id
+				 , adg.tbl_id			as tbl_id
+			  from anl.anl_drilldown_group	adg
+			  join anl.anl_column_mst		acm on adg.lv5_col_id = acm.id and acm.flag = 1
+		 	 where ${strSVCType}
+		 	   and adg.flag		= 1
+		 	   and adg.tbl_id	= #{tableId}
+		) dgc
+	</select>
+
+	<insert id="insertDrillDownGroup" parameterType="com.icignal.kepler.operation.dto.request.KprDrillDownGroupReqDto">
+		/* KPRDrillDownGroup.insertDrillDownGroup */
+		insert into anl.anl_drilldown_group (
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, tbl_id
+			, drilldown_group_nm
+			, seq
+			, lv1_col_id
+			, lv2_col_id
+			, lv3_col_id
+			, lv4_col_id
+			, lv5_col_id
+		) values (
+			#{drillDownGroupId}
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, #{tableId}
+			, #{drillDownGroupName}
+			, (select coalesce(max(t.seq), 0) + 1 from anl.anl_drilldown_group t where t.tbl_id = #{tableId})
+			, #{levelId_1}
+			, #{levelId_2}
+			, #{levelId_3}
+			, #{levelId_4}
+			, #{levelId_5}
+		)
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+
+	<update id="updateDrillDownGroup" parameterType="com.icignal.kepler.operation.dto.request.KprDrillDownGroupReqDto">
+		/* KPRDrillDownGroup.updateDrillDownGroup */
+		update anl.anl_drilldown_group
+		   set modify_by			= #{modifyBy}
+		     , modify_date			= sysdate
+		     <if test="drillDownGroupName != null and drillDownGroupName != ''">
+		     , drilldown_group_nm	= #{drillDownGroupName}
+		     </if>
+		     <if test="seq != null and seq != ''">
+		     , seq					= #{seq}
+		     </if>
+		     <if test="levelId_1 != null and levelId_1 != ''">
+		     , lv1_col_id			= #{levelId_1}
+		     , lv2_col_id			= ''
+		     , lv3_col_id			= ''
+		     , lv4_col_id			= ''
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="levelId_2 != null and levelId_2 != ''">
+		     , lv2_col_id			= #{levelId_2}
+		     , lv3_col_id			= ''
+		     , lv4_col_id			= ''
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="levelId_3 != null and levelId_3 != ''">
+		     , lv3_col_id			= #{levelId_3}
+		     , lv4_col_id			= ''
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="levelId_4 != null and levelId_4 != ''">
+		     , lv4_col_id			= #{levelId_4}
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="levelId_5 != null and levelId_5 != ''">
+		     , lv5_col_id			= #{levelId_5}
+		     </if>
+
+		     <!-- Node Level 에 따라 지워야할 범위 설정 -->
+		     <if test="nodeLevel == 1">
+		     , lv1_col_id			= ''
+		     , lv2_col_id			= ''
+		     , lv3_col_id			= ''
+		     , lv4_col_id			= ''
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="nodeLevel == 2">
+		     , lv2_col_id			= ''
+		     , lv3_col_id			= ''
+		     , lv4_col_id			= ''
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="nodeLevel == 3">
+		     , lv3_col_id			= ''
+		     , lv4_col_id			= ''
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="nodeLevel == 4">
+		     , lv4_col_id			= ''
+		     , lv5_col_id			= ''
+		     </if>
+		     <if test="nodeLevel == 5">
+		     , lv5_col_id			= ''
+		     </if>
+   		 where id = #{drillDownGroupId}
+	</update>
+
+	<update id="deleteDrillDownGroup" parameterType="com.icignal.kepler.operation.dto.request.KprDrillDownGroupReqDto">
+		/* KPRDrillDownGroup.deleteDrillDownGroup */
+		update anl.anl_drilldown_group
+		   set flag = flag + 1
+		 where id = #{drillDownGroupId}
+	</update>
+</mapper>

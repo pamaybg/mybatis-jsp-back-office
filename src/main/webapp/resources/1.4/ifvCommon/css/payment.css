@@ -1,0 +1,71 @@
+@CHARSET "UTF-8";
+
+p span{vertical-align:top;}
+.pay_pdbt20{padding-bottom:20px;}
+.pay_wrap{width:628px;}
+.modal-body.payment_body{padding:30px 35px;}
+.payment_grid{margin: 10px 0; width:558px;}
+
+/* caption */
+.payment_grid .ifv_grid_templete > .title{
+	height:42px; 
+	line-height:42px; 
+	border-top: 2px solid #666666; 
+	text-align: center; 
+	font-size:20px; 
+	font-family:'맑은 고딕', 'Malgun Gothic'; 
+	color:#333333;
+}
+
+/* col th 제목 */
+.payment_grid .ui-jqgrid .ui-jqgrid-hbox{
+	border-bottom: 1px solid #666666;
+}
+
+.payment_grid .ui-th-ltr, 
+.payment_grid .ui-jqgrid .ui-jqgrid-htable th.ui-th-ltr{
+	background-color:#f1f5f8;
+	border-top: 2px solid #666666; 
+	border-bottom: 0; 
+}
+.payment_grid .ui-th-ltr, 
+.payment_grid .ui-jqgrid .ui-jqgrid-htable th.ui-th-ltr:first-child{
+	border-left:0;
+}
+.payment_grid .ui-th-ltr, 
+.payment_grid .ui-jqgrid .ui-jqgrid-htable th.ui-th-ltr:last-child{
+	border-right:0;
+}
+.payment_grid .ui-jqgrid .ui-jqgrid-htable th div{
+	font-weight:bold;
+	color:#555555;
+}
+
+/* row cell */
+.payment_grid .ui-jqgrid tr.ui-row-ltr td:first-child, .payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-highlight td:first-child, .payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-hover td:first-child {border-left:0;}
+.payment_grid .ui-jqgrid tr.ui-row-ltr td:last-child, .payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-highlight td:last-child, .payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-hover td:last-child {border-right:0;}
+
+.payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-highlight td, .payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-hover td {background-color: #fff !important; color: #404040;}
+.payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-highlight, .payment_grid .ui-jqgrid tr.ui-row-ltr.ui-state-hover{border: 0 none;}
+
+/* 합계 */
+.payment_grid .ui-jqgrid .ui-jqgrid-ftable{border-top:2px solid #666666; border-bottom:1px solid #666666;}
+.payment_grid .ui-jqgrid-ftable tr td:first-child{background-color:#f3f3f3; text-align:center;}
+.payment_grid .ui-jqgrid tr.footrow-ltr td:first-child {border-left:0;}
+.payment_grid .ui-jqgrid tr.footrow-ltr td {border-top: 0; border-right-color: #ddd; padding: 5px 10px; height: auto;}
+.payment_grid .ui-jqgrid tr.footrow-ltr td:last-child{border-right:0;}
+
+
+/* data 없을 때 */
+.payment_grid .ifv_grid_templete .empty_msg{
+	border-top: 0; 
+	border-left:0;
+	border-right:0;
+	border-bottom: 2px solid #666666;
+}
+
+
+/* grid 밑 text */
+.pay_number{margin:0; line-height:20px; font-weight:bold; color:#777777;}
+.pay_error{margin:0; line-height:20px; font-weight:bold; color:#ff4949;}
+

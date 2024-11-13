@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.membershipcard.cardmaster.mapper.LoyCardMasterMapper">
+
+   <select id="selectCardTypeList" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardTypeReqDto"
+		   						   resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyCardTypeResDto">
+       /* LoyCardMasterMapper.selectCardTypeList */
+	   SELECT
+			 C.RID              AS rid
+		   , C.CARD_KIND_NO     AS cardKindNo
+		   , C.CARD_KIND_NM     AS cardKindNm
+		   , C.CARD_TYPE	    AS cardType
+		   , C.MAKE_TYPE        AS makeType
+	       , convert(varchar(10), C.CREATE_DATE, 120)      AS createDate
+		   , E.NAME             AS createBy
+		   , ${strColumn}
+	   FROM   LOY.LOY_CARD_KIND  c WITH (NOLOCK)
+		   LEFT OUTER JOIN COM.CRM_USER CU WITH (NOLOCK) ON C.CREATE_BY = CU.RID
+		   LEFT OUTER JOIN COM.EMPLOYEE E WITH (NOLOCK) ON CU.ID_EMPLOYEE = E.ID
+	   WHERE  ${strCondWhere}
+		   AND ${strWhere}
+		   AND C.FLAG  = 1
+	   ORDER BY ${strOrderby}
+	   		${strEndPaging}
+    </select>
+
+	<select id="selectCardTypeDtl" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardTypeReqDto"
+									resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyCardTypeResDto">
+		/* LoyCardMasterMapper.selectCardTypeDtl */
+		SELECT
+			C.RID         		AS rid
+			,C.CARD_KIND_NO		AS cardKindNo
+			,C.CARD_KIND_NM		AS cardKindNm
+			,C.BIN_NO_RULE		AS binNoRule
+			,C.CARD_TYPE		AS cardType
+			,C.MAKE_TYPE		AS makeType
+			,C.RID_CHNL_REF		AS ridChnl
+			,D.CHNL_NM			AS chnlNm
+			,C.RID_CLUB_REF		AS ridClub
+			,E.CLUB_NM			AS clubNm
+			,C.RID_TIER_REF		AS ridTier
+			,F.TIER_NM			AS tierNm
+		FROM LOY.LOY_CARD_KIND  C WITH (NOLOCK)
+			LEFT OUTER JOIN LOY.LOY_CHNL D WITH (NOLOCK) ON C.RID_CHNL_REF = D.RID AND D.FLAG = 1
+			LEFT OUTER JOIN LOY.LOY_CLUB E WITH (NOLOCK) ON C.RID_CLUB_REF = E.RID AND E.FLAG = 1
+			LEFT OUTER JOIN LOY.LOY_TIERS F WITH (NOLOCK) ON C.RID_TIER_REF = F.RID AND F.FLAG = 1
+		WHERE 1=1
+			AND C.RID = #{rid}
+			AND C.FLAG  = 1
+	</select>
+
+    <insert id="insertCardTypeDtl" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardTypeReqDto">
+	 	/* LoyCardMasterMapper.insertCardTypeDtl */
+		INSERT INTO LOY.LOY_CARD_KIND (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			CARD_KIND_NO,
+			CARD_KIND_NM,
+			MAKE_TYPE,
+			BIN_NO_RULE,
+			CARD_TYPE,
+			RID_TIER_REF,
+			RID_CLUB_REF,
+			RID_CHNL_REF
+		) VALUES (
+			#{rid},
+			#{createBy},
+			#{modifyBy},
+			LOY.FN_GET_CARD_TYPE_NO(),
+			#{cardKindNm},
+			#{makeType},
+			#{binNoRule},
+			#{cardType},
+			#{ridTier},
+			#{ridClub},
+			#{ridChnl}
+		)
+	</insert>
+	
+	<update id="updateCardTypeDtl" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardTypeReqDto">
+		UPDATE
+			LOY.LOY_CARD_KIND
+		SET
+			MODIFY_DATE = getdate(),
+			MODIFY_BY = #{modifyBy},
+			CARD_KIND_NM = #{cardKindNm},
+			MAKE_TYPE = #{makeType},
+			BIN_NO_RULE = #{binNoRule},
+			CARD_TYPE =  #{cardType},
+			RID_TIER_REF =  #{ridTier},
+			RID_CLUB_REF =  #{ridClub},
+			RID_CHNL_REF =  #{ridChnl}
+		WHERE RID = #{rid}
+	</update>
+
+    <select id="selectIssuedCardList" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyIssuedCardReqDto"
+								resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyIssuedCardResDto">
+        /* LoyCardMasterMapper.selectCardList */
+		select
+			   mc.rid            									AS rid,
+			   mc.CARD_NO										    AS cardNo,
+		       m.mbr_no          									AS mbrNo,
+		       mc.stat           									AS stat,
+		       convert(varchar(10), mc.issue_date, 120)     		AS issueDate,
+		       convert(varchar(10), mc.leav_date, 120) 				AS leavDate,
+		       c.chnl_nm        									AS chnlNm,
+		       convert(varchar, mc.create_date, 120)    			AS createDate,
+		       convert(varchar, mc.modify_date, 120)      			AS modifyDate,
+		       e.name            									AS modifyBy,
+		       m.rid 											 	AS ridMbr,
+			   ${strColumn}
+		FROM loy.loy_mbr_card    mc WITH (NOLOCK)
+		     INNER JOIN loy.loy_mbr m WITH (NOLOCK) ON mc.rid_mbr = m.rid AND m.flag = 1
+		     LEFT OUTER JOIN LOY.LOY_CHNL c WITH (NOLOCK) ON mc.rid_chnl = c.rid AND c.flag = 1
+		     LEFT OUTER JOIN com.crm_user d WITH (NOLOCK) ON mc.modify_by = d.rid
+		     LEFT OUTER JOIN com.employee e WITH (NOLOCK) ON d.id_employee = e.id
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND mc.flag = 1
+			AND mc.rid_card_kind = #{ridCardKind}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+    </select>
+
+	<!-- 카드 BIN 리스트 조회  -->
+	<select id="selectCardBinList" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardBinReqDto"
+								   resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyCardBinResDto">
+		/* LoyCardMasterMapper.selectCardBinList */
+		SELECT
+			A.RID 								 AS rid,
+			E.NAME             					 AS modifyBy,
+			convert(varchar(10), A.MODIFY_DATE, 120)  AS modifyDate,
+			A.START_NO							 AS startNo,
+			A.END_NO							 AS endNo,
+			convert(varchar(10), A.VAILD_END_DT, 120) AS validEndDt,
+			${strColumn}
+		FROM LOY.LOY_CARD_BIN A WITH (NOLOCK)
+			LEFT OUTER JOIN COM.CRM_USER CU WITH (NOLOCK) ON A.MODIFY_BY = CU.RID
+			LEFT OUTER JOIN COM.EMPLOYEE E WITH (NOLOCK) ON CU.ID_EMPLOYEE = E.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+			AND A.RID_CARD_KIND = #{ridCardKind}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<!-- 카드 BIN 단건 조회  -->
+	<select id="selectCardBinDetail" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardBinReqDto"
+			resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyCardBinResDto">
+		/* LoyCardMasterMapper.selectCardBinList */
+		SELECT
+			A.RID 								 AS rid,
+			A.START_NO							 AS startNo,
+			A.END_NO							 AS endNo,
+			convert(varchar(10), A.VAILD_END_DT, 120) AS validEndDt
+		FROM LOY.LOY_CARD_BIN A
+		WHERE  1=1
+			AND A.FLAG  = 1
+			AND A.RID_CARD_KIND = #{ridCardKind}
+	</select>
+	
+	<!-- 카드 BIN 등록 -->
+	<insert id="insertCardBin" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardBinReqDto" >
+		/* LoyCardMasterMapper.insertCardBin */
+		INSERT INTO LOY.LOY_CARD_BIN (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, RID_CARD_KIND
+			, START_NO
+			, END_NO
+			, VAILD_END_DT
+		) VALUES (
+			#{rid}
+			, #{createBy}
+			, #{modifyBy}
+			, #{ridCardKind}
+			, #{startNo}
+			, #{endNo}
+			, convert(varchar(10), #{validEndDt}, 120)
+		)
+	</insert>
+	
+	<!-- 카드 BIN 수정 -->
+	<update id="updateCardBin" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardBinReqDto" >
+		/* LoyCardMasterMapper.updateCardBin */
+		UPDATE LOY.LOY_CARD_BIN
+	   	SET MODIFY_DATE = getdate()
+		     , MODIFY_BY = #{modifyBy}
+		     , RID_CARD_KIND = #{ridCardKind}
+		     , START_NO = #{startNo}
+		     , END_NO = #{endNo}
+			 , VAILD_END_DT = convert(varchar(10), #{validEndDt}, 120)
+	 	WHERE RID = #{rid}
+	</update>
+	
+	<!-- 카드 BIN 삭제 -->
+	<update id="deleteCardBin" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardBinReqDto" >
+		/* LoyCardMasterMapper.deleteCardBin */
+		UPDATE LOY.LOY_CARD_BIN
+	   	SET MODIFY_DATE = getdate()
+		     , MODIFY_BY = #{modifyBy}
+		     , flag = flag + 1
+	 	WHERE RID = #{rid}
+	</update>
+	
+	<!-- 카드번호 pool 조회 -->
+	<select id="selectCardNoPoolList" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardNoPoolReqDto"
+									  resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyCardNoPoolResDto">
+		/* LoyCardMasterMapper.selectCardNoPoolList */
+		SELECT T1.RID AS rid
+			, T1.TITLE AS title
+			, convert(varchar(10), T1.CREATE_DATE, 120) AS createDate
+			, convert(varchar(10), T1.MODIFY_DATE, 120) AS modifyDate
+			, T1.CARD_NO AS cardNo
+			, convert(varchar(10), T1.REG_DT, 120) AS regDt
+			, T1.STAT_CD AS statCd
+			, ${strColumn}
+		FROM LOY.LOY_CARD_NO_POOL T1
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND T1.FLAG  = 1
+			AND T1.RID_CARD_KIND = #{ridCardKind}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectCardNoPoolListForExcelExport" parameterType="com.icignal.loyalty.membershipcard.cardmaster.dto.request.LoyCardNoPoolReqDto"
+			resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyCardNoPoolResDto">
+		/* LoyCardMasterMapper.selectCardNoPoolList */
+		SELECT T1.RID AS rid
+			, T1.TITLE AS title
+			, convert(varchar(10), T1.CREATE_DATE, 120) AS createDate
+			, convert(varchar(10), T1.MODIFY_DATE, 120) AS modifyDate
+			, T1.CARD_NO AS cardNo
+			, convert(varchar(10), T1.REG_DT, 120) AS regDt
+			, T1.STAT_CD AS statCd
+			, ${strColumn}
+		FROM LOY.LOY_CARD_NO_POOL T1
+		WHERE T1.FLAG = 1
+			AND T1.RID_CARD_KIND = #{ridCardKind}
+			AND T1.STAT_CD = '01'
+	</select>
+	
+	<!-- 카드 번호 생성 -->
+	<parameterMap id="callGenCardNoBulkMap" type="java.util.Map">
+		<parameter property="p_commit_yn" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="p_bin" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="p_typ" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="p_cnt" jdbcType="INTEGER" javaType="java.lang.Integer" mode="IN"/>
+		<parameter property="p_card_kind" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="p_title" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="p_create_by" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="p_rst" jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="p_rst_msg" jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+	</parameterMap>
+
+  	<update id="callGenCardNoBulk" parameterMap="callGenCardNoBulkMap" statementType="CALLABLE">
+		{ CALL LOY.pkg_loy_cardno_cr.sp_cardno_bulk( ?, ?, ?, ?, ?, ?, ?, ?, ? ) }
+	</update>
+
+	<!-- 카드번호 pool 수정 -->
+	<update id="updateCardNoPool" parameterType="java.lang.String">
+		/* LoyCardMasterMapper.updateCardNoPool */
+		MERGE INTO LOY.LOY_CARD_NO_POOL T
+		USING (SELECT * FROM LOY.LOY_CARD_NO_POOL_TEMP WHERE RID_TR = #{ridTr})
+		ON (T.CARD_NO = S.CARD_NO)
+		WHEN MATCHED THEN
+			UPDATE
+			SET T.MODIFY_BY = S.MODIFY_BY
+			 , T.MODIFY_DATE = getdate()
+			 , T.STAT_CD = '02'
+			 , T.TITLE = S.TITLE
+			 , T.REG_DT = convert(varchar(10), S.REG_DT, 120)
+	</update>
+
+	<!-- 카드번호 pool temp 삭제 -->
+	<delete id="deleteCardNoPoolTemp" parameterType="java.lang.String">
+		DELETE FROM LOY.LOY_CARD_NO_POOL_TEMP WHERE RID_TR = #{ridTr}
+	</delete>
+
+</mapper>

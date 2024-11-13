@@ -1,0 +1,1034 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed Sep 16 14:06:40 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.voc.requestConsultation.mapper.LoyVocMapper">
+
+	<!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 목록
+    -   설명                  : 상담요청 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.10.13
+    ***************************************/ -->
+	<select id="selectRequestConsultationList" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocRequestConsultationListReqDto" 
+																	resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocRequestConsultationListResDto">
+		/* LoyVocMapper.selectRequestConsultationList */
+		SELECT
+			   	t1.rid 						as rid
+			  	, t1.rid_cust 				as ridCust
+			   	, t1.rid_crmuser 			as ridCrmuser
+			   	, t1.sr_no 					as srNo
+			   	, c1.mark_name 				as srTrtStatusNm
+			   	, t1.sr_trt_status			as srTrtStatus
+			   	, c2.mark_name 				as cnslgTypeCdLNm
+			   	, c3.mark_name 				as cnslgTypeCdMNm
+			   	, c4.mark_name 				as cnslgTypeCdSNm
+			   	, CONVERT(VARCHAR, t1.rcp_dt,120 <!-- 'YYYY-MM-DD HH24:MI:SS' -->) 					as rcpDt
+			   	, t1.mem_no 					as memNo
+			   	, t1.mem_ptbl_no			as memPtblNo
+			   	, t1.mem_nm 					as memNm
+			   	, t1.cntc_desk 				as cntcDesk
+			   	, t1.email_addr				as emailAddr
+			   	, t1.call_id 				as callId
+			   	, c5.mark_name				as rcpMeth
+			   	, lm.RID					AS ridMbr
+			   	, em.name					AS name
+			   	, ${strColumn}
+		  from voc.voc_svc_req t1 WITH (NOLOCK)
+		  LEFT OUTER JOIN LOY.LOY_CUST WITH (NOLOCK) lc ON lc.RID = t1.RID_CUST AND lc.FLAG = 1
+		  LEFT OUTER JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lm.FLAG = 1 
+		  LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON t1.RID_CRMUSER = cu.rid AND cu.FLAG = 1
+		  LEFT OUTER JOIN COM.EMPLOYEE em WITH (NOLOCK) ON cu.ID_EMPLOYEE = em.id AND em.FLAG = 1
+		  	left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.group_code = 'SR_STATUS' and c1.code_name = t1.sr_trt_status
+		  	left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.group_code = 'SR_AREA_L' and c2.code_name = t1.cnslg_type_cd_l
+		  	left outer join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.group_code = 'SR_AREA_M' and c3.code_name = t1.cnslg_type_cd_m
+		  	left outer join com.comm_code c4 WITH (NOLOCK) on c4.flag = 1 and c4.group_code = 'SR_AREA_S' and c4.code_name = t1.cnslg_type_cd_s
+		  	left outer join com.comm_code c5 WITH (NOLOCK) on c5.flag = 1 and c5.group_code = 'CALL_TYPE' and c5.code_name = t1.rcp_meth
+         where
+         	${strCondWhere}
+         	AND ${strWhere}
+           <!-- and ${strDataAuthWhere} -->
+           	<if test="memNo != null and memNo != ''"> AND
+<!-- 			t1.mem_no like concat('%',#{memNo},'%') -->
+			t1.mem_no = #{memNo}
+			</if>
+           	<if test="memName != null and memName != ''"> AND
+<!-- 			t1.mem_nm like concat('%',#{memName},'%') -->
+<!-- 			t1.mem_nm = #{memName} -->
+			t1.mem_nm like concat(#{memName},'%')
+			</if>
+           	<if test="phoneNo != null and phoneNo != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.mem_ptbl_no, null) like concat('%',#{phoneNo},'%') -->
+			t1.mem_ptbl_no = #{phoneNo}
+			</if>
+           	<if test="email != null and email != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.email_addr, null) like concat('%',#{email},'%') -->
+			t1.email_addr =  #{email}
+			</if>
+           	<if test="contactInfo != null and contactInfo != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.cntc_desk, null) like concat('%',#{contactInfo},'%') -->
+			t1.cntc_desk = #{contactInfo}
+			</if>
+			<if test="ridCrmuser != null and ridCrmuser != ''"> AND
+			t1.RID_CRMUSER = #{ridCrmuser}
+			</if>
+			<if test="ridCrmuserFlag != null and ridCrmuserFlag != ''"> AND
+			(t1.RID_CRMUSER IS NULL OR t1.RID_CRMUSER = '')
+			</if>
+			<if test="ridCust != null and ridCust != ''"> AND
+			t1.rid_cust = #{ridCust}
+			</if>
+			<if test="initFlag != null and initFlag != ''"> AND
+			t1.sr_trt_status = 'Open'
+			</if>
+			<if test="processSituation != null and processSituation != ''"> AND
+			t1.sr_trt_status = #{processSituation}
+			</if>
+			<if test="consultType1st != null and consultType1st != ''"> AND
+			t1.cnslg_type_cd_l = #{consultType1st}
+			</if>
+			<if test="consultType2nd != null and consultType2nd != ''"> AND
+			t1.cnslg_type_cd_m = #{consultType2nd}
+			</if>
+			<if test="consultType3rd != null and consultType3rd != ''"> AND
+			t1.cnslg_type_cd_s = #{consultType3rd}
+			</if>
+			<if test="startDateRcpDt != null and startDateRcpDt != ''"> AND
+
+			t1.rcp_dt &gt;= CONVERT(DATE, #{startDateRcpDt}<!-- ,'YYYY-MM-DD' -->)
+
+			</if>
+			<if test="endDateRcpDt != null and endDateRcpDt != ''"> AND
+
+			t1.rcp_dt &lt;= CONVERT(DATE, #{endDateRcpDt}<!-- ,'YYYY-MM-DD' -->)
+
+			</if>
+			<if test="rcpMeth != null and rcpMeth != ''"> AND
+			t1.rcp_meth = #{rcpMeth}
+			</if>
+			<if test="srNo != null and srNo != ''"> AND
+			t1.sr_no = #{srNo}
+			</if>
+         ORDER BY ${strOrderby}
+         ${strEndPaging}
+	</select>
+	
+	<select id="selectConsultMaskList" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocRequestConsultationListReqDto" 
+														resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocRequestConsultationExcelListResDto">
+	/* LoyVocMapper.selectConsultMaskList */
+	SELECT
+			   	t1.rid 						AS rid
+			  	, t1.rid_cust 				AS ridCust
+			   	, t1.rid_crmuser 			AS ridCrmuser
+			   	, t1.sr_no 					AS srNo
+			   	, c1.mark_name 				AS srTrtStatusNm
+			   	, t1.sr_trt_status			AS srTrtStatus
+			   	, c2.mark_name 				AS cnslgTypeCdLNm
+			   	, c3.mark_name 				AS cnslgTypeCdMNm
+			   	, c4.mark_name 				AS cnslgTypeCdSNm
+			   	, CONVERT(VARCHAR, t1.RCP_DT, 120 <!-- 'YYYY-MM-DD HH24:MI:SS' -->) 					AS rcpDt
+			   	, t1.mem_no 					AS memNo
+			   	, t1.mem_ptbl_no			AS memPtblNo
+			   	, t1.mem_nm 					AS memNm
+			   	, t1.cntc_desk 				AS cntcDesk
+			   	, t1.email_addr				AS emailAddr
+			   	, t1.call_id 				AS callId
+			   	, c5.mark_name				AS rcpMeth
+			   	, ${strColumn}
+	FROM VOC.VOC_SVC_REQ t1 WITH (NOLOCK)
+	LEFT OUTER JOIN COM.COMM_CODE c1 WITH (NOLOCK) ON c1.FLAG = 1 AND c1.GROUP_CODE = 'SR_STATUS' AND c1.CODE_NAME = t1.SR_TRT_STATUS
+	LEFT OUTER JOIN COM.COMM_CODE c2 WITH (NOLOCK) ON c2.FLAG = 1 AND c2.GROUP_CODE = 'SR_AREA_L' AND c2.CODE_NAME = t1.CNSLG_TYPE_CD_L
+	LEFT OUTER JOIN COM.COMM_CODE c3 WITH (NOLOCK) ON c3.FLAG = 1 AND c3.GROUP_CODE = 'SR_AREA_M' AND c3.CODE_NAME = t1.CNSLG_TYPE_CD_M
+	LEFT OUTER JOIN COM.COMM_CODE c4 WITH (NOLOCK) ON c4.FLAG = 1 AND c4.GROUP_CODE = 'SR_AREA_S' AND c4.CODE_NAME = t1.CNSLG_TYPE_CD_S
+	LEFT OUTER JOIN COM.COMM_CODE c5 WITH (NOLOCK) ON c5.FLAG = 1 AND c5.GROUP_CODE = 'CALL_TYPE' AND c5.CODE_NAME = t1.RCP_METH
+    WHERE ${strCondWhere}
+    AND ${strWhere}
+		<if test="memNo != null and memNo != ''"> AND
+<!-- 			t1.mem_no like concat('%',#{memNo},'%') -->
+		t1.mem_no = #{memNo}
+		</if>
+	    <if test="memName != null and memName != ''"> AND
+<!-- 			t1.mem_nm like concat('%',#{memName},'%') -->
+<!-- 			t1.mem_nm = #{memName} -->
+		t1.mem_nm like concat(#{memName},'%')
+		</if>
+        <if test="phoneNo != null and phoneNo != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.mem_ptbl_no, null) like concat('%',#{phoneNo},'%') -->
+		t1.mem_ptbl_no = #{phoneNo}
+		</if>
+        <if test="email != null and email != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.email_addr, null) like concat('%',#{email},'%') -->
+		t1.email_addr =  #{email}
+		</if>
+         <if test="contactInfo != null and contactInfo != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.cntc_desk, null) like concat('%',#{contactInfo},'%') -->
+		t1.cntc_desk = #{contactInfo}
+		</if>
+		<if test="ridCrmuser != null and ridCrmuser != ''"> AND
+		t1.RID_CRMUSER = #{ridCrmuser}
+		</if>
+		<if test="ridCrmuserFlag != null and ridCrmuserFlag != ''"> AND
+		(t1.RID_CRMUSER IS NULL OR t1.RID_CRMUSER = '')
+		</if>
+		<if test="ridCust != null and ridCust != ''"> AND
+		t1.rid_cust = #{ridCust}
+		</if>
+		<if test="initFlag != null and initFlag != ''"> AND
+		t1.sr_trt_status = 'Open'
+		</if>
+		<if test="processSituation != null and processSituation != ''"> AND
+		t1.sr_trt_status = #{processSituation}
+		</if>
+		<if test="consultType1st != null and consultType1st != ''"> AND
+		t1.cnslg_type_cd_l = #{consultType1st}
+		</if>
+		<if test="consultType2nd != null and consultType2nd != ''"> AND
+		t1.cnslg_type_cd_m = #{consultType2nd}
+		</if>
+		<if test="consultType3rd != null and consultType3rd != ''"> AND
+		t1.cnslg_type_cd_s = #{consultType3rd}
+		</if>
+		<if test="startDateRcpDt != null and startDateRcpDt != ''"> AND
+
+		t1.rcp_dt &gt;= CONVERT(DATE, #{startDateRcpDt}<!-- ,'YYYY-MM-DD' -->)
+
+		</if>
+		<if test="endDateRcpDt != null and endDateRcpDt != ''"> AND
+
+		t1.rcp_dt &lt;= CONVERT(DATE, #{endDateRcpDt}<!-- ,'YYYY-MM-DD' -->)
+
+		</if>
+		<if test="rcpMeth != null and rcpMeth != ''"> AND
+		t1.rcp_meth = #{rcpMeth}
+		</if>
+		<if test="srNo != null and srNo != ''"> AND
+		t1.sr_no = #{srNo}
+		</if>
+	ORDER BY ${strOrderby}
+         ${strEndPaging}
+	</select>
+
+	<select id="selectRequestConsultationListCount" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocRequestConsultationListReqDto" resultType="java.lang.Integer">
+		/* LoyVocMapper.selectRequestConsultationListCount */
+		SELECT
+			count(*) as count
+	  	FROM VOC.VOC_SVC_REQ t1 WITH (NOLOCK)
+	    WHERE
+         	${strCondWhere}
+       		<if test="memNo != null and memNo != ''"> AND
+<!-- 			t1.mem_no like concat('%',#{memNo},'%') -->
+			t1.MEM_NO = #{memNo}
+			</if>
+           	<if test="memName != null and memName != ''"> AND
+<!-- 			t1.mem_nm like concat('%',#{memName},'%') -->
+<!-- 			t1.mem_nm = #{memName} -->
+			t1.MEM_NM LIKE CONCAT(#{memName},'%')
+			</if>
+           	<if test="phoneNo != null and phoneNo != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.mem_ptbl_no, null) like concat('%',#{phoneNo},'%') -->
+			t1.mem_ptbl_no = #{phoneNo}
+			</if>
+           	<if test="email != null and email != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.email_addr, null) like concat('%',#{email},'%') -->
+			t1.email_addr =  #{email}
+			</if>
+           	<if test="contactInfo != null and contactInfo != ''"> AND
+<!-- 			secu.fn_getDecrypt(#{cipherKey}, t1.cntc_desk, null) like concat('%',#{contactInfo},'%') -->
+			t1.cntc_desk = #{contactInfo}
+			</if>
+			<if test="ridCrmuser != null and ridCrmuser != ''"> AND
+			t1.RID_CRMUSER = #{ridCrmuser}
+			</if>
+			<if test="ridCrmuserFlag != null and ridCrmuserFlag != ''"> AND
+			(t1.RID_CRMUSER IS NULL OR t1.RID_CRMUSER = '')
+			</if>
+			<if test="ridCust != null and ridCust != ''"> AND
+			t1.rid_cust = #{ridCust}
+			</if>
+			<if test="initFlag != null and initFlag != ''"> AND
+			t1.sr_trt_status = 'Open'
+			</if>
+			<if test="processSituation != null and processSituation != ''"> AND
+			t1.sr_trt_status = #{processSituation}
+			</if>
+			<if test="consultType1st != null and consultType1st != ''"> AND
+			t1.cnslg_type_cd_l = #{consultType1st}
+			</if>
+			<if test="consultType2nd != null and consultType2nd != ''"> AND
+			t1.cnslg_type_cd_m = #{consultType2nd}
+			</if>
+			<if test="consultType3rd != null and consultType3rd != ''"> AND
+			t1.cnslg_type_cd_s = #{consultType3rd}
+			</if>
+			<if test="startDateRcpDt != null and startDateRcpDt != ''"> AND
+
+			t1.rcp_dt &gt;= CONVERT(DATE, #{startDateRcpDt}<!-- ,'YYYY-MM-DD' -->)
+
+			</if>
+			<if test="endDateRcpDt != null and endDateRcpDt != ''"> AND
+
+			t1.RCP_DT &lt;= CONVERT(DATE, #{endDateRcpDt}<!-- ,'YYYY-MM-DD' -->)
+
+			</if>
+			<if test="rcpMeth != null and rcpMeth != ''"> AND
+			t1.RCP_METH = #{rcpMeth}
+			</if>
+			<if test="srNo != null and srNo != ''"> AND
+			t1.SR_NO = #{srNo}
+			</if>
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청
+    -   설명                  : 상담요청 조회
+    -   결과형태              : 단건
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.10.13
+    ***************************************/ -->
+	<select id="selectRequestConsultation" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocRequestConsultationReqDto" resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocRequestConsultationResDto">
+	/* LoyVocMapper.selectRequestConsultation */
+	SELECT
+				t1.RID 						AS rid
+			   	, t1.RID_CUST 				AS ridCust
+			   	, t1.RID_CRMUSER 			AS ridCrmuser
+			   	, t1.RID_CHNL 				AS ridChnl
+			   	, t1.SR_NO 					AS srNo
+			   	, t1.SR_TRT_STATUS			AS srTrtStatus
+			   	, c1.MARK_NAME 				AS srTrtStatusNm
+			   	, t1.CNSLG_TYPE_CD_L 		AS cnslgTypeCdL
+			   	, t1.CNSLG_TYPE_CD_M 		AS cnslgTypeCdM
+			   	, t1.CNSLG_TYPE_CD_S 		AS cnslgTypeCdS
+			   	, t1.CNSLG_TITLE 			AS cnslgTitle
+			   	, t1.CNSLG_SBST 			AS cnslgSbst
+			   	, t1.RCP_METH 				AS rcpMeth
+			   	, CONVERT(VARCHAR, t1.RCP_DT, 120<!-- 'YYYY-MM-DD HH24MISS' -->) 					AS rcpDt
+			   	, CONVERT(VARCHAR, t1.TRC_DT, 120<!-- 'YYYY-MM-DD HH24MISS' -->) 					AS trcDt
+			   	, t1.MEM_NO 					AS memNo
+			   	, t1.CALL_ID 				AS callId
+			   	, t1.MEM_PTBL_NO			AS memPtblNo
+			   	, t1.MEM_NM 					AS memNm
+			   	, t1.CNTC_DESK 				AS cntcDesk
+			   	, t1.EMAIL_ADDR				AS emailAddr
+			   	, t1.MEM_PTBL_NO			AS unMaskMemPtblNo
+			   	, t1.MEM_NM 				AS unMaskMemNm
+			   	, t1.CNTC_DESK 				AS unMaskCntcDesc
+			   	, t1.EMAIL_ADDR				AS unMaskEmailAddr
+			   	, t1.CPRT_VNDR_CD 			AS cprtVndrCd
+			   	, CONVERT(VARCHAR, t1.END_DT, 120 <!-- 'YYYY-MM-DD HH24MISS' -->) 					AS endDt
+			   	, cu.USER_ID 				AS crmuserId
+			   	, e.NAME						AS crmuserName
+			   	, lc.CHNL_NO 				AS chnlNo
+    		   	, lc.CHNL_NM 				AS chnlNm
+    		   	, e2.NAME 					AS createBy
+    		   	, t1.CPRT_VNDR_HHO_CONV_FAIL	as cprtVndrHhoConvFail
+		  FROM VOC.VOC_SVC_REQ t1 WITH (NOLOCK)
+		  left join loy.loy_mbr lm WITH (NOLOCK) on lm.mbr_no = t1.mem_no
+		  left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.group_code = 'SR_STATUS' and c1.code_name = t1.sr_trt_status
+		  left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.group_code = 'SR_AREA_L' and c2.code_name = t1.cnslg_type_cd_l
+		  left outer join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.group_code = 'SR_AREA_M' and c3.code_name = t1.cnslg_type_cd_m
+		  left outer join com.comm_code c4 WITH (NOLOCK) on c4.flag = 1 and c4.group_code = 'SR_AREA_S' and c4.code_name = t1.cnslg_type_cd_s
+		  left outer join com.comm_code c5 WITH (NOLOCK) on c5.flag = 1 and c5.group_code = 'CALL_TYPE' and c5.code_name = t1.rcp_meth
+		  <!-- left outer join com.comm_code c6 on c6.flag = 1 and c6.group_code = 'MEMBER_ALIANCE_TYPE' and c6.code_name = t1.cprt_vndr_cd -->
+		  LEFT OUTER JOIN com.CRM_USER cu 	WITH (NOLOCK)	ON t1.RID_CRMUSER = cu.RID
+    	  LEFT OUTER JOIN com.EMPLOYEE e 	WITH (NOLOCK)		ON cu.ID_EMPLOYEE = e.id 	AND e.flag = '1'
+    	  LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK)	ON t1.RID_CHNL = lc.rid
+    	  LEFT OUTER JOIN com.CRM_USER cu2 	WITH (NOLOCK)	ON t1.create_by = cu2.RID
+    	  LEFT OUTER JOIN com.EMPLOYEE e2 	WITH (NOLOCK)		ON cu2.ID_EMPLOYEE = e2.id 	AND e2.flag = '1'
+         where t1.rid = #{rid}
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상세 > 활동내역 목록 조회
+    -   설명                  : 상담요청 상세 > 활동내역 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.17
+    ***************************************/ -->
+	<select id="selectActyHistoryList" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocGetActyHistoryListReqDto" resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocGetActyHistoryListResDto">
+		/* LoyVocMapper.selectActyHistoryList */
+		SELECT
+			a.RID 						AS rid			/* rid */
+		    , d.mark_name 				AS atvyType		/* 활동유형 */
+		    , a.ATVY_TYPE               AS atvyTypeCd
+		    , a.COMMENTS_LONG 			AS sbst			/* 활동내용 */
+		    , CONVERT(VARCHAR, a.ACT_CREATED_DT, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->) 			AS actCreatedDt	/* 접수일시 */
+		    , a.CREATOR_LOGIN			AS cuserId		/* 담당자ID */
+		    , c.name 					AS cuserName	/* 담당자명 */
+<!-- 			, CONVERT(a.EMAIL_TRM_DT,'YYYY-MM-DD HH24MISS') 			as emailTrmDt	/* email전송일시 */ -->
+<!-- 		    , CONVERT(a.SMS_TRM_DT,'YYYY-MM-DD HH24MISS') 				as sendDt		/* sms전송일시 */ -->
+<!-- 		    , CONVERT(a.SMS_RPY_DT,'YYYY-MM-DD HH24MISS') 				as smsRpyDt		/* sms응답일시 */ -->
+<!-- 			, a.SMS_RPY_YN 				as smsRpyYn		/* sms응답여부 */ -->
+<!-- 			, a.SMS_RPY_MSG 			as smsRpyMsg	/* sms응답메세지 */ -->
+			, CONVERT(VARCHAR, a.CHNL_SEND_DT, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)			AS chnlSendDt
+			, a.CHNL_RPY_RSN			AS chnlRpyRsn
+			, a.CHNL_RPY_DT				AS chnlRpyDt
+			, a.MSG_SUBJECT				AS msgSubject
+			, ${strColumn}
+	FROM VOC.VOC_ATVY_HIST a WITH (NOLOCK)
+	LEFT OUTER JOIN com.CRM_USER b 	WITH (NOLOCK) ON a.CREATOR_LOGIN = b.RID 			AND b.FLAG = '1'
+    LEFT OUTER JOIN com.EMPLOYEE c 	WITH (NOLOCK) ON b.ID_EMPLOYEE = c.id 		AND c.FLAG = '1'
+    LEFT OUTER JOIN com.COMM_CODE d	WITH (NOLOCK) ON a.ATVY_TYPE = d.CODE_NAME 		AND d.GROUP_CODE = 'TODO_TYPE_SR'
+	WHERE 1 = 1
+    AND ${strWhere}
+    <if test="ridSvcReq == null">
+    AND 1 = 2
+    </if>
+    <if test="ridSvcReq != null">
+    AND RID_SVCREQ = #{ridSvcReq}
+    </if>
+    ORDER BY ${strOrderby}
+         	${strEndPaging}
+	</select>
+
+	<select id="selectActyHistoryListCount" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocGetActyHistoryListReqDto" resultType="java.lang.Integer">
+	/* LoyVocMapper.selectActyHistoryList */
+	SELECT count(*) as count
+	FROM VOC.VOC_ATVY_HIST a WITH (NOLOCK)
+			LEFT OUTER JOIN COM.CRM_USER b WITH (NOLOCK)	ON a.CREATOR_LOGIN = b.RID 			AND b.flag = '1'
+    		LEFT OUTER JOIN COM.EMPLOYEE c 	WITH (NOLOCK)	ON b.ID_EMPLOYEE = c.id 		AND c.flag = '1'
+    		<!-- LEFT OUTER JOIN COM.COMM_CODE d	ON a.ATVY_TYPE = d.CODE_NAME 	And d.group_code = 'TODO_TYPE' -->
+	WHERE 1 = 1
+          <!--  AND ${strWhere} -->
+		   <if test="ridSvcReq == null">
+		   AND 1 = 2
+		   </if>
+		   <if test="ridSvcReq != null">
+		   AND RID_SVCREQ = #{ridSvcReq}
+		   </if>
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상세 > 포인트거래 조회
+    -   설명                  : 상담요청 상세 > 포인트거래 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.17
+    ***************************************/ -->
+    <!-- 사용 안하는거 같음 -->
+	<select id="selectTransactionListByRidMbr" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocGetTransactionListReqDto" 
+																	resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocGetTransactionListResDto">
+	/* LoyVocMapper.selectTransactionListByridMbr */
+    SELECT     SQL_CALC_FOUND_ROWS STRAIGHT_JOIN
+	   				lpt.TXN_NUM  AS txnUniqNo
+					,lpt.APPR_DT  AS apprDate
+			 		<!-- 	,CC.MARK_NAME  AS PNTTXNTYPE1CD -->
+					,cc1.MARK_NAME AS pntTxnType2Cd
+					,lm.MBR_NO AS mbrNo
+					,lct.CUST_NM AS custNm
+					<!-- ,cc2.MARK_NAME AS memDiv
+					,cc3.MARK_NAME AS memGrade -->
+					,CASE
+					  WHEN CARD_NUM IS NULL OR CARD_NUM = '' THEN CARD_NUM
+		              WHEN lpt.CARD_TYPE_CD='10' or lpt.CARD_TYPE_CD='30' THEN COM.FN_GETCARDNUM(CARD_NUM)
+		              ELSE CARD_NUM
+		              END AS cardNoDecoding
+					,lpt.PNT_AMT AS pntAmt
+		            ,lpt.USE_PNT AS usePnt
+		            ,lpt.GIFT_PNT AS giftPnt
+		            ,lp.PROD_NM AS prodNm
+		            ,lpt.TXN_AMT AS txnAmt
+		            ,lc.CHNL_NO AS chnlNo
+		            ,lc.CHNL_NM AS chnlNm
+		            ,lpt.RID AS rid
+		            ,lm.RID AS ridMbr
+		            ,lck.CARD_TYPE AS mbrType
+		            ,lmc.CPRT_CARD_CD AS cprtCardCd
+		            <!-- ,lpt.card_type_cd             as cardKndNm -->
+		            ,cc4.MARK_NAME AS cardKndNm
+					,d.MARK_NAME	AS cprtCard
+					,(SELECT COUNT(1) FROM loy.loy_pnt_acrl  WHERE RID_PNT_TXN = lpt.rid <!-- and rownum=1 -->) AS promoCnt
+	FROM  LOY.LOY_MBR lm WITH (NOLOCK)
+	LEFT OUTER JOIN
+			<if test="pntTxnDateType == &quot;A&quot;">
+				LOY.LOY_PNT_TXN WITH (NOLOCK)
+	        </if>
+			<if test="pntTxnDateType != &quot;A&quot;">
+				LOY.LOY_PNT_TXN_ARCHIVE WITH (NOLOCK)
+	        </if>
+				lpt ON  lpt.RID_MBR =lm.RID
+	LEFT OUTER JOIN LOY.LOY_CUST lct WITH (NOLOCK) ON lct.RID= lm.RID_CUST
+	LEFT OUTER JOIN LOY.LOY_PROD lp WITH (NOLOCK) ON lp.RID= lpt.RID_PROD
+	LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lc.RID= lpt.rid_chnl
+	LEFT OUTER JOIN loy.loy_mbr_card lmc WITH (NOLOCK) ON lmc.CARD_NO = lpt.CARD_NUM
+	LEFT OUTER JOIN loy.loy_card_kind lck WITH (NOLOCK) ON lck.RID = lmc.RID_CARD_KIND
+	LEFT OUTER JOIN COM.COMM_CODE d WITH (NOLOCK) on lmc.CPRT_CARD_CD = d.CODE_NAME  AND d.GROUP_CODE   = 'CARD_CORP_TYPE' AND d.FLAG  = 1  AND d.LANG=#{lang}
+	<!-- INNER JOIN COM.COMM_CODE cc on cc.CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND cc.lang=#{lang}  AND cc.GROUP_CODE='TXN_TYPE_CD_TM' -->
+	INNER JOIN COM.COMM_CODE cc1 WITH (NOLOCK) on cc1.CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND cc1.lang=#{lang}  AND cc1.GROUP_CODE='TXN_SUB_TYPE_CD'
+	<!-- LEFT OUTER JOIN COM.COMM_CODE cc2 on cc2.CODE_NAME = lpt.MEM_DIV AND cc2.lang=#{lang}  AND cc2.GROUP_CODE='MEMBER_TYPE' -->
+	<!-- LEFT OUTER JOIN COM.COMM_CODE cc3 on cc3.CODE_NAME = lpt.MEM_GRADE AND cc3.lang=#{lang}  AND cc3.GROUP_CODE='MEMBER_GRADE' -->
+	LEFT OUTER JOIN COM.COMM_CODE cc4 WITH (NOLOCK) ON cc4.CODE_NAME = lpt.CARD_TYPE_CD AND cc4.LANG=#{lang}  AND cc4.GROUP_CODE='MEMBER_CARD_CD'
+	WHERE 1=1
+		        <if test="defaultMbrRid != null and defaultMbrRid != ''">AND lm.RID = #{defaultMbrRid} </if>
+		        <if test="mbrRidFlag != null and mbrRidFlag != ''">AND 1 = 2</if>
+	ORDER BY ${strOrderby}
+				${strEndPaging}
+    </select>
+
+
+	<!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상세 > 포인트카드 조회
+    -   설명                  : 상담요청 상세 > 포인트카드 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2018.01.27
+    ***************************************/ -->
+	<select id="selectRgstCardListByRidMbr" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocGetRgstCardListReqDto" resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocGetRgstCardListResDto">
+	/* LoyVocMapper.selectRgstCardListByRidMbr */
+	SELECT SQL_CALC_FOUND_ROWS
+             b.RID              AS rid
+             ,CASE WHEN c.CARD_TYPE='10' OR c.CARD_TYPE='30' THEN COM.FN_GETCARDNUM(b.CARD_NO)
+              ELSE b.CARD_NO
+              END AS cardNo
+			,c.CARD_KND_NM             AS cardKndNm
+			<!-- ,d.mark_name             as cprtCard -->
+			<!-- ,cc.MARK_NAME             AS cprtCardItemCd -->
+			,e.MARK_NAME             AS stat
+			,b.STAT					AS statCd
+			,c.CARD_TYPE				AS mbrType
+			<!-- ,f.MARK_NAME             AS regChnlCd -->
+			,b.CREATE_DATE             AS createDate
+			,i.NAME            AS createBy
+			,b.LOSE_DT             AS loseDt
+			,j.NAME            AS loseTrTr
+			,b.CARD_LEAV_DATE             AS cardLeavDate
+			,IFNULL(b.CPRT_CARD_CD,'')			AS cprtCardCd
+	FROM LOY.LOY_MBR a WITH (NOLOCK)
+	INNER JOIN LOY.LOY_MBR_CARD  b WITH (NOLOCK) ON a.RID = b.RID_MBR
+	INNER JOIN LOY.LOY_CARD_KIND c WITH (NOLOCK) ON b.RID_CARD_KIND  = c.RID
+		<!-- LEFT OUTER JOIN COM.COMM_CODE d  on b.cprt_card_cd = d.code_name  and d.group_code   = 'CARD_CORP_TYPE' and d.flag  = 1  and d.lang=#{lang} --> 
+	LEFT OUTER JOIN COM.COMM_CODE e WITH (NOLOCK) ON b.STAT = e.CODE_NAME  AND e.GROUP_CODE   = 'MEMBER_CARD_STATUS' and e.flag  = 1  and e.lang=#{lang} 
+		<!-- LEFT OUTER JOIN COM.COMM_CODE f  ON b.REG_CHNL_CD = f.CODE_NAME  and f.GROUP_CODE   = 'CARD_REGIST_CHANNEL' and f.flag  = 1  and f.lang=#{lang} -->
+		<!-- LEFT OUTER JOIN COM.COMM_CODE cc  on b.cprt_card_item_cd =cc.code_name  and cc.group_code   = 'CARD_CORP_ITEM' and cc.flag  = 1  and cc.lang=#{lang} -->
+	LEFT OUTER JOIN COM.CRM_USER g ON WITH (NOLOCK) b.create_by = g.rid
+	LEFT OUTER JOIN  COM.EMPLOYEE i ON WITH (NOLOCK) g.ID_EMPLOYEE = i.id
+	LEFT OUTER JOIN COM.CRM_USER h ON WITH (NOLOCK)  b.rid_lose_trtr = h.rid
+	LEFT OUTER JOIN COM.EMPLOYEE j ON WITH (NOLOCK) h.ID_EMPLOYEE = j.id
+	WHERE a.FLAG = 1
+		 	<if test="ridMbr != null and ridMbr != ''">AND a.RID = #{ridMbr} </if>
+		 	<if test="mbrRidFlag != null and mbrRidFlag != ''">AND 1 = 2</if>
+    ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상세 > 활동내역 추가
+    -   설명                  : 상담요청 상세 > 활동내역 추가
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.18
+    ***************************************/ -->
+    <insert id="insertActyHistory" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocSetActyHistoryReqDto">
+   	/* LoyVocMapper.insertActyHistory */
+   	INSERT INTO VOC.VOC_ATVY_HIST (
+    		RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, CREATE_DATE
+    		, MODIFY_DATE
+    		, FLAG
+    		, RID_CUST
+    		, CREATOR_LOGIN
+    		, ATVY_TYPE
+    		, COMMENTS_LONG
+    		, ACT_CREATED_DT
+    		, RID_SVCREQ
+    		, ATVY_SUB_TYPE
+    		, MSG_SUBJECT
+    	)
+    VALUES (
+    		com.getNewID('A')
+    		, #{empId}
+    		, #{empId}
+    		, GETDATE()
+    		, GETDATE()
+    		, '1'
+    		, #{ridCust}
+    		, #{cuserId}
+    		, #{actyType}
+    		, #{sbst}
+    		, GETDATE()
+    		, #{ridSvcReq}
+    		, '10'
+    		, #{msgSubject}
+    	)
+    	<!-- <selectKey keyProperty="" resultType="java.lang.String">
+			select 1 from dual
+		</selectKey> -->
+    </insert>
+
+	<!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상세 수정
+    -   설명                  : 상담요청 상세 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.18
+    ***************************************/ -->
+    <update id="updateRequestConsultation" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocModifyRequestConsultationReqDto">
+   	/* LoyVocMapper.updateRequestConsultation */
+   	UPDATE VOC.VOC_SVC_REQ
+   	SET
+    		MODIFY_BY = #{empId}
+    		, MODIFY_DATE = GETDATE()
+    		<if test="ridCust != null and ridCust != ''">
+			, RID_CUST = #{ridCust}
+			</if>
+    		, RID_CRMUSER = #{ridCrmuser}
+    		, SR_NO = #{srNo}
+    		, CNSLG_TYPE_CD_L = #{cnslgTypeCdL}
+    		, CNSLG_TYPE_CD_M = #{cnslgTypeCdM}
+    		, CNSLG_TYPE_CD_S = #{cnslgTypeCdS}
+    		, CNSLG_TITLE = #{cnslgTitle}
+    		, CNSLG_SBST = #{cnslgSbst}
+    		, RCP_METH = #{rcpMeth}
+    		<if test="callId != null and callId != ''">
+    		, CALL_ID = #{callId}
+    		</if>
+    		, MEM_PTBL_NO = #{memPtblNo}
+    		, mem_no = #{memNo}
+    		, MEM_NM = #{memNm}
+    		, CNTC_DESK = #{cntcDesk}
+    		, EMAIL_ADDR = #{emailAddr}
+    		, CPRT_VNDR_HHO_CONV_FAIL = #{cprtVndrHhoConvFail}
+    		, CPRT_VNDR_CD = #{cprtVndrCd}
+    		, rid_chnl = #{ridChnl}
+    		, RID_MBR = #{ridMbr}
+    WHERE RID = #{rid}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상세 신규
+    -   설명                  : 상담요청 상세 신규
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.18
+    ***************************************/ -->
+    <insert id="insertRequestConsultation" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocSetRequestConsultationReqDto">
+    	<selectKey keyProperty="rid" resultType="java.lang.String">
+			SELECT com.getNewID('A') AS rid <!-- FROM dual -->
+		</selectKey>
+    /* LoyVocMapper.insertRequestConsultation */
+    INSERT INTO VOC.VOC_SVC_REQ
+    	(
+    		RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, CREATE_DATE
+    		, MODIFY_DATE
+    		, FLAG
+    		, RID_CUST
+    		, RID_CRMUSER
+    		, RID_CHNL
+    		, SR_NO
+    		, SR_TRT_STATUS
+    		, CNSLG_TYPE_CD_L
+    		, CNSLG_TYPE_CD_M
+    		, CNSLG_TYPE_CD_S
+    		, CNSLG_TITLE
+    		, CNSLG_SBST
+    		, RCP_METH
+    		, RCP_DT
+    		, MEM_NO
+    		, CALL_ID
+    		, MEM_PTBL_NO
+    		, MEM_NM
+    		, CNTC_DESK
+    		, EMAIL_ADDR
+    		, CPRT_VNDR_HHO_CONV_FAIL
+    		, CPRT_VNDR_CD
+    		, RID_MBR
+    	)
+    	VALUES
+    	(
+    		#{rid}
+    		, #{empId}
+    		, #{empId}
+			, GETDATE()
+			, GETDATE()
+			, '1'
+			, #{ridCust}
+			, #{ridCrmuser}
+			, #{ridChnl}
+			, com.getNewSrNo(#{memNo})
+			, 'Open'
+			, #{cnslgTypeCdL}
+			, #{cnslgTypeCdM}
+			, #{cnslgTypeCdS}
+			, #{cnslgTitle}
+			, #{cnslgSbst}
+			, #{rcpMeth}
+			, GETDATE()
+			, #{memNo}
+			, #{callId}
+			, #{memPtblNo}
+			, #{memNm}
+			, #{cntcDesk}
+			, #{emailAddr}
+			, #{cprtVndrHhoConvFail}
+			, #{cprtVndrCd}
+			, #{ridMbr}
+    	)
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상태 완료 수정
+    -   설명                  : 상담요청 상태 완료 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.18
+    ***************************************/ -->
+    <update id="updateRequestConsultationComplete" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocModifyRequestConsultationReqDto">
+    /* LoyVocMapper.updateRequestConsultationComplete */
+   	UPDATE VOC.VOC_SVC_REQ
+   	SET
+    		modify_by = #{empId}
+    		, modify_date = GETDATE()
+    		, CMPLT_DT = GETDATE()
+    		, END_DT = GETDATE()
+    		<if test="srTrtStatus != null and srTrtStatus != ''">
+			, SR_TRT_STATUS = 'Closed'
+			</if>
+    WHERE RID IN
+    	<foreach collection="ridList" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상담원 이관
+    -   설명                  : 상담요청 상담원 이관
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.18
+    ***************************************/ -->
+    <update id="updateRequestConsultationTransfer" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocModifyRequestConsultationReqDto">
+    /* LoyVocMapper.updateRequestConsultationTransfer */
+   	UPDATE VOC.VOC_SVC_REQ
+   	SET
+   		MODIFY_BY = #{empId}
+   		, MODIFY_DATE = GETDATE()
+   		, TRC_DT = GETDATE()
+   		, RID_CRMUSER = #{ridCrmuser}
+   		<!-- , sr_trt_status = 'Trans' -->
+   	WHERE RID IN
+   		 <foreach collection="ridList" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : CCA 녹취청취 목록 조회
+    -   설명                  : CCA 녹취청취 목록 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.12.19
+    ***************************************/ -->
+    <!-- 사용하지 않는거 같아보여서 임시 주석처리 합니다 -->
+    <!-- <select id="selectRecordFileListForCCA" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocGetRecordFileListReqDto" resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocGetRecordFileListResDto">
+    	/* LoyVocMapper.selectRecordFileListForCCA */
+    	SELECT
+    		a.companyid					AS companyId
+    		, a.interactionid			AS interactionId
+    		, a.actiondate				AS actionDate
+    		, a.userid					AS userId
+    		, a.mediatype				AS mediaType
+    		, a.filename				AS fileName
+    		, a.filepath				AS filePath
+    		, a.hostname				AS hostName
+    		, a.url						AS url
+    		, a.duration				AS duration
+    		, a.transactionstatus		AS transactionStatus
+    		, a.numberofretries			AS numberOfRetries
+    		, a.remotestatus			AS remoteStatus
+    		, a.projectid				AS projectId
+    		, a.mediastatus				AS mediaStatus
+    		, a.MODIFIEDDATE			AS modifyDate
+    		, a.backup_filepath			AS backupFilePath
+    	FROM
+    		VOC.QUALITYCONTROL a
+    	WHERE
+    		a.INTERACTIONID = #{callId}
+    </select> -->
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 상담요청 상세 > 활동내역 이메일 또는 SMS 발송 > 발송 내역 수정
+    -   설명                  : 상담요청 상세 > 활동내역 이메일 또는 SMS 발송 > 발송 내역 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.10.18
+    ***************************************/ -->
+    <insert id="updateActyHistory" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocSetActyHistoryReqDto">
+    /* LoyVocMapper.updateActyHistory */
+   	UPDATE VOC.VOC_ATVY_HIST
+   	SET
+    		MODIFY_BY = #{empId}
+    		, MODIFY_DATE = GETDATE()
+<!--     		<isEqual property="chnlType" compareValue="email"> -->
+<!--     		, email_trm_dt = GETDATE() -->
+<!--     		</isEqual> -->
+<!--     		<isEqual property="chnlType" compareValue="sms"> -->
+<!--     		, sms_trm_dt = GETDATE() -->
+<!--     		</isEqual> -->
+		    <if test="chnlType == &quot;email&quot;">
+		    , CHNL_SEND_DT = GETDATE()
+		    </if>
+		    <if test="chnlType == &quot;sms&quot;">
+		    , CHNL_SEND_DT = GETDATE()
+		    </if>
+    WHERE RID = #{rid}
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : rid_cust 로 rid_mbr 조회
+    -   설명                  : rid_cust 로 rid_mbr 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2018.01.17
+    ***************************************/ -->
+    <select id="selectRidMbrByRidCust" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocRequestConsultationReqDto" resultType="java.lang.String">
+    /* LoyVocMapper.selectRidMbrByRidCust */
+    SELECT b.rid 	AS ridMbr
+    FROM LOY.LOY_CUST a WITH (NOLOCK)
+    INNER JOIN loy.loy_mbr b WITH (NOLOCK) ON a.rid = b.rid_cust
+    WHERE a.RID = #{ridCust}
+    AND b.MBR_NO = #{memNo}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : VOCRequestConsultationDAO.java
+    ============================================
+    -   제목                  : 활동이력 > 활동내역 메시지 조회
+    -   설명                  : 활동이력 > 활동내역 메시지 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2018.01.17
+    ***************************************/ -->
+    <select id="selectActyHistoryMsg" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocGetActyHistoryMsgReqDto" resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocGetActyHistoryMsgResDto">
+    	/* LoyVocMapper.selectActyHistoryMsg */
+    SELECT
+    		a.COMMENTS_LONG	AS sbst			/* 활동내용 */
+    FROM VOC.VOC_ATVY_HIST a WITH (NOLOCK)
+    WHERE a.RID = #{rid}
+    </select>
+    
+    <select id="clearMaskDrop" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocRequestConsultationReqDto" resultType="com.icignal.loyalty.voc.requestConsultation.dto.response.VocRequestConsultationResDto">
+	/* LoyVocMapper.clearMaskDrop */
+	SELECT
+				t1.RID 						AS rid
+			   	, t1.MEM_PTBL_NO			AS unMaskMemPtblNo
+			   	, t1.MEM_NM 				AS unMaskMemNm
+			   	, t1.CNTC_DESK 				AS unMaskCntcDesc
+			   	, t1.EMAIL_ADDR				AS unMaskEmailAddr
+	FROM VOC.VOC_SVC_REQ t1 WITH (NOLOCK)
+    WHERE t1.RID = #{rid}
+	</select>
+	
+	<select id="selectUpdateCrmUser" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocModifyRequestConsultationReqDto" resultType="java.lang.String">
+	/* LoyVocMapper.selectUpdateCrmUser */
+	SELECT em.NAME
+	FROM COM.CRM_USER cu WITH (NOLOCK)
+	LEFT OUTER JOIN COM.EMPLOYEE em WITH (NOLOCK) ON cu.ID_EMPLOYEE = em.id AND em.FLAG = 1
+	WHERE cu.RID = #{ridCrmuser}
+	</select>
+	
+	<select id="selectCrmUser" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocModifyRequestConsultationReqDto" 
+												resultType="java.lang.String">
+	/* LoyVocMapper.selectCrmUser */
+	SELECT USER_ID
+	FROM COM.CRM_USER WITH (NOLOCK)
+	WHERE RID = #{ridCrmuser}
+	</select>
+    
+    <insert id="insertRequestConsultationActyHist" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocSetActyHistoryReqDto">
+   	/* LoyVocMapper.insertRequestConsultationActyHist */
+   	INSERT INTO VOC.VOC_ATVY_HIST (
+    		RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, CREATE_DATE
+    		, MODIFY_DATE
+    		, FLAG
+    		, RID_CUST
+    		, CREATOR_LOGIN
+<!--     		, rid_crmuser -->
+    		, ATVY_TYPE
+    		, COMMENTS_LONG
+    		, ACT_CREATED_DT
+    		, RID_SVCREQ
+    		, ATVY_SUB_TYPE
+    		, MSG_SUBJECT
+    	)
+    VALUES (
+    		  #{rid}
+    		, #{createBy}
+    		, #{modifyBy}
+    		, GETDATE()
+    		, GETDATE()
+    		, '1'
+    		, #{ridCust}
+    		, #{cuserId}
+<!--     		, #{ridCrmuser} -->
+    		, '70'
+    		, N'현재담당자: (' || #{crmName} || ') , 변경담당자: (' || #{updateCrmName} || ')'
+    		, GETDATE()
+    		, #{ridSvcReq}
+    		, '10'
+    		, #{msgSubject}
+    )
+    </insert>
+    
+    <insert id="insertRequestConsultationCompleActyHist" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocSetActyHistoryReqDto">
+    /* LoyVocMapper.insertRequestConsultationCompleActyHist */
+    INSERT INTO VOC.VOC_ATVY_HIST
+    	(
+    		RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, CREATE_DATE
+    		, MODIFY_DATE
+    		, FLAG
+    		, RID_CUST
+    		, CREATOR_LOGIN
+<!--     		, rid_crmuser -->
+    		, ATVY_TYPE
+    		, COMMENTS_LONG
+    		, ACT_CREATED_DT
+    		, RID_SVCREQ
+    		, ATVY_SUB_TYPE
+    		, MSG_SUBJECT
+    	)
+    VALUES
+    	(
+    		  #{rid}
+    		, #{createBy}
+    		, #{modifyBy}
+    		, GETDATE()
+    		, GETDATE()
+    		, '1'
+    		, #{ridCust}
+    		, #{cuserId}
+<!--     		, #{ridCrmuser} -->
+    		, '80'
+    		, N'완료자명: (' || #{crmName} || ')'
+    		, GETDATE()
+    		, #{ridSvcReq}
+    		, '10'
+    		, #{msgSubject}
+    )
+    </insert>
+    
+    <insert id="insertRequestConsultationHist" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocSetActyHistoryReqDto">
+   	/* LoyVocMapper.insertRequestConsultationHist */
+   	INSERT INTO VOC.VOC_ATVY_HIST (
+    		RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, CREATE_DATE
+    		, MODIFY_DATE
+    		, FLAG
+    		, RID_CUST
+    		, CREATOR_LOGIN
+<!--     		, rid_crmuser -->
+    		, ATVY_TYPE
+    		, COMMENTS_LONG
+    		, ACT_CREATED_DT
+    		, RID_SVCREQ
+    		, ATVY_SUB_TYPE
+    		, MSG_SUBJECT
+    	)
+    VALUES (
+    		  #{rid}
+    		, #{createBy}
+    		, #{modifyBy}
+    		, GETDATE()
+    		, GETDATE()
+    		, '1'
+    		, #{ridCust}
+    		, #{cuserId}
+<!--     		, #{ridCrmuser} -->
+    		, '90'
+    		, N'VOC 등록/' || #{rcpMethNm} || '/' || #{crmName}  
+    		, GETDATE()
+    		, #{ridSvcReq}
+    		, '10'
+    		, #{msgSubject}
+    )
+    </insert>
+    
+    <select id="selectRcpMethNm" parameterType="com.icignal.loyalty.voc.requestConsultation.dto.request.VocSetRequestConsultationReqDto" resultType="java.lang.String">
+	/* LoyVocMapper.selectRcpMethNm */
+	SELECT MARK_NAME
+	FROM COM.COMM_CODE WITH (NOLOCK)
+	WHERE GROUP_CODE = #{groupCode}
+	AND CODE_NAME  = #{rcpMeth}
+	</select>
+    
+
+</mapper>

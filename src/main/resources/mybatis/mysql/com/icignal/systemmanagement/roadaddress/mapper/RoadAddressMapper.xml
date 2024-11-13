@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 18:26:12 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.roadaddress.mapper.RoadAddressMapper">
+
+	<!-- /**************************************
+	-	관련 파일				: RoadAddressService.java(getRoadAddressList)
+	============================================
+	-	제목					: 도로명주소 데이터 조회
+	-	설명					: 도로명주소 데이터를 COM.B_CODE 테이블로 부터 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: 
+	============================================
+	-	작성자				: jb.kim	
+	-	작성일				: 2020.12.04
+	***************************************/ -->	
+	<select id="getRoadAddressList" parameterType ="com.icignal.systemmanagement.roadaddress.dto.request.RoadAddressReqDto" 
+			resultType="com.icignal.systemmanagement.roadaddress.dto.response.RoadAddressResDto" fetchSize= "5000">
+		select 	bc.rid as rid       
+			   ,bc.code as code  
+			   ,bc.code_nm as code_nm  
+			   ,bc.sido as sido
+			   ,bc.sigungu as sigungu
+			   ,bc.del_flag as del_flag
+			   ,${strColumn}
+		from 	com.b_code bc
+		where 	1=1
+			and bc.flag = 1
+			and ${strCondWhere}
+		    and ${strWhere}
+		order by ${strOrderby}
+		
+		${strEndPaging}
+	</select>
+	
+	
+	 <select id="selectChnlRidCheck" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.selectChnlRidCheck */
+    	SELECT   lc.RID 		AS rid
+    			,lc.LVL_CD      AS lvlCd
+    	FROM LOY.LOY_CHNL lc
+    	WHERE lc.CHNL_NO = #{chnlNo}
+    	AND lc.FLAG = 1
+    </select>	
+	
+	
+	<select id="selectChnlIdCheck" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="java.lang.Integer">
+    	/* LoyProdGrpMapper.selectChnlIdCheck */
+    	SELECT   count(1)
+    	FROM LOY.LOY_CHNL_GRP_XM lcgx
+    	WHERE lcgx.RID_CHNL_GRP = #{chnlGrpRid}
+    	AND   lcgx.RID_CHNL     = #{chnlRid}
+    	AND   lcgx.FLAG = 1
+    </select>
+	    
+</mapper>

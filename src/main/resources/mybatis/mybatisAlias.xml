@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+
+<configuration>
+
+
+     <settings>
+        <setting name="jdbcTypeForNull" value="VARCHAR" />
+        <setting name="returnInstanceForEmptyRow" value="true"/>
+        <setting name="cacheEnabled" value="false"></setting>
+     </settings>
+	<typeAliases>
+	<!--  공통 (로그인) 관련 -->
+	<!-- <typeAlias alias="LoginRequest" type="com.icignal.auth.dto.request.LoginReqDto"/>
+	<typeAlias alias="LoginResponse" type="com.icignal.auth.dto.request.LoginResDto"/>
+	
+	 -->
+	
+	
+	
+	 <!--  로열티 회원 관련   -->
+<!-- 	 <typeAlias alias="MbrRequest" type="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"/>
+     <typeAlias alias="MbrResponse" type="com.icignal.loyalty.membership.dto.response.LoyMbrResDto"/>
+     
+      -->
+     
+         
+     
+     </typeAliases>
+     <!-- <typeHandlers>
+     	<typeHandler handler="com.icignal.loyalty.membership.typehandler.LoyFmlyTypeHandler" javaType="java.lang.String" jdbcType="ARRAY"/>
+     </typeHandlers> -->
+     
+      <!-- MyBatis mapper 파일이 추가될 때마다 지정해줘야 . -->
+    
+
+     
+     
+
+</configuration>

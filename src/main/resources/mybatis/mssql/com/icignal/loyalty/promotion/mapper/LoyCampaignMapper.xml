@@ -1,0 +1,3329 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 16:49:24 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.promotion.campaign.mapper.LoyCampaignMapper">
+
+
+
+    <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java
+    ============================================
+    -   제목                  : 프로모션 목록
+    -   설명                  : 프로모션 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2018.11.20
+    ***************************************/ -->
+    <select id="getPromotionList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqtDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.LOYCampaignListResDto">
+        /* LoyCampaign.getPromotionList */
+           select   c.ID
+               , c.CREATE_BY as createBy
+               , c.MODIFY_BY as modifyBy
+               , c.CREATE_DATE as createDate
+               , c.MODIFY_DATE as modifyDate
+
+               , c.OFFER_ID as offerId
+               , o.OFFER_NM as offerName
+               , o.OFFER_TYPE_CD as offerTypeCd
+
+               , c.ACCNT_ID as accountId
+               , o.OFFER_TYPE_CD as offerType
+               <!-- , c.ACCNT_ID as accountId -->
+               , c.DISP_NO as dispNo
+
+               , c.CAM_STATUS_CD as campaignStatusCode
+
+               , c.CAM_NM as campaignName
+               , c.CAM_DESC as description
+               , com.TO_CHAR(c.CAM_START_DD,'YYYY-MM-DD') as campaignStartDate
+               , com.TO_CHAR(c.CAM_END_DD,'YYYY-MM-DD') as campaignEndDate
+
+               , c.CAM_PLAN_ORG_CD as planOrgCode
+               , d1.div_nm as planOrgCodeName
+
+               , c.EXE_ORG_LVL_CD as exeOrgLvlCode
+
+               , c.CAM_PLNER as campaignPlanner
+               , e.NAME as campaignPlannerName
+
+               , c.CAM_PRPS_CD as campaignPurposeCode
+               , c.CAM_METH_CD as campaignMethodCode
+               , c.CAM_METH_DESC as campaignMethodDesc
+               , c.CHNL_TYPE_CD as channelTypeCode
+               , c.CAM_TYPE_CD as campaignTypeCode
+               , ea.ELEC_APRV_STATUS_CD as campaignApprovalStatusCode
+               , c.PAR_CAM_ID as parCampaignId
+               , c.PROGRAM_ID as programId
+               , c.PLAN_ID as planId
+               , c.cam_scope_type_cd as camScopeTypeCd
+               , c.plan_group_cd     as planGroupCd
+               , c.type 	as type
+               , c.prom_yn  as promYn
+               , ${strColumn}
+          from mkt.mkt_cam_mst c
+          left outer join mkt.mkt_cam_offer_rel r on r.flag = 1 and r.cam_id = c.id
+          left outer join mkt.mkt_offer_mst     o on r.offer_id = o.id
+          left outer join com.employee e        on e.id = c.CAM_PLNER
+          left outer join com.crm_division d1  on d1.rid = e.rid_division
+          left outer join com.com_elec_aprv ea  on ea.flag = 1 and ea.cam_id = c.id
+         where ${strCondWhere}
+           and ${strSVCType}
+           and ${strWhere}
+           and c.flag = 1
+           and c.type = #{type}
+         order by ${strOrderby}
+         ${strEndPaging}
+    </select>
+    
+
+    
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(getTemp)
+    ============================================
+    -   제목                  : 등록된 템플릿 리스트 조회
+    -   설명                  : 등록된 템플릿 리스트 전체조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력                  : camTypeCd 캠페인 유형
+                        camPrpsCd 캠페인 목적
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.25
+    ***************************************/ -->
+    <select id="getTemp" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignGetTempNodeListReqDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignGetTempNodeListResDto">
+        /* LoyCampaign.getTemp */
+        select    mwtm.id as tempMstId
+                , mwtm.wf_nm as taskTitle
+                , mwtm.wf_desc as taskDesc
+                , cc.id as camTypeCd
+                , cc.mark_name as camTypeCdName
+                , mwtm.wf_id as workflowId
+                , mwtm.cam_id as campaignId
+        from mkt.mkt_wf_template_mst mwtm
+        left outer join com.comm_code cc on mwtm.wf_cam_type_cd = cc.code_name and cc.flag=1 and cc.lang = #{lang} and cc.group_code = 'MKT_CAM_TYPE_CD'
+        left outer join com.comm_code cc2 on mwtm.wf_cam_prps_cd = cc2.code_name and cc2.flag=1 and cc2.lang = #{lang} and cc2.group_code = 'MKT_CAM_GOAL_CD' 
+        where 1=1
+        <!-- and mwtm.accnt_id = #{accountId} -->
+        and mwtm.flag = 1
+        <if test="camTypeCd != null and camTypeCd != ''">
+        and cc.code_name = #{camTypeCd}
+        </if>
+        <if test="camPrpsCd != null and camPrpsCd != ''">
+        and cc2.code_name = #{camPrpsCd}
+        </if>
+        and ${strSVCType}
+    </select>
+      <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(getTempNodeList)
+    ============================================
+    -   제목                  : 템플릿에 등록된 작업노드 리스트 조회
+    -   설명                  : 템플릿 선택시 템플릿 아이디 기반으로 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.25
+    ***************************************/ -->
+    <select id="getTempNodeList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignGetTempNodeListReqDto"
+     resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignGetTempNodeListResDto">
+        /* LoyCampaign.getTempNodeList */
+        select mwtm.wf_nm as taskTitle
+               , mwtm.wf_desc as taskDesc
+               , cc.mark_name as camTypeCd
+               , cc2.mark_name as nodeTypeCodeName
+               , cc2.mark_code as taskTypeCode
+       	from mkt.mkt_wf_template_mst mwtm
+          join com.wf_task_had wth
+            on wth.id = mwtm.wf_id and wth.flag = 1
+          join com.comm_code cc
+            on mwtm.wf_cam_type_cd = cc.code_name and cc.flag=1 and cc.lang = #{lang} and cc.group_code = 'MKT_CAM_TYPE_CD'
+          join com.wf_task_node wtn
+            on wth.id = wtn.task_had_id and wtn.flag = 1
+          join com.wf_node_mst wnm
+            on wnm.id = wtn.node_id and wnm.flag = 1
+          join com.comm_code cc2
+            on cc2.code_name = wnm.node_type_cd and cc2.flag=1 and cc2.lang = #{lang} and cc2.group_code = 'MKT_WF_NODE_TYPE'
+        where mwtm.id = #{tempMstId}
+           <!-- and mwtm.accnt_id = #{accountId} -->
+           and mwtm.flag = 1
+           and ${strSVCType}
+        order by cc2.seq asc
+    </select>
+    
+    <!-- 승인전송 프로모션 전체 등록 -->
+	<update id="proc_if_ifl_vanPromotionAll_ins" 
+	parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignPromotionExeInfoReqDto" 
+	statementType="CALLABLE">
+		
+<!-- 		<![CDATA[{ call ifl.proc_if_ifl_vanPromotionAll_ins(#{promNo}, #{promStatusCd}) }]]> -->
+        { call ifl.proc_if_ifl_vanPromotionAll_ins(#{promNo}, #{promStatusCd}) }
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java
+    ============================================
+    -   제목                  : 메세지 발송 중지
+    -   설명                  : 메세지 발송 중지
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.06
+    ***************************************/ -->
+    <update id="updateStopSendingMessagesByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaign.updateStopSendingMessagesByCampaignId */
+        update mkt.mkt_msg_send_log
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , BAT_SEND_STATUS = 'C'
+         where CAM_ID = #{id}
+           and BAT_SEND_STATUS = 'N'
+    </update>
+      <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java
+    ============================================
+    -   제목                  : PUSH 발송 중지
+    -   설명                  : PUSH 발송 중지
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.06
+    ***************************************/ -->
+    <update id="updateStopSendingPushByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaign.updateStopSendingPushByCampaignId */
+        update mkt.mkt_push_send_log
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , BAT_SEND_STATUS = 'C'
+         where CAM_ID = #{id}
+           and BAT_SEND_STATUS = 'N'
+    </update>
+       <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java
+    ============================================
+    -   제목                  : 카카오 친구톡 발송 중지
+    -   설명                  : 카카오 친구톡 발송 중지
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2018.01.11
+    ***************************************/ -->
+    <update id="updateStopSendingKakaoByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaign.updateStopSendingKakaoByCampaignId */
+        update mkt.mkt_kakao_send_log
+           set
+                 MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , BAT_SEND_STATUS = 'C'
+         where CAM_ID = #{id}
+           and BAT_SEND_STATUS = 'N'
+    </update>
+    
+    
+    <update id="updateCampaignExeInfoStatusActive" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaign.updateCampaignStatus */
+		update 	mkt.mkt_exe_info_item
+		set 	exe_info_status_cd = 'A'
+	            , modify_by = #{modifyBy}
+	            , modify_date = GETDATE()
+		where 	flag = 1
+		  and 	exe_info_status_cd = 'W'
+		  and 	exe_info_id in (select id from mkt.mkt_exe_info where flag = 1 and cam_id = #{id})
+    </update>
+    
+      <update id="updateCampaignExeInfoStatusStop" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaign.updateCampaignStatus */
+		update 	mkt.mkt_exe_info_item
+		set 	exe_info_status_cd = 'C'
+	            , modify_by = #{modifyBy}
+	            , modify_date = GETDATE()
+		where 	flag = 1
+		  and 	exe_info_status_cd = 'A'
+		  and 	exe_info_id in (select id from mkt.mkt_exe_info where flag = 1 and cam_id = #{id})
+    </update>
+    
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(editCampaignWorkflowRel)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 상태 수정
+    -   설명                  : 캠페인 워크플로우 상태 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="updateCampaignStatus" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaign.updateCampaignStatus */
+        update LOY.LOY_PROM
+           set
+                 MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , PROM_STAT_CD = #{promStatCd}
+         where RID = #{id}
+    </update>
+    
+   
+    
+    	<!-- 활성 프로모션 실행정보 조회 -->
+	<select id="selectExeInfoPromActiveList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignPromotionExeInfoReqDto" 
+	resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignPromotionExeInfoResDto">
+		/* LoyCampaign.selectExeInfoPromActiveList */
+		select prom_no as promNo
+		  from mkt.mkt_exe_info_prom
+		 where 1=1
+		   and flag = 1
+		   and prom_status_cd in ('1', '2')
+		   and cam_id = #{camId}
+	</select>
+	
+	    <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java
+    ============================================
+    -   제목                  : 이메일 발송 중지
+    -   설명                  : 이메일 발송 중지
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.06
+    ***************************************/ -->
+    <update id="updateStopSendingEmailByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaign.updateStopSendingEmailByCampaignId */
+        update mkt.mkt_email_send_log
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , BAT_SEND_STATUS = 'C'
+         where CAM_ID = #{id}
+           and BAT_SEND_STATUS = 'N'
+    </update>
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(removeCampaignProgram)
+    ============================================
+    -   제목                  : 캠페인 프로그램 등록
+    -   설명                  : 캠페인 프로그램 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.27
+    ***************************************/ -->
+    <update id="deleteCampaignProgram" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignProgramReqDto">
+        /* LoyCampaign.deleteCampaignProgram */
+        update mkt.mkt_prog
+           set
+                 MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where id = #{id}
+    </update>
+    
+    
+     <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java
+    ============================================
+    -   제목                  : 캠페인 기획완료 체크
+    -   설명                  : 캠페인 기획완료 체크
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.06
+    ***************************************/ -->
+   <select id="selectTgtChk" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignTgtChnlChkReqDto" 
+   resultType="java.lang.String">
+      SELECT memType
+      FROM (
+        SELECT DISTINCT mst.id AS camId,
+               CASE
+                  WHEN mtd.attrip01 IS NOT NULL THEN 'external'
+                  ELSE 'internal'
+               END
+                  AS memType
+        from mkt.mkt_cam_mst mst
+        join mkt.mkt_exe_info mei on mst.id = mei.cam_id and mei.flag = 1
+        join mkt.mkt_exe_info_item meii on mei.id = meii.exe_info_id and meii.flag = 1
+        join mkt.mkt_tgt_dtl mtd on meii.id = mtd.exe_info_item_id and mtd.flag = 1
+        where ${strSVCType}
+          and mst.id = #{id}
+          and mst.flag = 1
+      )
+   </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java
+    ============================================
+    -   제목                  : 캠페인 기획완료 체크
+    -   설명                  : 캠페인 기획완료 체크
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.06
+    ***************************************/ -->
+   <select id="selectChnlChk" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignTgtChnlChkReqDto" 
+   resultType="java.lang.String">
+        SELECT cm.exe_chnl_type_cd as exeChnlTypeCd
+        FROM mkt.mkt_cam_mst mcm
+        join com.mkt_conts_chnl_rel ccr on mcm.id = ccr.cam_id and ccr.flag = 1
+        left outer join com.mkt_conts_mst cm on ccr.contents_id = cm.id and cm.flag = 1
+        where ${strSVCType}
+        and mcm.id = #{id}
+        and mcm.flag = 1
+   </select>
+  <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(getCampaignWorkflowTemplateCount)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 템플릿 Count
+    -   설명                  : 캠페인 워크플로우 템플릿 Count
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.01.05
+    ***************************************/ -->
+    <select id="selectCampaignWorkflowTemplateCount" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowTemplateReqDto" 
+    resultType="java.lang.Integer">
+        /* LoyCampaign.selectCampaignWorkflowTemplateCount */
+        select count(1)
+          from mkt.mkt_wf_template_mst
+         where 1=1
+           and flag = 1
+           and cam_id = #{campaignId}
+    </select>
+    
+       <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(editCampaignWorkflowTemplate)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 템플릿 수정
+    -   설명                  : 캠페인 워크플로우 템플릿 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.01.05
+    ***************************************/ -->
+    <update id="updateCampaignWorkflowTemplate" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowTemplateReqDto">
+        /* LoyCampaign.updateCampaignWorkflowTemplate */
+        update mkt.mkt_wf_template_mst
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , WF_ID = #{workflowId}
+         where 1=1
+           and CAM_ID = #{campaignId}
+           and flag = 1
+    </update>
+     <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(removeCampaignWorkflowTemplate)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 템플릿 삭제
+    -   설명                  : 캠페인 워크플로우 템플릿 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.01.05
+    ***************************************/ -->
+    <update id="deleteCampaignWorkflowTemplate" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowTemplateReqDto">
+        /* LoyCampaign.deleteCampaignWorkflowTemplate */
+        update mkt.mkt_wf_template_mst
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where 1=1
+           and CAM_ID = #{campaignId}
+    </update>
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(addCampaignWorkflowTemplate, removeCampaignWorkflowTemplate)
+    ============================================
+    -   제목                  : 캠페인 템플릿 사용여부 수정
+    -   설명                  : 캠페인 템플릿 사용여부 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.03.21
+    ***************************************/ -->
+    <update id="updateCampaignTemplateFlag" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowTemplateReqDto">
+        /* LoyCampaign.updateCampaignTemplateFlag */
+        update mkt.mkt_cam_mst c
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , c.CAM_TEMP_USE_YN = #{templateUseFlag}
+         where c.id = #{campaignId}
+    </update>
+       <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(removeCampaignWorkflowTemplate)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 템플릿 삭제
+    -   설명                  : 캠페인 워크플로우 템플릿 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.01.05
+    ***************************************/ -->
+<!--     <update id="deleteCampaignWorkflowTemplate" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowTemplateReqDto">
+        /* LoyCampaign.deleteCampaignWorkflowTemplate */
+        update mkt.mkt_wf_template_mst
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where 1=1
+           and CAM_ID = #{campaignId}
+    </update> -->
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(addCampaignWorkflowTemplate, removeCampaignWorkflowTemplate)
+    ============================================
+    -   제목                  : 캠페인 템플릿 사용여부 수정
+    -   설명                  : 캠페인 템플릿 사용여부 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.03.21
+    ***************************************/ -->
+<!--     <update id="updateCampaignTemplateFlag" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowTemplateReqDto">
+        /* LoyCampaign.updateCampaignTemplateFlag */
+        update mkt.mkt_cam_mst c
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , c.CAM_TEMP_USE_YN = #{templateUseFlag}
+         where c.id = #{campaignId}
+    </update> -->
+    
+    
+    
+      <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(addCampaignOfferRel)
+    ============================================
+    -   제목                  : 캠페인 오퍼 등록
+    -   설명                  : 캠페인 오퍼 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <insert id="insertCampaignOfferRel" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignOfferReqDto">
+        /* LoyCampaign.insertCampaignOfferRel */
+        insert into mkt.mkt_cam_offer_rel
+            ( ID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , FLAG
+           <!--  , COUNTRY -->
+           <!--  , APP_SERVICE_TYPE -->
+            , CAM_ID
+            , OFFER_ID )
+        values
+            ( #{id}
+            , #{createBy}
+            , #{modifyBy}
+            , GETDATE()
+            , GETDATE()
+            , 1
+         <!--    , #{country} -->
+         <!--    , #{appServiceId} -->
+            , #{campaignId}
+            , #{offerId} )
+
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from mkt.mkt_cam_offer_rel where id = #{id} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey>
+    </insert>
+    
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(removeCampaignOfferRel)
+    ============================================
+    -   제목                  : 캠페인 오퍼 삭제
+    -   설명                  : 캠페인 오퍼 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteCampaignOfferRel" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignOfferReqDto">
+        /* LoyCampaign.deleteCampaignOfferRel */
+        update mkt.mkt_cam_offer_rel
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where ID = #{id}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(editCampaignOfferRel)
+    ============================================
+    -   제목                  : 캠페인 오퍼 수정
+    -   설명                  : 캠페인 오퍼 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="updateCampaignOfferRel" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignOfferReqDto">
+        /* LoyCampaign.updateCampaignOfferRel */
+        update mkt.mkt_cam_offer_rel
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , FLAG = 1
+               , CAM_ID = #{campaignId}
+               , OFFER_ID = #{offerId}
+         where ID = #{id}
+    </update>
+    
+    
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java(getCampaignStatus)
+    ============================================
+    -   제목                  : 캠페인 상태 조회
+    -   설명                  : 캠페인 상태 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.03.18
+    ***************************************/ -->
+    <select id="selectCampaignStatus" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" resultType="java.lang.String">
+        /* LoyCampaign.selectCampaignStatus */
+        select c1.code_name
+          from mkt.mkt_cam_mst c
+         inner join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c.cam_status_cd = c1.code_name and c1.group_code = 'MKT_CAM_STAT'
+        where c.id = #{id}
+    </select>
+    
+    
+        <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java (removeCampaign)
+    ============================================
+    -   제목                  : 캠페인 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.11.29
+    ***************************************/ -->
+    <update id="removeCampaign" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignRemoveReqDto">
+
+        update LOY.LOY_PROM
+        set
+              flag = flag + 1
+            , modify_date = GETDATE()
+            , modify_by   = #{modifyBy}
+        where rid = #{rid}
+    </update>
+    
+    
+	<update id="removeCampaignTemplates" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignRemoveReqDto">
+    	/* LoyCampaign.removeCampaignTemplates */
+    	update 	mkt.mkt_wf_template_mst
+    	set 	flag = flag + 1
+    			, modify_date = GETDATE()
+    	where 	cam_id = #{id}
+    		and flag = 1
+    </update>
+    
+     <!-- /**************************************
+    -   관련 파일             : LoyCampaignMapper.java (isExecutableUser)
+    ============================================
+    -   제목                  : 활성 권한 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2018.01.22
+    ***************************************/ -->
+    <select id="isExecutableUser" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignExecutableUserReqDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignExecutableUserResDto">
+        select
+
+            <!-- 활성권한을 가진 권한 그룹원인가?  -->
+            com.nvl((SELECT '1' FROM DUAL WHERE #{createBy} in (
+                select usr.rid
+                from com.auth_user_rel rel
+                left join com.auth_group aut on aut.flag = 1 and aut.id = rel.aut_group_id
+                left join com.crm_user   usr on usr.flag = 1 and usr.rid = rel.rid_user
+                where aut.type = 'MKT_MASTER'
+                  and rel.flag = 1
+            )),0) as authGroupUserYN,
+
+            <!-- 작성자인가? -->
+            com.nvl((SELECT '1' FROM DUAL WHERE #{createBy} = (
+                select create_by
+                from mkt.mkt_cam_mst
+                where id = #{camId}
+            )),0) as createUserYN,
+
+            <!-- 요청자인가? -->
+            com.nvl((SELECT '1' FROM DUAL WHERE #{createBy} = (
+                select ELEC_APRV_RQTR_ID
+                from com.com_elec_aprv
+                where CAM_ID = #{camId}
+                  and flag = 1
+            )),0) as rqtrUserYN
+
+		from dual
+    </select>
+    
+    
+     <select id="checkChnlExeInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignStatusCheckReqDto" 
+     resultType="java.lang.String">
+     /* LoyCampaign.checkChnlExeInfo */
+        select mei.id
+        from mkt.mkt_cam_mst mcm
+        join mkt.mkt_exe_info mei on mei.cam_id = mcm.id and mei.flag = 1
+        where mei.cam_id = #{camId}
+        and rownum=1
+     </select>
+
+     <select id="checkChnlExeInfoItem" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignStatusCheckReqDto" resultType="java.lang.String">
+     /* LoyCampaign.checkChnlExeInfoItem */
+     	select meii.id from mkt.mkt_cam_mst mcm
+		join mkt.mkt_exe_info mei
+		on mei.cam_id = mcm.id and mei.flag = 1
+		join mkt.mkt_exe_info_item meii
+		on mei.id = meii.exe_info_id and meii.flag = 1
+		where mei.cam_id = #{camId}
+		and rownum=1
+     </select>
+    
+    	<select id = "chnlTypeCheck" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignScheduleCheckReqDto" 
+    	resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignScheduleCheckResDto">
+	SELECT mc.CHNL_TYPE_CD as chnlType
+  	  FROM com.MKT_CONTS_CHNL_REL mcc
+      JOIN mkt.MKT_CHNL mc ON mcc.MKT_CHNL_ID = mc.ID AND mc.FLAG = 1
+     WHERE mcc.FLAG = 1
+       AND mcc.CAM_ID = #{camId}
+	</select>
+	
+	    <select id ="chnlTimeValidCheck" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignScheduleCheckReqDto" resultType="java.lang.Integer">
+	SELECT count(*)
+	  FROM com.MKT_CONTS_CHNL_REL mcc
+	  JOIN mkt.MKT_CHNL mc ON mcc.MKT_CHNL_ID = mc.ID AND mc.FLAG = 1
+      JOIN mkt.MKT_EXE_INFO_ITEM mei ON mei.CAM_ID = mcc.CAM_ID AND mei.FLAG = 1
+     WHERE mcc.CAM_ID = #{camId}
+       AND mcc.FLAG = 1
+       AND mc.CHNL_TYPE_CD = #{chnlType}
+	   AND (mc.SENDABLE_START_TIME <![CDATA[>]]> com.TO_CHAR(mei.EXE_DT, 'hh24miss')
+        OR mc.SENDABLE_END_TIME <![CDATA[<]]> com.TO_CHAR(mei.EXE_DT, 'hh24miss'))
+	</select>
+	
+	
+	
+    <!-- /**************************************
+    -   관련 파일       : CommonDAO.java(campaignStatusCheck)
+    ============================================
+    -   제목            : 캠페인 유효성 체크
+    -   설명            : 오퍼 유형과 채널 체크 - 오퍼유형이 쿠폰유형일 경우 채널은 MMS만 가능
+    -   결과형태      : 단일
+    ============================================
+    -   작성자         : 장용
+    -   작성일         : 2016. 03. 28.
+    ***************************************/ -->
+     <select id="checkOfferInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignStatusCheckReqDto" resultType="java.lang.String">
+     /* LoyCampaign.checkOfferInfo */
+     	select cc2.code_name as offerType
+		from mkt.mkt_cam_mst mcm
+		left outer join mkt.mkt_cam_offer_rel mcor 	on mcm.id = mcor.cam_id and mcor.flag = 1
+		left outer join mkt.mkt_offer_mst mom 		on mcor.offer_id = mom.id and mom.flag = 1
+		join com.comm_code cc2 						on cc2.flag = 1 and cc2.code_name = mom.offer_type_cd and cc2.lang = #{lang} and cc2.group_code = 'OFFER_TYPE_CD'
+		where mcm.id = #{camId}
+		and rownum=1
+     </select>
+     
+     
+     <select id="checkExeInfoItemId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignStatusCheckReqDto" resultType="java.lang.String">
+     	select meii.id as exeInfoItemId
+        from mkt.mkt_exe_info_item meii
+        join mkt.mkt_exe_info mei
+        on meii.exe_info_Id = mei.id and mei.flag = 1
+        where mei.cam_id = #{camId} and meii.flag = 1
+		and rownum=1
+     </select>
+     
+     
+        <select id="checkChnlInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignStatusCheckReqDto" resultType="java.lang.Integer">
+     /* LoyCampaign.checkChnlInfo */
+		select
+            com.nvl(sum(decode(mc.chnl_type_cd,'TERMINAL',0,DECODE(mc.chnl_type_cd,'WEB',0,decode(mc.chnl_type_cd,'RECEIPT',0,1)))), 0) as chkChnl
+        from mkt.mkt_cam_mst mcm
+		join com.mkt_conts_chnl_rel mccr on mcm.id = mccr.cam_id and mccr.flag = 1
+		join mkt.mkt_chnl mc on mc.id = mccr.mkt_chnl_id and mc.flag = 1
+		where mcm.id = #{camId}
+     </select>
+     
+         <!-- /**************************************
+    -   관련 파일       : CommonDAO.java(campaignStatusCheck)
+    ============================================
+    -   제목            : 캠페인 유효성 체크
+    -   설명            : 캠페인 승인 완료가 아닌 경우 에러
+    -   결과형태      : 단일
+    ============================================
+    -   작성자         : 장용
+    -   작성일         : 2016. 03. 28.
+    ***************************************/ -->
+    <select id="checkElecAprov" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignStatusCheckReqDto" resultType="java.lang.String">
+    /* LoyCampaign.checkElecAprov */
+	    select CASE when (cc.code_name = '090' or cc.code_name = '002') then 'true' else 'false' end as checkVal
+		from mkt.mkt_cam_mst mcm
+		join com.com_elec_aprv mea on mcm.id = mea.cam_id and mea.flag = 1
+		join com.comm_code cc on cc.code_name = mea.elec_aprv_status_cd and cc.lang = #{lang} and cc.group_code = 'EL_APPROVAL_STATUS_CD'
+		where mcm.id = #{camId}
+    </select>
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(getCampaignApproval)
+    ============================================
+    -   제목                  : 캠페인 전자결재 조회
+    -   설명                  : 캠페인 전자결재 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.12.07
+    ***************************************/ -->
+    <select id="selectCampaignApproval" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.CampaignApprovalReqDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignApprovalResDto">
+        /* LoyCampaignMapper.selectCampaignApproval */
+        select id as id
+               , id as approvalId
+               , modify_date as modifyDate
+          from com.com_elec_aprv ea
+         where 1=1
+           and ea.cam_id = #{campaignId}
+           and ea.flag = 1
+    </select>
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java
+    ============================================
+    -   제목                  : 캠페인 기본정보
+    -   설명                  : 캠페인 기본정보 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    -   id                    : 캠페인 아이디
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <select id="selectCampaignDefaultInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionDefaultInfoResDto">
+        /* LoyCampaignMapper.selectCampaignDefaultInfo */
+        SELECT   lp.PROM_NO		AS promNo
+        	   , lp.PROM_NM		AS promNm
+        	   , lp.DESC_TEXT	AS descText
+        	   , lp.PROM_STAT_CD	AS promStatCd
+        	   , lp.RID_PGM			AS pgmRid
+        	   , lpp.PGM_NM			AS pgmNm
+        	   , lp.PROM_GOAL_CD	AS promGoalCd
+        	   , lp.MAX_REWARD_CNT	AS maxRewardCnt
+        	   , lp.ISS_DUP_YN		AS issDupYn
+        	   , lp.PROM_TYPE_LV1_CD	AS promTypeLv1Cd
+        	   , lp.PROM_TYPE_LV2_CD	AS promTypeLv2Cd
+        	   , lp.RID_OFR				AS ofrRid
+        	   , lo.OFR_NM				AS ofrNm
+        	   , lo.OFR_NO				AS ofrNo
+        	   , lo.CPN_YN				AS cpnYn
+        	   <!-- , lp.RID_STBG			AS stampRid -->
+        	   <!-- , ls.STBG_NO				AS stampNo
+        	   , ls.STBG_NM				AS stampNm -->
+        	   , lp.PROM_OFFER_AMT_DEF_CD	AS promOfferAmtDefCd
+        	   , com.TO_CHAR(lp.VALID_START_DATE,'YYYY-MM-DD HH24:MI:SS')		AS validStartDate
+        	   , com.TO_CHAR(lp.VALID_END_DATE, 'YYYY-MM-DD HH24:MI:SS')		AS validEndDate
+        	   , lp.PROM_CYCLE_CD			AS promCycleCd
+        	   , lp.CYCLE_MON_YN				AS cycleMonYn
+        	   , lp.CYCLE_TUE_YN				AS cycleTueYn
+        	   , lp.CYCLE_WED_YN				AS cycleWedYn
+        	   , lp.CYCLE_THU_YN				AS cycleThuYn
+        	   , lp.CYCLE_FRI_YN				AS cycleFriYn
+        	   , lp.CYCLE_SAT_YN				AS cycleSatYn
+        	   , lp.CYCLE_SUN_YN				AS cycleSunYn
+        	   , lp.SPECIAL_DAY_FROM		AS specialDayFrom
+        	   , lp.SPECIAL_DAY_TO			AS specialDayTo
+        	   , lp.SPECIAL_TIME_FROM		AS specialTimeFrom
+        	   , lp.SPECIAL_TIME_TO			AS specialTimeTo
+        	   , lp.PROM_CALC_CD			AS promCalcCd
+        	   , lp.RID_TGT_GRP_INC			AS tgtGrpRid
+        	   , lp.RID_TGT_GRP_EXC			AS expectTgtGrpRid
+        	   , ltg.TGT_GRP_NO				AS tgtGrpNo
+        	   , ltg.TGT_GRP_NM				AS tgtGrpNm
+        	   , eltg.TGT_GRP_NO			AS expectTgtGrpNo
+        	   , eltg.TGT_GRP_NM			AS expectTgtGrpNm
+        	   , lp.MODIFY_DATE				AS modifyDate
+        	   , lp.CREATE_DATE				AS createDate
+        	   , em.name					AS name
+        	   , cd.DIV_NM					AS divNm
+        	   , lp.RID						AS rid
+        	   , lp.RID						AS id
+        	   , lp.RID_CHNL_GRP													AS chnlGrpRid
+        	   , lcg.TGT_GRP_NO												AS chnlGrpNo
+        	   , lcg.TGT_GRP_NM												AS chnlGrpNm
+        	   , lp.noti_yn                 AS notiYn
+        FROM   LOY.LOY_PROM lp
+        LEFT OUTER JOIN   LOY.LOY_PGM lpp ON lp.RID_PGM = lpp.RID AND lpp.FLAG = 1
+        LEFT OUTER JOIN   LOY.LOY_OFR lo ON lp.RID_OFR = lo.RID AND lo.FLAG = 1
+        <!-- LEFT OUTER JOIN   LOY.LOY_STBG ls ON lp.RID_STBG = ls.RID AND ls.FLAG = 1 -->
+        LEFT OUTER JOIN   LOY.LOY_TGT_GRP ltg ON lp.RID_TGT_GRP_INC = ltg.RID AND ltg.FLAG = 1
+        LEFT OUTER JOIN   LOY.LOY_TGT_GRP eltg ON lp.RID_TGT_GRP_EXC = eltg.RID AND eltg.FLAG = 1
+        LEFT OUTER JOIN   COM.CRM_USER cu ON cu.RID = lp.CREATE_BY AND cu.FLAG = 1
+        LEFT OUTER JOIN   COM.EMPLOYEE em ON em.ID = cu.ID_EMPLOYEE AND em.FLAG = 1
+        LEFT OUTER JOIN   COM.CRM_DIVISION cd ON cd.RID = em.RID_DIVISION AND cd.FLAG = 1
+        LEFT OUTER JOIN   LOY.LOY_CHNL_GRP lcg ON lp.RID_CHNL_GRP = lcg.RID AND lcg.FLAG = 1
+        WHERE lp.FLAG = 1
+        AND   lp.RID = #{rid}
+        
+    </select>
+    	<!--  캠페인 복사 -->
+	<update id="procCamCopy" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" statementType="CALLABLE" >
+
+		{ call loy.PROC_CAM_COPY(#{id}, #{createBy},
+		#{resultCd, mode=OUT, jdbcType=VARCHAR, javaType=String}
+		,#{resultMsg , mode=OUT, jdbcType=VARCHAR, javaType=String}) }
+
+	</update>
+	      <select id="selectConidByCamid" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignGetConidByCamidReqDto" 
+        resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignGetConidByCamidResDto">
+        /* LoyCampaignMapper.selectConidByCamid */
+        select
+              mccr.contents_id     as conid
+            , mcc.chnl_type_cd     as chnlTypeCd
+        from com.mkt_conts_chnl_rel mccr
+        left join mkt.mkt_chnl      mcc on mcc.id = mccr.MKT_CHNL_ID
+        where ${strSVCType}
+          and mccr.cam_id = #{camid}
+          and mccr.flag = '1'
+    </select>
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(getCampaignOfferList)
+    ============================================
+    -   제목                  : 캠페인 오퍼 목록
+    -   설명                  : 캠페인 오퍼 목록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <select id="selectCampaignOfferList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignOfferReqDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignOfferListResDto">
+        /* LoyCampaignMapper.selectCampaignOfferList */
+        select
+                 cor.ID as id
+               , cor.CREATE_BY as createBy
+               , c5.name as modifyBy
+               , cor.CREATE_DATE as createDate
+               , cor.MODIFY_DATE as modifyDate
+               , mof.id as offerId
+               , mof.offer_no as offerNo
+               , mof.offer_nm as offerName
+               , com.TO_CHAR(mof.APLY_START_DD,'YYYY-MM-DD') as applyStrDate
+               , com.TO_CHAR(mof.APLY_END_DD,'YYYY-MM-DD') as applyEndDate
+               , c4.mark_name as commStatus
+               , c1.mark_name as mktOfferCostGbn
+               , c2.mark_name as offerTypeCd
+               , c3.mark_name as discountType
+               , c8.mark_name as offerSubTypeNm /* 오퍼유형상세 */
+               , mof.DC_AMT as discountAmt
+               , c7.offer_nm as parOfferId
+               , mof.OFFER_DESC as description
+			   , mof.offer_ecnrs_div_cd    as offerEcnrsDivCd
+			   , c9.mark_name    as offerEcnrsDivNm
+			   , mof.offer_use_desk_div_cd as offerUseDeskDivCd
+			   , c10.mark_name as offerUseDeskDivNm
+               , c6.name as offerFownerId
+               , cor.CAM_ID as campaignId
+
+          FROM mkt.mkt_cam_offer_rel cor
+         inner join mkt.mkt_offer_mst mof
+            on mof.ID = cor.OFFER_ID
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = mof.offer_cost_div_cd and c1.group_code = 'MKT_OFFER_COST_GBN'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = mof.offer_type_cd and c2.group_code = 'OFFER_TYPE_CD'
+          left outer join com.comm_code c3
+            on c3.flag = 1 and c3.lang = #{lang} and c3.code_name = mof.DC_TYPE_CD and c3.group_code = 'OFFER_DISCOUNT_TYPE_CD'
+          left outer join com.comm_code c4
+            on c4.flag = 1 and c4.lang = #{lang} and c4.code_name = mof.OFFER_STATUS_CD and c4.group_code = 'COMM_STATUS'
+          left outer join com.comm_code c8
+            on c8.flag = 1 and c8.lang = #{lang} and c8.code_name = mof.OFFER_SUB_TYPE_CD and c8.group_code = 'OFFER_SUB_TYPE_CD'
+		  left outer join com.comm_code c9 on c9.flag = 1 and c9.code_name = mof.offer_ecnrs_div_cd and c9.lang = #{lang} and c9.group_code = 'OFFER_ECNRS_DIV_CD'
+    	  left outer join com.comm_code c10 on c10.flag = 1 and c10.code_name = mof.offer_use_desk_div_cd and c10.lang = #{lang} and c10.group_code = 'OFFER_USE_DESK_DIV_CD'
+          left outer join com.crm_user u
+            on mof.modify_by = u.rid
+          left outer join com.employee  c5
+            on c5.id = u.id_employee
+          left outer join com.account c6
+            on c6.id = mof.OFFER_ECNRS_ACCNT_ID
+          left outer join mkt.mkt_offer_mst c7
+            on c7.id = mof.par_offer_id
+         where 1=1
+           and ${strSVCType}
+           and cor.flag = 1
+           and cor.CAM_ID = #{campaignId}
+         order by cor.MODIFY_DATE DESC
+    </select>
+    
+    
+        <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeCampaignOfferRelByCmapaignId)
+    ============================================
+    -   제목                  : 캠페인 오퍼 삭제
+    -   설명                  : 캠페인 오퍼 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteCampaignOfferRelByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignOfferReqDto">
+        /* LoyCampaignMapper.deleteCampaignOfferRelByCampaignId */
+        update mkt.mkt_cam_offer_rel
+           set
+                 MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where CAM_ID = #{campaignId}
+    </update>
+      <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeCampaignContentsChnnelRel)
+    ============================================
+    -   제목                  : 캠페인 콘텐츠 채널 관계 삭제
+    -   설명                  : 캠페인 콘텐츠 채널 관계 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.11.27
+    ***************************************/ -->
+    <update id="deleteCampaignContentsChnnelRel" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignContentsChnnelRelReqDto">
+        /* LoyCampaignMapper.deleteCampaignContentsChnnelRel */
+        update LOY.LOY_PROM_ALT_CHNL
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where 1=1
+           and RID = #{id}
+    </update>
+    
+      <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(editCampaignContentsChnnelRel)
+    ============================================
+    -   제목                  : 캠페인 콘텐츠 채널 수정
+    -   설명                  : 캠페인 콘텐츠 채널 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.11.27
+    ***************************************/ -->
+    <update id="updateCampaignContents" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignContentsChnnelRelReqDto">
+        /* LoyCampaignMapper.updateCampaignContents */
+        update com.mkt_conts_mst
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , FLAG = 1
+         where 1=1
+           and ID in (select ccr.CONTENTS_ID from com.mkt_conts_chnl_rel ccr where ccr.ID = #{id})
+    </update>
+    
+    <update id="deleteCampaignContents" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignContentsChnnelRelReqDto">
+        /* MktCampaignMapper.deleteCampaignContents */
+        update com.mkt_conts_mst
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where 1=1
+           and ID in (select ccr.CONTENTS_ID from com.mkt_conts_chnl_rel ccr where ccr.ID = #{id})
+    </update>
+    
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeCampaignTargetByCampaignId)
+    ============================================
+    -   제목                  : 캠페인 대상자 삭제 By CampaignId
+    -   설명                  : 캠페인 대상자 삭제 By CampaignId
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteCampaignTargetByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignTargetReqDto">
+        /* LoyCampaignMapper.deleteCampaignTargetByCampaignId */
+        update mkt.mkt_tgt_had
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where CAM_ID = #{campaignId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeCampaignTargetDtlByCampaignId)
+    ============================================
+    -   제목                  : 캠페인 대상자 상세 삭제 By CampaignId
+    -   설명                  : 캠페인 대상자 상세 삭제 By CampaignId
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteCampaignTargetDtlByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignTargetDtlReqDto">
+        /* LoyCampaignMapper.deleteCampaignTargetDtlByCampaignId */
+        update mkt.mkt_tgt_dtl
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where CAM_TGT_HAD_ID IN (select id from mkt.mkt_tgt_had where cam_id = #{campaignId})
+    </update>
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeExecutionInfoByCampaignId)
+    ============================================
+    -   제목                  : 실행정보 삭제 By CampaignId
+    -   설명                  : 실행정보 삭제 By CampaignId
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteExecutionInfoByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignExecutionInfoReqDto">
+        /* LoyCampaignMapper.selectCampaignTargetList */
+        update mkt.mkt_exe_info
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where CAM_ID = #{campaignId}
+    </update>
+         <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeExecutionInfo)
+    ============================================
+    -   제목                  : 실행정보 아이템 삭제 By ExeInfoId
+    -   설명                  : 실행정보 아이템 삭제 By ExeInfoId
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteExecutionInfoItemByExeInfoId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignExecutionInfoItemReqDto">
+        /* LoyCampaignMapper.deleteExecutionInfoItemByExeInfoId */
+        update mkt.mkt_exe_info_item
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where 1=1
+           and EXE_INFO_ID = #{exeInfoId}
+           and exe_info_status_cd = 'W'
+    </update>
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeExecutionInfoItemByCampaignId)
+    ============================================
+    -   제목                  : 실행정보 아이템 삭제 By CampaignId
+    -   설명                  : 실행정보 아이템 삭제 By CampaignId
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteExecutionInfoItemByCampaignId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignExecutionInfoItemReqDto">
+        /* LoyCampaignMapper.deleteExecutionInfoItemByCampaignId */
+        update mkt.mkt_exe_info_item
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where 1=1
+           and EXE_INFO_ID IN (select t.id from mkt.mkt_exe_info t where t.cam_id = #{campaignId})
+           and exe_info_status_cd = 'W'
+    </update>
+    
+      
+    <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java
+    ============================================
+    -   제목                  : 캠페인 워크플로우 진행현황 등록
+    -   설명                  : 캠페인 워크플로우 진행현황 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <insert id="insertCampaignWorkflowStatus" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowStatusReqDto">
+        /* LoyCampaignMapper.insertCampaignWorkflowStatus */
+        insert into loy.loy_cam_wf_rel
+            ( ID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , FLAG
+      <!--       , COUNTRY -->
+       <!--      , APP_SERVICE_TYPE -->
+    <!--         , ACCNT_ID -->
+
+            , CAM_ID
+            , WF_ID
+
+            , TASK_NM
+            , TASK_PROGR_STATUS_CD
+            , TASK_ID
+            , TASK_TYPE_CD
+            , TASK_DESC
+            , ACT_TASK_ID
+            )
+        values
+            ( #{id}
+            , #{createBy}
+            , #{modifyBy}
+            , GETDATE()
+            , GETDATE()
+            , 1
+        <!--     , #{country} -->
+      <!--       , #{appServiceId} -->
+        <!--     , #{accountId} -->
+
+            , #{campaignId}
+            , #{workflowId}
+
+            , #{taskName}
+            , #{statusCode}
+            , #{taskId}
+            , #{taskTypeCode}
+            , #{taskDesc}
+            , #{actualTaskId}
+            )
+
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from loy.loy_cam_wf_rel where id = #{id} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey>
+    </insert>
+    
+      <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java (editCampaignWorkflowStatus)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 진행현황 수정
+    -   설명                  : 캠페인 워크플로우 진행현황 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <update id="updateCampaignWorkflowStatus" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowStatusReqDto">
+        /* LoyCampaignMapper.updateCampaignWorkflowStatus */
+        update loy.loy_cam_wf_rel
+            set
+                MODIFY_BY = #{modifyBy}
+                , MODIFY_DATE = GETDATE()
+                , FLAG = 1
+                , CAM_ID = #{campaignId}
+                , TASK_NM = #{taskName}
+                , TASK_PROGR_STATUS_CD = #{statusCode}
+                , TASK_ID = #{taskId}
+                , TASK_TYPE_CD = #{taskTypeCode}
+                , TASK_DESC = #{taskDesc}
+                , ACT_TASK_ID = #{actualTaskId}
+          where id = #{id}
+    </update>
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(editCampaignWorkflowRel)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 관계 수정
+    -   설명                  : 캠페인 워크플로우 관계 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.16
+    ***************************************/ -->
+    <update id="updateCampaignWorkflowRel" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowReqDto">
+        /* LoyCampaignMapper.updateCampaignWorkflowRel */
+        update com.wf_task_had
+        set
+                 MODIFY_BY 		= #{modifyBy}
+               , MODIFY_DATE 	= GETDATE()
+               , PAR_ID 		= #{campaignId}
+         where id = #{workflowId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java (getCampaignWorkflowStatusList)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 진행현황 목록
+    -   설명                  : 캠페인 워크플로우 진행현황 목록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <select id="selectCampaignWorkflowStatusList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowStatusReqDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.CampaignWorkflowStatusListResDto">
+        /* LoyCampaignMapper.selectCampaignWorkflowStatusList */
+        select wfc.ID
+               , wfc.CREATE_BY as createBy
+               , wfc.MODIFY_BY as modifyBy
+               , wfc.CREATE_DATE as createDate
+               , wfc.MODIFY_DATE as modifyDate
+
+               , wfc.CAM_ID as campaignId
+               , wfc.WF_ID as workflowId
+
+               , c1.CODE_NAME as statusCode
+               , c1.MARK_NAME as statusCodeName
+
+               , wfc.TASK_ID as taskId
+               , wfc.TASK_NM as taskName
+               , wfc.TASK_DESC as taskDesc
+
+               , c2.CODE_NAME as taskTypeCode
+               , c2.MARK_NAME as taskTypeCodeName
+
+               , c3.CODE_NAME as nodeTypeCode
+               , c3.MARK_NAME as nodeTypeCodeName
+
+               , wfc.ACT_TASK_ID as actualTaskId
+
+          from loy.loy_cam_wf_rel wfc
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = wfc.TASK_PROGR_STATUS_CD and c1.group_code = 'MKT_TASK_TYPE'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = wfc.TASK_TYPE_CD and c2.group_code = 'MKT_WF_NODE_TYPE'
+          left outer join com.wf_task_node wtn
+            on wtn.id = wfc.task_id
+          left outer join com.wf_node_mst wn
+            on wn.id = wtn.node_id
+          left outer join com.comm_code c3
+            on c3.flag = 1 and c3.lang = #{lang} and c3.code_name = wn.NODE_TYPE_CD and c3.group_code = 'MKT_WF_NODE_TYPE'
+         where ${strSVCType}
+           and wfc.flag = 1
+           <if test="workflowId != null and workflowId != ''">AND
+               wfc.WF_ID = #{workflowId}
+           </if>
+           <if test="workflowId == null or workflowId == ''">AND
+               wfc.CAM_ID = #{campaignId}
+           </if>
+         order by c3.SEQ
+    </select>
+    
+        <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java (removeAllCampaignWorkflowStatusByWorkflowId)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 진행현황 삭제 By workflow ID
+    -   설명                  : 캠페인 워크플로우 진행현황 삭제 By workflow ID
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <update id="deleteAllCampaignWorkflowStatusByWorkflowId" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowStatusReqDto">
+        /* LoyCampaignMapper.deleteAllCampaignWorkflowStatusByWorkflowId */
+        update loy.loy_cam_wf_rel
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+         where WF_ID = #{workflowId}
+    </update>
+    
+  
+    
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(editCampaignDefaultInfo)
+    ============================================
+    -   제목                  : 캠페인 마스터 수정
+    -   설명                  : 캠페인 마스터 수정(캠페인 기본정보 수정)
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.16
+    ***************************************/ -->
+    <update id="updateCampaignMaster" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaignMapper.updateCampaignMaster */
+        update mkt.mkt_cam_mst
+        set
+                 MODIFY_BY 		= #{modifyBy}
+               , MODIFY_DATE 	= GETDATE()
+               , FLAG 			= 1
+               , TYPE 			= #{type}
+               , OFFER_ID 		= #{offerId}
+          <!--      , ACCNT_ID 		= #{accountId} -->
+               , CAM_STATUS_CD 	= #{campaignStatusCode}
+               , CAM_NM			= #{campaignName}
+               , CAM_DESC 		= #{description}
+               <if test="campaignStartDate != null and campaignStartDate != ''">
+               , CAM_START_DD 	= com.TO_DATE(#{campaignStartDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+               </if>
+               <if test="campaignEndDate != null and campaignEndDate != ''">
+               , CAM_END_DD 	= com.TO_DATE(#{campaignEndDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+               </if>
+               <!-- , CAM_PLAN_ORG_CD = #{planOrgCode} -->
+               , EXE_ORG_LVL_CD 	= #{exeOrgLvlCode}
+               , CAM_PLNER 			= #{campaignPlanner}
+               , CAM_PRPS_CD 		= #{campaignPurposeCode}
+               , CAM_METH_CD 		= #{campaignMethodCode}
+               , CAM_METH_DESC 		= #{campaignMethodDesc}
+               , CHNL_TYPE_CD 		= #{channelTypeCode}
+               , CAM_TYPE_CD		= #{campaignTypeCode}
+               , PAR_CAM_ID 		= #{parCampaignId}
+               , PROGRAM_ID 		= #{programId}
+               <!-- , CAM_TEMP_USE_YN = #{camTemplateUseYn} -->
+               , FATI_EXCEPT_YN = #{fatigueExceptYn}
+               , RID_INTACT_TYPE = #{ridIntactType}
+
+               , PRMS_EXCEPT_YN    = #{prmsExceptYn}
+               , PROM_YN           = #{promYn}
+               , PLAN_ID           = #{planId}
+               , CAM_SCOPE_TYPE_CD = #{camScopeTypeCd}
+               , PLAN_GROUP_CD     = #{planGroupCd}
+
+               , b2c_ref_key       = #{b2cRefKey}
+               , event_yn 		   = #{eventYn}
+
+               , PNT_ACCNT_BIG_TYPE_CD = #{pntAccntBigTypeCd}
+               , PNT_ACCNT_MID_TYPE_CD = #{pntAccntMidTypeCd}
+               , PNT_ACCNT_SML_TYPE_CD = #{pntAccntSmlTypeCd}
+               , PNT_ACCNT_DETAIL_TYPE_CD = #{pntAccntDetailTypeCd}
+               , PNT_ACCNT_CUST_DISP_TXT = #{pntAccntCustDispTxt}
+
+               , PNT_ACCNT_CODE_VAL = #{pntAccntCodeVal}
+
+         where ID = #{id}
+    </update>
+    <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(addCampaignDefaultInfo)
+    ============================================
+    -   제목                  : 캠페인 마스터 등록
+    -   설명                  : 캠페인 마스터 등록(캠페인 기본정보 등록)
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.16
+    ***************************************/ -->
+    <insert id="insertCampaignMaster" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto" useGeneratedKeys="false">
+        /* LoyCampaignMapper.insertCampaignMaster */
+        insert into mkt.mkt_cam_mst (
+              ID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , FLAG
+           <!--  , COUNTRY -->
+           <!--  , APP_SERVICE_TYPE -->
+            , OFFER_ID
+           <!--  , ACCNT_ID -->
+            , DISP_NO
+            , CAM_STATUS_CD
+            , CAM_NM
+            , CAM_DESC
+            <if test="campaignStartDate != null and campaignStartDate != ''">
+            , CAM_START_DD
+            </if>
+            <if test="campaignEndDate != null and campaignEndDate != ''">
+            , CAM_END_DD
+            </if>
+            , CAM_PLAN_ORG_CD
+            , EXE_ORG_LVL_CD
+            , CAM_PLNER
+            , CAM_PRPS_CD
+            , CAM_METH_CD
+            , CAM_METH_DESC
+            , CHNL_TYPE_CD
+            , CAM_TYPE_CD
+            , PAR_CAM_ID
+            , PROGRAM_ID
+            , FATI_EXCEPT_YN
+            , RID_INTACT_TYPE
+            , RID_PGM
+            , TYPE
+            , PRMS_EXCEPT_YN
+            , PROM_YN
+            , PLAN_ID
+            , CAM_SCOPE_TYPE_CD
+            , PLAN_GROUP_CD
+            , b2c_ref_key
+            , event_yn
+            , PNT_ACCNT_BIG_TYPE_CD
+            , PNT_ACCNT_MID_TYPE_CD
+            , PNT_ACCNT_SML_TYPE_CD
+            , PNT_ACCNT_DETAIL_TYPE_CD
+            , PNT_ACCNT_CUST_DISP_TXT
+            , PNT_ACCNT_CODE_VAL
+        )
+        values (
+              #{id}
+            , #{createBy}
+            , #{modifyBy}
+            , GETDATE()
+            , GETDATE()
+            , 1
+    <!--         , #{country} -->
+       <!--      , #{appServiceId} -->
+            , #{offerId}
+            <!-- , #{accountId} -->
+            , mkt.getCampaignNo()
+            , #{campaignStatusCode}
+            , #{campaignName}
+            , #{description}
+            <if test="campaignStartDate != null and campaignStartDate != ''">
+            , com.TO_DATE(#{campaignStartDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
+            <if test="campaignEndDate != null and campaignEndDate != ''">
+            , com.TO_DATE(#{campaignEndDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+            </if>
+            , #{planOrgCode}
+            , #{exeOrgLvlCode}
+            , #{campaignPlanner}
+            , #{campaignPurposeCode}
+            , #{campaignMethodCode}
+            , #{campaignMethodDesc}
+            , #{channelTypeCode}
+            , #{campaignTypeCode}
+            , #{parCampaignId}
+            , #{programId}
+            , #{fatigueExceptYn}
+            , #{ridIntactType}
+            , #{loyProgramId}
+            , #{type}
+            , #{prmsExceptYn}
+            , #{promYn}
+            , #{planId}
+            , #{camScopeTypeCd}
+            , #{planGroupCd}
+            , #{b2cRefKey}
+            , #{eventYn}
+            , #{pntAccntBigTypeCd}
+            , #{pntAccntMidTypeCd}
+            , #{pntAccntSmlTypeCd}
+            , #{pntAccntDetailTypeCd}
+            , #{pntAccntCustDispTxt}
+            , #{pntAccntCodeVal}
+        )
+
+        <!-- <selectKey keyProperty="" resultType="java.lang.String">
+            select id from mkt.mkt_cam_mst where id = #{id} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey> -->
+    </insert>
+    
+    
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(editCampaignDefaultInfoDesc)
+    ============================================
+    -   제목                  : 캠페인 기본정보 비고 수정
+    -   설명                  : 캠페인 기본정보 비고 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.03.21
+    ***************************************/ -->
+    <update id="updateCampaignDefaultInfoDesc" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignDefaultInfoReqDto">
+        /* LoyCampaignMapper.updateCampaignDefaultInfoDesc */
+        update mkt.mkt_cam_mst c
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , c.cam_desc = #{description}
+         where c.id = #{id}
+    </update>
+    
+    <select id="selectPromotionListNew" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionListResDto">
+        /* LoyCampaignMapper.selectPromotionListNew */
+       select  	lp2.PGM_NM			AS pgmNm
+       		  ,	lp.PROM_NM			AS promNm
+       		  , lp.PROM_TYPE_LV1_CD	AS promTypeLv1Cd
+       		  , lp.PROM_TYPE_LV2_CD AS promTypeLv2Cd
+       		  , lp.PROM_STAT_CD		AS promStatCd
+       		  , com.TO_CHAR(lp.VALID_START_DATE,'YYYY-MM-DD')	AS validStartDate
+       		  , com.TO_CHAR(lp.VALID_END_DATE,'YYYY-MM-DD')	AS validEndDate
+       		  , em.name				AS name
+       		  , com.TO_CHAR(lp.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+       		  , lp.RID				AS rid
+       		  , lp.PROM_NO AS promNo
+       		  , ${strColumn}
+       FROM  LOY.LOY_PROM lp
+       LEFT OUTER JOIN LOY.LOY_PGM lp2 ON lp.RID_PGM = lp2.RID AND lp2.FLAG = 1
+       LEFT OUTER JOIN com.CRM_USER cu ON cu.RID = lp.CREATE_BY AND cu.FLAG = 1
+	   LEFT OUTER JOIN com.EMPLOYEE em ON em.ID = cu.ID_EMPLOYEE AND em.FLAG = 1
+       WHERE lp.FLAG = 1
+	  and ${strCondWhere}
+	  and ${strDataAuthWhere}<!-- 데이터 권한 파라미터 -->
+	  and ${strWhere}
+ 	  order by ${strOrderby}
+	  ${strEndPaging} 
+    </select>
+    
+    <select id="selectPromotionStatus" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionDefaultInfoReqDto" resultType="java.lang.String">
+        /* LoyCampaign.selectPromotionStatus */
+        select c1.code_name
+          from LOY.LOY_PROM lp
+         inner join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and lp.prom_stat_cd = c1.code_name and c1.group_code = 'MKT_CAM_STAT'
+        where lp.rid = #{rid}
+    </select>
+    
+    <insert id="insertPromotionMaster" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionDefaultInfoReqDto">
+    	/* LoyCampaign.insertPromotionMaster */
+    	INSERT INTO LOY.LOY_PROM
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, PROM_NO
+    		, PROM_NM
+    		, DESC_TEXT
+    		, PROM_STAT_CD
+    		, RID_PGM
+    		, PROM_GOAL_CD
+    		, MAX_REWARD_CNT
+    		, ISS_DUP_YN
+    		, PROM_TYPE_LV1_CD
+    		, PROM_TYPE_LV2_CD
+    		, RID_OFR
+    		<!-- , RID_STBG -->
+    		, PROM_OFFER_AMT_DEF_CD
+    		, VALID_START_DATE
+    		, VALID_END_DATE
+    		, PROM_CYCLE_CD
+    		, CYCLE_MON_YN
+    		, CYCLE_TUE_YN
+    		, CYCLE_WED_YN
+    		, CYCLE_THU_YN
+    		, CYCLE_FRI_YN
+    		, CYCLE_SAT_YN
+    		, CYCLE_SUN_YN
+    		, SPECIAL_DAY_FROM
+    		, SPECIAL_DAY_TO
+    		, SPECIAL_TIME_FROM
+    		, SPECIAL_TIME_TO
+    		, PROM_CALC_CD
+    		, RID_TGT_GRP_INC
+    		, RID_TGT_GRP_EXC
+    		, RID_CHNL_GRP
+    		, NOTI_YN
+    	)
+    	VALUES
+    	(
+    		  #{rid}
+    		, #{createBy}
+    		, #{modifyBy}
+    		, loy.fn_get_prom_no()
+    		, #{promNm}
+    		, #{descText}
+    		, #{promStatCd}
+    		, #{pgmRid}
+    		, #{promGoalCd}
+    		, #{maxRewardCnt}
+    		, #{issDupYn}
+    		, #{promTypeLv1Cd}
+    		, #{promTypeLv2Cd}
+    		, #{ofrRid}
+    		<!-- , #{stampRid} -->
+    		, #{promOfferAmtDefCd}
+    		, com.TO_DATE(#{validStartDate}, 'YYYY-MM-DD HH24:MI:SS')
+    		, com.TO_DATE(#{validEndDate}, 'YYYY-MM-DD HH24:MI:SS')
+    		, #{promCycleCd}
+    		, #{cycleMonYn}
+    		, #{cycleTueYn}
+    		, #{cycleWedYn}
+    		, #{cycleThuYn}
+    		, #{cycleFriYn}
+    		, #{cycleSatYn}
+    		, #{cycleSunYn}
+    		, #{specialDayFrom}
+    		, #{specialDayTo}
+    		, #{specialTimeFrom}
+    		, #{specialTimeTo}
+    		, #{promCalcCd}
+    		, #{tgtGrpRid}
+    		, #{expectTgtGrpRid}
+    		, #{chnlGrpRid}
+    		, #{notiYn}
+    	)
+    </insert>
+    
+    <update id="updatePromotionMaster" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionDefaultInfoReqDto">
+    	/* LoyCampaign.updatePromotionMaster */
+    	UPDATE LOY.LOY_PROM
+    	SET   MODIFY_BY				= #{modifyBy}
+    		, MODIFY_DATE			= GETDATE()
+    		, PROM_NM				= #{promNm}
+    		, DESC_TEXT				= #{descText}
+    		, PROM_STAT_CD			= #{promStatCd}
+    		, RID_PGM				= #{pgmRid}
+    		, PROM_GOAL_CD			= #{promGoalCd}
+    		, MAX_REWARD_CNT		= #{maxRewardCnt}
+    		, ISS_DUP_YN			= #{issDupYn}
+    		, PROM_TYPE_LV1_CD		= #{promTypeLv1Cd}
+    		, PROM_TYPE_LV2_CD		= #{promTypeLv2Cd}
+    		, RID_OFR				= #{ofrRid}
+    		<!-- , RID_STBG				= #{stampRid} -->
+    		, PROM_OFFER_AMT_DEF_CD = #{promOfferAmtDefCd}
+    		, VALID_START_DATE		= com.TO_DATE(#{validStartDate}, 'YYYY-MM-DD HH24:MI:SS')
+    		, VALID_END_DATE		= com.TO_DATE(#{validEndDate}, 'YYYY-MM-DD HH24:MI:SS')
+    		, PROM_CYCLE_CD			= #{promCycleCd}
+    		, CYCLE_MON_YN			= #{cycleMonYn}
+    		, CYCLE_TUE_YN			= #{cycleTueYn}
+    		, CYCLE_WED_YN			= #{cycleWedYn}
+    		, CYCLE_THU_YN			= #{cycleThuYn}
+    		, CYCLE_FRI_YN			= #{cycleFriYn}
+    		, CYCLE_SAT_YN			= #{cycleSatYn}
+    		, CYCLE_SUN_YN			= #{cycleSunYn}
+    		, SPECIAL_DAY_FROM		= #{specialDayFrom}
+    		, SPECIAL_DAY_TO		= #{specialDayTo}
+    		, SPECIAL_TIME_FROM		= #{specialTimeFrom}
+    		, SPECIAL_TIME_TO		= #{specialTimeTo}
+    		, PROM_CALC_CD			= #{promCalcCd}
+    		, RID_TGT_GRP_INC		= #{tgtGrpRid}
+    		, RID_TGT_GRP_EXC		= #{expectTgtGrpRid}
+    		, RID_CHNL_GRP          = #{chnlGrpRid}
+    		, NOTI_YN				= #{notiYn}
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectTgtGrpIncList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyTgtGrpListResDto">
+        /* LoyCampaign.selectTgtGrpIncList */
+        SELECT    ltg.TGT_GRP_NO	AS tgtGrpNo
+        		, ltg.TGT_GRP_NM	AS tgtGrpNm
+        		, ltg.TGT_TYPE_CD	AS tgtTypeCd
+        		, ltg.RID			AS rid
+        		, ${strColumn}
+        FROM LOY.LOY_TGT_GRP ltg
+        WHERE ltg.FLAG = 1
+        and ltg.STAT_CD = 'A'
+        and ${strCondWhere}
+	    and ${strWhere}
+ 	    order by ${strOrderby}
+	    ${strEndPaging}
+    </select>
+    
+    <insert id="insertPromotionKpi" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionKpiDetailReqDto">
+    	/* LoyCampaign.insertPromotionKpi */
+    	INSERT INTO LOY.LOY_PROM_KPI
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, RID_PROM
+    		, PROM_KPI_CD
+    		, CNTRL_GRP_CD
+    		, RID_TGT_GRP_CNTRL
+    		, KPI_DATE_TYPE_CD
+    		, DATE_VAL
+    		, KPI_OFR_COST_CD
+    		, KPI_OFR_COST_AMT
+    		, ETC_COST_AMT
+    		, ETC_COST_DESC
+    		, MAN_PROFIT_CD
+    		, MAN_PROFIT_AMT
+    	)
+    	VALUES
+    	(
+    		  #{rid}
+    		, #{createBy}
+    		, #{modifyBy}
+    		, #{promRid}
+    		, #{promKpiCd}
+    		, #{cntrlGrpCd}
+    		, #{tgtGrpCntrlRid}
+    		, #{kpiDateTypeCd}
+    		, #{dateVal}
+    		, #{kpiOfrCostCd}
+    		, #{kpiOfrCostAmt}
+    		, #{etcCostAmt}
+    		, #{etcCostDesc}
+    		, #{manProfitCd}
+    		, #{manProfitAmt}
+    	)
+    </insert>
+    
+    <update id="updatePromotionKpi" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionKpiDetailReqDto">
+    	/* LoyCampaign.updatePromotionKpi */
+    	UPDATE LOY.LOY_PROM_KPI
+    	SET   MODIFY_BY				= #{modifyBy}
+    		, MODIFY_DATE			= GETDATE()
+    		, RID_PROM				= #{promRid}
+    		, PROM_KPI_CD			= #{promKpiCd}
+    		, CNTRL_GRP_CD			= #{cntrlGrpCd}
+    		, RID_TGT_GRP_CNTRL		= #{tgtGrpCntrlRid}
+    		, KPI_DATE_TYPE_CD		= #{kpiDateTypeCd}
+    		, DATE_VAL				= #{dateVal}
+    		, KPI_OFR_COST_CD		= #{kpiOfrCostCd}
+    		, KPI_OFR_COST_AMT		= #{kpiOfrCostAmt}
+    		, ETC_COST_AMT			= #{etcCostAmt}
+    		, ETC_COST_DESC			= #{etcCostDesc}
+    		, MAN_PROFIT_AMT		= #{manProfitAmt}
+    		, MAN_PROFIT_CD			= #{manProfitCd}
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectPromKpiInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionKpiDetailReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionKpiDetailResDto">
+        /* LoyCampaignMapper.selectPromKpiInfo */
+       select     lpk.RID_PROM			AS promRid
+       			, lpk.PROM_KPI_CD		AS promKpiCd
+       			, lpk.CNTRL_GRP_CD		AS cntrlGrpCd
+       			, lpk.RID_TGT_GRP_CNTRL	AS tgtGrpCntrlRid
+       			, ltg.TGT_GRP_NO		AS tgtGrpNo
+       			, ltg.TGT_GRP_NM		AS tgtGrpNm
+       			, lpk.KPI_DATE_TYPE_CD	AS kpiDateTypeCd
+       			, lpk.DATE_VAL			AS dateVal
+       			, lpk.KPI_OFR_COST_CD	AS kpiOfrCostCd
+       			, com.TO_CHAR(lpk.KPI_OFR_COST_AMT,'FM9,999,999')	AS kpiOfrCostAmt
+       			, com.TO_CHAR(lpk.ETC_COST_AMT,'FM9,999,999')		AS etcCostAmt
+       			, lpk.ETC_COST_DESC		AS etcCostDesc
+       			, com.TO_CHAR(lpk.MAN_PROFIT_AMT,'FM9,999,999')	AS manProfitAmt
+       			, lpk.MAN_PROFIT_CD		AS manProfitCd
+       			, lpk.RID				AS rid 
+       FROM  LOY.LOY_PROM_KPI lpk
+       LEFT  OUTER JOIN LOY.LOY_TGT_GRP ltg ON ltg.RID = lpk.RID_TGT_GRP_CNTRL AND ltg.FLAG = 1
+       WHERE lpk.FLAG = 1
+       AND   lpk.RID_PROM = #{promRid}
+    </select>
+    
+    <select id="selectActionTierList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionDefaultInfoReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionActionTierList">
+        /* LoyCampaignMapper.selectActionTierList */
+       select     lt.RID_TG			AS tierGroupRid
+       			, lt.RID			AS tierRid
+       			, lt.TIER_TYPE_CD	AS tierCode
+       FROM  LOY.LOY_TIERS_GRP ltg
+       JOIN  LOY.LOY_TIERS lt ON ltg.RID = lt.RID_TG AND ltg.FLAG = 1
+       WHERE ltg.FLAG = 1
+       AND   ltg.RID_PGM = #{pgmRid}
+    </select>
+    
+    <insert id="insertPromotionAction" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionActionDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAction */
+    INSERT INTO LOY.LOY_PROM_ACT
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, MAX_AMT
+    	, EFF_STRT_DAY_CNT
+    	, EFF_STRT_DATE
+    	, EFF_DATE_TYPE
+    	, STMP_YN
+    	, RID_TGT_GRP
+    	, QPNT_TYPE_CD
+    	, QPNT_AMT
+    	, TIERS_YN
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{maxAmt}
+    	, #{effStrtDayCnt}
+    	, com.TO_DATE(#{effStrtDate},'YYYY-MM-DD')
+    	, #{effDateType}
+    	, #{stmpYn}
+    	, #{tgtGrpActionRid}
+    	, #{qpntTypeCd}
+    	, #{qpntAmt}
+    	, #{tiersYn}
+    )
+    </insert>
+    
+    <update id="updatePromotionAction" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionActionDetailReqDto">
+    /* LoyCampaignMapper.updatePromotionAction */
+    UPDATE LOY.LOY_PROM_ACT
+    SET
+    	  MODIFY_BY			= #{modifyBy}
+    	, MODIFY_DATE		= GETDATE()
+    	, RID_PROM			= #{promRid}
+    	, MAX_AMT			= #{maxAmt}
+    	, EFF_STRT_DAY_CNT  = #{effStrtDayCnt}
+    	, EFF_STRT_DATE     = com.TO_DATE(#{effStrtDate},'YYYY-MM-DD')
+    	, EFF_DATE_TYPE		= #{effDateType}
+    	, STMP_YN			= #{stmpYn}
+    	, RID_TGT_GRP		= #{tgtGrpActionRid}
+    	, QPNT_TYPE_CD		= #{qpntTypeCd}
+    	, QPNT_AMT			= #{qpntAmt}
+    	, TIERS_YN 			= #{tiersYn}
+   	WHERE RID = #{rid}
+    </update>
+    
+    <insert id="insertPromotionTierAction" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionTierActionReqDto">
+    /* LoyCampaignMapper.insertPromotionTierAction */
+    INSERT INTO LOY.LOY_PROM_ACT_TIER
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, RID_PROM_ACT
+    	, SEQ_NUM
+    	, RID_TIERS_GROUP
+    	, RID_TIERS
+    	, OFR_AMT_TYPE
+    	, OFR_AMT
+    	<!-- , EFF_STRT_DAY_CNT -->
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{promActRid}
+    	, #{seqNum}
+    	, #{tierGroupRid}
+    	, #{tierRid}
+    	, #{ofrAmtType}
+    	, #{ofrAmt}
+    	<!-- , #{tierEffStrtDayCnt} -->
+    )
+    </insert>
+    
+    <update id="updatePromotionTierAction" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionTierActionReqDto">
+    /* LoyCampaignMapper.updatePromotionTierAction */
+    UPDATE LOY.LOY_PROM_ACT_TIER
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, RID_PROM			= #{promRid}
+    	, RID_PROM_ACT		= #{promActRid}
+    	, SEQ_NUM			= #{seqNum}
+    	, RID_TIERS_GROUP   = #{tierGroupRid}
+    	, RID_TIERS			= #{tierRid}
+    	, OFR_AMT_TYPE      = #{ofrAmtType}
+    	, OFR_AMT			= #{ofrAmt}
+    	<!-- , EFF_STRT_DAY_CNT  = #{tierEffStrtDayCnt} -->
+   	WHERE RID = #{rid}
+    </update>
+    
+    <select id="selectPromActionInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionActionDetailReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionActionDetailResDto">
+        /* LoyCampaignMapper.selectPromActionInfo */
+       select     lpa.RID				AS rid
+       			, lpa.RID_PROM			AS promRid
+       			, lpa.EFF_STRT_DAY_CNT  AS effStrtDayCnt
+       			, com.TO_CHAR(lpa.EFF_STRT_DATE,'YYYY-MM-DD')		AS effStrtDate
+       			, lpa.EFF_DATE_TYPE		AS effDateType
+				, lpa.STMP_YN			AS stmpYn
+				, lpa.MAX_AMT			AS maxAmt
+				, lpa.RID_TGT_GRP		AS tgtGrpActionRid
+				, lpa.QPNT_TYPE_CD		AS qpntTypeCd
+				, lpa.QPNT_AMT			AS qpntAmt
+				, ltg.TGT_GRP_NO		AS tgtGrpNo
+				, ltg.TGT_GRP_NM		AS tgtGrpNm
+				, ltg.MODIFY_DATE		AS modifyDate
+				, lpa.TIERS_YN			AS tiersYn
+				, lo.OFR_TYPE			AS ofrType
+				, lo.CPN_YN				AS cpnYn
+       FROM  LOY.LOY_PROM_ACT lpa
+       LEFT OUTER JOIN LOY.LOY_TGT_GRP ltg ON lpa.RID_TGT_GRP = ltg.RID AND ltg.FLAG = 1
+       LEFT OUTER JOIN LOY.LOY_PROM lp ON lpa.RID_PROM = lp.RID AND lp.FLAG = 1
+       LEFT OUTER JOIN LOY.LOY_OFR lo ON lo.RID = lp.RID_OFR AND lo.FLAG = 1
+       WHERE lpa.FLAG = 1
+       AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <select id="selectPromotionActionInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionActionDetailResDto">
+        /* LoyCampaignMapper.selectPromotionActionInfo */
+       select     lpa.RID				AS rid
+       			, lpa.RID_PROM			AS promRid
+       			, lpa.EFF_STRT_DAY_CNT  AS effStrtDayCnt
+       			, com.TO_CHAR(lpa.EFF_STRT_DATE,'YYYY-MM-DD')		AS effStrtDate
+       			, lpa.EFF_DATE_TYPE		AS effDateType
+				, lpa.STMP_YN			AS stmpYn
+				, lpa.MAX_AMT			AS maxAmt
+				, lpa.RID_TGT_GRP		AS tgtGrpActionRid
+				, lpa.QPNT_TYPE_CD		AS qpntTypeCd
+				, lpa.QPNT_AMT			AS qpntAmt
+				, ltg.TGT_GRP_NO		AS tgtGrpNo
+				, ltg.TGT_GRP_NM		AS tgtGrpNm
+				, ltg.MODIFY_DATE		AS modifyDate
+       FROM  LOY.LOY_PROM_ACT lpa
+       LEFT OUTER JOIN LOY.LOY_TGT_GRP ltg ON lpa.RID_TGT_GRP = ltg.RID AND ltg.FLAG = 1
+       WHERE lpa.FLAG = 1
+       AND   lpa.RID_PROM = #{rid}
+    </select>
+    
+    <select id="selectPromTierAction" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionActionDetailReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionTierActionDetailResDto">
+        /* LoyCampaignMapper.selectPromTierAction */
+       select     lpat.RID				AS rid
+       			, lpat.RID_PROM			AS promRid
+       			, lpat.RID_PROM_ACT		AS promActRid
+       			, lpat.SEQ_NUM			AS seqNo
+       			, lpat.RID_TIERS_GROUP	AS tierGroupRid
+       			, lpat.RID_TIERS		AS tierRid
+       			, lpat.OFR_AMT_TYPE		AS ofrAmtType
+       			, lpat.OFR_AMT			AS ofrAmt
+       			<!-- , lpat.EFF_STRT_DAY_CNT	AS tierEffStrtDayCnt -->
+       			, ltg.TIERS_GRP_NM		AS tierGrpNm
+       			, lt.TIER_NM			AS tierNm
+       			, lt.TIER_TYPE_CD		AS tierTypeCd
+       FROM  LOY.LOY_PROM_ACT_TIER lpat
+       LEFT OUTER JOIN LOY.LOY_TIERS lt ON lpat.RID_TIERS = lt.RID AND lt.FLAG = 1
+       LEFT OUTER JOIN LOY.LOY_TIERS_GRP ltg ON lpat.RID_TIERS_GROUP = ltg.RID AND ltg.FLAG = 1
+       WHERE lpat.FLAG = 1
+       AND   lpat.RID_PROM = #{promRid}
+       AND   lpat.RID_PROM_ACT = #{promActionRid}
+       ORDER BY lpat.SEQ_NUM ASC
+    </select>
+    
+	<update id="deleteActionTier" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionTierActionReqDto">
+    /* LoyCampaignMapper.deleteActionTier */
+    UPDATE LOY.LOY_PROM_ACT_TIER
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID = #{rid}
+    </update>
+    
+    <select id="selectPromRuleInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionTierActionReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionDetailResDto">
+        /* LoyCampaignMapper.selectPromRuleInfo */
+       select     lp.RID					AS rid
+       			, lp.PROM_TYPE_LV1_CD		AS promTypeLv1Cd
+       			, lp.PROM_TYPE_LV2_CD		AS promTypeLv2Cd
+       			, lo.OFR_NO					AS ofrNo
+       			, lo.OFR_NM					AS ofrNm
+       			, lp.RID_OFR				AS ofrRid
+       			, lp.PROM_OFFER_AMT_DEF_CD	AS promOfferAmtDefCd
+       			, ltg.TGT_GRP_NO			AS tgtGrpNo
+       			, ltg.TGT_GRP_NM			AS tgtGrpNm
+       			, lp.RID_TGT_GRP_INC		AS tgtRuleGrpRid
+       			, eltg.TGT_GRP_NO			AS expectTgtGrpNo
+       			, eltg.TGT_GRP_NM			AS expectTgtGrpNm
+       			, lp.RID_TGT_GRP_EXC		AS expectTgtRuleGrpRid
+       			, lp.PROM_STAT_CD			AS promStatCd
+       FROM  LOY.LOY_PROM lp
+       LEFT OUTER JOIN LOY.LOY_OFR lo ON lp.RID_OFR = lo.RID AND lo.FLAG = 1
+       LEFT OUTER JOIN LOY.LOY_TGT_GRP ltg ON lp.RID_TGT_GRP_INC = ltg.RID AND ltg.FLAG = 1
+       LEFT OUTER JOIN LOY.LOY_TGT_GRP eltg ON lp.RID_TGT_GRP_EXC = eltg.RID AND eltg.FLAG = 1
+       WHERE lp.FLAG = 1
+       AND   lp.RID = #{rid}
+    </select>
+    
+    <update id="updatePromotion" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionRuleDetailReqDto">
+    /* LoyCampaignMapper.updatePromotion */
+    UPDATE LOY.LOY_PROM
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, PROM_TYPE_LV1_CD  = #{promTypeLv1Cd}
+    	, PROM_TYPE_LV2_CD  = #{promTypeLv2Cd}
+    	, RID_OFR			= #{ofrRid}
+    	, PROM_OFFER_AMT_DEF_CD	= #{promOfferAmtDefCd}
+    	, RID_TGT_GRP_INC			= #{tgtGrpRid}
+    	, RID_TGT_GRP_EXC			= #{expectTgtGrpRid}
+   	WHERE RID = #{rid}
+    </update>
+    
+    <insert id="insertPromotionSa1Rule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionSa1Rule */
+    INSERT INTO LOY.LOY_PRUL_SA1GEN
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, CHNL_CON_YN
+    	, RID_CHNL_GRP
+    	, PROD_CON_YN
+    	, RID_PROD_GRP_1
+    	, RID_PROD_GRP_2
+    	, PROD_GRP_ALL_YN
+    	, SELL_AMT_OFR_YN
+    	, PAY_METH_YN
+    	, PAY_METH_TYPE_CD
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{chnlConYn}
+    	, #{chnlTgtGrpRid}
+    	, #{prodConYn}
+    	, #{prodTgtGrpRid}
+    	, #{prodTgtGrpRid2}
+    	, #{prodGrpAllYn}
+    	, #{sellAmtOfrYn}
+    	, #{payMethYn}
+    	, #{payMethTypeCd}
+    )
+	</insert>
+	
+	<update id="updatePromotionSa1Rule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionSa1Rule */
+	UPDATE LOY.LOY_PRUL_SA1GEN
+	SET     MODIFY_BY		 = #{modifyBy}
+		  , MODIFY_DATE		 = GETDATE()
+    	  , RID_PROM		 = #{promRid}
+    	  , CHNL_CON_YN		 = #{chnlConYn}
+    	  , RID_CHNL_GRP	 = #{chnlTgtGrpRid}
+    	  , PROD_CON_YN 	 = #{prodConYn}
+    	  , RID_PROD_GRP_1   = #{prodTgtGrpRid}
+    	  , RID_PROD_GRP_2   = #{prodTgtGrpRid2}
+    	  , PROD_GRP_ALL_YN  = #{prodGrpAllYn}
+    	  , SELL_AMT_OFR_YN  = #{sellAmtOfrYn}
+    	  , PAY_METH_YN      = #{payMethYn}
+    	  , PAY_METH_TYPE_CD = #{payMethTypeCd}
+   WHERE RID = #{rid}
+   </update>
+   
+   <insert id="insertPromotionSa1XmRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionSa1XmRule */
+    INSERT INTO LOY.LOY_PRUL_SA1GEN_XM
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, RID_PRUL_SA1GEN
+    	, SEQ_NUM
+    	, START_VAL
+    	, END_VAL
+    	, RID_OFR
+    	, OFR_AMT_TYPE
+    	, OFR_AMT
+    	, EFF_STRT_DAY_CNT
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{paulSa1genRid}
+    	, #{seqNum}
+    	, #{startVal}
+    	, #{endVal}
+    	, #{ofrRid}
+    	, #{ofrAmtType}
+    	, #{ofrAmt}
+    	, #{effStrtDayCnt}
+    )
+	</insert>
+	
+	<update id="updatePromotionSa1XmRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionSa1XmRule */
+	UPDATE LOY.LOY_PRUL_SA1GEN_XM
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, RID_PRUL_SA1GEN	= #{paulSa1genRid}
+    		, SEQ_NUM			= #{seqNum}
+    		, START_VAL			= #{startVal}
+    		, END_VAL			= #{endVal}
+    		, RID_OFR			= #{ofrRid}
+    		, OFR_AMT_TYPE		= #{ofrAmtType}
+    		, OFR_AMT			= #{ofrAmt}
+    		, EFF_STRT_DAY_CNT	= #{effStrtDayCnt}
+   WHERE RID = #{rid}
+   </update>
+   
+   <select id="selectChnlTgtGrpList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyChnlTgtGrpResDto">
+        /* LoyCampaign.selectChnlTgtGrpList */
+        SELECT    lcg.TGT_GRP_NO	AS chnlTgtGrpNo
+        		, lcg.TGT_GRP_NM	AS chnlTgtGrpNm
+        		, lcg.RID			AS rid
+        		, ${strColumn}
+        FROM LOY.LOY_CHNL_GRP lcg
+        WHERE lcg.FLAG = 1
+        AND lcg.STAT_CD = 'A'
+        and ${strCondWhere}
+	    and ${strWhere}
+ 	    order by ${strOrderby}
+	    ${strEndPaging}
+    </select>
+    
+    <select id="selectProdTgtGrpList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyProdTgtGrpResDto">
+        /* LoyCampaign.selectProdTgtGrpList */
+        SELECT    lpg.TGT_GRP_NO	AS prodTgtGrpNo
+        		, lpg.TGT_GRP_NM	AS prodTgtGrpNm
+        		, lpg.RID			AS rid
+        		, ${strColumn}
+        FROM LOY.LOY_PROD_GRP lpg
+        WHERE lpg.FLAG = 1
+        AND lpg.STAT_CD = 'A'
+        and ${strCondWhere}
+	    and ${strWhere}
+ 	    order by ${strOrderby}
+	    ${strEndPaging}
+    </select>
+    
+    <select id="selectPromSa1RuleInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionSa1RuleDetailResDto">
+        /* LoyCampaign.selectPromSa1RuleInfo */
+        SELECT    lps.RID_PROM		   AS promRid
+        		, lps.CHNL_CON_YN	   AS chnlConYn
+        		, lps.RID_CHNL_GRP	   AS chnlTgtGrpRid
+        		, lps.PROD_CON_YN	   AS prodConYn
+        		, lps.RID_PROD_GRP_1   AS prodTgtGrpRid
+        		, lps.RID_PROD_GRP_2   AS prodTgtGrpRid2
+        		, lps.PROD_GRP_ALL_YN  AS prodGrpAllYn
+        		, lps.SELL_AMT_OFR_YN  AS sellAmtOfrYn
+        		, lps.PAY_METH_YN	   AS payMethYn
+        		, lps.PAY_METH_TYPE_CD AS payMethTypeCd
+        		, lcg.TGT_GRP_NO	   AS chnlTgtGrpNo
+        		, lcg.TGT_GRP_NM	   AS chnlTgtGrpNm
+        		, lpg.TGT_GRP_NO	   AS prodTgtGrpNo
+        		, lpg.TGT_GRP_NM	   AS prodTgtGrpNm
+        		, lpg2.TGT_GRP_NO	   AS prodTgtGrpNo2
+        		, lpg2.TGT_GRP_NM	   AS prodTgtGrpNm2
+        		, lps.RID			   AS rid
+        FROM LOY.LOY_PRUL_SA1GEN lps
+        LEFT OUTER JOIN LOY.LOY_CHNL_GRP lcg ON lps.RID_CHNL_GRP = lcg.RID AND lcg.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_PROD_GRP lpg ON lps.RID_PROD_GRP_1 = lpg.RID AND lpg.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_PROD_GRP lpg2 ON lps.RID_PROD_GRP_2 = lpg2.RID AND lpg2.FLAG = 1
+        WHERE lps.FLAG = 1
+        AND   lps.RID_PROM = #{promRid}
+    </select>
+    
+    <select id="selectPromSa1XmRuleInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionSa1XmRuleDetailResDto">
+        /* LoyCampaign.selectPromSa1XmRuleInfo */
+        SELECT    lpsx.RID_PRUL_SA1GEN		AS paulSa1genRid
+        		, lpsx.SEQ_NUM				AS seqNo
+        		, lpsx.START_VAL			AS startVal
+        		, lpsx.END_VAL				AS endVal
+        		, lpsx.RID_OFR				AS ofrRid
+        		, lpsx.OFR_AMT_TYPE			AS ofrAmtType
+        		, lpsx.OFR_AMT				AS ofrAmt
+        		, lpsx.EFF_STRT_DAY_CNT		AS effStrtDayCnt
+        		, lo.OFR_NM					AS ofrNm
+        		, lo.OFR_NO					AS ofrNo
+        		, lpsx.RID					AS rid
+        		, lo.CPN_YN					AS cpnYn
+        FROM LOY.LOY_PRUL_SA1GEN_XM lpsx
+        LEFT OUTER JOIN LOY.LOY_OFR lo ON lpsx.RID_OFR = lo.RID AND lo.FLAG = 1
+        WHERE lpsx.FLAG = 1
+        AND   lpsx.RID_PROM = #{promRid}
+        AND   lpsx.RID_PRUL_SA1GEN = #{prulSa1GenRid}
+        ORDER BY lpsx.SEQ_NUM ASC
+    </select>
+    
+    <update id="deleteRuleSa1Xm" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteRuleSa1Xm */
+    UPDATE LOY.LOY_PRUL_SA1GEN_XM
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteRuleAc2Add" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteRuleAc2Add */
+    UPDATE LOY.LOY_PRUL_AC2ADD
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteRuleSa2Sum" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteRuleSa2Sum */
+    UPDATE LOY.LOY_PRUL_SA1SUM
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteRuleAc2On" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteRuleAc2On */
+    UPDATE LOY.LOY_PRUL_AC2ON
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteSa1Rule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteSa1Rule */
+    UPDATE LOY.LOY_PRUL_SA1GEN
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteSa1XmRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteSa1XmRule */
+    UPDATE LOY.LOY_PRUL_SA1GEN_XM
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc2AgrRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc2AgrRule */
+    UPDATE LOY.LOY_PRUL_AC2AGR
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc2SurRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc2SurRule */
+    UPDATE LOY.LOY_PRUL_AC2SUR
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteSa2SumRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteSa2SumRule */
+    UPDATE LOY.LOY_PRUL_SA1SUM
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc2OnRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc2OnRule */
+    UPDATE LOY.LOY_PRUL_AC2ON
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc2AddRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc2AddRule */
+    UPDATE LOY.LOY_PRUL_AC2ADD
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc1JoinRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc1JoinRule */
+    UPDATE LOY.LOY_PRUL_AC1JOIN
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc1FrndRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc1FrndRule */
+    UPDATE LOY.LOY_PRUL_AC1FRND
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc1FamRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc1FamRule */
+    UPDATE LOY.LOY_PRUL_AC1FAM
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc1CardRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc1CardRule */
+    UPDATE LOY.LOY_PRUL_AC1CARD
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="deleteAc1ClbRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc1ClbRule */
+    UPDATE LOY.LOY_PRUL_AC1CLB
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <update id="updatePromType" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.updatePromType */
+    UPDATE LOY.LOY_PROM
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, PROM_TYPE_LV1_CD  = #{promTypeLv1Cd}
+    	, PROM_TYPE_LV2_CD  = #{promTypeLv2Cd}
+   	WHERE RID = #{promRid}
+    </update>
+    
+    <select id="selectPromSa1AniDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionSa1AniDetailResDto">
+        /* LoyCampaign.selectPromSa1AniDetail */
+        SELECT    lps.CONDITION_CD			AS conditionCd
+        		, lps.OPER_CD				AS operCd
+        		, lps.DAY_VAL				AS dayVal
+        		, lps.RID					AS rid
+        FROM LOY.LOY_PRUL_SA1ANI lps
+        WHERE lps.FLAG = 1
+        AND   lps.RID_PROM = #{promRid}
+    </select>
+    
+    <insert id="insertPromotionSa1AniRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1AniDetailReqDto">
+    /* LoyCampaignMapper.savePromotionSa1AniRule */
+    INSERT INTO LOY.LOY_PRUL_SA1ANI
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, CONDITION_CD
+    	, OPER_CD
+    	, DAY_VAL
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{conditionCd}
+    	, #{operCd}
+    	, #{dayVal}
+    )
+	</insert>
+	
+	<update id="updatePromotionSa1AniRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1AniDetailReqDto">
+    /* LoyCampaignMapper.updatePromotionSa1AniRule */
+    UPDATE LOY.LOY_PRUL_SA1ANI
+    SET        MODIFY_DATE		= GETDATE()
+    	   	 , MODIFY_BY		= #{modifyBy}
+    	   	 , RID_PROM			= #{promRid}
+    	   	 , CONDITION_CD		= #{conditionCd}
+    	   	 , OPER_CD			= #{operCd}
+    	   	 , DAY_VAL			= #{dayVal}
+	WHERE  rid = #{rid}
+	</update>
+	
+	<insert id="insertPromotionAc2ConRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2ConDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc2ConRule */
+    INSERT INTO LOY.LOY_PRUL_AC2CON
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, HHP_YN
+    	, EMAIL_YN
+    	, ADDR_YN
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{hhpYn}
+    	, #{emailYn}
+    	, #{addrYn}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc2ConRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2ConDetailReqDto">
+    /* LoyCampaignMapper.updatePromotionAc2ConRule */
+    UPDATE LOY.LOY_PRUL_AC2CON
+    SET        MODIFY_DATE		= GETDATE()
+    	   	 , MODIFY_BY		= #{modifyBy}
+    	   	 , RID_PROM			= #{promRid}
+    	   	 , HHP_YN			= #{hhpYn}
+    	   	 , EMAIL_YN			= #{emailYn}
+    	   	 , ADDR_YN			= #{addrYn}
+	WHERE  rid = #{rid}
+	</update>
+	
+	<update id="deleteSa1AniRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteSa1AniRule */
+    UPDATE LOY.LOY_PRUL_SA1ANI
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteAc2ConRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa1RuleDetailReqDto">
+    /* LoyCampaignMapper.deleteAc2ConRule */
+    UPDATE LOY.LOY_PRUL_AC2CON
+    SET
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG 				= flag + 1
+   	WHERE RID_PROM = #{promRid}
+    </update>
+    
+    <insert id="insertPromotionAc2AgrRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2AgrDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc2ConRule */
+    INSERT INTO LOY.LOY_PRUL_AC2AGR
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, TEXT_YN
+    	, EMAIL_YN
+    	, TM_YN
+    	, DM_YN
+    	, PUSH_YN
+    	, KKF_YN
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{textYn}
+    	, #{emailYn}
+    	, #{tmYn}
+    	, #{dmYn}
+    	, #{pushYn}
+    	, #{kkfYn}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc2AgrRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2AgrDetailReqDto">
+    /* LoyCampaignMapper.updatePromotionAc2AgrRule */
+    UPDATE LOY.LOY_PRUL_AC2AGR
+    SET       
+    		  MODIFY_DATE = GETDATE()
+    		, MODIFY_BY   = #{modifyBy}
+    		, RID_PROM	  = #{promRid}
+    		, TEXT_YN     = #{textYn}
+    		, EMAIL_YN    = #{emailYn}
+    		, TM_YN		  = #{tmYn}
+    		, DM_YN		  = #{dmYn}
+    		, PUSH_YN	  = #{pushYn}
+    		, KKF_YN	  = #{kkfYn}
+	WHERE  rid = #{rid}
+	</update>
+	
+	<select id="selectPromAc2ConDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2ConDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2ConDetailResDto">
+        /* LoyCampaign.selectPromAc2ConDetail */
+        SELECT    lpa.HHP_YN		AS hhpYn
+        		, lpa.EMAIL_YN		AS emailYn
+        		, lpa.ADDR_YN		AS addrYn
+        		, lpa.RID			AS rid
+        FROM LOY.LOY_PRUL_AC2CON lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <select id="selectPromAc2AgrDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2AgrDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2AgrDetailResDto">
+        /* LoyCampaign.selectPromAc2AgrDetail */
+        SELECT    lpa.TEXT_YN			AS textYn
+        		, lpa.EMAIL_YN			AS emailYn
+        		, lpa.TM_YN				AS tmYn
+        		, lpa.DM_YN				AS dmYn
+        		, lpa.PUSH_YN			AS pushYn
+        		, lpa.KKF_YN			AS kkfYn
+        		, lpa.RID				AS rid
+        FROM LOY.LOY_PRUL_AC2AGR lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <insert id="insertPromotionAc2SurRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2SurDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc2SurRule */
+    INSERT INTO LOY.LOY_PRUL_AC2SUR
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, RID_SURV
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{surveyRid}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc2SurRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2SurDetailReqDto">
+    /* LoyCampaignMapper.updatePromotionAc2SurRule */
+    UPDATE LOY.LOY_PRUL_AC2SUR
+    SET       
+    		  MODIFY_DATE = GETDATE()
+    		, MODIFY_BY   = #{modifyBy}
+    		, RID_PROM	  = #{promRid}
+    		, RID_SURV   = #{surveyRid}
+	WHERE  rid = #{rid}
+	</update>
+	
+	<insert id="insertPromotionSa2SumRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa2SumDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionSa2SumRule */
+    INSERT INTO LOY.LOY_PRUL_SA1SUM
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, SEQ_NUM
+    	, START_VAL
+    	, END_VAL
+    	, RID_OFR
+    	, OFR_AMT_TYPE
+    	, OFR_AMT
+    	, EFF_STRT_DAY_CNT
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{seqNum}
+    	, #{startVal}
+    	, #{endVal}
+    	, #{ofrRid}
+    	, #{ofrAmtType}
+    	, #{ofrAmt}
+    	, #{effStrtDayCnt}
+    )
+	</insert>
+	
+	<update id="updatePromotionSa2SumRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa2SumDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionSa2SumRule */
+	UPDATE LOY.LOY_PRUL_SA1SUM
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, SEQ_NUM			= #{seqNum}
+    		, START_VAL			= #{startVal}
+    		, END_VAL			= #{endVal}
+    		, RID_OFR			= #{ofrRid}
+    		, OFR_AMT_TYPE		= #{ofrAmtType}
+    		, OFR_AMT			= #{ofrAmt}
+    		, EFF_STRT_DAY_CNT	= #{effStrtDayCnt}
+   WHERE RID = #{rid}
+   </update>
+   
+   <insert id="insertPromotionAc2OnRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2OnDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc2OnRule */
+    INSERT INTO LOY.LOY_PRUL_AC2ON
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, SEQ_NUM
+    	, ONL_ACT_CD
+    	, RID_OFR
+    	, OFR_AMT
+    	, EFF_STRT_DAY_CNT
+    	, OFR_AMT_TYPE
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{seqNum}
+    	, #{onlActCd}
+    	, #{ofrRid}
+    	, #{ofrAmt}
+    	, #{effStrtDayCnt}
+    	, #{ofrAmtType}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc2OnRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2OnDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionAc2OnRule */
+	UPDATE LOY.LOY_PRUL_AC2ON
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, SEQ_NUM			= #{seqNum}
+    		, ONL_ACT_CD		= #{onlActCd}
+    		, RID_OFR			= #{ofrRid}
+    		, OFR_AMT			= #{ofrAmt}
+    		, EFF_STRT_DAY_CNT	= #{effStrtDayCnt}
+   WHERE RID = #{rid}
+   </update>
+	
+	<select id="selectPromSa2SumRuleInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionSa2SumDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionSa2SumDetailResDto">
+        /* LoyCampaign.selectPromSa2SumRuleInfo */
+        SELECT    lps.SEQ_NUM				AS seqNo
+        		, lps.START_VAL			    AS startVal
+        		, lps.END_VAL				AS endVal
+        		, lps.RID_OFR				AS ofrRid
+        		, lps.OFR_AMT_TYPE			AS ofrAmtType
+        		, lps.OFR_AMT				AS ofrAmt
+        		, lps.EFF_STRT_DAY_CNT		AS effStrtDayCnt
+        		, lo.OFR_NM					AS ofrNm
+        		, lo.OFR_NO					AS ofrNo
+        		, lps.RID					AS rid
+        FROM LOY.LOY_PRUL_SA1SUM lps
+        LEFT OUTER JOIN LOY.LOY_OFR lo ON lps.RID_OFR = lo.RID AND lo.FLAG = 1
+        WHERE lps.FLAG = 1
+        AND   lps.RID_PROM = #{promRid}
+        ORDER BY lps.SEQ_NUM ASC
+    </select>
+    
+    <select id="selectPromAc2OnRuleInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2OnDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2OnDetailResDto">
+        /* LoyCampaign.selectPromAc2OnRuleInfo */
+        SELECT    lpa.SEQ_NUM				AS seqNo
+        		, lpa.RID_OFR				AS ofrRid
+        		, lpa.ONL_ACT_CD			AS onlActCd
+        		, lpa.OFR_AMT				AS ofrAmt
+        		, lpa.OFR_AMT_TYPE			AS ofrAmtType
+        		, lpa.EFF_STRT_DAY_CNT		AS effStrtDayCnt
+        		, lo.OFR_NM					AS ofrNm
+        		, lo.OFR_NO					AS ofrNo
+        		, lpa.RID					AS rid
+        FROM LOY.LOY_PRUL_AC2ON lpa
+        LEFT OUTER JOIN LOY.LOY_OFR lo ON lpa.RID_OFR = lo.RID AND lo.FLAG = 1
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+        ORDER BY lpa.SEQ_NUM ASC
+    </select>
+    
+    <select id="selectPromAc2AddRuleInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2AddDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2AddDetailResDto">
+        /* LoyCampaign.selectPromAc2AddRuleInfo */
+        SELECT    lpa.SEQ_NUM				AS seqNo
+        		, lpa.ADD_INFO_CD			AS addInfoCd
+        		, lpa.RID					AS rid
+        FROM LOY.LOY_PRUL_AC2ADD lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+        ORDER BY lpa.SEQ_NUM ASC
+    </select>
+    
+    <insert id="insertPromotionAc2AddRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2AddDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc2AddRule */
+    INSERT INTO LOY.LOY_PRUL_AC2ADD
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, SEQ_NUM
+		, ADD_INFO_CD
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{seqNum}
+    	, #{addInfoCd}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc2AddRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2AddDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionAc2AddRule */
+	UPDATE LOY.LOY_PRUL_AC2ADD
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, SEQ_NUM			= #{seqNum}
+			, ADD_INFO_CD		= #{addInfoCd}
+   WHERE RID = #{rid}
+   </update>
+   
+   <insert id="insertPromotionAc1JoinRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1JoinDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc1JoinRule */
+    INSERT INTO LOY.LOY_PRUL_AC1JOIN
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, PRUL_JOIN_CHNL_CD
+    	, RID_CHNL_GRP
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{prulJoinChnlCd}
+    	, #{chnlTgtGrpRid}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc1JoinRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1JoinDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionAc1JoinRule */
+	UPDATE  LOY.LOY_PRUL_AC1JOIN
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, PRUL_JOIN_CHNL_CD = #{prulJoinChnlCd}
+    		, RID_CHNL_GRP      = #{chnlTgtGrpRid}
+   WHERE RID = #{rid}
+   </update>
+   
+   
+   <insert id="insertPromotionAc1FrndRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1FrndDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc1FrndRule */
+    INSERT INTO LOY.LOY_PRUL_AC1FRND
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, PRUL_RECOM_CD
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{prulRecomCd}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc1FrndRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1JoinDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionAc1FrndRule */
+	UPDATE  LOY.LOY_PRUL_AC1FRND
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, PRUL_RECOM_CD     = #{prulRecomCd}
+   WHERE RID = #{rid}
+   </update>
+   
+   <select id="selectPromAc1FrndDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1FrndDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1FrndDetailResDto">
+        /* LoyCampaign.selectPromAc1FrndDetail */
+        SELECT    lpa.PRUL_RECOM_CD			AS prulJoinChnlCd
+        		, lpa.RID					AS rid
+        FROM LOY.LOY_PRUL_AC1FRND lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <select id="selectPromAc1JoinDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1JoinDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1JoinDetailResDto">
+        /* LoyCampaign.selectPromAc1JoinDetail */
+        SELECT    lpa.PRUL_JOIN_CHNL_CD			AS prulJoinChnlCd
+        		, lpa.RID_CHNL_GRP				AS chnlTgtGrpRid
+        		, lcg.TGT_GRP_NO				AS tgtGrpNo
+        		, lcg.TGT_GRP_NM				AS tgtGrpNm
+        		, lpa.RID						AS rid
+        FROM LOY.LOY_PRUL_AC1JOIN lpa
+        LEFT OUTER JOIN LOY.LOY_CHNL_GRP lcg ON lpa.RID_CHNL_GRP = lcg.RID AND lcg.FLAG = 1
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <insert id="insertPromotionAc1FamRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1FamDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc1FamRule */
+    INSERT INTO LOY.LOY_PRUL_AC1FAM
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, PRUL_FAM_CD
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{prulFamCd}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc1FamRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1FamDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionAc1FamRule */
+	UPDATE  LOY.LOY_PRUL_AC1FAM
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, PRUL_FAM_CD       = #{prulFamCd}
+   WHERE RID = #{rid}
+   </update>
+   
+   <select id="selectPromAc1FamDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1FamDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1FamDetailResDto">
+        /* LoyCampaign.selectPromAc1FamDetail */
+        SELECT    lpa.PRUL_FAM_CD				AS prulFamCd
+        		, lpa.RID						AS rid
+        FROM LOY.LOY_PRUL_AC1FAM lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <select id="selectPromAc1CardDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1CardDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1CardDetailResDto">
+        /* LoyCampaign.selectPromAc1CardDetail */
+        SELECT    lpa.RID_CHNL_GRP				AS chnTgtGrpRid
+        		, lcg.TGT_GRP_NO				AS chnlTgtGrpNo
+       			, lcg.TGT_GRP_NM				AS chnlTgtGrpNm
+        		, lpa.RID						AS rid
+        FROM LOY.LOY_PRUL_AC1CARD lpa
+        JOIN LOY.LOY_CHNL_GRP lcg ON lpa.RID_CHNL_GRP = lcg.RID AND lcg.FLAG = 1
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <insert id="insertPromotionAc1CardRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1CardDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc1CardRule */
+    INSERT INTO LOY.LOY_PRUL_AC1CARD
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, RID_CHNL_GRP
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{chnTgtGrpRid}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc1CardRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1CardDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionAc1CardRule */
+	UPDATE  LOY.LOY_PRUL_AC1CARD
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, RID_CHNL_GRP      = #{chnTgtGrpRid}
+   WHERE RID = #{rid}
+   </update>
+   
+   <select id="selectPromAc1ClbDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1ClbDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1ClbDetailResDto">
+        /* LoyCampaign.selectPromAc1ClbDetail */
+        SELECT    lpa.RID_CLUB				AS clubRid
+        		, lc.club_No					AS clubNo
+       			, lc.club_Nm					AS clubNm
+        		, lpa.RID					AS rid
+        FROM LOY.LOY_PRUL_AC1CLB lpa
+        JOIN LOY.LOY_CLUB lc ON lpa.RID_CLUB = lc.RID AND lc.FLAG = 1
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <insert id="insertPromotionAc1ClbRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1ClbDetailReqDto">
+    /* LoyCampaignMapper.insertPromotionAc1ClbRule */
+    INSERT INTO LOY.LOY_PRUL_AC1CLB
+    (
+    	  RID
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, RID_PROM
+    	, RID_CLUB
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, #{createBy}
+    	, #{modifyBy}
+    	, #{promRid}
+    	, #{clubRid}
+    )
+	</insert>
+	
+	<update id="updatePromotionAc1ClbRule" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc1ClbDetailReqDto">
+	/* LoyCampaignMapper.updatePromotionAc1ClbRule */
+	UPDATE  LOY.LOY_PRUL_AC1CLB
+	SET       MODIFY_BY			= #{modifyBy}
+			, MODIFY_DATE		= GETDATE()
+    		, RID_PROM			= #{promRid}
+    		, RID_CLUB      	= #{clubRid}
+   WHERE RID = #{rid}
+   </update>
+   
+   <select id="selectPromAc2SurDetail" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionAc2SurDetailReqDto" resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc2SurDetailResDto">
+        /* LoyCampaign.selectPromAc2SurDetail */
+        SELECT    lpa.RID_SURV					AS surveyRid
+        		, lsm.SURV_NO					AS surveyNo
+       			, lsm.SURV_NM					AS surveyNm
+        		, lpa.RID						AS rid
+        FROM LOY.LOY_PRUL_AC2SUR lpa
+        JOIN LOY.LOY_SURV_MST lsm ON lpa.RID_SURV = lsm.RID AND lsm.FLAG = 1
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{promRid}
+    </select>
+    
+    <select id="selectPromStatCd" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowReqDto" resultType="java.lang.String">
+        /* LoyCampaign.selectPromStatCd */
+        SELECT lp.PROM_TYPE_LV2_CD
+        FROM   LOY.LOY_PROM	lp
+     	WHERE  rid = #{rid}
+    </select>
+    
+    <select id="selectPrulSa1GenInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionSa1RuleDetailResDto">
+        /* LoyCampaign.selectPrulSa1GenInfo */
+        SELECT    lps.PAY_METH_TYPE_CD  AS payMethTypeCd
+        		, lps.MODIFY_DATE		AS modifyDate
+        		, lps.RID			    AS rid
+        FROM LOY.LOY_PRUL_SA1GEN lps
+        WHERE lps.FLAG = 1
+        AND   lps.RID_PROM = #{rid}
+    </select>
+    
+    <select id="selectPrulSa1AniInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionSa1AniDetailResDto">
+        /* LoyCampaign.selectPrulSa1AniInfo */
+        SELECT    lps.CONDITION_CD 		AS conditionCd
+        		, lps.RID			    AS rid
+        FROM LOY_PRUL_SA1ANI lps
+        WHERE lps.FLAG = 1
+        AND   lps.RID_PROM = #{rid}
+    </select>
+    
+    <select id="selectPrulSa2SumInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionSa2SumDetailResDto">
+        /* LoyCampaign.selectPrulSa2SumInfo */
+        SELECT    lps.OFR_AMT_TYPE 		AS ofrAmtType
+        		, lps.RID			    AS rid
+        FROM  LOY.LOY_PRUL_SA1SUM lps
+        WHERE lps.FLAG = 1
+        AND   lps.RID_PROM = #{rid}
+    </select>
+    
+    <select id="selectPrulAc1JoinInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1JoinDetailResDto">
+        /* LoyCampaign.selectPrulAc1JoinInfo */
+        SELECT    lpa.PRUL_JOIN_CHNL_CD 		AS prulJoinChnlCd
+        		, lpa.RID			    		AS rid
+        FROM  LOY.LOY_PRUL_AC1JOIN lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{rid}
+    </select>
+    
+    <select id="selectPrulAc1FamInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1FamDetailResDto">
+        /* LoyCampaign.selectPrulAc1FamInfo */
+        SELECT    lpa.PRUL_FAM_CD 				AS prulFamCd
+        		, lpa.RID			    		AS rid
+        FROM  LOY_PRUL_AC1FAM lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{rid}
+    </select>
+    
+    <select id="getPrulAc1ClbInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1ClbDetailResDto">
+        /* LoyCampaign.getPrulAc1ClbInfo */
+        SELECT    lc.CLUB_NM					AS clubNm
+        		, lpa.RID			    		AS rid
+        FROM  LOY_PRUL_AC1FAM lpa
+        JOIN LOY.LOY_CLUB lc ON lpa.RID_CLUB = lc.RID AND lc.FLAG = 1
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{rid}
+    </select>
+    
+    <select id="selectPrulAc1CardInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1CardDetailResDto">
+        /* LoyCampaign.selectPrulAc1CardInfo */
+        SELECT  , lcg.TGT_GRP_NM				AS chnlTgtGrpNm
+        		, lpa.RID			    		AS rid
+        FROM  LOY_PRUL_AC1CARD lpa
+        JOIN LOY.LOY_CHNL_GRP lcg ON lpa.RID_CHNL_GRP = lcg.RID AND lcg.FLAG = 1
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{rid}
+    </select>
+    
+    <select id="selectPrulAc1FrndInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    							      resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionAc1FrndDetailResDto">
+        /* LoyCampaign.selectPrulAc1FrndInfo */
+        SELECT  , lpa.PRUL_RECOM_CD				AS prulJoinChnlCd
+        		, lpa.RID			    		AS rid
+        FROM  LOY_PRUL_AC1FRND lpa
+        WHERE lpa.FLAG = 1
+        AND   lpa.RID_PROM = #{rid}
+    </select>
+	
+	<update id="deletePromotionActionTier" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionActionDetailReqDto">
+        /* LoyCampaign.deletePromotionActionTier */
+        update LOY.LOY_PROM_ACT
+           set
+                 MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where TIERS_YN != #{tiersYn}
+    </update>
+    
+    <update id="deleteActionTierItem" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionTierActionReqDto">
+        /* LoyCampaign.deleteActionTierItem */
+        update LOY.LOY_PROM_ACT_TIER
+           set
+                 MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where RID_PROM = #{promRid}
+    </update>
+    
+    <select id="selectPromotionListPop" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionListResDto">
+        /* LoyCampaignMapper.selectPromotionListPop */
+       select   lp.PROM_NM			AS promNm
+       		  , lp.PROM_TYPE_LV1_CD	AS promTypeLv1Cd
+       		  , lp.PROM_TYPE_LV2_CD AS promTypeLv2Cd
+       		  , lp.PROM_STAT_CD		AS promStatCd
+       		  , lo.OFR_NO			AS ofrNo
+       		  , lo.OFR_NM			AS ofrNm
+       		  , com.TO_CHAR(lp.VALID_START_DATE,'YYYY-MM-DD')	AS validStartDate
+       		  , com.TO_CHAR(lp.VALID_END_DATE,'YYYY-MM-DD')	AS validEndDate
+       		  , lo.OFR_NM			AS ofrNm
+       		  , lo.OFR_TYPE			AS ofrTypeCd
+       		  , lp.RID				AS rid
+       		  , lp.RID_OFR			AS ofrRid
+       		  , ${strColumn}
+       FROM  LOY.LOY_PROM lp
+       JOIN LOY.LOY_OFR lo ON lp.RID_OFR = lo.RID AND lo.FLAG = 1
+       WHERE lp.FLAG = 1
+       AND   lp.PROM_STAT_CD = 'A'
+       <if test="promType2Cd != null and promType2Cd != ''">
+       AND   lp.PROM_TYPE_LV2_CD = #{promType2Cd}
+       </if>
+	  and ${strCondWhere}
+	  and ${strWhere}
+ 	  order by ${strOrderby}
+	  ${strEndPaging} 
+    </select>
+    
+    <update id="deleteCampaignContentsChnnelRelByCampaignId" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignContentsChnnelRelReqDto">
+        /* LoyCampaignMapper.deleteCampaignContentsChnnelRelByCampaignId */
+        update LOY.LOY_PROM_ALT_CHNL
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where 1=1
+           and RID_PROM = #{campaignId}
+    </update>
+    
+    <update id="updateCampaignContentsChnnelRel" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignContentsChnnelRelReqDto">
+        /* LoyCampaignMapper.updateCampaignContentsChnnelRel */
+        update LOY.LOY_PROM_ALT_CHNL
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , FLAG = 1
+               , RID_PROM = #{campaignId}
+               , RID_CONTS = #{contentsId}
+               , ALT_CHNL_TYPE_CD = (select exe_chnl_type_cd from  com.mkt_conts_mst where id = #{contentsId})
+               <!-- , MKT_CHNL_ID = (select id from mkt.mkt_chnl where flag = 1 and chnl_type_cd = (select exe_chnl_type_cd from  mkt.mkt_conts_mst where id = #{contentsId}))
+               , URL_INFO = #{urlInfo}
+               , ATCM_DESC = #{attachmentDesc}
+               , TRT_DESC = #{treatmentDesc} -->
+               , EXP_SEND_DATE = #{exeTm}
+               , EXP_TYPE      = #{exeType}
+         where RID = #{id}
+    </update>
+    
+    <insert id="insertCampaignContentsChnnelRel" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignContentsChnnelRelReqDto">
+        /* LoyCampaignMapper.insertCampaignContentsChnnelRel */
+        insert into LOY.LOY_PROM_ALT_CHNL
+            ( RID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , FLAG
+            , RID_PROM
+            , RID_CONTS
+            , ALT_CHNL_TYPE_CD
+            <!-- , MKT_CHNL_ID
+            , URL_INFO
+            , ATCM_DESC
+            , TRT_DESC  -->
+            , EXP_SEND_DATE
+            , EXP_TYPE)
+        values
+            ( #{id}
+            , #{createBy}
+            , #{modifyBy}
+            , GETDATE()
+            , GETDATE()
+            , 1
+            , #{campaignId}
+            , #{contentsId}
+            <!-- , (select id from mkt.mkt_chnl where flag = 1 and chnl_type_cd = (select exe_chnl_type_cd from  mkt.mkt_conts_mst where id = #{contentsId}) and flag =1) -->
+            <!-- , #{chnnelId} -->
+            , (select exe_chnl_type_cd from  com.mkt_conts_mst where id = #{contentsId})
+            , #{exeTm}
+            , #{exeType} 
+            )
+           <!--  , #{urlInfo}
+            , #{attachmentDesc}
+            , #{treatmentDesc} 
+            , #{exeDt}
+            , #{exeTm} -->
+
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from LOY.LOY_PROM_ALT_CHNL where id = #{id} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey>
+    </insert>
+    
+    <select id="selectCampaignContentsChnnelRel" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignContentsChnnelRelReqDto" resultType="com.icignal.marketing.campaign.dto.response.MktCampaignContentsChnnelRelResDto">
+        /* LoyCampaignMapper.selectCampaignContentsChnnelRel */
+        select ccr.RID as id
+               , ccr.CREATE_BY as createBy
+               , ccr.MODIFY_BY as modifyBy
+               , ccr.CREATE_DATE as createDate
+               , ccr.MODIFY_DATE as modifyDate
+               , ccr.RID_PROM as campaignId
+               , ccr.RID_CONTS as contentsId
+               <!-- , ccr.MKT_CHNL_ID as chnnelId -->
+             <!--   , ccr.URL_INFO as urlInfo
+               , ccr.ATCM_DESC as attachmentDesc
+               , ccr.TRT_DESC as treatmentDesc
+               , cm.CONTS_NM as contentsName -->
+               <!-- , com.TO_CHAR(ccr.EXP_SEND_DATE,'YYYY-MM-DD') as exeDt -->
+               , ccr.EXP_SEND_DATE as exeTm
+               , ccr.EXP_TYPE as exeType
+          from LOY.LOY_PROM_ALT_CHNL ccr
+          left outer join com.mkt_conts_mst cm
+            on ccr.RID_CONTS = cm.ID
+         where 1=1
+           and ccr.RID = #{id}
+         order by ccr.MODIFY_DATE desc
+         OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+    </select>
+    
+    <select id ="selectBuyNotiYn" resultType="com.icignal.marketing.campaign.dto.response.MktCampaignContentsChnnelRelResDto">
+ 		    SELECT TOP 1
+ 		    		CASE WHEN lopd.DATA_VAL IS NOT NULL 
+         			   	       THEN lopd.DATA_VAL
+         			   	       ELSE 'N'
+         			   	       END useNotiYn 
+			FROM loy.LOY_OPR_PLCY lop 
+            JOIN loy.LOY_OPR_PLCY_DTL lopd ON lop.RID = lopd.RID_OPR AND lopd.FLAG =1
+            where  1=1 
+            AND lop.FLAG =1
+            AND lop.USE_YN = 'Y'
+            AND lop.CTG_2_CD ='C2'
+            AND lop.PLCY_CD ='C13'  
+    </select>
+    
+    <select id ="selectPromBuyNotiYn" resultType="com.icignal.marketing.campaign.dto.response.MktCampaignContentsChnnelRelResDto">
+	       select  	count(*) AS promBuyYnCount
+	       FROM  LOY.LOY_PROM lp
+	       LEFT OUTER JOIN LOY.LOY_PGM lp2 ON lp.RID_PGM = lp2.RID AND lp2.FLAG = 1
+	       WHERE lp.FLAG = 1
+	       AND lp.PROM_TYPE_LV1_CD ='PUR'
+	       AND lp.NOTI_YN ='Y'  
+    </select> 
+    
+    <select id="selectPromInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyPromotionActionDetailReqDto" 
+    									resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyPromotionActionDetailResDto">
+        /* LoyCampaignMapper.selectPromInfo */
+       select     lo.OFR_TYPE			AS ofrType
+				, lo.CPN_YN				AS cpnYn
+       FROM  LOY.LOY_PROM lp
+       LEFT OUTER JOIN LOY.LOY_OFR lo ON lo.RID = lp.RID_OFR AND lo.FLAG = 1
+       WHERE lp.FLAG = 1
+       AND   lp.RID = #{promRid}
+    </select>
+    
+       
+</mapper>

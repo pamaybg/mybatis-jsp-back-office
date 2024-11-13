@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.product.mapper.LoyBrandMapper">
+
+    <select id="selectBrandList" parameterType="com.icignal.loyalty.product.dto.request.LoyBrandReqDto"
+                                 resultType="com.icignal.loyalty.product.dto.response.LoyBrandListResDto">
+    /* LoyBrandMapper.selectBrandList */
+    SELECT lbc.RID AS rid
+        , lbc.BRD_ID AS brdId
+        , lbc.BRD_NM AS brdNm
+        , lbc.BRD_DESCTXT AS brdDescTxt
+        , lbc.RID_PGM AS ridPgm
+        , lp.PGM_NM  AS pgmNm
+        , convert(varchar, lbc.CREATE_DATE, 120) AS createDate
+        , e.NAME AS createBy
+         , convert(varchar, lbc.MODIFY_DATE, 120) AS modifyDate
+        , e2.NAME AS modifyBy
+        , ${strColumn}
+    FROM LOY.LOY_BRD_CATEGORY lbc WITH (NOLOCK)
+    LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lp.RID = lbc.RID_PGM AND lp.FLAG = 1
+    LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON lbc.CREATE_BY = cu.RID AND cu.FLAG = 1
+    LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+    LEFT OUTER JOIN COM.CRM_USER cu2 WITH (NOLOCK) ON lbc.MODIFY_BY = cu2.RID AND cu.FLAG = 1
+    LEFT OUTER JOIN COM.EMPLOYEE e2 WITH (NOLOCK) ON cu2.ID_EMPLOYEE = e2.ID AND e.FLAG = 1
+    WHERE lbc.FLAG =1
+    AND ${strWhere}
+    AND ${strCondWhere}
+    ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectBrandDetail" parameterType="com.icignal.loyalty.product.dto.request.LoyBrandReqDto"
+                                    resultType="com.icignal.loyalty.product.dto.response.LoyBrandResDto">
+    /* LoyBrandMapper.selectBrandDetail */
+    SELECT lbc.RID AS rid
+         , lbc.BRD_ID AS brdId
+         , lbc.BRD_NM AS brdNm
+         , lbc.BRD_DESCTXT AS brdDescTxt
+         , lbc.RID_PGM AS pgmRid
+         , lp.PGM_NM  AS pgmNm
+    FROM LOY.LOY_BRD_CATEGORY lbc WITH (NOLOCK)
+    LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lp.RID  = lbc.RID_PGM  and lp.FLAG = 1
+    WHERE lbc.FLAG =1
+    AND lbc.RID  = #{rid}
+    </select>
+
+    <insert id="insertBrand" parameterType="com.icignal.loyalty.product.dto.request.LoyBrandReqDto">
+    /* LoyBrandMapper.insertBrand */
+    INSERT INTO LOY.LOY_BRD_CATEGORY(
+             RID
+            , RID_PGM
+            , BRD_ID
+            , BRD_NM
+            , BRD_DESCTXT
+            , FLAG
+            , CREATE_DATE
+            , CREATE_BY
+            , MODIFY_DATE
+            , MODIFY_BY
+    ) VALUES(
+           com.getNewID('')
+          , #{pgmRid}
+          , #{brdId}
+          , #{brdNm}
+          , #{brdDescTxt}
+          , 1
+          , GETDATE()
+          , #{createBy}
+          , GETDATE()
+          , #{modifyBy}
+          )
+    </insert>
+
+    <update id="updateBrand" parameterType="com.icignal.loyalty.product.dto.request.LoyBrandReqDto">
+    /* LoyBrandMapper.updateBrand */
+    UPDATE LOY.LOY_BRD_CATEGORY
+    SET RID_PGM = #{pgmRid}
+      , BRD_ID = #{brdId}
+      , BRD_NM = #{brdNm}
+      , BRD_DESCTXT = #{brdDescTxt}
+      , MODIFY_DATE = GETDATE()
+      , MODIFY_BY = #{modifyBy}
+    WHERE RID = #{rid}
+    </update>
+
+
+    <update id="deleteBrand" parameterType="com.icignal.loyalty.product.dto.request.LoyBrandReqDto">
+    /* LoyBrandMapper.deleteBrand */
+    UPDATE LOY.LOY_BRD_CATEGORY
+    SET FLAG = 0
+    WHERE RID = #{rid}
+    </update>
+
+</mapper>

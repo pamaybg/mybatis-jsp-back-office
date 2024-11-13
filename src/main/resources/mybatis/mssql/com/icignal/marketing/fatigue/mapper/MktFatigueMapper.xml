@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 17:28:33 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.fatigue.mapper.MktFatigueMapper">
+
+
+  <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (getFatigueList)
+    ============================================
+    -   제목                  : 피로도 목록 조회
+    -   설명                  : 피로도 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:	id,account_id (회사명)
+    -	출력				:	chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명),periodDivName(기간구분),MAX_RSTRTN_TMSCNT(최대발송횟수)
+    						,startDate(시작일자),endDate(마지막일자),fatigue_desc(설명)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/ -->
+<!--     <select id="getFatigueList" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto" -->
+<!--     resultType="com.icignal.marketing.fatigue.dto.response.MktFatigueResDto">-->
+<!--		select ${strColumn},-->
+<!--			mfm.chnl_type_cd as chnlTypeCd, -->
+<!--			c1.mark_name as chnlTypeCdName, -->
+<!--			mfm.fati_restriction_day as periodDivName, -->
+<!--			mfm.MAX_RSTRTN_TMSCNT as maxRstrtnTmscnt,-->
+<!--			mfm.NON_REACT_DAY as non_react_day,-->
+<!--			mfm.NON_REACT_CNT as non_react_cnt,-->
+<!--			com.TO_CHAR(mfm.START_DD,'YYYY-MM-DD') as startDate, -->
+<!--			com.TO_CHAR(mfm.END_DD,'YYYY-MM-DD') as endDate,-->
+<!--			mfm.fatigue_desc as fatigueDesc,-->
+<!--			mfm.create_date as createDate , -->
+<!--			mfm.id as id-->
+<!--		from mkt.mkt_fatigue_mst mfm-->
+<!--			left outer join com.comm_code c1 on mfm.chnl_type_cd = c1.code_name and c1.flag = 1 and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'-->
+<!--			left outer join com.comm_code c2 on mfm.period_div = c2.code_name and c2.flag = 1 and c2.lang = #{lang} and c2.group_code = 'MKT_STAND_TYPE_CD'-->
+<!--		where ${strSVCType}-->
+<!--			and ${strWhere}  -->
+<!--			and ${strCondWhere}-->
+<!--			and mfm.flag = 1-->
+<!--		order by ${strOrderby}-->
+<!--			${strEndPaging}-->
+<!--    </select> -->
+
+	<select id="getFatigueList" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto"
+			resultType="com.icignal.marketing.fatigue.dto.response.MktFatigueResDto">
+	/* MktFatigueMapper.getFatigueList */
+		select mfm.ID as id,
+			   e1.NAME as createBy,
+			   e2.NAME as modifyBy,
+			   com.TO_CHAR(mfm.CREATE_DATE,'YYYY-MM-DD') as createDate,
+			   com.TO_CHAR(mfm.MODIFY_DATE,'YYYY-MM-DD') as modifyDate,
+		       mfm.FATI_TITLE as fatiTitle,
+			   mfm.FATI_STATE as fatiState,
+			   mfm.FATI_RESTRICTION_DAY as fatiRestrictionDay,
+			   mfm.FATI_MAX_RESTRICTION_DAY_CNT as fatiMaxRestrictionDayCnt,
+		       mfm.FATI_DESC as fatiDesc,
+			   STRING_AGG(mfci.CHNL_TYPE_CD,'/') WITHIN GROUP(ORDER BY mfci.CHNL_TYPE_CD desc) as chnlList,
+			   c1.mark_name as markName,
+		       ${strColumn}
+		from mkt.mkt_fatigue_mst mfm
+		left outer join mkt.MKT_FATIGUE_CHNL_ITEM mfci on mfm.ID = mfci.RID_FATI and mfci.FLAG = 1
+  	    left outer join com.comm_code c1 on mfm.FATI_STATE = c1.code_name and c1.flag = 1 and c1.lang = #{lang} and c1.group_code = 'MKT_FATI_STAT'
+		LEFT OUTER JOIN COM.CRM_USER u1 on mfm.CREATE_BY = u1.RID
+		LEFT OUTER JOIN COM.EMPLOYEE e1 on u1.ID_EMPLOYEE = e1.ID
+		LEFT OUTER JOIN COM.CRM_USER u2 on mfm.MODIFY_BY = u2.RID
+		LEFT OUTER JOIN COM.EMPLOYEE e2 on u2.ID_EMPLOYEE = e2.ID
+		where ${strSVCType}
+		  and ${strWhere}
+		  and ${strCondWhere}
+		  and mfm.flag = 1
+		GROUP by mfm.ID, e1.NAME, e2.NAME, com.TO_CHAR(mfm.CREATE_DATE,'YYYY-MM-DD'), com.TO_CHAR(mfm.MODIFY_DATE,'YYYY-MM-DD'), mfm.FATI_TITLE, mfm.FATI_STATE, mfm.FATI_RESTRICTION_DAY, mfm.FATI_MAX_RESTRICTION_DAY_CNT, mfm.FATI_DESC, c1.mark_name
+		order by ${strOrderby}
+			${strEndPaging}
+	</select>
+
+
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (getFatigueDetail)
+    ============================================
+    -   제목                  : 피로도 목록 세부사항
+    -   설명                  : 피로도 ID에 따른 세부사항
+    -   결과형태              : 단일
+    ============================================
+    -   입력				:	id(피로도 아이디),account_id (회사명)
+    -	출력				:	chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명),periodDivName(기간구분),MAX_RSTRTN_TMSCNT(최대발송횟수)
+    						,startDate(시작일자),endDate(마지막일자),fatigue_desc(설명),createBy(작성자),crerateDate(작성일자),modifyBy(변경자)
+    						modifyDate(변경일자)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/-->
+     <select id="getFatigueDetail" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueDetailReqDto"
+     					resultType="com.icignal.marketing.fatigue.dto.response.MktFatigueDetailResDto">
+     /* mktFatigueMapper.getFatigueDetail */
+
+	 SELECT mfm.ID as id
+		  , mfm.FATI_TITLE AS fatiTitle
+		  , mfm.FATI_STATE AS fatiState
+	      , cc.MARK_NAME as fatiStateNm
+		  , mfm.FATI_RESTRICTION_DAY AS fatiRestrictionDay
+		  , mfm.FATI_MAX_RESTRICTION_DAY_CNT AS fatiMaxRestrictionDayCnt
+		  , mfm.FATI_DESC AS fatiDesc
+		  , e1.NAME AS createBy
+		  , COM.TO_CHAR(mfm.CREATE_DATE ,'YYYY-MM-DD') AS createDate
+		  , e2.NAME AS modifyBy
+		  , COM.TO_CHAR(mfm.MODIFY_DATE,'YYYY-MM-DD') AS modifyDate
+		  , STRING_AGG(mfci.CHNL_TYPE_CD,',') WITHIN GROUP(ORDER BY mfci.CHNL_TYPE_CD) as chnlList
+	 FROM MKT.MKT_FATIGUE_MST mfm
+			  left outer join mkt.MKT_FATIGUE_CHNL_ITEM mfci on mfm.ID = mfci.RID_FATI and mfci.FLAG =1
+			  LEFT OUTER JOIN COM.CRM_USER u1 on mfm.CREATE_BY = u1.RID
+			  LEFT OUTER JOIN COM.EMPLOYEE e1 on u1.ID_EMPLOYEE = e1.ID
+			  LEFT OUTER JOIN COM.CRM_USER u2 on mfm.MODIFY_BY = u2.RID
+			  LEFT OUTER JOIN COM.EMPLOYEE e2 on u2.ID_EMPLOYEE = e2.ID
+			  LEFT outer join com.comm_code cc on cc.flag = 1 and cc.code_name = mfm.FATI_STATE and cc.lang = #{lang} and cc.group_code = 'MKT_FATI_STAT'
+	 WHERE mfm.FLAG =1
+	   and mfm.id = #{id}
+	 GROUP by mfm.ID, mfm.FATI_TITLE, mfm.FATI_STATE, mfm.FATI_RESTRICTION_DAY, mfm.FATI_MAX_RESTRICTION_DAY_CNT, mfm.FATI_DESC, e1.NAME, COM.TO_CHAR(mfm.CREATE_DATE ,'YYYY-MM-DD'), e2.NAME, COM.TO_CHAR(mfm.MODIFY_DATE,'YYYY-MM-DD'),cc.MARK_NAME
+    </select>
+	<!--
+	select mfm.chnl_type_cd as chnlTypeCd,
+	mfm.period_div as periodDiv,
+	mfm.MAX_RSTRTN_TMSCNT as maxRstrtnTmscnt,com.TO_CHAR(mfm.START_DD,'YYYY-MM-DD') as startDate,
+	com.TO_CHAR(mfm.END_DD,'YYYY-MM-DD') as endDate, mfm.fatigue_desc as fatigueDesc,e1.name as createBy,
+	com.TO_CHAR(mfm.create_date,'YYYY-MM-DD') as createDate,
+	e2.name as modifyBy, com.TO_CHAR(mfm.modify_date,'YYYY-MM-DD') as modifyDate,
+	mfm.fati_restriction_day as maxDayCnt,
+	mfm.NON_REACT_DAY as non_react_day,
+	mfm.NON_REACT_CNT as non_react_cnt
+	from mkt.mkt_fatigue_mst mfm
+	left outer join com.crm_user u1 on mfm.create_by = u1.rid
+	left outer join com.employee e1 on u1.id_employee = e1.id
+	left outer join com.crm_user u2 on mfm.modify_by = u2.rid
+	left outer join com.employee e2 on u2.id_employee = e2.id
+	where ${strSVCType}
+	and mfm.id = #{id}
+	and mfm.flag = 1
+	-->
+
+
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (insertFatigue)
+    ============================================
+    -   제목                  : 피로도 추가
+    -   설명                  : 피로도 추가
+    -   결과형태              : 단일
+    ============================================
+    -   입력				:
+    id(피로도 아이디),account_id (회사명),chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명),chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명)
+    ,periodDivName(기간구분),MAX_RSTRTN_TMSCNT(최대발송횟수),startDate(시작일자),endDate(마지막일자),fatigue_desc(설명),createBy(작성자),createDate(작성일자)
+    -	출력				:	0,1
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/-->
+	<insert id="insertFatigue" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueSetReqDto">
+    /* MktFatigueMapper.insertFatigue */
+	insert into mkt.mkt_fatigue_mst
+	(
+		ID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, FATI_STATE
+		, FATI_TITLE
+		, FATI_RESTRICTION_DAY
+		, FATI_MAX_RESTRICTION_DAY_CNT
+		, FATI_DESC
+	)
+	values
+	(
+		#{id}
+		, #{createBy}
+		, #{createBy}
+		, GETDATE()
+		, GETDATE()
+		, 1
+		, 'S'
+	 	, #{fatiTitle}
+	 	, #{fatiRestrictionDay}
+	 	, #{fatiMaxRestrictionDayCnt}
+	 	, #{fatiDesc}
+	)
+	</insert>
+
+
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (deleteFatigue)
+    ============================================
+    -   제목                  : 피로도 삭제
+    -   설명                  : 피로도 삭제
+    -   결과형태              : 단일
+    ============================================
+    -   입력				: id , accountId, modifyBy(변경자)
+
+    -	출력				:	0,1
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/-->
+	<update id="deleteFatigue" parameterType="com.icignal.marketing.fatigue.dto.request.MktDeleteFatigueReqDto">
+		/* MktFatigueMapper.deleteFatigue */
+		update mkt.mkt_fatigue_mst
+		set
+			flag = flag + 1,
+			modify_by = #{modifyBy},
+			modify_date = GETDATE(),
+		    FATI_STATE = 'S'
+		where
+			id = #{id}
+			and ${strSVCType}
+	</update>
+
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (updateFatigue)
+    ============================================
+    -   제목                  : 피로도 수정
+    -   설명                  : 피로도 수정
+    -   결과형태              : 단일
+    ============================================
+    -   입력				: chnlTypeCd(채널유형코드) ,periodDiv(기간구분),maxRstrtnTmscnt(최대제한횟수) accountId, modifyBy(변경자)
+    					  startDate(시작일자),endDate(종료일자),fatigue_desc(설명),modifyBy(변경자),modify_date(수정일자),id(피로도아이디)
+    -	출력				:	0,1
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/-->
+	<update id="updateFatigue" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueModifyReqDto">
+	/* MktFatigueMapper.updateFatigue */
+		UPDATE MKT.MKT_FATIGUE_MST
+		SET
+			MODIFY_BY = #{modifyBy}
+			, MODIFY_DATE = GETDATE()
+			, FATI_TITLE = #{fatiTitle}
+			, FATI_RESTRICTION_DAY = #{fatiRestrictionDay}
+			, FATI_MAX_RESTRICTION_DAY_CNT = #{fatiMaxRestrictionDayCnt}
+			, FATI_DESC = #{fatiDesc}
+		WHERE id = #{id}
+		AND ${strSVCType}
+	</update>
+
+	<update id="updateFatigueItem" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueModifyReqDto">
+	/* MktFatigueMapper.updateFatigueItem */
+	</update>
+
+	<select id="selectFatigueCheck" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueSetReqDto" resultType="java.lang.Integer">
+	/* MktFatigueMapper.selectFatigueCheck */
+<!--	select count(1)-->
+<!--    from mkt.mkt_fatigue_mst mfm-->
+<!--	join com.comm_code cc on cc.flag = 1 and cc.code_name = mfm.chnl_type_cd and cc.lang = #{lang} and cc.group_code = 'MKT_CAM_CHNL_TYPE_CD'-->
+<!--	where ${strSVCType}-->
+<!--    and cc.id = #{chnlTypeCd}-->
+<!--    and mfm.flag = 1-->
+<!--	<if test="id != null and id != ''">-->
+<!--	and mfm.id != #{id}-->
+<!--	</if>-->
+
+	</select>
+
+	<!-- /**************************************
+ -   관련 파일             : MKTFatigueDAO.java (editFatigueState)
+ ============================================
+ -   제목                  : 피로도 상태 변경
+ -   설명                  : 피로도 상태 변경
+ -   결과형태              : 단일
+ ============================================
+ -   입력				: modifyBy(변경자), id(피로도아이디), fatiState(피로도 상태)
+ -	 출력				:	0,1
+ ============================================
+ -   작성자                : 윤법공
+ -   작성일                : 2022.01.24
+ ***************************************/-->
+	<update id="updateFatigueState" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueModifyReqDto">
+		/* MKTFatigue.updateFatigueState */
+		UPDATE MKT.MKT_FATIGUE_MST
+		SET FATI_STATE = #{fatiState}
+		  ,	MODIFY_BY = #{modifyBy}
+		  , MODIFY_DATE = GETDATE()
+		WHERE 1 = 1
+		  AND FLAG = 1
+		  AND FATI_STATE IN ('A', 'S')
+		  AND id = #{id}
+	</update>
+
+
+
+	<update id="updateFatigueChnlItemOfMfm" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueModifyReqDto">
+		/* MktFatigueMapper.updateFatigueChnlItemOfMfm */
+		UPDATE mkt.MKT_FATIGUE_CHNL_ITEM
+		SET mkt.MKT_FATIGUE_CHNL_ITEM.MODIFY_BY = #{modifyBy}
+		  , mkt.MKT_FATIGUE_CHNL_ITEM.MODIFY_DATE = GETDATE()
+			FROM mkt.MKT_FATIGUE_MST mfm
+		WHERE 1 = 1
+		    AND mfm.ID = mkt.MKT_FATIGUE_CHNL_ITEM.RID_FATI
+		    AND mkt.MKT_FATIGUE_CHNL_ITEM.FLAG = 1
+		    AND mfm.id = #{id}
+	</update>
+
+	<select id="selectFatigueChnlItemList" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto"
+											resultType="com.icignal.marketing.fatigue.dto.response.MktFatigueResDto">
+	/* MktFatigueMapper.selectFatigueChnlItemList */
+	SELECT mfci.ID AS id
+	     , mfci.CHNL_TYPE_CD AS chnlTypeCd
+	     , mfm.FATI_STATE AS fatiItemState
+		 , mfm.FATI_RESTRICTION_DAY AS fatiItemRestrictionDay
+		 , mfm.FATI_MAX_RESTRICTION_DAY_CNT AS fatiItemMaxRestrictionDayCnt
+		 , ${strColumn}
+	FROM MKT.MKT_FATIGUE_CHNL_ITEM mfci
+	JOIN MKT.MKT_FATIGUE_MST mfm ON mfci.RID_FATI = mfm.ID AND mfm.FLAG = 1
+	WHERE mfci.FLAG = 1
+	AND mfci.RID_FATI = #{rid}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectFatigueItemDetail" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto"
+										resultType="com.icignal.marketing.fatigue.dto.response.MktFatigueChnlItemResDto">
+	/* MktFatigueMapper.selectFatigueItemDetail */
+	SELECT CHNL_TYPE_CD AS chnlTypeCd
+	FROM MKT.MKT_FATIGUE_CHNL_ITEM
+	WHERE FLAG = 1
+	AND ID = #{id}
+	</select>
+
+	<insert id="insertFatiItem" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto">
+		/* MktFatigueMapper.insertFatiItem */
+		INSERT INTO MKT.MKT_FATIGUE_CHNL_ITEM(
+				 ID
+				, CREATE_BY
+				, MODIFY_BY
+				, CREATE_DATE
+				, MODIFY_DATE
+				, FLAG
+				, RID_FATI
+				, CHNL_TYPE_CD
+		) VALUES(
+				COM.GETNEWID('')
+				, #{createBy}
+				, #{createBy}
+				, GETDATE()
+				, GETDATE()
+				, 1
+				, #{ridFati}
+				, #{chnlTypeCd}
+		)
+	</insert>
+
+	<update id="updateFatiItem" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto">
+	/* MktFatigueMapper.updateFatiItem */
+	UPDATE MKT.MKT_FATIGUE_CHNL_ITEM
+	SET CHNL_TYPE_CD = #{chnlTypeCd}
+		, MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = GETDATE()
+	WHERE ID = #{id}
+	</update>
+
+	<update id="deleteFatigueChnlItem" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto">
+		/* MktFatigueMapper.deleteFatigueChnlItem */
+		delete from  MKT.MKT_FATIGUE_CHNL_ITEM
+		WHERE RID_FATI = #{id}
+	</update>
+
+</mapper>

@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.blackTxnRule.mapper.LoyBlackTxnRuleMapper">
+
+ <select id="selectBlackRuleList"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleListReqDto"
+							    			resultType="com.icignal.loyalty.blackTxnRule.dto.response.LoyBlackTxnRuleListResDto">
+     /* LoyBlackTxnRuleMapper.selectBlackRuleList */
+	SELECT    lfm.FRAUD_NO		AS blCd
+			, lfm.FRAUD_NM		AS blNm
+			, lp.PGM_NM			AS pgmNm
+			, lfm.FRAUD_TYPE_CD			AS fraudTypeCd
+			, lfm.FRAUD_SUB_TYPE_CD			AS fraudSubTypeCd
+			, lfm.STAT_CD		AS statCd
+			, em.name			AS createBy
+			, TO_CHAR(lfm.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+			, lfm.RID			AS rid
+			, ${strColumn}
+	FROM LOY.LOY_FRAUD_MST lfm
+	LEFT OUTER JOIN LOY.LOY_PGM lp ON lfm.RID_PGM = lp.RID AND lp.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER cu ON lfm.CREATE_BY = cu.RID AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE em ON cu.ID_EMPLOYEE = em.ID AND em.FLAG = 1
+	WHERE lfm.flag  = 1
+	AND ${strCondWhere}
+	AND ${strWhere}
+	order by ${strOrderby}
+	${strEndPaging} 
+    </select>
+    
+    <select id="selectBlackRuleMstDetail"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleListReqDto"
+							    			resultType="com.icignal.loyalty.blackTxnRule.dto.response.LoyBlackTxnRuleDetailResDto">
+     /* LoyBlackTxnRuleMapper.selectBlackRuleMstDetail */
+	SELECT    lp.PGM_NM						AS pgmNm
+			, lfm.FRAUD_NO					AS blCd
+			, lfm.FRAUD_NM					AS blNm
+			, lfm.STAT_CD					AS statCd
+			, lfm.CONTENTS					AS contents
+			, lfm.PNT_ACRL_YN		AS pntAcrlLimitYn
+			, lfm.PNT_RDM_YN			AS pntRdmLimitYn
+			, lfm.CPN_YN		AS coupUsedLimitYn
+			, lfm.DISCOUNT_YN			AS salesLimitYn
+			, lfm.MGT_ALERT_YN			AS mgtAlertYn
+			, lfm.PERIOD_MM				AS periodMm
+			, lfm.RID_PGM					AS pgmRid
+			, lfm.LIMIT_YN				AS dayLimitYn
+			, lfm.FRAUD_TYPE_CD				AS fraudTypeCd
+			, lfm.FRAUD_SUB_TYPE_CD			AS fraudSubTypeCd
+			, lfm.RID						AS rid 
+	FROM LOY.LOY_FRAUD_MST lfm
+	LEFT OUTER JOIN LOY.LOY_PGM lp ON lfm.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE lfm.RID = #{rid}
+	AND   lfm.flag  = 1
+    </select>
+    
+    <insert id="insertBlackRuleDetail" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleDetailReqDto">
+    /* LoyBlackTxnRuleMapper.insertBlackRuleDetail */
+    INSERT INTO LOY.LOY_FRAUD_MST
+    (
+    	  RID
+    	, CREATE_DATE
+    	, MODIFY_DATE
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, FLAG
+    	, FRAUD_NO
+    	, FRAUD_NM
+    	, STAT_CD
+    	, CONTENTS
+    	, PNT_ACRL_YN
+    	, PNT_RDM_YN
+    	, CPN_YN
+    	, DISCOUNT_YN
+    	, PERIOD_MM
+    	, RID_PGM
+    	, LIMIT_YN
+    	, MGT_ALERT_YN
+    	, FRAUD_TYPE_CD
+    	, FRAUD_SUB_TYPE_CD
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, sysdate
+    	, sysdate
+    	, #{createBy}
+    	, #{modifyBy}
+    	, 1
+    	, LOY.FN_GET_BL_NO()
+    	, #{blNm}
+    	, #{statCd}
+    	, #{contents}
+    	, #{pntAcrlLimitYn}
+    	, #{pntRdmLimitYn}
+    	, #{coupUsedLimitYn}
+    	, #{salesLimitYn}
+    	, #{periodMm}
+    	, #{pgmRid}
+    	, #{dayLimitYn} 
+    	, #{mgtAlertYn}
+    	, #{fraudTypeCd} 
+    	, #{fraudSubTypeCd}
+    )
+    
+    </insert>
+    
+    <update id="updateBlackRuleDetail" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleDetailReqDto">
+    /* LoyBlackTxnRuleMapper.updateBlackRuleDetail */
+    UPDATE LOY.LOY_FRAUD_MST
+    SET	  MODIFY_DATE			= sysdate
+    	, MODIFY_BY				= #{modifyBy}
+    	, FRAUD_NO					= #{blCd}
+    	, FRAUD_NM					= #{blNm}
+    	, STAT_CD				= #{statCd}
+    	, CONTENTS				= #{contents}
+    	, PNT_ACRL_YN		= #{pntAcrlLimitYn}
+    	, PNT_RDM_YN		= #{pntRdmLimitYn}
+    	, CPN_YN	= #{coupUsedLimitYn}
+    	, DISCOUNT_YN		= #{salesLimitYn}
+    	, PERIOD_MM				= #{periodMm}
+    	, RID_PGM				= #{pgmRid}
+    	, LIMIT_YN			= #{dayLimitYn}
+    	, MGT_ALERT_YN		= #{mgtAlertYn}
+    	, FRAUD_TYPE_CD     = #{fraudTypeCd}
+    	, FRAUD_SUB_TYPE_CD = #{fraudSubTypeCd}
+    WHERE rid = #{rid}    
+    </update>
+    
+    <select id="selectBlackRuleListTab"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleListReqDto"
+							    			resultType="com.icignal.loyalty.blackTxnRule.dto.response.LoyBlackRuleListResDto">
+     /* LoyBlackTxnRuleMapper.selectBlackRuleListTab */
+	SELECT    lfu.RULE_TYPE_CD	 AS baseType
+			, lfu.RULE_VAL		 AS gtOrEt
+			, lfu.EXTR_RANGE_VAL	 AS basDayCnt
+			, lfu.EXTR_RANGE_CD    AS basDayMmCd
+			, lfu.COMMENTS			 AS calc
+			, em.name			 AS createBy
+			, TO_CHAR(lfu.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+			, lfu.RID_FRAUD	 AS blackTxnRid
+			, lfu.RID			AS rid
+			, ${strColumn}
+	FROM LOY.LOY_FRAUD_RULE lfu
+	LEFT OUTER JOIN COM.CRM_USER cu ON lfu.CREATE_BY = cu.RID AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE em ON cu.ID_EMPLOYEE = em.ID AND em.FLAG = 1
+	WHERE lfu.flag  = 1
+	AND   lfu.RID_FRAUD = #{blackTxnRid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+	order by ${strOrderby}
+	${strEndPaging} 
+    </select>
+    
+    <update id="deleteBlackRule" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleListReqDto">
+    /* LoyBlackTxnRuleMapper.deleteBlackRule */
+    UPDATE  LOY.LOY_FRAUD_RULE
+    SET 	MODIFY_DATE = sysdate
+    	  , MODIFY_BY	= #{modifyBy}
+    	  , FLAG		= flag + 1
+    WHERE rid = #{rid}
+    </update>
+    
+    <update id="deleteBlackMst" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleListReqDto">
+    /* LoyBlackTxnRuleMapper.deleteBlackMst */
+    UPDATE  LOY.LOY_FRAUD_MST
+    SET 	MODIFY_DATE = sysdate
+    	  , MODIFY_BY	= #{modifyBy}
+    	  , FLAG		= flag + 1
+    WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectBlackRuleDetail"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleDetailReqDto"
+							    			resultType="com.icignal.loyalty.blackTxnRule.dto.response.LoyBlackRuleDetailResDto">
+     /* LoyBlackTxnRuleMapper.selectBlackRuleDetail */
+	SELECT    lfu.RULE_TYPE_CD		AS basType
+			, lfu.RULE_VAL			AS gtOrEt
+			, lfu.EXTR_RANGE_CD		AS basDayMmCd
+			, lfu.EXTR_RANGE_VAL	AS basDayCnt
+			, lfu.RID			    AS rid
+			, lfu.RID_DS			AS dsRid
+			, lfu.RID_DS_ITEM		AS dsItemRid
+			, lfu.OFR_NO			AS ofrNo
+			, lo.OFR_NM				AS ofrNm
+			, ld.DS_NM				AS dsNm
+			, ldt.FIELD_DESC        AS dsItemNm
+	FROM LOY.LOY_FRAUD_RULE lfu
+	LEFT OUTER JOIN LOY.LOY_DATASET ld ON lfu.RID_DS = ld.RID AND ld.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_DATASET_ITEM ldt ON lfu.RID_DS_ITEM = ldt.RID AND ldt.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_OFR lo ON lfu.OFR_NO = lo.OFR_NO AND lo.FLAG = 1
+	WHERE lfu.flag  = 1
+	AND   lfu.RID   = #{rid}
+    </select>
+    
+    <select id="selectBaseTypeNm"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBlackRuleDetailReqDto"
+							    			resultType="java.lang.String">
+     /* LoyBlackTxnRuleMapper.selectBaseTypeNm */
+	SELECT   cc.MARK_NAME
+	FROM   COM.COMM_CODE cc
+	WHERE cc.flag  = 1
+	AND   cc.GROUP_CODE   = 'LOY_FRAUD_RULE_TYPE'
+	AND   cc.CODE_NAME = #{basType}
+    </select>
+    
+    <select id="selectBaseDayNm"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBlackRuleDetailReqDto"
+							    			resultType="java.lang.String">
+     /* LoyBlackTxnRuleMapper.selectBaseDayNm */
+	SELECT   cc.MARK_NAME
+	FROM   COM.COMM_CODE cc
+	WHERE cc.flag  = 1
+	AND   cc.GROUP_CODE   = 'LOY_FRAUD_RANAGE_CD'
+	AND   cc.CODE_NAME = #{basDayMmCd}
+    </select>
+    
+    <insert id="insertBlackRule" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBlackRuleDetailReqDto">
+    /* LoyBlackTxnRuleMapper.insertBlackRule */
+    INSERT INTO LOY.LOY_FRAUD_RULE
+    (
+    	  RID
+    	, CREATE_DATE
+    	, MODIFY_DATE
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, FLAG
+    	, RULE_TYPE_CD
+    	, RULE_VAL
+    	, EXTR_RANGE_CD
+    	, EXTR_RANGE_VAL
+    	, RID_FRAUD
+    	, COMMENTS
+    	, RID_DS
+    	, RID_DS_ITEM
+    	, OFR_NO
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, sysdate
+    	, sysdate
+    	, #{createBy}
+    	, #{modifyBy}
+    	, 1
+    	, #{basType}
+    	, #{gtOrEt}
+    	, #{basDayMmCd}
+    	, #{basDayCnt}
+    	, #{blackMstRid}
+    	, #{basTypeNm} || ' : ' ||  #{gtOrEt} || '회 초과'|| '(전' || #{basDayCnt} || #{basDayMmCdNm}|| '이내)'
+    	, #{dsRid}
+    	, #{dsItemRid}
+    	, #{ofrNo}
+    )
+    
+    </insert>
+    
+    <update id="updateBlackRule" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleDetailReqDto">
+    /* LoyBlackTxnRuleMapper.updateBlackRule */
+    UPDATE LOY.LOY_FRAUD_RULE
+    SET	  
+    	  MODIFY_DATE		= sysdate
+    	, MODIFY_BY			= #{modifyBy}
+    	, RULE_TYPE_CD		= #{basType}
+    	, RULE_VAL			= #{gtOrEt}
+    	, EXTR_RANGE_CD		= #{basDayMmCd}
+    	, EXTR_RANGE_VAL		= #{basDayCnt}
+    	, RID_FRAUD		    = #{blackMstRid}
+    	, COMMENTS				= #{basTypeNm} || ' :' ||  #{gtOrEt} || '회 초과'|| '(전' || #{basDayCnt} || #{basDayMmCdNm}|| '이내)'
+    	, RID_DS			= #{dsRid}
+    	, RID_DS_ITEM		= #{dsItemRid}
+    	, OFR_NO			= #{ofrNo}
+    WHERE rid = #{rid}    
+    </update>
+    
+    <select id="selectBlackMbrListTab"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleDetailReqDto"
+							    			resultType="com.icignal.loyalty.blackTxnRule.dto.response.LoyBlackMbrListResDto">
+     /* LoyBlackTxnRuleMapper.selectBlackMbrListTab */
+	SELECT    lm.MBR_NO					AS mbrNo
+			, lc.CUST_NM				AS custNm
+			, lc.HHP					AS hhp
+			, lfm.TOT_CNT				AS totCnt
+			, lfm.STAT_CD				AS statCd
+			, lfm.COMMENTS				AS contents
+			, TO_CHAR(lfm.VALID_START_DATE,'YYYY-MM-DD')		AS validStartDate
+			, TO_CHAR(lfm.VALID_END_DATE,'YYYY-MM-DD')			AS validEndDate
+			, TO_CHAR(lfm.CONFIRM_DATE,'YYYY-MM-DD')			AS confirmDate
+			, TO_CHAR(lfm.CANCEL_DATE,'YYYY-MM-DD')			AS cancelDate
+			, TO_CHAR(lfm.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+			, lfm.RID					AS rid
+			, ${strColumn}
+	FROM LOY.LOY_FRAUD_MBR lfm
+	JOIN LOY.LOY_MBR lm ON lfm.RID_MBR = lm.RID AND lm.FLAG = 1
+	JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	WHERE lfm.flag  = 1
+	AND   lfm.RID_FRAUD = #{blackTxnRid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+	order by ${strOrderby}
+	${strEndPaging} 
+    </select>
+    
+    <select id="selectClearMaskBlackMbr"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleDetailReqDto"
+							    			resultType="com.icignal.loyalty.blackTxnRule.dto.response.LoyBlackMbrListResDto">
+     /* LoyBlackTxnRuleMapper.selectClearMaskBlackMbr */
+	SELECT    lc.CUST_NM				AS unMaskCustNm
+			, lc.HHP					AS unMaskHhp
+	FROM LOY.LOY_FRAUD_MBR lfm
+	JOIN LOY.LOY_MBR lm ON lfm.RID_MBR = lm.RID AND lm.FLAG = 1
+	JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	WHERE lfm.flag  = 1
+	AND   lfm.RID = #{rid}
+	</select>
+    
+    <insert id="insertBlackMbr" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckMbrDetailReqDto">
+    /* LoyBlackTxnRuleMapper.insertBlackMbr */
+    INSERT INTO LOY_FRAUD_MBR
+    (
+    	  RID
+    	, CREATE_DATE
+    	, MODIFY_DATE
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, FLAG
+    	, RID_MBR
+    	, RID_FRAUD
+    	, ACRL_N_CANL_CNT
+    	, OVER_ACRL_CNT
+    	, CLAIM_CNT
+    	, STAT_CD
+    	, COMMENTS
+    	, TOT_CNT
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, sysdate
+    	, sysdate
+    	, #{createBy}
+    	, #{modifyBy}
+    	, 1
+    	, #{mbrRid}
+    	, #{blackMstRid}
+    	, 0
+    	, 0
+    	, 0
+    	, #{statCd}
+    	, #{contents}
+    	, 0
+    )
+    
+    </insert>
+    
+    <select id="selectMbrCnt"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckMbrDetailReqDto"
+							    			resultType="java.lang.Integer">
+     /* LoyBlackTxnRuleMapper.selectMbrCnt */
+	SELECT    count(*)
+	FROM LOY.LOY_FRAUD_MBR lfm
+	WHERE lfm.flag  = 1
+	AND   lfm.RID_FRAUD = #{blackTxnRid}
+	AND   lfm.RID_MBR = #{mbrRid}
+	<!-- AND   lfm.RID NOT IN  (
+				 SELECT RID FROM LOY.LOY_FRAUD_MBR lfm2
+				 WHERE lfm2.RID_MBR = #{mbrRid}
+				 ) -->
+    </select>
+    
+    <update id="updateBlackMbr" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckMbrDetailReqDto">
+    /* LoyBlackTxnRuleMapper.updateBlackMbr */
+    UPDATE LOY.LOY_FRAUD_MBR
+    SET	  
+    	  MODIFY_BY			= #{modifyBy}
+    	, MODIFY_DATE		= sysdate
+    	, RID_MBR			= #{mbrRid}
+    	, STAT_CD			= #{statCd}
+    	, COMMENTS			= #{contents}
+    WHERE rid = #{rid}    
+    </update>
+    
+    <select id="selectBlackMbrDetail"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleDetailReqDto"
+							    			resultType="com.icignal.loyalty.blackTxnRule.dto.response.LoyBalckMbrDetailResDto">
+     /* LoyBlackTxnRuleMapper.selectBlackMbrDetail */
+	SELECT    lfm.STAT_CD		AS statCd
+			, lfm.COMMENTS 	AS contents
+			, lm.RID			AS mbrRid
+			, lc.CUST_NM		AS custNm
+	FROM LOY.LOY_FRAUD_MBR lfm
+	JOIN LOY.LOY_MBR lm ON lfm.RID_MBR = lm.RID AND lm.FLAG = 1
+	JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	WHERE lfm.flag  = 1
+	AND   lfm.RID   = #{rid}
+    </select>
+    
+    <update id="updateStatCdConf" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckMbrDetailReqDto">
+    /* LoyBlackTxnRuleMapper.updateStatCdConf */
+    UPDATE LOY.LOY_FRAUD_MBR
+    SET	  
+    	  MODIFY_BY			= #{modifyBy}
+    	, MODIFY_DATE		= sysdate
+    	, CONFIRM_DATE		= sysdate
+    	, VALID_START_DATE  = sysdate
+    	<if test="periodMm != null and periodMm != ''">
+    	, VALID_END_DATE    = TO_DATE(TO_CHAR(ADD_MONTHS(sysdate,+#{periodMm})))
+    	</if>
+    	<if test="periodMm == null or periodMm == ''">
+    	, VALID_END_DATE    = TO_DATE(TO_CHAR(ADD_MONTHS(sysdate,+0)))
+    	</if>
+    	, STAT_CD			= #{statCd}
+    	, COMMENTS			= #{contents}
+    WHERE rid = #{rid}    
+    </update>
+    
+    <update id="updateStatCdCanl" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckMbrDetailReqDto">
+    /* LoyBlackTxnRuleMapper.updateStatCdCanl */
+    UPDATE LOY.LOY_FRAUD_MBR
+    SET	  
+    	  MODIFY_BY			= #{modifyBy}
+    	, MODIFY_DATE		= sysdate
+    	, CANCEL_DATE		= sysdate
+    	, STAT_CD			= #{statCd}
+    	, COMMENTS			= #{contents}
+    WHERE rid = #{rid}    
+    </update>
+    
+    <update id="updateStatCd" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckMbrDetailReqDto">
+    /* LoyBlackTxnRuleMapper.updateStatCd */
+    UPDATE LOY.LOY_FRAUD_MBR
+    SET	  
+    	  MODIFY_BY			= #{modifyBy}
+    	, MODIFY_DATE		= sysdate
+    	, STAT_CD			= #{statCd}
+    	, COMMENTS			= #{contents}
+    WHERE rid = #{rid}    
+    </update>
+    
+    <update id="deleteBlackMbr" parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBalckTxnRuleListReqDto">
+    /* LoyBlackTxnRuleMapper.deleteBlackMbr */
+    UPDATE  LOY.LOY_FRAUD_MBR
+    SET 	MODIFY_DATE = sysdate
+    	  , MODIFY_BY	= #{modifyBy}
+    	  , FLAG		= flag + 1
+    WHERE rid = #{rid}
+    </update>
+    
+     <select id="selectBasTypeCheck"  parameterType="com.icignal.loyalty.blackTxnRule.dto.request.LoyBlackRuleDetailReqDto"
+							    			resultType="java.lang.Integer">
+     /* LoyBlackTxnRuleMapper.selectBasTypeCheck */
+	SELECT    count(*)
+	FROM LOY.LOY_FRAUD_RULE lfu
+	WHERE lfu.flag  = 1
+	AND   lfu.RID_FRAUD = #{blackMstRid}
+	AND   lfu.RULE_TYPE_CD = #{basType}
+	<if test="rid != null and rid != ''">
+	AND   lfu.RID NOT IN  (
+				 SELECT RID FROM LOY.LOY_FRAUD_RULE lfu2
+				 WHERE lfu2.RULE_TYPE_CD = #{basType}
+				 AND   lfu.RID_FRAUD = #{blackMstRid}
+				 AND   lfu2.rid = #{rid}
+				 )
+	</if>
+    </select>
+
+</mapper>

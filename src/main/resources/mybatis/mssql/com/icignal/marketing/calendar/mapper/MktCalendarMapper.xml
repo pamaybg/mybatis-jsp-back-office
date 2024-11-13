@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:29 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.calendar.mapper.MktCalendarMapper">
+
+
+    <!-- /**************************************
+    -   관련 파일             : MKTCalendarDAO.java (getCampaignType)
+    ============================================
+    -   제목                  : 캠페인 유형 조회
+    -   설명                  : 캠페인 유형 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:
+    -	출력				:	id(캠페인 유형),makr_name(캠페인 유형명)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.16
+    ***************************************/ -->
+    <select id="getCampaignType" parameterType="com.icignal.marketing.calendar.dto.request.MktgetCampaignReqDto"
+            resultType="com.icignal.marketing.calendar.dto.response.MktgetCampaignResDto">
+        /* MKTCalendar.getCampaignType */
+        select code_name as campaignTypeCode
+             , mark_name as campaignTypeCodeName
+        from com.comm_code
+        where ${strSVCType}
+          and flag = 1
+          and group_code = 'MKT_CAM_TYPE_CD'
+    </select>
+
+
+    <!-- /**************************************
+-   관련 파일             : MKTCalendarDAO.java (getCampaign)
+============================================
+-   제목                  : 캠페인 조회
+-   설명                  : 캠페인 조회
+-   결과형태              : 복수
+============================================
+-   입력				: campaignTypeCode(캠페인 유형)
+-	출력				: campaignId(캠페인 id),title(캠페인명),campaignTypeCode(캠페인 유형코드),campaignStatusCodeName(캠페인 상태명)
+                      campaignData(캠페인 상세),start(시작dd),end(끝 dd),colorClass(색상),camTypeCodeName(켐페인유형 코드네임)
+============================================
+-   작성자                : 안형욱
+-   작성일                : 2015.11.16
+***************************************/ -->
+    <select id="getCampaign" parameterType="com.icignal.marketing.calendar.dto.request.MktgetCampaignReqDto"
+            resultType="com.icignal.marketing.calendar.dto.response.MktgetCampaignResDto">
+        /* MKTCalendar.getCampaign */
+        select mcm.id as campaignId,
+        mcm.cam_nm as title,
+        mcm.cam_type_cd as campaignTypeCode,
+        cc2.mark_name as campaignStatusCodeName,
+        mcm.cam_desc as campaignData,
+        mcm.cam_start_dd as "start",
+        mcm.cam_end_dd as "end",
+        cc.attrib01 as colorClass,
+        cc.code_name as camTypeCodeName
+        from mkt.mkt_cam_mst mcm
+        left outer join com.comm_code cc on mcm.cam_type_cd = cc.code_name and cc.group_code = 'MKT_CAM_TYPE_CD' and
+        cc.lang = #{lang} and cc.flag = 1
+        left outer join com.comm_code cc2 on mcm.cam_status_cd = cc2.code_name and cc2.group_code = 'MKT_CAM_STAT' and
+        cc2.lang = #{lang} and cc2.flag = 1
+        LEFT OUTER JOIN COM.EMPLOYEE E1 ON E1.ID = mcm.CAM_PLNER
+        LEFT OUTER JOIN com.crm_division d1 WITH (NOLOCK) on d1.rid = E1.rid_division
+        LEFT OUTER JOIN com.com_elec_aprv ea WITH (NOLOCK) on ea.flag = 1 and ea.cam_id = mcm.id
+        where ${strSVCType}
+        and ${strDataAuthWhere}
+        <if test="campaignTypeCode != null and campaignTypeCode != ''">and
+            mcm.cam_type_cd = #{campaignTypeCode}
+        </if>
+        and mcm.flag = 1
+        <if test="campaignStatusCode != null and campaignStatusCode != '' and campaignStatusCode!='ALL'">and
+            <if test="campaignStatusCode == &quot;A_E&quot;">
+                cc2.code_name in ('A', 'E')
+            </if>
+            <if test="campaignStatusCode != &quot;A_E&quot;">
+                cc2.code_name = #{campaignStatusCode}
+            </if>
+        </if>
+        <if test="thisYear != null and thisYear != ''">
+            and com.TO_CHAR(mcm.cam_start_dd, 'YYYY') &lt;= #{thisYear}
+            and com.TO_CHAR(mcm.cam_end_dd,'YYYY') &gt;= #{thisYear}
+        </if>
+        <if test="targetMonth != null and targetMonth != ''">
+            and com.TO_CHAR(mcm.cam_start_dd, 'MM') &lt;= #{targetMonth}
+            and com.TO_CHAR(mcm.cam_end_dd,'MM') &gt;= #{targetMonth}
+        </if>
+        <if test="camNm != null and camNm != ''">and
+            mcm.CAM_NM = #{camNm}
+        </if>
+        <if test='authType != "A" '>
+            and d1.X_BRAND_CD = #{brandCd}
+            <if test='authType != "B" '>
+                and E1.ID = #{empId}
+            </if>
+        </if>
+        order by mcm.CAM_START_DD desc
+    </select>
+
+</mapper>

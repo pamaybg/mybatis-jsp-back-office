@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.appversion.mapper.SystemAppVersionMapper">
+
+	<select id="selectAppVerList" parameterType="com.icignal.systemmanagement.appversion.dto.request.SystemAppVerListReqDto" resultType="com.icignal.systemmanagement.appversion.dto.response.SystemAppVerListResDto">
+		/* SystemAppVersionMapper.selectAppVerList */
+		select ${strColumn}
+				,t1.*
+		from(
+			select   mv.id as id
+				,mv.app_service_type as serviceId
+				,mv.DESCRIPTION 	 as description
+				,mv.mobile_name 	 as appName
+				,case
+					when mv.store_type = 'GOOGLE' then '구글 플레이'
+					when mv.store_type = 'APPLE' then '애플 스토어'
+				end as storeName
+				,mv.deploy as distributeVer
+				,mv.min as minVer
+				,mv.create_date as appRegDate
+				,mv.modify_date as appUpdateDate
+		from 	com.mobile_version mv
+		where mv.flag  = 1 
+		<!-- and   mv.country = #{country} -->
+		) t1
+		where ${strCondWhere}
+		and ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+
+	</select>
+	
+	<insert id="insertAppVersion" parameterType="com.icignal.systemmanagement.appversion.dto.request.SystemAppVerListReqDto">
+		/* SystemAppVersionMapper.insertAppVersion */
+		<selectKey resultType="java.lang.String" order="BEFORE">
+            select 1 from dual
+        </selectKey>
+		insert into com.mobile_version
+			(
+				id
+				,store_type
+				,deploy
+				,min
+				,url
+				<!-- ,accnt_id
+				,app_service_type -->
+				<!-- ,country -->
+				,flag
+				,create_date
+				,modify_date
+				,create_by
+				,modify_by
+				,type
+				,devicetype
+				,DESCRIPTION
+				,mobile_name
+			)
+		values(
+				com.getNewID('A')
+				,#{storeType}
+				,#{AppDistVer}
+				,#{AppMinVer}
+				,#{storeUrl}
+				<!-- ,#{accountId} -->
+<!-- 				,#{appServiceId} -->
+				<!-- ,#{serviceId} -->
+				<!-- ,#{country} -->
+				,1
+				,GETDATE()
+				,GETDATE()
+				,#{createBy}
+				,#{modifyBy}
+				,#{appOs}
+				,#{appSchema}
+				,#{description}
+				,#{appName}
+		)
+		</insert>
+		
+		<update id="updateAppVersion" parameterType="com.icignal.systemmanagement.appversion.dto.request.SystemAppVerListReqDto">
+			/* SystemAppVersionMapper.updateAppVersion */
+			update com.mobile_version
+			set	modify_by = #{modifyBy}
+				,modify_date = GETDATE()
+				,deploy = #{AppDistVer}
+				,min = #{AppMinVer}
+				,url = #{storeUrl}
+				<!-- ,accnt_id = #{accountId} -->
+				,devicetype = #{appSchema}
+				,DESCRIPTION= #{description}
+				,store_type=#{storeType}
+				,mobile_name=#{appName}
+			where id = #{versionId}
+			<!-- and country = #{country} -->
+		</update>
+		
+		<select id="selectAppDetail" parameterType="com.icignal.systemmanagement.appversion.dto.request.SystemAppVerDetailReqDto" resultType="com.icignal.systemmanagement.appversion.dto.response.SystemAppVerDetailResDto">
+			select
+				 mv.DESCRIPTION 	 as description
+				,mv.mobile_name 	 as appName
+				,mv.type as appOs
+				,mv.deploy as AppDistVer
+				,mv.min as AppMinVer
+				,mv.url as storeUrl
+				,mv.devicetype as appSchema
+			from    com.mobile_version mv
+			where   mv.id = #{appId}
+		</select>
+	
+</mapper>

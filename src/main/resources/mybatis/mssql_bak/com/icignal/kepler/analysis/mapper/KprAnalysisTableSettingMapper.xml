@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Sep 21 09:56:18 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.kepler.analysis.mapper.KprAnalysisTableSettingMapper">
+
+
+	<select id="selectAnalysisTableDetail" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisTableDetailReqDto" 
+														resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisTableDetailResDto">
+	/* KprAnalysisTableSettingMapper.selectAnalysisTableDetail */
+	SELECT col_tot_type_cd	AS colTotalTypeCode
+		 , row_tot_type_cd	AS rowTotalTypeCode
+	FROM ANL.ANL_RPT_MST_INST WITH (NOLOCK)
+	WHERE FLAG = 1
+	AND ID = #{analysisId}
+	</select>
+	
+	<update id="updateAnalysisTableDetail" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisTableDetailReqDto">
+	/* KprAnalysisTableSettingMapper.updateAnalysisTableDetail */
+	UPDATE anl.anl_rpt_mst_inst
+	SET MODIFY_BY = #{modifyBy}
+		 , MODIFY_DATE = GETDATE()
+		 , COL_TOT_TYPE_CD = #{colTotalTypeCode}
+		 , ROW_TOT_TYPE_CD = #{rowTotalTypeCode}
+	WHERE ID = #{analysisId}
+	</update>
+</mapper>

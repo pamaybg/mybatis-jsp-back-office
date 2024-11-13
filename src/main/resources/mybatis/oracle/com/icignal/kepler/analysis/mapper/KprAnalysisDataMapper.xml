@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:56:20 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.kepler.analysis.mapper.KprAnalysisDataMapper">
+
+	<!-- 분석 Publish DTO -->
+	<!--
+		Sorry, I can`t migrate	com.icignal.kepler.analysis.dto.request.KprAnalysisDataReqDto
+		See console output for further details 
+	-->
+	<!--
+		Sorry, I can`t migrate	KPRAnalysisDataResponse
+		See console output for further details 
+	-->
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisDataMappe.java (selectAnalysisDateKeyFlagCheck)
+	============================================
+	-	제목					: 분석 DATE_KEY_YN 체크
+	-	설명					: 분석 DATE_KEY_YN 체크
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisDateKeyFlagCheck" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDataReqDto" resultType="java.lang.Integer">
+		/* KprAnalysisDataMapper.selectAnalysisDateKeyFlagCheck */
+		SELECT	COUNT(1)
+		FROM	anl.anl_rpt_mst_inst		arm
+		JOIN	anl.anl_lgc_comp_mst		lcm	ON	arm.LGC_COMP_ID	=	lcm.ID
+												AND	lcm.FLAG		=	1
+		JOIN	anl.anl_atrib_group			aag	ON	lcm.ID			=	aag.LGC_COMP_ID
+												AND	aag.FLAG		=	1
+		JOIN	anl.anl_atrib_group_column	agc	ON	aag.ID			=	agc.ATRIB_GROUP_ID
+												AND	agc.FLAG		=	1
+		WHERE	arm.FLAG		=	1
+		AND		agc.DATE_KEY_YN	=	'1'
+		AND		arm.ID			=	#{analysisId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisDataMappe.java (selectAnalysisDateFilterCheck)
+	============================================
+	-	제목					: 분석 DATE 필터 체크
+	-	설명					: 분석 DATE 필터 체크
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisDateFilterCheck" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDataReqDto" resultType="java.lang.Integer">
+		/* KprAnalysisDataMapper.selectAnalysisDateFilterCheck */
+		SELECT	COUNT( CASE z.DATE_CNT WHEN 1 THEN 1 END )
+		FROM	(
+			SELECT	COUNT( 1 )	AS	DATE_CNT
+			FROM	anl.anl_rpt_mst_inst		arm
+			JOIN	anl.anl_lgc_comp_mst		lcm	ON	arm.LGC_COMP_ID	=	lcm.ID
+													AND	lcm.FLAG		=	1
+			JOIN	anl.anl_atrib_group			aag	ON	lcm.ID			=	aag.LGC_COMP_ID
+													AND	aag.FLAG		=	1
+			JOIN	anl.anl_atrib_group_column	agc	ON	aag.ID			=	agc.ATRIB_GROUP_ID
+													AND	agc.FLAG		=	1
+			JOIN	(
+				SELECT	agc.DIM_COL_ID
+				FROM	anl.anl_rpt_filter_inst		arf
+				JOIN	anl.anl_atrib_group_column	agc	ON	arf.ATRIB_GROUP_COL_ID	=	agc.ID
+														AND	agc.FLAG				=	1
+				JOIN	com.comm_code				ocd	ON	arf.OPRT_CD				=	ocd.CODE_NAME
+														AND	ocd.GROUP_CODE			=	'MKT_TARGET_SERC_OPRT_TYPE'
+														AND	ocd.FLAG				=	1
+														AND	ocd.LANG				=	#{lang}
+				WHERE	arf.FLAG	=	1
+				AND		arf.RPT_ID	=	#{analysisId}
+			)									tmp	ON	agc.DIM_COL_ID	=	tmp.DIM_COL_ID
+			WHERE	agc.DATE_KEY_YN	=	'0'
+			AND		agc.COL_ID		IN	(
+									SELECT	agc.COL_ID
+									FROM	anl.anl_rpt_mst_inst		arm
+									JOIN	anl.anl_lgc_comp_mst		lcm	ON	arm.LGC_COMP_ID	=	lcm.ID
+																			AND	lcm.FLAG		=	1
+									JOIN	anl.anl_atrib_group			aag	ON	lcm.ID			=	aag.LGC_COMP_ID
+																			AND	aag.FLAG		=	1
+									JOIN	anl.anl_atrib_group_column	agc	ON	aag.ID			=	agc.ATRIB_GROUP_ID
+																			AND	agc.FLAG		=	1
+									WHERE	arm.FLAG		=	1
+									AND		agc.DATE_KEY_YN	=	'1'
+									AND		arm.ID			=	#{analysisId}
+			)
+			AND		arm.ID			=	#{analysisId}
+			
+			UNION ALL
+			
+			SELECT	COUNT( 1 )
+			FROM	anl.anl_rpt_mst_inst		arm
+			JOIN	anl.anl_lgc_comp_mst		lcm	ON	arm.LGC_COMP_ID	=	lcm.ID
+													AND	lcm.FLAG		=	1
+			JOIN	anl.anl_atrib_group			aag	ON	lcm.ID			=	aag.LGC_COMP_ID
+													AND	aag.FLAG		=	1
+			JOIN	anl.anl_atrib_group_column	agc	ON	aag.ID			=	agc.ATRIB_GROUP_ID
+													AND	agc.FLAG		=	1
+			JOIN	(
+				SELECT	agc.DIM_COL_ID
+				FROM	anl.anl_rpt_filter_inst		arf
+				JOIN	anl.anl_atrib_group_column	agc	ON	arf.ATRIB_GROUP_COL_ID	=	agc.ID
+														AND	agc.FLAG				=	1
+				JOIN	com.comm_code				ocd	ON	arf.OPRT_CD				=	ocd.CODE_NAME
+														AND	ocd.GROUP_CODE			=	'MKT_TARGET_SERC_OPRT_TYPE'
+														AND	ocd.FLAG				=	1
+														AND	ocd.LANG				=	#{lang}
+				WHERE	arf.FLAG	=	1
+				AND		arf.RPT_ID	=	#{analysisId}
+			)									tmp	ON	agc.DIM_COL_ID	=	tmp.DIM_COL_ID
+			WHERE	agc.DATE_KEY_YN	=	'1'
+			AND		agc.COL_ID		IN	(
+									SELECT	agc.COL_ID
+									FROM	anl.anl_rpt_mst_inst		arm
+									JOIN	anl.anl_lgc_comp_mst		lcm	ON	arm.LGC_COMP_ID	=	lcm.ID
+																			AND	lcm.FLAG		=	1
+									JOIN	anl.anl_atrib_group			aag	ON	lcm.ID			=	aag.LGC_COMP_ID
+																			AND	aag.FLAG		=	1
+									JOIN	anl.anl_atrib_group_column	agc	ON	aag.ID			=	agc.ATRIB_GROUP_ID
+																			AND	agc.FLAG		=	1
+									WHERE	arm.FLAG		=	1
+									AND		agc.DATE_KEY_YN	=	'1'
+									AND		arm.ID			=	#{analysisId}
+			)
+			AND		arm.ID			=	#{analysisId}	
+		)	z
+	</select>
+</mapper>

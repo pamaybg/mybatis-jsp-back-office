@@ -1,0 +1,47 @@
+@charset "utf-8";
+
+/* ifvsfGrid */
+.ifv_grid_templete .e-grid {box-sizing:border-box;border:1px solid #ddd}
+.ifv_grid_templete .e-grid.responsive_grid {width:100% !important}
+.ifv_grid_templete .e-grid *{font-size:11px !important;color:#666}
+.ifv_grid_templete .e-grid .e-gridheader{color:#666;border-top:0 none}
+.ifv_grid_templete .e-grid button, .ifv_grid_templete .e-grid button i.fa {color: #fff;}
+
+
+.ifv_grid_templete .e-grid .e-headercell,
+.ifv_grid_templete .e-grid .e-headercell-hover{c:auto}
+.ifv_grid_templete .e-grid .e-headercell,
+.ifv_grid_templete .e-grid .e-grouptopleftcell{background-color:#f1f5f8;border-color:#ddd}
+.ifv_grid_templete .e-grid .e-headercelldiv{padding:7px 2px;font-weight:normal;font-size:11px}
+
+.ifv_grid_templete .e-grid .e-rowcell{padding:5px;color:#404040}
+.ifv_grid_templete .e-grid .e-editcell,
+.ifv_grid_templete .e-grid .e-form-container,
+.ifv_grid_templete .e-grid .e-externalformedit,
+.ifv_grid_templete .e-grid .e-tabletd, 
+.ifv_grid_templete .e-grid .e-rowcell{border-color:#ddd}
+.ifv_grid_templete .e-grid tr.e-hover{background-color:#ebebeb;cursor:pointer}
+.ifv_grid_templete .e-grid td.e-active{color:#3b9cca;background-color:#d9edf7}
+.ifv_grid_templete .e-grid .e-alt_row{background:#fff}
+
+.ifv_grid_templete .e-grid .emptyrecord{line-height:30px; text-align: center;}
+.ifv_grid_templete .e-grid .e-headercell .sort_type:after{content:'';display:inline-block;padding-left:2px;color:#6caad4}
+.ifv_grid_templete .e-grid .e-headercell .sort_type.asc:after{content:'▲'}
+.ifv_grid_templete .e-grid .e-headercell .sort_type.desc:after{content:'▼'}
+.ifv_grid_templete .e-grid .empty_msg{border:0 none;background-color:#fff;overflow-x:auto;}
+.ifv_grid_templete .e-grid .empty_msg > div {margin: 0 auto;}
+
+.ifv_grid_templete .e-pager.e-js {display: none;}
+
+.e-headercell.e-stackedHeaderCell.e-default.over {border-bottom-width: 0px !important}
+.e-headercell.e-stackedHeaderCell.e-default.vision {font-size: 0px !important;}
+.e-headercell.e-stackedHeaderCell{padding: 7px 2px; text-align: center}
+
+.e-grid.horizontal_scroll_grid .e-gridheader > div {overflow-x: hidden;}
+.e-grid.horizontal_scroll_grid .e-gridcontent > div {overflow-x: auto;}
+
+.e-grid.horizontal_scroll_grid .e-gridheader > div {overflow-x: hidden;}
+.e-grid.horizontal_scroll_grid.has_footer .e-gridcontent > div {overflow-x: hidden;}
+.e-grid.horizontal_scroll_grid.has_footer .e-gridfooter {overflow-x: auto;}
+
+.e-gridSummaryRows .e-summaryrow { text-align: right !important; }

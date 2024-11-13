@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:29
+	KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.channel.mapper.LoyChannelMapper">
+
+	<!-- /************************************** - 관련 파일 : LoyChannelMapperDAO.java (delCHNL)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 삭제 - 설명
+		: 멤버쉽정책관리 로열티 채널 삭제 - 결과형태 : 단건 ============================================
+		- 입력 : RID - 출력 : ============================================ - 작성자 : knlee
+		- 작성일 : 2016.12.23 ***************************************/ -->
+	<update id="updateChnlDel" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlReqDto">
+		/*	LoyChannelMapper.updateChnlDel */
+		update LOY.LOY_CHNL
+			set modify_date = getdate()
+				, modify_by = #{modifyBy}
+				, flag = flag + 1
+		where 1 = 1
+		and rid = #{rid}
+	</update>
+
+	<!-- /************************************** - 관련 파일 : LoyChannelMapperDAO.java (removeCHNLAcrlHist)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 삭제 - 설명
+		: 멤버쉽정책관리 로열티 채널 삭제 - 결과형태 : 단건 ============================================
+		- 입력 : RID - 출력 : ============================================ - 작성자 : knlee
+		- 작성일 : 2016.12.23 ***************************************/ -->
+	<update id="updateChnlAcrlHistDel" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlAcrlHistReqDto">
+		/*
+		LoyChannelMapper.updateChnlAcrlHistDel */
+		update LOGS.loy_chnl_acrl_hist
+			set modify_date = getdate()
+				, modify_by = #{modifyBy}
+				, flag = flag + 1
+		where 1 = 1
+		and rid = #{rid}
+	</update>
+
+
+	<!-- /************************************** - 관련 파일 : LoyChannelMapperDAO.java (getCHNLPos)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 POS 조회
+		- 설명 : 멤버쉽정책관리 로열티 채널 POS 조회 - 결과형태 : 다건 ============================================
+		- 입력 : RIDCHNL - 출력 : ============================================ - 작성자
+		: knlee - 작성일 : 2016.12.23 ***************************************/ -->
+	<select id="selectChnlPosList" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlPosReqDto"
+											 resultType="com.icignal.loyalty.channel.dto.response.LoyChnlPosResDto">
+		/* LoyChannelMapper.selectChnlPosList */
+		select
+			a.rid as rid /* RID */
+			,a.rid_chnl as ridChnl /* RID_CHNL */
+			,a.pos_no as posNo /* POS 번호 */
+			,a.desctxt as desctxt /* 설명 */
+			,a.active_yn as activeYn /* 활성 여부 */
+			,CONVERT(varchar(10),a.create_date,120) as createDate
+			,em.name as createBy
+			,CONVERT(varchar(10),a.modify_date,120) as modifyDate
+			,em1.name as modifyBy
+		from loy.loy_pos a WITH (NOLOCK) 
+		left join com.crm_user us WITH (NOLOCK) on a.create_by = us.rid
+		left join com.crm_user us1 WITH (NOLOCK) on a.modify_by = us1.rid
+		left join com.employee em WITH (NOLOCK) on us.id_employee = em.id
+		left join com.employee em1 WITH (NOLOCK) on us1.id_employee = em1.id
+		where
+		${strCondWhere}
+		and ${strSVCType}
+		and ${strWhere}
+		<!-- and a.accnt_id =	#{accountId} -->
+		and a.rid_chnl = #{ridChnl}
+		and a.flag = 1
+		order by
+		${strOrderby}
+		${strEndPaging}
+
+	</select>
+
+	<!-- /************************************** - 관련 파일 : LoyChannelMapperDAO.java (getCHNLPos)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 상세 - 설명
+		: 멤버쉽정책관리 로열티 채널 상세 - 결과형태 : 단건 ============================================
+		- 입력 : RID - 출력 : ============================================ - 작성자 : knlee
+		- 작성일 : 2016.12.23 ***************************************/ -->
+	<select id="selectChnlPos" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlPosReqDto"
+										resultType="com.icignal.loyalty.channel.dto.response.LoyChnlPosResDto">
+		/* LoyChannelMapper.selectChnlPos */
+		select
+			a.rid as rid /* RID */
+			,a.rid_chnl as ridChnl /* RID_CHNL */
+			,a.pos_no as posNo /* POS 번호 */
+			,a.desctxt as desctxt /* 설명 */
+			,a.active_yn as activeYn /* 활성 여부 */
+		from loy.loy_pos a WITH (NOLOCK)
+		left join com.crm_user us WITH (NOLOCK) on a.create_by = us.rid
+		left join com.crm_user us1 WITH (NOLOCK) on a.modify_by = us1.rid
+		left join com.employee em WITH (NOLOCK) on us.id_employee = em.id
+		left join com.employee em1 WITH (NOLOCK) on us1.id_employee = em1.id
+		where 1=1
+		<!-- and a.accnt_id = #{accountId} -->
+		and a.rid = #{rid}
+		and a.flag = 1
+	</select>
+
+	<!-- /************************************** - 관련 파일 : LoyChannelMapperDAO.java (getCHNLPos)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 상세 - 설명
+		: 멤버쉽정책관리 로열티 채널 상세 - 결과형태 : 단건 ============================================
+		- 입력 : RID - 출력 : ============================================ - 작성자 : knlee
+		- 작성일 : 2016.12.23 ***************************************/ -->
+	<select id="checkCHNLPosNoDupl" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlPosReqDto"
+												 resultType="java.lang.Integer">
+		/* LoyChannelMapper.checkCHNLPosNoDupl */
+		select count(a.rid)
+		from loy.loy_pos a WITH (NOLOCK) 
+		where 1=1
+		<!-- and a.accnt_id = #{accountId} -->
+		and a.pos_no = trim(#{posNo})
+		and a.flag = 1
+	</select>
+
+
+	<!-- /************************************** - 관련 파일 : LoyChannelMapperDAO.java (editCHNLPos)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 POS 수정
+		- 설명 : 멤버쉽정책관리 로열티 채널 POS 수정 - 결과형태 : ============================================
+		- 입력 : RID - 출력 : ============================================ - 작성자 : knlee
+		- 작성일 : 2016.12.23 ***************************************/ -->
+	<update id="updateChnlPos" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlPosReqDto">
+		/*
+		LoyChannelMapper.updateChnlPos */
+		update loy.loy_pos
+			set
+				pos_no = #{posNo}
+				, desctxt = #{desctxt}
+				, active_yn = #{activeYn}
+				, mod_num = mod_num +1
+				, modify_date = getdate()
+				, modify_by = #{modifyBy}
+		where 1 = 1
+		and rid = #{rid}
+	</update>
+
+
+	<!-- /************************************** - 관련 파일 : LOYCustDAO.java (removeCHNLPos)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 POS 삭제
+		- 설명 : 멤버쉽정책관리 로열티 채널 POS 삭제 - 결과형태 : ============================================
+		- 입력 : RID - 출력 : ============================================ - 작성자 : knlee
+		- 작성일 : 2016.12.16 ***************************************/ -->
+	<update id="updateChnlPosDel" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlPosReqDto">
+		/*
+		LoyChannelMapper.updateChnlPosDel */
+		update loy.loy_pos
+			set modify_date = getdate()
+				, modify_by = #{modifyBy}
+				, flag = flag + 1
+		where 1 = 1
+		and rid = #{rid}
+	</update>
+
+	<!-- /************************************** - 관련 파일 : LOYCustDAO.java (addCHNLPos)
+		============================================ - 제목 : 멤버쉽정책관리 로열티 채널 POS 등록
+		- 설명 : 멤버쉽정책관리 로열티 채널 POS 등록 - 결과형태 : ============================================
+		- 입력 : RID - 출력 : ============================================ - 작성자 : knlee
+		- 작성일 : 2016.12.16 ***************************************/ -->
+	<insert id="insertChnlPos" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlPosReqDto">
+		/* LoyChannelMapper.insertChnlPos */
+		insert into loy.loy_pos (
+			rid
+			,rid_chnl
+			,pos_no
+			,desctxt
+			,active_yn
+			<!-- ,accnt_id -->
+			<!-- ,app_service_type -->
+			<!-- ,country -->
+			,create_date
+			,create_by
+			)
+		values (
+			#{rid} <!-- com.getNewID('A') -->
+			, #{ridChnl}
+			, #{posNo}
+			, #{desctxt}
+			, #{activeYn}
+			<!-- , #{accountId} -->
+			<!-- , #{appServiceId} -->
+			<!-- , #{country} -->
+			, getdate()
+			, #{createBy}
+		)
+		<selectKey keyProperty="" resultType="java.lang.String">
+			select 1
+		</selectKey>
+	</insert>
+
+	<!-- /************************************** - 관련 파일 : LOYChannelDAO.java
+		============================================ - 제목 : 가맹점 거래이력 - 설명 : 가맹점 거래이력
+		- 결과형태 : 목록 ============================================ - 입력 ============================================
+		- 작성자 : 이성원 - 작성일 : 2017.10.17 ***************************************/ -->
+	<select id="getChnlSubTxnHistListCnt" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlTxnHistListReqDto"
+													resultType="java.lang.Integer">
+		/* LoyChannelMapper.getChnlSubTxnHistListCnt */
+		SELECT
+			count(*) as cnt
+		FROM loy.loy_pnt_txn a WITH (NOLOCK) 
+		WHERE 1=1
+		AND a.RID_CHNL = #{rid}
+		<if test="searchType == &quot;ALL&quot;">
+
+		</if>
+		<if test="searchType == &quot;ACRL&quot;">
+			AND a.PNT_TXN_TYPE_1_CD = 'P'
+		</if>
+		<if test="searchType == &quot;RDM&quot;">
+			AND a.PNT_TXN_TYPE_1_CD ='M'
+		</if>
+
+	</select>
+
+	<update id="removeChannel" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlMasterReqDto">
+	/*	LoyChannelMapper.removeChannel */
+		UPDATE LOY.LOY_CHNL
+			SET flag = flag + 1
+				, MODIFY_DATE = getdate()
+				, MODIFY_BY = #{modifyBy}
+		WHERE RID = #{rid}
+		AND FLAG = 1
+	</update>
+	
+	
+	
+	<select id="selectChnlListPage" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlMasterReqDto" 
+									resultType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto">
+		/* LoyChannelMapper.selectChnlListPage */
+	SELECT 	  lcm.CHNL_NO			AS chnlNo
+			, lcm.CHNL_NM			AS chnlNm
+			, lcm.STAT_CD			AS statCd
+			, lcm.CHNL_TYPE_CD		AS chnlTypeCd
+			, CONVERT(varchar,lcm.CREATE_DATE,120)		AS createDate
+			, em.name 			 	AS createBy
+			, lcm.RID				AS rid
+			, ${strColumn}
+	FROM LOY.LOY_CHNL lcm WITH (NOLOCK) 
+	LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) on lcm.create_by = us.rid AND us.FLAG = 1
+	LEFT OUTER JOIN com.employee em WITH (NOLOCK) on us.id_employee = em.id AND em.FLAG = 1
+	WHERE lcm.FLAG = 1 
+	AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<select id="selectParentChnlTList" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlReqDto" 
+									resultType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto">
+		/* LoyChannelMapper.selectParentChnlTList */
+	SELECT 	  lcm.CHNL_NO			AS chnlNo
+			, lcm.CHNL_NM			AS chnlNm
+			, lcm.STAT_CD			AS statCd
+			, lcm.RID				AS rid
+			, ${strColumn}
+	FROM LOY.LOY_CHNL lcm WITH (NOLOCK) 
+	WHERE lcm.FLAG = 1
+	<!-- AND lcm.CHNL_TYPE_CD = #{chnlTypeCd} -->
+	AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+   <select id="selectChnlDetailNew" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlNewDetailReqDto" 
+									resultType="com.icignal.loyalty.channel.dto.response.LoyChnlDetailNewResDto">
+		/* LoyChannelMapper.selectChnlDetailNew */
+	SELECT 	  lcm.CHNL_NO			AS chnlNo
+			, lcm.CHNL_NM			AS chnlNm
+			, lcm.CHNL_REAL_NM		AS chnlRealNm
+			, lcm.CHNL_TYPE_CD		AS chnlTypeCd
+			, lcm.STAT_CD			AS statCd
+			, lcm.LVL_CD			AS lvlCd
+			, lcm2.CHNL_NM			AS parChnlNm
+			, lcm2.RID				AS parChnlRid
+	FROM LOY.LOY_CHNL lcm WITH (NOLOCK) 
+	LEFT OUTER JOIN LOY.LOY_CHNL lcm2 WITH (NOLOCK) ON lcm.RID_PAR_CHNL = lcm2.RID AND lcm2.FLAG = 1
+	WHERE lcm.FLAG = 1
+	AND lcm.RID = #{rid}
+	</select>
+	
+	<insert id="insertChnlDetail" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlNewDetailReqDto">
+	/* LoyChannelMapper.insertChnlDetail */
+	INSERT INTO LOY.LOY_CHNL
+	(
+		  RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, CHNL_NO
+		, CHNL_NM
+		, CHNL_REAL_NM
+		, CHNL_TYPE_CD
+		, RID_PAR_CHNL
+		, STAT_CD
+		, LVL_CD
+	)
+	VALUES
+	(
+		  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, loy.fn_get_chnl_no()
+		, #{chnlNm}
+		, #{chnlRealNm}
+		, #{chnlTypeCd}
+		, #{parChnlRid}
+		, #{statCd}
+		, #{lvlCd}
+	)
+	</insert>
+	
+	<update id="updateChnlDetail" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlNewDetailReqDto">
+	/* LoyChannelMapper.updateChnlDetail */
+	UPDATE LOY.LOY_CHNL
+	SET   CHNL_NM      = #{chnlNm}
+		, CHNL_REAL_NM = #{chnlRealNm}
+		, CHNL_TYPE_CD = #{chnlTypeCd}
+		, RID_PAR_CHNL = #{parChnlRid}
+		, STAT_CD      = #{statCd}
+		, LVL_CD       = #{lvlCd}
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectChnlAddInfoDetailNew" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlNewDetailReqDto" 
+									resultType="com.icignal.loyalty.channel.dto.response.LoyChnlAddInfoDetailNewResDto">
+		/* LoyChannelMapper.selectChnlDetailNew */
+	SELECT 	  lcai.BIZR_NO			AS bizrNo
+			, lcai.JURIR_NO			AS jurirNo
+			, lcai.AREA				AS area
+			, lcai.REPR_NM			AS reprNm
+			, lcai.CHARGER			AS charger
+			, lcai.TEL_NO			AS telNo
+			, lcai.FAX				AS fax
+			, lcai.ZIP				AS zip
+			, lcai.sido				AS sido
+			, lcai.gugun			AS gugun
+			, lcai.ADRES			AS adres
+			, lcai.LATITUDE			AS latitude
+			, lcai.LONGITUDE		AS longitude
+			, lcai.BUNJI			AS bunji
+			, lcai.SALES_TIME		AS salesTime
+			, lcai.RID				AS rid
+	FROM    LOY.LOY_CHNL_ADD_INF lcai WITH (NOLOCK) 
+	WHERE   lcai.FLAG = 1
+	AND     lcai.RID_CHNL = #{rid}
+	</select>
+	
+	<insert id="insertChnlAddInfoDetail" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlAddInfoDetailResDto">
+	/* LoyChannelMapper.insertChnlAddInfoDetail */
+	INSERT INTO LOY.LOY_CHNL_ADD_INF
+	(
+		  RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_CHNL
+		, REPR_NM
+		, CHARGER
+		, ZIP
+		, ADRES
+		, BUNJI
+		, LATITUDE
+		, LONGITUDE
+		, SIDO
+		, GUGUN
+		, SALES_TIME
+		, AREA
+		, TEL_NO
+		, BIZR_NO
+		, JURIR_NO
+		, FOND_DT
+		, FAX
+	)
+	VALUES
+	(
+		  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{chnlRid}
+		, #{reprNm}
+		, #{charger}
+		, #{zip}
+		, #{adres}
+		, #{bunji}
+		, #{latitude}
+		, #{longitude}
+		, #{sido}
+		, #{gugun}
+		, #{salesTime}
+		, #{area}
+		, #{telNo}
+		, #{bizrNo}
+		, #{jurirNo}
+		, #{fondDt}
+		, #{fax}	
+	)
+	</insert>
+	
+	<update id="updateChnlAddInfoDetail" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlAddInfoDetailResDto">
+	/* LoyChannelMapper.updateChnlAddInfoDetail */
+	UPDATE LOY.LOY_CHNL_ADD_INF
+	SET   REPR_NM      = #{reprNm}
+		, CHARGER      = #{charger}
+		, ZIP		   = #{zip}
+		, ADRES		   = #{adres}
+		, BUNJI		   = #{bunji}
+		, LATITUDE	   = #{latitude}
+		, LONGITUDE	   = #{longitude}
+		, SIDO		   = #{sido}
+		, GUGUN		   = #{gugun}
+		, SALES_TIME   = #{salesTime}
+		, AREA		   = #{area}
+		, TEL_NO	   = #{telNo}
+		, BIZR_NO	   = #{bizrNo}
+		, JURIR_NO	   = #{jurirNo}
+		, FOND_DT	   = #{fondDt}
+		, FAX		   = #{fax}
+		, MODIFY_BY	   = #{modifyBy}
+		, MODIFY_DATE  = getdate()
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectChnlLoyPgmList" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlLoyPgmListResDto">
+	/* LoyChannelMapper.selectChnlLoyPgmList */
+	SELECT    lp.PGM_NO			AS pgmNo
+			, lp.PGM_NM			AS pgmNm
+			, lcp.USE_YN		AS useYn
+			, lcp.PNT_ACRL_YN	AS pntAcrlYn
+			, lcp.PNT_RDM_YN	AS pntRdmYn
+			, lcp.EVT_YN		AS evtYn
+			, lcp.RID			AS rid
+			, lcp.RID_PGM		AS pgmRid
+			, ${strColumn}
+	FROM  LOY.LOY_CHNL_PGM lcp WITH (NOLOCK) 
+	LEFT JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcp.RID_PGM = lp.RID AND lp.FLAG = 1 
+	WHERE lcp.FLAG = 1
+	AND   lcp.RID_CHNL = #{chnlRid}
+	AND   ${strCondWhere}
+	AND   ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<select id="selectLoyPgmListNew" parameterType="com.icignal.loyalty.channel.dto.request.LoyProgramListReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyProgramListResDto">
+	/* LoyChannelMapper.selectLoyPgmListNew */
+	SELECT    lp.PGM_NO			AS pgmNo
+			, lp.PGM_NM			AS pgmNm
+			, lp.STAT_CD		AS pgmStat
+			, lp.RID			AS rid
+			, ${strColumn}
+	FROM  LOY.LOY_PGM lp WITH (NOLOCK) 
+	WHERE lp.FLAG = 1
+	AND   lp.STAT_CD = 'A'
+	AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<insert id="insertChnlLoyPgm" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlLoyProgramReqDto">
+	/* LoyChannelMapper.insertChnlLoyPgm */
+	INSERT INTO LOY.LOY_CHNL_PGM
+	(
+		  RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_CHNL
+		, RID_PGM
+		, PNT_ACRL_YN
+		, PNT_RDM_YN
+		, EVT_YN
+		, USE_YN
+	)
+	VALUES
+	(
+		  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{chnlRid}
+		, #{pgmRid}
+		, #{pntAcrlYn}
+		, #{pntRdmYn}
+		, #{evtYn}
+		, #{useYn}	
+	)
+	</insert>
+	
+	<insert id="insertChnlLoyPgmHist" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlLoyProgramReqDto">
+	/* LoyChannelMapper.insertChnlLoyPgmHist */
+	INSERT INTO LOY.LOY_CHNL_PGM_HIST
+	(
+		  RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_CHNL
+		, RID_PGM
+		, PNT_ACRL_YN
+		, PNT_RDM_YN
+		, EVT_YN
+		, USE_YN
+	)
+	VALUES
+	(
+		  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{chnlRid}
+		, #{pgmRid}
+		, #{pntAcrlYn}
+		, #{pntRdmYn}
+		, #{evtYn}
+		, #{useYn}	
+	)
+	</insert>
+	
+	<update id="updateChnlLoyPgm" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlLoyProgramReqDto">
+	/* LoyChannelMapper.updateChnlLoyPgm */
+	UPDATE LOY.LOY_CHNL_PGM
+	SET   RID_PGM      = #{pgmRid}
+		, PNT_ACRL_YN  = #{pntAcrlYn}
+		, PNT_RDM_YN   = #{pntRdmYn}
+		, EVT_YN	   = #{evtYn}
+		, USE_YN       = #{useYn}
+		, MODIFY_BY	   = #{modifyBy}
+		, MODIFY_DATE  = getdate()
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectLoyPgmDetailNew" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlLoyProgramReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlPgmDetailResDto">
+	/* LoyChannelMapper.selectLoyPgmDetailNew */
+	SELECT    lp.PGM_NO			AS pgmNo
+			, lp.PGM_NM			AS pgmNm
+			, lcp.USE_YN		AS useYn
+			, lcp.PNT_ACRL_YN	AS pntAcrlYn
+			, lcp.PNT_RDM_YN	AS pntRdmYn
+			, lcp.EVT_YN		AS evtYn
+			, lcp.RID			AS rid
+	FROM  LOY.LOY_CHNL_PGM lcp WITH (NOLOCK) 
+	LEFT JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcp.RID_PGM = lp.RID AND lp.FLAG = 1 
+	WHERE lcp.FLAG = 1
+	AND lcp.rid = #{rid}
+	</select>
+	
+	<select id="selectChnlSettleList" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlSettleMasterReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlSettleListResDto">
+	/* LoyChannelMapper.selectChnlSettleList */
+	SELECT    lp.PGM_NM				AS pgmNm
+			, lcs.SETTLE_TYPE_CD	AS chnlSettleTypeCd
+			, CAST(FORMAT(lcs.HQ_RATE,'g15') AS VARCHAR)   + '%'	AS hqRate
+			, CAST(FORMAT(lcs.CHNL_RATE,'g15') AS VARCHAR)	+ '%'	AS chnlRate
+			,cast(cast(lcs.SETTLE_START_DATE as date) as datetime) AS settleStartDate
+			, CONVERT(varchar,lcs.CREATE_DATE, 120)		AS createDate
+			, lcs.RID_PGM_CHNL		AS chnlPgmRid
+			, lp.RID				AS pgmRid
+			, lcs.RID				AS rid
+			, ${strColumn}
+	FROM  LOY.LOY_CHNL_SETTLE lcs WITH (NOLOCK) 
+	JOIN  LOY.LOY_CHNL_PGM lcp WITH (NOLOCK) ON lcs.RID_PGM_CHNL = lcp.RID AND lcp.FLAG = 1 
+	JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcp.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE lcs.FLAG = 1
+	AND lcp.RID_CHNL = #{chnlRid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<select id="selectChnlMbrRelList" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlMbrRelListReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlMbrRelResDto">
+	/* LoyChannelMapper.selectChnlMbrRelList */
+	SELECT    lp.PGM_NM				AS pgmNm
+			, lcm.CHNL_REL_TYPE_CD  AS chnlRelTypeCd
+			, lcm.SEQ_NO			AS seqNo
+			, lm.MBR_NO				AS mbrNo
+			, lcc.CUST_NM			AS custNm
+			, lm.MBR_STAT_CD		AS mbrStatCd
+			, lcm.RID				AS rid
+			, ${strColumn}
+	FROM  LOY.LOY_CHNL_MBR lcm WITH (NOLOCK) 
+	JOIN  LOY.LOY_CHNL lc WITH (NOLOCK) ON lc.RID = lcm.RID_CHNL AND lcm.FLAG = 1
+	JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON lm.RID = lcm.RID_MBR AND lm.FLAg = 1
+	JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lm.RID_PGM = lp.RID AND lp.FLAG = 1
+	JOIN LOY.LOY_CUST lcc WITH (NOLOCK) ON lcc.RID = lm.RID_CUST AND lcc.FLAG = 1
+	WHERE lc.FLAG = 1
+	AND lcm.RID_CHNL = #{rid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<select id="selectChnlLoyPgmListNew" parameterType="com.icignal.loyalty.channel.dto.request.LoyProgramListReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlLoyPgmListResDto">
+	/* LoyChannelMapper.selectChnlLoyPgmListNew */
+	SELECT    lp.PGM_NO			AS pgmNo
+			, lp.PGM_NM			AS pgmNm
+			, lcp.USE_YN		AS useYn
+			, lcp.PNT_ACRL_YN	AS pntAcrlYn
+			, lcp.PNT_RDM_YN	AS pntRdmYn
+			, lcp.EVT_YN		AS evtYn
+			, lcp.RID			AS rid
+			, lcp.RID_PGM		AS pgmRid
+			, ${strColumn}
+	FROM  LOY.LOY_CHNL_PGM lcp WITH (NOLOCK) 
+	JOIN  LOY.LOY_PGM lp WITH (NOLOCK) ON lcp.RID_PGM = lp.RID AND lp.FLAG = 1 
+	WHERE lcp.FLAG = 1
+	AND   lcp.RID_CHNL = #{chnlRid}
+	AND   ${strCondWhere}
+	AND   ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<insert id="insertChnlSettle" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlSettleReqDto">
+	/* LoyChannelMapper.insertChnlSettle */
+	INSERT INTO LOY.LOY_CHNL_SETTLE
+	(
+		  RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_PGM_CHNL
+		, SETTLE_TYPE_CD
+		, HQ_RATE
+		, CHNL_RATE
+		, SETTLE_START_DATE
+	)
+	VALUES
+	(
+		  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{pgmChnlRid}
+		, #{settleTypeCd}
+		, #{hqRate}
+		, #{chnlRate}
+		, cast(cast(#{settleStartDate} as date) as datetime)
+	)
+	</insert>
+	
+	<insert id="insertChnlSettleHist" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlSettleReqDto">
+	/* LoyChannelMapper.insertChnlSettleHist */
+	INSERT INTO LOY.LOY_CHNL_SETTLE_HIST
+	(
+		  RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, RID_CHNL
+		, RID_PGM
+		, SETTLE_TYPE_CD
+		, HQ_RATE
+		, CHNL_RATE
+		, SETTLE_START_DATE
+	)
+	VALUES
+	(
+		  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{chnlRid}
+		, #{pgmRid}
+		, #{settleTypeCd}
+		, #{hqRate}
+		, #{chnlRate}
+		, cast(cast(#{settleStartDate} as date) as datetime)
+	)
+	</insert>
+	
+	<update id="updateChnlSettle" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlSettleReqDto">
+	/* LoyChannelMapper.updateChnlSettle */
+	UPDATE LOY.LOY_CHNL_SETTLE
+	SET   RID_PGM_CHNL       = #{pgmChnlRid}
+		, SETTLE_TYPE_CD  	 = #{settleTypeCd}
+		, HQ_RATE   		 = #{hqRate}
+		, CHNL_RATE	   		 = #{chnlRate}
+		, SETTLE_START_DATE  = cast(cast(#{settleStartDate} as date) as datetime)
+		, MODIFY_BY	   		 = #{modifyBy}
+		, MODIFY_DATE  		 = getdate()
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectLoyChnlPgmDetailNew" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlLoyProgramReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlSettleResDto">
+	/* LoyChannelMapper.selectLoyChnlPgmDetailNew */
+	SELECT    lp.PGM_NO				AS pgmNo
+			, lp.PGM_NM				AS pgmNm
+			, lcs.RID				As rid
+			, lcs.RID_PGM_CHNL		AS pgmChnlRid
+			, lcs.SETTLE_TYPE_CD	AS settleTypeCD
+			, lcs.HQ_RATE			AS hqRate
+			, lcs.CHNL_RATE			AS chnlRate
+			, lcs.SETTLE_START_DATE AS settleStartDate
+	FROM   LOY.LOY_CHNL_SETTLE lcs WITH (NOLOCK) 
+	JOIN   LOY.LOY_CHNL_PGM lcp WITH (NOLOCK) ON lcs.RID_PGM_CHNL = lcp.RID AND lcp.FLAG = 1
+	JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcp.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE lcs.RID = #{rid}
+	</select>
+	
+	<select id="selectChnlLoyPgmHist" parameterType="com.icignal.loyalty.channel.dto.request.LoyProgramListReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlLoyPgmListResDto">
+	/* LoyChannelMapper.selectChnlLoyPgmHist */
+	SELECT    lp.PGM_NO			AS pgmNo
+			, lp.PGM_NM			AS pgmNm
+			, lcph.USE_YN		AS useYn
+			, lcph.PNT_ACRL_YN	AS pntAcrlYn
+			, lcph.PNT_RDM_YN	AS pntRdmYn
+			, lcph.EVT_YN		AS evtYn
+			, lcph.RID			AS rid
+			, lcph.RID_PGM		AS pgmRid
+			, ${strColumn}
+	FROM  LOY.LOY_CHNL_PGM_HIST lcph WITH (NOLOCK) 
+	LEFT JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcph.RID_PGM = lp.RID AND lp.FLAG = 1 
+	WHERE lcph.FLAG = 1
+	AND   lcph.RID_CHNL = #{chnlRid}
+	AND   lcph.RID_PGM  = #{pgmRid}
+	AND   ${strCondWhere}
+	AND   ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+
+	<select id="selectChnlSettleHist" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlSettleMasterReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyChnlSettleListResDto">
+	/* LoyChannelMapper.selectChnlSettleHist */
+	SELECT    lp.PGM_NM				AS pgmNm
+			, lcsh.SETTLE_TYPE_CD	AS chnlSettleTypeCd
+			, cast(FORMAT(lcsh.HQ_RATE,'g15') AS varchar)   + '%'	AS hqRate
+			, cast(FORMAT(lcsh.CHNL_RATE,'g15') AS varchar)	+ '%'	AS chnlRate
+			, lcsh.SETTLE_START_DATE	AS settleStartDate
+			, CONVERT(varchar,lcsh.CREATE_DATE, 120)		AS createDate
+			, lcsh.RID				AS rid
+			, ${strColumn}
+	FROM  LOY.LOY_CHNL_SETTLE_HIST lcsh WITH (NOLOCK) 
+	LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcsh.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE lcsh.FLAG = 1
+	AND lcsh.RID_CHNL = #{chnlRid}
+	AND lcsh.RID_PGM  = #{pgmRid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<update id="deleteChnlChannel" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlReqDto">
+	/* LoyChannelMapper.deleteChnlChannel */
+	UPDATE LOY.LOY_CHNL
+	SET       MODIFY_DATE = getdate()
+			, MODIFY_BY	  = #{modifyBy}
+			, FLAG        = 0
+	WHERE  RID = #{rid}
+	</update>
+	
+	<delete id="deleteChnlLoyPgm" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlReqDto">
+	/* LoyChannelMapper.deleteChnlLoyPgm */
+	DELETE FROM LOY.LOY_CHNL_PGM
+	WHERE RID = #{rid}
+	</delete>
+	
+	<delete id="deleteChnlSettle" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlReqDto">
+	/* LoyChannelMapper.deleteChnlSettle */
+	DELETE FROM LOY.LOY_CHNL_SETTLE
+	WHERE RID = #{rid}
+	</delete>
+	
+</mapper>

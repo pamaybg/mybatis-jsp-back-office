@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.systemmanagement.pushmsg.mapper.SystemPushMsgMgtMapper">
+
+
+	<select id="getPushMsgList" parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgDetailReqDto"
+											resultType="com.icignal.systemmanagement.pushmsg.dto.response.SystemPushMsgListResDto">
+	/* SystemPushMsgMgtMapper.getPushMsgList */
+		select ${strColumn},
+			t1.*
+		from (
+			select
+				case lpm.push_lang when N'ko' then N'국문' when N'en' then N'영문' else N'중문' end
+				as pushLang,
+				lpm.rid as rid,
+				lpm.title as pushTitle,
+				lpm.message as pushMessage,
+				e.name as createBy,
+				convert(varchar, lpm.create_date, 120) as createDate,
+				convert(varchar, lpm.send_date, 120) as sendDate,
+				<!-- stcd.mark_name as sendType, -->
+				lpm.send_type as sendTypeCdNm,
+				<!-- tmtcd.mark_name as targetMbrType, -->
+				lpm.target_mbr_type as targetMbrTypeCdNm,
+				<!-- sscd.mark_name as pushStatus, -->
+				lpm.status as pushStatusCd
+			from loy.loy_push_msg lpm with(nolock)
+				left join com.crm_user us with(nolock) on lpm.create_by = us.rid
+				left outer join com.employee e with(nolock) on e.id = us.id_employee
+			<!-- left join com.comm_code stcd on stcd.code_name = lpm.send_type and stcd.group_code = 'LOY_PUSH_SEND_TYPE' and stcd.lang = #{lang}
+			left join com.comm_code tmtcd on tmtcd.code_name = lpm.target_mbr_type and tmtcd.group_code = 'LOY_PUSH_TARGET_MBR_TYPE'	and tmtcd.lang = #{lang}
+			left join com.comm_code sscd on sscd.code_name = lpm.status and sscd.group_code = 'LOY_PUSH_SEND_STATUS' and sscd.lang = #{lang} -->
+			where lpm.flag = 1
+				and lpm.send_type != 'ra'
+		) t1
+		where ${strCondWhere}
+			and ${strWhere}
+		order by ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<insert id="insertPushMsg" parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgInsertReqDto">
+		/* PushMsgMgtMapper.insertPushMsg */
+		insert into loy.loy_push_msg
+		(
+			rid
+			,send_type
+			,send_date
+			,target_mbr_type
+			,title
+			,message
+			,status
+			,flag
+			,create_date
+			,create_by
+			,modify_date
+			,modify_by
+			,push_lang
+		)
+		values(
+			#{insertPushMsgRid}
+			,#{pushType}
+			,case when #{pushType} = 'rv' then convert(datetime, #{sendDate})
+			else getdate()
+			end
+			,#{pushTarget}
+			,#{pushTitle}
+			,#{pushContent}
+			,'BEFORE'
+			,1
+			,getdate()
+			,#{createBy}
+			,getdate()
+			,#{modifyBy}
+			,#{pushLang}
+		)
+	</insert>
+
+	<update id="updatePushMsg" parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgInsertReqDto">
+	/* PushMsgMgtMapper.updatePushMsg */
+		update loy.loy_push_msg
+		set modify_date = getdate()
+			,modify_by = #{modifyBy}
+			,title = #{pushTitle}
+			,message = #{pushContent}
+			,send_type = #{pushType}
+			,send_date = case when #{pushType} = 'rt' then getdate() when #{pushType} = 'rv'
+			then convert(datetime, #{sendDate}) end
+			,target_mbr_type = #{pushTarget}
+			,push_lang = #{pushLang}
+		where rid = #{pushMsgId}
+			and ${strSVCType}
+	</update>
+
+	<update id="updatePushMsgLog" 	parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgInsertReqDto">
+		/* PushMsgMgtMapper.updatePushMsgLog */
+		update loy.loy_push_msg_list
+		set modify_date = getdate()
+			,modify_by = #{modifyBy}
+			,title = #{pushTitle}
+			,message = #{pushContent}
+			,send_type = #{pushType}
+			,send_date = case when #{pushType} = 'rt' then getdate() when #{pushType} = 'rv'
+			then convert(datetime, #{sendDate}) end
+			,target_mbr_type = #{pushTarget}
+			,push_lang = #{pushLang}
+		where rid = #{pushMsgId}
+		and ${strSVCType}
+	</update>
+
+
+	<resultMap id="pushMsgDetailMap" type="com.icignal.systemmanagement.pushmsg.dto.response.SystemPushMsgDetailResDto">
+		<result property="pushTitle" column="pushTitle" />
+		<result property="pushContent" column="pushContent" />
+		<result property="pushLang" column="pushLang" />
+		<result property="pushType" column="pushType" />
+		<result property="pushTarget" column="pushTarget" />
+		<result property="sendDate" column="sendDate" />
+		<result property="sendTime" column="sendTime" />
+		<result property="PushStatus" column="PushStatus" />
+		<collection property="images"
+			javaType="java.util.ArrayList"
+			column="{parentId=pushMsgId, category=imageType, imageLang=imageLang}"
+			select="com.icignal.common.base.mapper.CommonMapper.multiSelectImages" />
+		<collection property="summary" javaType="java.lang.String"
+			ofType="java.lang.String" column="pushMsgId"
+			select="getPushMsgSummary" />
+	</resultMap>
+	<select id="getPushMsgDetail" parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgDetailReqDto" 
+												resultMap="pushMsgDetailMap">
+		/* PushMsgMgtMapper.getPushMsgDetail */
+		select lpm.title as
+			pushTitle
+			,lpm.message as pushContent
+			,lpm.push_lang as pushLang
+			,lpm.send_type as pushType
+			,lpm.target_mbr_type as pushTarget
+			,convert(varchar(10), lpm.send_date, 120) as sendDate
+			,RIGHT(convert(varchar(16), lpm.send_date, 120), 5) as sendTime
+			,'PUSH_MESSAGE' as imageType
+			,'com' as schemas
+			,#{pushMsgId} as pushMsgId
+			,lpm.status as PushStatus
+			,'' as imageLang
+		from loy.loy_push_msg lpm
+		where ${strSVCType}
+			and lpm.rid = #{pushMsgId}
+	</select>
+	
+	<select id="getPushMsgSummary" parameterType="java.lang.String" resultType="java.lang.String">
+		select
+			concat(
+				convert(varchar,  (select count(*) from loy.loy_push_mbr where push_rid = #{pushMsgId}) )
+				,
+				'/' +
+				convert(varchar, (select count(*) from LOGS.loy_push_mbr_log where push_rid = #{pushMsgId}) )
+			) as pushMsgId
+	</select>
+
+	<update id="getPushMsgCancel"	parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgDetailReqDto">
+		/* PushMsgMgtMapper.getPushMsgCancel */
+		update loy.loy_push_msg
+		set status = 'CANCLE'
+			,modify_date = getdate()
+			,modify_by = #{modifyBy}
+		where ${strSVCType}
+			and rid = #{pushMsgId}
+	</update>
+
+	<update id="getPushMsgLogCancel" parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgDetailReqDto">
+	/* PushMsgMgtMapper.getPushMsgLogCancel */
+		update loy.loy_push_msg
+		set status = 'CANCLE'
+			,modify_date = getdate()
+			,modify_by = #{modifyBy}
+		where ${strSVCType}
+			and rid = #{pushMsgId}
+	</update>
+
+	<insert id="insertPushMsgLog"
+		parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgInsertReqDto" useGeneratedKeys="false">
+		/* PushMsgMgtMapper.insertPushMsgLog */
+		insert into loy.loy_push_msg_list
+		(
+			rid
+			,send_type
+			,send_date
+			,target_mbr_type
+			,title
+			,message
+			,status
+			,flag
+			,create_date
+			,create_by
+			,modify_date
+			,modify_by
+			,push_lang
+		)
+		values
+		(
+			#{insertPushMsgLogRid}
+			,#{pushType}
+			,(	select
+				case when #{pushType} = 'rv' then convert(datetime, #{sendDate})
+				else getdate()
+				end
+			)
+			,#{pushTarget}
+			,#{pushTitle}
+			,#{pushContent}
+			,'BEFORE'
+			,1
+			,getdate()
+			,#{createBy}
+			,getdate()
+			,#{modifyBy}
+			,#{pushLang}
+		)
+	</insert>
+
+
+	<update id="insertPushMbr" parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMsgInsertReqDto">
+	/* PushMsgMgtMapper.insertPushMbr */
+		insert into loy.loy_push_mbr
+		(
+			rid
+			,push_rid
+			,mbr_rid
+			,send_date
+			,flag
+			,mod_num
+			,create_date
+			,create_by
+			,modify_date
+			,modify_by
+		)
+		select
+			#{insertPushMbrRid}
+			, #{pushMsgId} as push_rid
+			, m.rid as mbr_rid
+			, case when #{pushType} = 'rv'
+			then convert(datetime, #{sendDate})
+			else getdate()
+			end as send_date
+			, 1 as flag
+			, 0 as mod_num
+			, getdate() as create_date
+			, #{createBy} as create_by
+			, getdate() as modify_date
+			, #{modifyBy} as modify_by
+		from loy.loy_mbr m
+		join loy.loy_cust c on m.rid_cust = c.rid
+		where 1=1
+		<if test="pushType!='te'">
+			<if test="pushTarget=='AGREE'">
+				and (m.chnl_agre_push = 'Y' and m.mkt_agre_use = 'Y')
+			</if>
+			<if test="natnCd=='US'">
+				<!-- and c.natn_cd not in ('KR', 'CN') -->
+			</if>
+			<if test="natnCd!='US'">
+				<!-- and c.natn_cd = #{natnCd} -->
+			</if>
+		</if>
+		<if test="pushType=='te'">
+			<foreach collection="pushMembers" item="item" index="index"
+				separator="," open="and m.rid in (" close=")">
+				#{item}
+			</foreach>
+		</if>
+	</update>
+
+	
+	<!-- /**************************************
+	-	관련 파일				: SystemPushMsgMapper.java(selectPushMemberList)
+	============================================
+	-	제목					: 회원 목록 조회
+	-	설명					: 푸시 발송 대상 선정을 위한 회원 목록을 조회한다.
+	-	결과형태				: 복수
+	============================================
+	-	입력
+	-	출력
+		rid     		: LOY.LOY_MBR RID
+		mbrNo   		: 회원 번호
+		custNm  		: 고객 명
+		hhpNo   		: 핸드폰 번호
+		webId   		: 회원 로그인 ID
+		hasToken		: 푸시토큰 유무
+	============================================
+	-	변경일			작성자			변경내용
+	============================================
+	-	2017. 07. 31.	km1.park		신규 생성
+	============================================
+	********************************************/ -->
+	<select id="selectPushMemberList" parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemPushMemberListReqDto" 
+													resultType="com.icignal.systemmanagement.pushmsg.dto.response.SystemPushMemberListResDto">
+	/* PushMsgMgtMapper.selectPushMemberList */
+		SELECT
+			MBR.RID as rid
+			, MBR.MBR_NO as mbrNo
+			<!-- , SECU.fn_getDecrypt(#{ciperKey} ,MBR.CUST_NM, 'CUST_NM') as custNm
+			, SECU.fn_getDecrypt(#{ciperKey} ,MBR.HHP_NO, 'PHONE_NUM') as hhpNo -->
+			, MBR.CUST_NM as custNm
+			, MBR.HHP_NO as hhpNo
+			, MBR.WEB_ID as webId
+			<!-- , SECU.fn_getDecrypt(#{ciperKey} ,MBR.EMAIL_ADDR, 'EML') as emailAddr -->
+			, MBR.EMAIL_ADDR as emailAddr
+			, ${strColumn}
+		FROM (
+		/* alias 구분을 위해 한번 감싸서 조회 */
+				SELECT
+					MBR.RID
+					, MBR.MBR_NO
+					, CST.CUST_NM
+					, MBR.HHP_NO
+					, MBR.WEB_ID
+					, MBR.EMAIL_ADDR
+					, CST.CREATE_DATE
+				FROM LOY.LOY_CUST CST with(nolock)
+					LEFT JOIN LOY.LOY_MBR MBR with(nolock) ON CST.RID = MBR.RID_CUST
+					JOIN LOY.LOY_MEM_PUSH PMBR with(nolock) ON MBR.RID = PMBR.PARTY_ID
+					JOIN LOY.LOY_PUSH PSH with(nolock) ON PMBR.PUSH_ID = PSH.RID AND TRIM(PSH.REG_ID) IS NOT NULL
+				WHERE MBR.MBR_NO IS NOT NULL
+					AND CST.FLAG = 1
+				<!-- AND CST.ACCNT_ID = #{accountId} -->
+		) MBR
+		WHERE ${strCondWhere}
+			AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: SystemPushMsgMapper.java(selectTestPushResultList)
+	============================================
+	-	제목					: 테스트 푸시 발송 결과 조회
+	-	설명					: 해당 테스트 푸시 메시지의 발송 대상자들의 발송 상태를 조회한다.
+	-	결과형태				: 복수
+	============================================
+	-	입력
+		pushMsgId			: 푸시 메시지 ID(LOY.LOY_PUSH_MSG_LIST.RID)
+	-	출력
+		custNm				: 고객 명
+		hhpNo				: 핸드폰 번호
+		webId				: 회원 로그인 ID
+		mbrNo				: 회원 번호
+		sendStatus			: 푸시 발송 상태
+		rid					: loy.loy_mbr RID
+	============================================
+	-	변경일			작성자			변경내용
+	============================================
+	-	2017. 07. 31.	km1.park		신규 생성
+	============================================
+	********************************************/ -->
+	<select id="getTestPushResultList"
+													parameterType="com.icignal.systemmanagement.pushmsg.dto.request.SystemTestPushResultListReqDto"
+													resultType="com.icignal.systemmanagement.pushmsg.dto.response.SystemTestPushResultListResDto">
+		/* SystemPushMsgMgtMapper.getTestPushResultList */
+		SELECT
+			MBRV.custNm as custNm
+			, MBRV.hhpNo as hhpNo
+			, MBRV.webId as webId
+			, MBRV.mbrNo as mbrNo
+			, MBRV.emailAddr as emailAddr
+			, MBRV.sendStatus as sendStatus
+			, MBRV.rid as rid
+			, ${strColumn}
+		FROM
+		(
+		SELECT
+			<!-- SECU.fn_getDecrypt(#{ciperKey} ,CUST.CUST_NM, 'CUST_NM') as custNm -->
+			CUST.CUST_NM as custNm
+			<!-- , SECU.fn_getDecrypt(#{ciperKey} ,MBR.HHP_NO, 'PHONE_NUM') as hhpNo -->
+			,  MBR.HHP_NO as hhpNo
+			, MBR.WEB_ID as webId
+			, MBR.MBR_NO as mbrNo
+			<!-- , SECU.fn_getDecrypt(#{ciperKey} ,MBR.EMAIL_ADDR, 'EML') as emailAddr -->
+			, MBR.EMAIL_ADDR as emailAddr
+			, N'발송전' as sendStatus
+			, MBR.RID as rid
+		FROM LOY.LOY_MBR MBR with(nolock)
+			JOIN LOY.LOY_CUST CUST with(nolock) ON CUST.RID = MBR.RID_CUST
+			JOIN LOY.LOY_PUSH_MBR PM with(nolock) ON PM.MBR_RID = MBR.RID AND PM.PUSH_RID = #{pushMsgId}
+
+		UNION ALL
+
+		SELECT
+			<!-- SECU.fn_getDecrypt(#{ciperKey} ,CUST.CUST_NM, 'CUST_NM') as custNm -->
+			CUST.CUST_NM as custNm
+			<!-- , SECU.fn_getDecrypt(#{ciperKey} ,MBR.HHP_NO, 'PHONE_NUM') as hhpNo -->
+			, MBR.HHP_NO as hhpNo
+			, MBR.WEB_ID as webId
+			, MBR.MBR_NO as mbrNo
+			<!-- , SECU.fn_getDecrypt(#{ciperKey} ,MBR.EMAIL_ADDR, 'EML') as emailAddr -->
+			, MBR.EMAIL_ADDR as emailAddr
+			, CASE PMSGL.RESULT_CODE
+				WHEN 0 THEN N'발송실패(API 오류)'
+				WHEN 1 THEN N'발송성공'
+				WHEN 2 THEN N'발송실패(정보누락 - 푸시토큰 등)'
+				END as sendStatus
+				, MBR.RID as rid
+		FROM LOGS.LOY_PUSH_MSG_LOG PMSGL with(nolock)
+			JOIN LOY.LOY_MBR MBR with(nolock) ON MBR.RID = PMSGL.MBR_RID
+			JOIN LOY.LOY_CUST CUST with(nolock) ON CUST.RID = MBR.RID_CUST
+		WHERE PMSGL.PUSH_MSG_RID = #{pushMsgId}
+		) MBRV
+		WHERE ${strCondWhere}
+			AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+</mapper> 

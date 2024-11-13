@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.responseinfo.mapper.SystemResponseInfoMapper">
+
+<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (getResponseInfoList)
+    ============================================
+    -   제목                    : 반응정보 목록 조회		
+    -   설명                    : 반응정보 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력		   :	account_id (회사명)
+    -	출력		   :	id(반응정보 id),
+    					dbSeq(노출순서),
+    					parRspnsCd(상위반응코드),
+    					camRspnsCd(반응코드),
+    					camRspnsNm(반응명),
+    					spcfChnlRspnsCd(적용채널),
+    					camRspnsDesc(설명)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->
+	
+	<select id="selectResponseInfoList" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemResponseInfoReqDto" resultType="com.icignal.systemmanagement.responseinfo.dto.response.SystemResponseInfoResDto">
+	/* SystemResponseInfoMapper.selectResponseInfoList */
+		select
+			mrim.id,
+			mrim.dp_seq as dpSeq,
+		    tmrim.cam_rspns_nm as parRspnsCd,
+		    mrim.cam_rspns_cd as camRspnsCd,
+		    mrim.cam_rspns_nm as camRspnsNm,
+		    mrim.spcf_chnl_rspns_cd as spcfChnlRspnsTypeCd,
+		    mrim.cam_rspns_desc as camRspnsDesc,
+		    ${strColumn}
+		from mkt.mkt_rspns_info_mst mrim
+			left outer join mkt.mkt_rspns_info_mst tmrim on mrim.par_rspns_cd = tmrim.id <!-- and tmrim.country = #{country} --> and tmrim.flag = 1  
+		where ${strCondWhere}
+			and ${strWhere}
+			and ${strSVCType}
+			<!-- and mrim.accnt_id = #{accountId} -->
+	    	and mrim.flag = 1
+	    order by ${strOrderby}                                                  
+  		${strEndPaging}		
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (getResponseInfoDetail)
+    ============================================
+    -   제목                    : 반응정보 목록 세부사항		
+    -   설명                    : 반응정보 목록 세부사향
+    -   결과형태              : 단일
+    ============================================
+    -   입력		   :	account_id (회사명), id (반응정보 id)
+    -	출력		   :	dbSeq(노출순서),
+    					parRspnsCd(상위반응코드),
+    					parRspnsName(상위반응코드명),
+    					camRspnsCd(반응코드),
+    					camRspnsNm(반응명),
+    					spcfChnlRspnsCd(적용채널),
+    					camRspnsDesc(설명)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->	
+	
+	
+	<select id="selectResponseInfoDetail" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemGetResponseInfoDetailReqDto" resultType="com.icignal.systemmanagement.responseinfo.dto.response.SystemGetResponseInfoDetailResDto">
+		/* SystemResponseInfoMapper.selectResponseInfoDetail */
+		select 
+			mrim.id,
+			SUBSTR(mrim.dp_seq,3) as dpSeq,
+		    mrim.par_rspns_cd as parRspnsCd,
+		    tmrim.cam_rspns_nm as parRspnsName,
+		    mrim.cam_rspns_cd as camRspnsCd,
+		    mrim.cam_rspns_nm as camRspnsNm,
+		    mrim.spcf_chnl_rspns_cd as spcfChnlRspnsCd,
+		    mrim.cam_rspns_desc as camRspnsDesc,
+		    TO_CHAR(mrim.create_date,'YYYY-MM-DD') as createDate,
+		    e1.name as createBy,
+		    TO_CHAR(mrim.modify_date,'YYYY-MM-DD') as modifyDate,
+		    e2.name as modifyBy
+		from mkt.mkt_rspns_info_mst mrim
+			<!-- left outer join com.comm_code c1 on mrim.spcf_chnl_rspns_cd = c1.code_name and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD' and c1.flag = 1 and c1.lang = #{lang} and c1.country = #{country}  -->
+			join ${comSchemas}.employee e1 on mrim.create_by = e1.id and e1.flag = 1 <!-- and e1.country = #{country} -->
+			join ${comSchemas}.employee e2 on mrim.modify_by = e2.id and e2.flag = 1 <!-- and e2.country = #{country} -->
+			left outer join mkt.mkt_rspns_info_mst tmrim on mrim.par_rspns_cd = tmrim.id and tmrim.flag = 1 <!-- and tmrim.country = #{country} -->  
+		where ${strSVCType}
+			and mrim.id = #{id}
+			<!-- and mrim.accnt_id = #{accountId} -->
+	    	and mrim.flag = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java ("checkDuplicationSeq")
+    ============================================
+    -   제목                    : 노출 순서 중복 체크		
+    -   설명                    : 노출 순서 중복 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력		   :	dpSeq(노출 순서)
+    -	출력		   :	1,0(중복,중복아님)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->	
+	<select id="selectCheckDuplicationSeq" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemCheckDuplicationReqDto" resultType="java.lang.String">
+		/* SystemResponseInfoMapper.checkDuplicationSeq */
+		select count(*)
+		from mkt.mkt_rspns_info_mst
+		where ${strSVCType}
+		and dp_seq = #{dpSeq}
+		<!-- and accnt_id = #{accountId} -->
+		and flag = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (checkDuplicationCode)
+    ============================================
+    -   제목                    : 반응정보명 중복 체크		
+    -   설명                    : 반응정보명 중복 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력		   :	camRspnsCd(반응정보 코드)
+    -	출력		   :	1,0(중복,중복아님)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->	
+	<select id="selectCheckDuplicationCode" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemCheckDuplicationReqDto" resultType="java.lang.String">
+		/* SystemResponseInfoMapper.checkDuplicationCode */
+		select count(*)
+		from mkt.mkt_rspns_info_mst
+		where ${strSVCType}
+		and cam_rspns_cd = #{camRspnsCd}
+		<!-- and accnt_id = #{accountId} -->
+		and flag = 1		
+	</select>	
+	
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (checkDuplicationName)
+    ============================================
+    -   제목                    : 반응정보명 중복 체크		
+    -   설명                    : 반응정보명 중복 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력		   :	camRspnsNm(반응정보명)
+    -	출력		   :	1,0(중복,중복아님)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->	
+	<select id="selectCheckDuplicationName" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemCheckDuplicationReqDto" resultType="java.lang.String">
+		/* SystemResponseInfoMapper.checkDuplicationName */
+		select count(*)
+		from mkt.mkt_rspns_info_mst
+		where ${strSVCType}
+		and cam_rspns_nm = #{camRspnsNm}
+		<!-- and accnt_id = #{accountId} -->
+		and flag = 1		
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (insertResponseInfo)
+    ============================================
+    -   제목                    : 반응정보 추가		
+    -   설명                    : 반응정보 추가
+    -   결과형태              : 단일
+    ============================================
+    -   입력		   :	dbSeq(노출순서),
+    					parRspnsCd(상위반응코드),
+    					camRspnsCd(반응코드),
+    					camRspnsNm(반응명),
+    					spcfChnlRspnsCd(적용채널),
+    					camRspnsDesc(설명)
+    -	출력		   :	1,0(성공,실패)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->	
+	
+	
+	<insert id="insertResponseInfo" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemSetResponseInfoReqDto">
+		/* SystemResponseInfoMapper.insertResponseInfo */
+		insert into mkt.mkt_rspns_info_mst
+		( 
+			id,
+			dp_seq,
+		    par_rspns_cd,
+		    cam_rspns_cd,
+		    cam_rspns_nm,
+		    spcf_chnl_rspns_cd,
+		    cam_rspns_desc,
+		    create_date,
+		    create_by,
+		    modify_date,
+		    modify_by,
+			flag
+			<!-- accnt_id, -->
+			<!-- app_service_type, -->
+			<!-- country -->
+		)
+		values
+		(
+			#{id},
+			#{dpSeq},
+		    #{parRspnsCd},
+		    #{camRspnsCd},
+		    #{camRspnsNm},
+		    #{spcfChnlRspnsCd},
+		    #{camRspnsDesc},
+		    SYSDATE,
+		    #{createBy},
+		    SYSDATE,
+		    #{modifyBy},
+			1
+			<!-- #{accountId}, -->
+			<!-- #{appServiceId}, -->
+			<!-- #{country} -->
+		)		
+	<selectKey keyProperty="" resultType="java.lang.String">
+			select id from mkt.mkt_rspns_info_mst where id = #{id}
+	</selectKey>
+	
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (updateResponseInfo)
+    ============================================
+    -   제목                    : 반응정보 수정		
+    -   설명                    : 반응정보 수정
+    -   결과형태              : 단일
+    ============================================
+    -   입력		   :	id(반응정보 id)
+    					dbSeq(노출순서),
+    					parRspnsCd(상위반응코드),
+    					camRspnsCd(반응코드),
+    					camRspnsNm(반응명),
+    					spcfChnlRspnsCd(적용채널),
+    					camRspnsDesc(설명)
+    -	출력		   :	1,0(성공,실패)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->	
+	
+	<update id="updateResponseInfo" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemModifyResponseInfoReqDto">
+		update mkt.mkt_rspns_info_mst 
+		set 
+			dp_seq = #{dpSeq},
+		    par_rspns_cd = #{parRspnsCd},
+		    cam_rspns_cd = #{camRspnsCd},
+		    cam_rspns_nm = #{camRspnsNm},
+		    spcf_chnl_Rspns_cd = #{spcfChnlRspnsCd},
+		    cam_rspns_desc = #{camRspnsDesc},
+		    modify_date = SYSDATE,
+		    modify_by = #{modifyBy}
+		where ${strSVCType}
+			and id = #{id}
+			<!-- and accnt_id = #{accountId} -->
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (deleteAboutParId)
+    ============================================
+    -   제목                    : 하위반응정보 삭제		
+    -   설명                    : 상위 반응정보가 삭제되어있을때 하위 반응정보도 삭제.
+    -   결과형태              : 단일
+    ============================================
+    -   입력		   :	par_rspns_cd(상위반응정보 id)
+    -	출력		   :	1,0(성공,실패)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->		
+	<update id="deleteAboutParId" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemDelResponseInfoReqDto">
+		update mkt.mkt_rspns_info_mst 
+		set 
+		    modify_date = SYSDATE,
+		    modify_by = #{modifyBy},
+		    flag = flag + 1
+		where ${strSVCType}
+			and par_rspns_cd = #{id}
+			<!-- and accnt_id = #{accountId} -->
+	</update>	
+	
+	<!-- /**************************************
+    -   관련 파일             : MKTResponseInfoDAO.java (deleteResponseInfo)
+    ============================================
+    -   제목                    : 반응정보 삭제		
+    -   설명                    : 반응정보 삭제
+    -   결과형태              : 단일
+    ============================================
+    -   입력		   :	id(반응정보 id)
+    -	출력		   :	1,0(성공,실패)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2016.01.27
+    ***************************************/ -->		
+	<update id="deleteResponseInfo" parameterType="com.icignal.systemmanagement.responseinfo.dto.request.SystemDelResponseInfoReqDto">
+		update mkt.mkt_rspns_info_mst 
+		set 
+		    modify_date = SYSDATE,
+		    modify_by = #{modifyBy},
+		    flag = flag + 1
+		where ${strSVCType}
+			and id = #{id}
+			<!-- and accnt_id = #{accountId} -->
+	</update>
+	
+</mapper>

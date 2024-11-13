@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:52:45 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.auth.mapper.AuthMapper">
+<!--comm_code lang=ko만 존재 다국어 설정시 다국어 필요 : 추후 수정 필요-->
+	<!-- 권한그룹 목록 -->
+	<select id="selectAuthGroupList" resultType="com.icignal.auth.dto.response.AuthorityGroupListResDto">
+		/* AuthMapper.selectAuthGroupList */
+		select t1.id as id
+			 , t1.aut_group_nm as GroupName
+		     , t1.aut_group_desc as GroupDesc
+		     , c1.code_name as GroupStatus
+		     , t1.type
+		from com.auth_group t1
+		join com.auth_user_rel t2 		on t2.flag = 1 and t2.aut_group_id = t1.id
+		left outer join com.comm_code c1 on c1.flag = 1 and c1.lang = 'ko' and c1.code_name = t1.aut_group_status and c1.group_code = 'AUTH_GROUP_ACTIVATION_TYPE'
+		where 1=1
+		and c1.code_name = 'ACTIVATION'
+		and t2.rid_user = #{ridUser}
+	</select>
+	
+	<!-- 권한 목록 -->
+	<select id="selectAuthList" resultType="com.icignal.auth.dto.response.AuthorityListResDto">
+		/* AuthMapper.selectAuthList */
+		select t4.id as id
+			 , t4.aut_num as authNo
+		     , t4.aut_nm as authName
+			 , t4.aut_desc as authDesc
+		from com.auth_group t1
+		join com.auth_user_rel t2 on t2.flag = 1 and t2.aut_group_id = t1.id
+		left outer join com.comm_code c1 on c1.flag = 1 and c1.lang = 'ko' and c1.code_name = t1.aut_group_status and c1.group_code = 'AUTH_GROUP_ACTIVATION_TYPE'
+		join com.auth_group_rel t3 on t3.flag = 1 and t3.aut_group_id = t1.id
+		join com.auth t4 on t4.flag = 1 and t4.id = t3.aut_id
+		left outer join com.comm_code c2 on c2.flag = 1 and c2.lang = 'ko' and c2.code_name = t4.data_type_cd and c2.group_code = 'DATA_TYPE_CD'
+		where 1=1
+		and c1.code_name = 'ACTIVATION'
+		and t2.rid_user = #{ridUser}
+		<if test="authGroupId != null and authGroupId != ''">
+		and t1.id = #{authGroupId} 
+		</if>
+	</select>
+	
+	<!-- 데이터 권한 목록 -->
+	<select id="selectAuthDataList" resultType="com.icignal.auth.dto.response.AuthorityDataListResDto">
+		/* AuthMapper.selectAuthDataList */
+		select distinct
+		     t6.rid as accountId
+		     , t6.div_nm as accountName
+		     , case min(c2.seq) when 1 then 'ALL'
+								when 2 then 'TEAM'
+								when 3 then 'MY_TEAM'
+								when 4 then 'MY'
+								else 'NA'
+			   end as dataTypeCd
+		from com.auth_group t1
+		join com.auth_user_rel t2 on t2.flag = 1 and t2.aut_group_id = t1.id
+		left outer join com.comm_code c1 on c1.flag = 1 and c1.lang = 'ko' and c1.code_name = t1.aut_group_status and c1.group_code = 'AUTH_GROUP_ACTIVATION_TYPE'
+		join com.auth_group_rel t3 on t3.flag = 1 and t3.aut_group_id = t1.id
+		join com.auth t4 on t4.flag = 1 and t4.id = t3.aut_id
+		left outer join com.comm_code c2 on c2.flag = 1 and c2.lang = 'ko' and c2.code_name = t4.data_type_cd and c2.group_code = 'DATA_TYPE_CD'
+		left outer join com.auth_data_rel t5 on t5.flag = 1 and t5.aut_id = t4.id
+		left outer join com.crm_division t6 on t6.flag = 1 and t6.rid = t5.rid_division
+		where 1=1
+		and c1.code_name = 'ACTIVATION'
+		and t2.rid_user = #{ridUser}
+		<if test="authGroupId != null and authGroupId != ''">
+		and t1.id = #{authGroupId} 
+		</if>
+		<if test="ridDivision != null and ridDivision != ''">
+		and t6.id = #{ridDivision} 
+		</if>
+		group by t6.rid, t6.div_nm
+	</select>
+	
+	<!-- 권한별 메뉴 목록 -->
+	<select id="selectAuthMenuList" resultType="com.icignal.auth.dto.response.AuthorityMenuListResDto">
+		/* AuthMapper.selectAuthMenuList */
+		select distinct t6.id as menuId
+		
+		<if test="lang != null and lang.equals('en')">
+			,t6.menu_nm_en as menuName
+		</if>
+		<if test="lang != null and lang.equals('ko')">
+			, t6.menu_nm as menuName
+		</if>
+		     , t6.menu_lvl as menuLevel
+		     , t8.pgm_no as progNum
+		     , t8.pgm_nm as progName
+		     , c3.code_name as progTypeCd
+		     , t8.pgm_path as progPath
+		     , t6.prnts_menu_id as parentMenuId
+		     , t6.sort_odgr as sortSeq
+		     , ('/' || i1.image_folder || i1.image_file_name || i1.image_file_type) as imgURL
+		     , t8.type as applyType
+		     , t6.privacy_flg as privacyFlg
+		     , t6.ICON_IMG AS iconImg
+		from com.auth_group t1
+		join com.auth_user_rel t2 			on t2.flag = 1 and t2.aut_group_id = t1.id
+		left outer join com.comm_code c1 	on c1.flag = 1 and c1.lang = 'ko' and c1.code_name = t1.aut_group_status and c1.group_code = 'AUTH_GROUP_ACTIVATION_TYPE'
+		join com.auth_group_rel t3 			on t3.flag = 1 and t3.aut_group_id = t1.id
+		join com.auth t4 					on t4.flag = 1 and t4.id = t3.aut_id
+		left outer join com.comm_code c2 	on c2.flag = 1 and c2.lang = 'ko' and c2.code_name = t4.data_type_cd and c2.group_code = 'DATA_TYPE_CD'
+		join com.auth_menu_rel t5 			on t5.flag = 1 and t5.aut_id = t4.id
+		join com.menu t6 					on t6.flag = 1 and t6.id = t5.menu_id and t6.lang = 'ko'
+		left outer join com.menu_pgm_rel t7 on t7.flag = 1 and t7.menu_id = t6.id
+		left outer join com.program t8 		on t8.flag = 1 and t8.id = t7.pgm_id
+		left outer join com.comm_code c3 	on c2.flag = 1 and c3.lang = 'ko' and c3.code_name = t8.pgm_type_cd and c3.group_code = 'ADMIN_PROG_TYPE'
+		<!-- join com.menu_acc_rel t9 			on t9.flag = 1 and t9.menu_id = t6.id and t9.lang = 'ko' -->
+		left outer join com.image i1 		on i1.image_flag = 1 and i1.parent_id = t6.id
+		where 1=1
+		and c1.code_name = 'ACTIVATION'
+ 		and (c3.code_name = 'LIST'  or c3.code_name is null)
+		and t2.rid_user = #{ridUser}
+		<!-- and t1.accnt_id = #{accountOrgId} -->
+		<if test="authGroupId != null and authGroupId != ''">
+		and t1.id = #{authGroupId} 
+		</if>
+		order by t6.sort_odgr, t6.menu_lvl , c3.CODE_NAME
+    </select>
+    
+	<!-- 권한별 프로그램 목록 -->
+	<select id="selectAuthProgramList" resultType="com.icignal.auth.dto.response.AuthorityProgramListResDto">
+		/* AuthMapper.selectAuthProgramList */
+		select distinct t8.id as id
+		     , t8.pgm_no as progNum
+		     , t8.pgm_nm as progName
+		     , c3.code_name as progTypeCd
+		     , t8.pgm_path as progPath
+		     , t8.type as applyType
+			 , t6.SORT_ODGR as sortOdgr
+			 , t6.MENU_LVL	as menuLvl
+		from com.auth_group t1
+		join com.auth_user_rel t2 on t2.flag = 1 and t2.aut_group_id = t1.id
+		left outer join com.comm_code c1 on c1.flag = 1 and c1.lang ='ko' and c1.code_name = t1.aut_group_status and c1.group_code = 'AUTH_GROUP_ACTIVATION_TYPE'
+		join com.auth_group_rel t3 on t3.flag = 1 and t3.aut_group_id = t1.id
+		join com.auth t4 on t4.flag = 1 and t4.id = t3.aut_id
+		left outer join com.comm_code c2 on c2.flag = 1 and c2.lang ='ko' and c2.code_name = t4.data_type_cd and c2.group_code = 'DATA_TYPE_CD'
+		join com.auth_menu_rel t5 		on t5.flag = 1 and t5.aut_id = t4.id
+		join com.menu t6 				on t6.flag = 1 and t6.id = t5.menu_id
+		join com.menu_pgm_rel t7 		on t7.flag = 1 and t7.menu_id = t6.id
+		join com.program t8 				on t8.flag = 1 and t8.id = t7.pgm_id
+		join com.comm_code c3 			on c2.flag = 1 and c3.lang = 'ko' and c3.code_name = t8.pgm_type_cd and c3.group_code = 'ADMIN_PROG_TYPE'
+		<!-- join com.menu_acc_rel t9 		on t9.flag = 1 and t9.menu_id = t6.id -->
+		where 1=1
+		and c1.code_name = 'ACTIVATION'
+		and t2.rid_user = #{ridUser}
+		<!-- and t1.accnt_id = #{accountOrgId} -->
+		<if test="authGroupId != null and authGroupId != ''">
+		and t1.id = #{authGroupId} 
+		</if>
+		order by t6.sort_odgr, t6.menu_lvl
+	</select>
+    
+	<!-- 권한별 오브젝트 목록 -->
+	<select id="selectAuthObjectList" resultType="com.icignal.auth.dto.response.AuthorityObjectListResDto">
+		/* AuthMapper.selectAuthObjectList */
+		select distinct 
+			 t11.id as id
+		     , c4.code_name as objTypeCd
+		     , c4.mark_name as objTypeNm
+		     , t11.ui_obj_nm as uiObjNm
+		     , t11.ui_obj_desc as uiObjDesc
+		     , t12.id as objId
+		     , t12.obj_cd as objCd
+		     , t12.obj_nm as objNm
+		     , t12.obj_desc as objDesc
+		     , t8.id as progId
+		     , t8.pgm_no as progNum
+		     , t8.pgm_nm as progName
+		     , c3.code_name as progTypeCd
+		     , t8.pgm_path as progPath
+		     , t8.type as applyType
+		     , c5.mark_name as uiViewNm
+		from com.auth_group t1
+		join com.auth_user_rel t2 			on t2.flag = 1 and t2.aut_group_id = t1.id
+		left outer join com.comm_code c1 	on c1.flag = 1 and c1.lang = 'ko' and c1.code_name = t1.aut_group_status and c1.group_code = 'AUTH_GROUP_ACTIVATION_TYPE'
+		join com.auth_group_rel t3 			on t3.flag = 1 and t3.aut_group_id = t1.id
+		join com.auth t4 					on t4.flag = 1 and t4.id = t3.aut_id
+		left outer join com.comm_code c2 	on c2.flag = 1 and c2.lang = 'ko' and c2.code_name = t4.data_type_cd and c2.group_code = 'DATA_TYPE_CD'
+		join com.auth_object_rel t10 		on t10.flag = 1 and t10.aut_id = t4.id
+        join com.program t8 				on t8.flag = 1 and t8.id = t10.pgm_id
+        join com.ui_object t11 				on t11.flag = 1 and t11.id = t10.ui_obj_id and t11.pgm_id = t8.id
+		join com.object t12 				on t12.flag = 1 and t12.id = t11.obj_id
+		join com.comm_code c3 				on c2.flag = 1 and c3.lang = 'ko' and c3.code_name = t8.pgm_type_cd and c3.group_code = 'ADMIN_PROG_TYPE'
+		left outer join com.comm_code c4 	on c4.flag = 1 and c4.lang = 'ko' and c4.code_name = t12.obj_type_cd and c4.group_code = 'OBJ_TYPE_CD'
+		left outer join com.comm_code c5 	on c5.flag = 1 and c5.lang = 'ko' and c5.code_name = t10.ui_view_cd and c5.group_code = 'UI_VIEW_CD'
+		where 1=1
+		and c1.code_name = 'ACTIVATION'
+		and t2.rid_user = #{ridUser}
+		<!-- and t1.accnt_id = #{accountOrgId} -->
+		<if test="authGroupId != null and authGroupId != ''">
+		and t1.id = #{authGroupId} 
+		</if>
+	</select>
+	
+	<!-- 하위 어카운트 목록 -->
+    <update id="selectSubAccountList" parameterType="java.lang.String" statementType="CALLABLE">
+        call com.procGetChildDivIds( #{ridDivision}, 0 )
+    </update>
+	
+	<select id="selectGetAuthId" parameterType="java.lang.String" resultType="java.lang.String">
+		/* MKTAuth.selectGetAuthId */
+		SELECT att.ID AS authId
+        FROM  com.AUTH_USER_REL aur
+        JOIN  com.AUTH_GROUP ag ON aur.AUT_GROUP_ID = ag.id AND ag.FLAG=1
+        JOIN  com.AUTH_GROUP_REL agr ON ag.id = agr.AUT_GROUP_ID AND agr.flag=1
+        JOIN  com.AUTH att ON agr.AUT_ID = att.ID AND ag.FLAG=1  AND att.FLAG = 1
+		WHERE aur.RID_USER = #{id}
+		AND   aur.FLAG=1
+	</select>
+	
+	<select id="getAuthProgram" parameterType="com.icignal.common.cache.dto.request.ProgramCacheReqDto" resultType="com.icignal.common.cache.dto.response.ProgramCache">
+		/* MKTAuth.getAllProgram */ 
+			SELECT pgm.*
+			 FROM( 
+		  SELECT DISTINCT p.PGM_PATH 	AS url
+			 			  ,p.id     	AS pgmRid
+		  FROM  com.AUTH a 
+			 JOIN com.AUTH_PGM_REL c ON  a.ID = c.AUTH_ID AND c.flag = 1
+			 JOIN com.PROGRAM p ON c.PGM_ID = p.id AND p.flag=1
+			 WHERE a.id in
+			<foreach collection="list" item="item2" open="(" close=")" separator=","> 
+    		 	#{item2}
+			</foreach>
+			 AND a.flag = 1
+			 ORDER BY p.id ASC
+			 ) pgm
+			ORDER BY pgm.pgmRid ASC  
+	</select>
+	
+<!-- 	<select id="getAuthProgram" parameterType="com.icignal.common.cache.dto.request.ProgramCacheReqDto" resultType="com.icignal.common.cache.dto.response.ProgramCache">
+		/* MKTAuth.getAuthProgram */ 
+			SELECT pgm.*
+			 FROM( 
+		  SELECT DISTINCT p.PGM_PATH 	AS url
+			 			  ,p.id     	AS pgmRid
+		  FROM  com.AUTH a 
+			 JOIN com.AUTH_PGM_REL c ON  a.ID = c.AUTH_ID AND c.flag = 1
+			 JOIN com.PROGRAM p ON c.PGM_ID = p.id AND p.flag=1
+			 WHERE a.id in
+			<foreach collection="list" item="item2" open="(" close=")" separator=","> 
+    		 	#{item2}
+			</foreach>
+			 AND a.flag = 1
+			 ORDER BY p.id ASC
+			 ) pgm
+			ORDER BY pgm.pgmRid ASC  
+	</select> -->
+	
+	<select id="getAuthProgramTabChild" parameterType="com.icignal.common.cache.dto.request.ProgramCacheReqDto" resultType="com.icignal.common.cache.dto.response.ProgramChildResDto">
+		/* MKTAuth.getAuthProgramTabChild */ 
+			SELECT pgm.*
+			 FROM( 
+		  SELECT DISTINCT p.PGM_PATH 	AS url
+			 			  ,p.id     	AS pgmRid
+			 			  ,p.PAR_PGM_ID	AS parPgmRid
+			 			  ,p.TAB_LABEL	AS tabLabelNm
+			 			  ,p.TAB_SEQ	AS tabSeq
+		  FROM  com.AUTH a 
+			 JOIN com.AUTH_PGM_REL c ON  a.ID = c.AUTH_ID AND c.flag = 1
+			 JOIN com.PROGRAM p ON c.PGM_ID = p.id AND p.flag=1
+			 WHERE a.id in
+			<foreach collection="list" item="item2" open="(" close=")" separator=","> 
+    		 	#{item2}
+			</foreach>
+			 AND a.flag = 1
+			 AND p.PGM_TYPE_CD = 'TAB'
+			 ORDER BY p.id ASC
+			 ) pgm
+			ORDER BY TO_NUMBER(pgm.tabSeq) ASC  
+	</select>
+	
+	<select id="selectGetObject" parameterType="java.util.HashMap" resultType="com.icignal.common.cache.dto.response.ProgramObject">
+		/* MKTAuth.selectGetObject */
+		SELECT DISTINCT 
+				 pgm.progRid
+				,pgm.progPath
+				,o.OBJ_CD	        AS objCd
+<!-- 				,uo.UI_OBJ_NM 	    AS objNm
+				,uo.OBJ_TYPE_CD     AS objTypeCd -->
+				from(
+		SELECT DISTINCT   p.PGM_PATH 	    AS progPath
+			    	     ,p.id     		    AS progRid
+		FROM  com.AUTH a 
+		JOIN com.AUTH_PGM_REL c ON  a.ID = c.AUTH_ID AND c.flag = 1
+		JOIN com.PROGRAM p ON c.PGM_ID = p.id AND p.flag=1
+		WHERE a.id in
+		<foreach collection="list" item="item2" open="(" close=")" separator=","> 
+    		 #{item2}
+		</foreach>
+		AND a.flag = 1
+		ORDER BY c.pgm_id ASC) pgm
+		LEFT OUTER JOIN com.AUTH_OBJECT_REL aor ON pgm.progRid = aor.PGM_ID AND aor.flag=1
+		LEFT OUTER JOIN com.UI_OBJECT uo ON uo.ID = aor.UI_OBJ_ID AND uo.flag=1
+		LEFT JOIN com.OBJECT o ON o.id = uo.OBJ_ID AND o.flag=1
+		WHERE aor.AUT_ID IN
+		<foreach collection="list" item="item2" open="(" close=")" separator=","> 
+    		 #{item2}
+		</foreach>
+ORDER BY pgm.progRid ASC
+</select>
+	
+
+
+</mapper>

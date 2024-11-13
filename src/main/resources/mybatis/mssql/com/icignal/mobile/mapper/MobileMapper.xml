@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.mobile.mapper.MobileMapper">
+
+	<select id="getCampaginApprovalReqList"
+		parameterType="com.icignal.mobile.dto.request.MktMobileCampaginReqDto"
+		resultType="com.icignal.mobile.dto.response.MktCampaignApprovalReqListResDto">
+			/* MobileMapper.getCampaginApprovalReqList */
+			SELECT mcm.CAM_NM AS camNm
+			       , e.NAME AS reqName
+				   , iif(e.PHONE_NO is not null,', '+e.PHONE_NO,'') as reqHhp
+			       , convert(varchar,cea.CREATE_DATE,120) AS createDate
+				   , cmcm.EXE_CHNL_TYPE_CD AS exeChnlTypeCd
+				   , mth.CAM_TGT_CNT AS camTgtCnt
+			       , ( SELECT count(1)
+					FROM mkt.MKT_CAM_MST mcm2
+					join com.MKT_CONTS_CHNL_REL mccr2 on mcm2.ID = mccr2.CAM_ID and mccr2.FLAG =1
+					JOIN com.MKT_CONTS_MST cmcm2 on mccr2.CONTENTS_ID = cmcm2.ID and cmcm2.FLAG =1
+					WHERE 1=1
+					AND mcm2.CAM_PLNER = #{memId}
+					AND CONVERT(CHAR(6),mcm2.CAM_START_DD,112) = CONVERT(CHAR(6),GETDATE(),112)
+					AND mcm2.CAM_STATUS_CD IN ('A','D')
+					AND cmcm2.EXE_CHNL_TYPE_CD IN ('SMS', 'LMS', 'MMS')
+					) AS monthAccrueCnt
+				   , img.Image_folder+'/'+img.image_file_name + img.image_file_type AS imagePath
+			       , cmcm.CONTS_SBST AS contsSbst
+			       , mcm.CAM_STATUS_CD AS camStatusCd
+			       , cea.ID AS elecAprvId
+			       , cea.ELEC_APRV_STATUS_CD AS elecAprvStatusCd
+			       , ceai.elec_aprv_seq AS seq
+			       , ceai.apvr_type_cd AS apvrTypeCd
+			       , cea.cam_id	AS recordRid
+			       , ceai.ID AS itemId
+				   , convert(varchar,meii.exe_dt,120) as exeDt
+				   , mcm.ID as camId
+			       , ${strColumn}
+			FROM mkt.MKT_CAM_MST mcm WITH (NOLOCK)
+			JOIN (
+				select *
+				from (
+				    select cmcm.ID as contsId
+				        ,mccr.ID as contRelId
+				        ,mccr.CAM_ID as CAM_ID
+				        ,cmcm.CONTS_SBST as CONTS_SBST
+				        ,cmcm.EXE_CHNL_TYPE_CD as EXE_CHNL_TYPE_CD
+				        ,cmcm.IMG_ID as IMG_ID
+				        ,ROW_NUMBER() OVER(PARTITION BY mccr.CAM_ID  ORDER BY case when cmcm.EXE_CHNL_TYPE_CD = 'SMS' then 1
+				                                                                   when cmcm.EXE_CHNL_TYPE_CD = 'LMS' then 2
+				                                                                   when cmcm.EXE_CHNL_TYPE_CD = 'MMS' then 3
+				                                                                   when cmcm.EXE_CHNL_TYPE_CD = 'PUSH' then 4
+				                                                                   when cmcm.EXE_CHNL_TYPE_CD = 'EMAIL' then 5
+				                                                                   when cmcm.EXE_CHNL_TYPE_CD = 'KAKAONOTI' then 6
+				                                                                   when cmcm.EXE_CHNL_TYPE_CD = 'KAKAOFR' then 7
+				        end asc) as rak
+				    from com.MKT_CONTS_MST cmcm
+				    JOIN com.MKT_CONTS_CHNL_REL mccr ON cmcm.ID = mccr.CONTENTS_ID  and mccr.FLAG =1
+				    where 1=1
+				    and cmcm.FLAG =1
+				) T
+				where rak = 1
+			)cmcm ON mcm.ID = cmcm.CAM_ID
+			JOIN mkt.MKT_TGT_HAD mth ON mcm.ID = mth.CAM_ID and mth.FLAG =1
+			JOIN com.COM_ELEC_APRV cea ON  mcm.ID = cea.CAM_ID and cea.FLAG =1
+			JOIN com.COM_ELEC_APRV_ITEM ceai ON ceai.ELEC_APRV_ID = cea.ID and ceai.FLAG = 1 AND ceai.APVR_TYPE_CD = '9'
+			JOIN com.CRM_USER cu ON cea.CREATE_BY = cu.RID AND cu.FLAG =1
+			JOIN com.EMPLOYEE e ON cu.ID_EMPLOYEE = e.ID AND e.FLAG =1
+			LEFT OUTER JOIN com.IMAGE img ON cmcm.IMG_ID = img.ID and img.FLAG =1
+			join (select meii.CAM_ID
+						,meii.EXE_DT
+						from mkt.MKT_EXE_INFO_ITEM meii
+						where meii.flag = 1
+						and meii.exe_seq = 1
+			) meii on mcm.ID = meii.cam_id
+			WHERE 1=1
+				AND ${strSVCType} <!-- list 기본 파라미터 -->
+				AND ${strWhere} <!-- 그리드 검색 파라미터 -->
+				AND mcm.CAM_STATUS_CD = 'W'
+			 	AND cea.ELEC_APRV_STATUS_CD = '010'
+			 	AND ceai.ELEC_APRV_STATUS_CD = '013'
+			 	AND ceai.apvr_id = #{memId}
+        	ORDER BY ${strOrderby} <!--  그리드에서 파라미터를 받아서 order by를 함. -->
+        	${strEndPaging} <!-- 그리드 페이징1,2,3,... -->
+	</select>
+
+</mapper>

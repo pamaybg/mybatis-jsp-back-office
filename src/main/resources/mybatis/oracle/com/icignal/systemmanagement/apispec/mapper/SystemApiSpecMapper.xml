@@ -1,0 +1,563 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.apispec.mapper.SystemApiSpecMapper">
+
+    <select id="getApiSpecList" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+    										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiSpecListResDto">
+	  /* SystemApiSpecMapper.getApiSpecList */
+	  SELECT lam.RID AS rid
+				, lam.API_GRP_CD AS apiGrpCd
+				, lam.API_NO AS apiNo
+				, lam.API_NM AS apiNm
+				, lam.PROTOCOL AS protocol
+				, lam.HTTP_METHOD_CD AS httpMethodCd
+				, lam.HTTP_CONTENT_TYPE_CD AS httpContentTypeCd
+				, lam.API_URL AS reqUrl
+				, lam.API_DESC AS apiDesc
+				, lam.STAT_CD AS statCd
+				, TO_CHAR(lam.CREATE_DATE, 'YYYY-MM-DD hh24:mi:ss') AS createDate
+				, TO_CHAR(lam.MODIFY_DATE, 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+				, e.name AS modifyBy
+				, lam.SP_NM AS spNm
+				, ${strColumn}
+	  FROM LOY_API_MGT lam
+	  LEFT OUTER JOIN COM.CRM_USER cu ON lam.MODIFY_BY = cu.RID AND cu.FLAG = 1
+      LEFT OUTER JOIN COM.EMPLOYEE e ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1 
+	  WHERE  ${strCondWhere}
+	  		 AND ${strWhere}
+		  	 AND lam.FLAG = 1
+	  order by ${strOrderby}
+			   ${strEndPaging}
+    </select>
+    
+    <insert id="insertApiSpec" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecInsertReqDto">
+     /* SystemApiSpecMapper.insertApiSpec */
+    INSERT INTO LOY_API_MGT (
+			  	RID
+				, CREATE_BY
+				, MODIFY_BY
+				, CREATE_DATE
+				, MODIFY_DATE
+				, FLAG
+				, API_GRP_CD
+				, API_NO
+				, API_NM
+				, PROTOCOL
+				, HTTP_METHOD_CD
+				, HTTP_CONTENT_TYPE_CD
+				, API_URL
+				, API_DESC
+				, STAT_CD
+				, RID_SYSTEM
+				, SP_NM
+	)
+	VALUES (
+				  #{rid},
+				  #{createBy},
+				  #{modifyBy},
+				  SYSDATE,
+				  SYSDATE,
+				  1,
+				  #{apiGrpCd},
+				  #{apiNo},
+				  #{apiNm},
+				  #{protocol},
+				  <!-- #{host},
+				  #{port}, -->
+				  #{httpMethodCd},
+				  #{httpContentTypeCd},
+				  #{reqUrl},
+				  #{apiDesc},
+				  #{statCd},
+				  #{systemRid},
+				  #{spNm}
+	)
+    </insert>
+    
+    <update id="deleteApiSpec"  parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto">
+	   /* SystemApiSpecMapper.deleteApiSpec */
+	UPDATE loy.LOY_API_MGT
+	   SET MODIFY_BY    = #{modifyBy},
+	 	   MODIFY_DATE 	= sysdate,
+	 	   flag = flag + 1
+	 where rid = #{rid}    
+	</update>
+	
+
+    <update id="updateApiSpec"  parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto">
+	/* SystemApiSpecMapper.updateApiSpec */
+	UPDATE loy.LOY_API_MGT
+	   SET MODIFY_BY    = #{modifyBy}
+	 	    , MODIFY_DATE 	= SYSDATE
+			, API_GRP_CD = #{apiGrpCd}
+			, API_NO = #{apiNo}
+			, API_NM = #{apiNm}
+			, PROTOCOL = #{protocol}
+			, HTTP_METHOD_CD = #{httpMethodCd}
+			, HTTP_CONTENT_TYPE_CD = #{httpContentTypeCd}
+			, API_URL = #{reqUrl}
+			, API_DESC = #{apiDesc}
+			, STAT_CD = #{statCd}
+			, RID_SYSTEM = #{systemRid}
+			, SP_NM = #{spNm}
+	 WHERE RID = #{rid} 
+	</update>
+	
+	<select id="apiSpecDetail" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+	    									resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiSpecDetailResDto">
+	/* SystemApiSpecMapper.apiSpecDetail */
+	SELECT lam.RID AS rid
+				, lam.API_GRP_CD AS apiGrpCd
+				, lam.API_NO AS apiNo
+				, lam.API_NM AS apiNm
+				, lam.PROTOCOL AS protocol
+				, lam.HTTP_METHOD_CD AS httpMethodCd
+				, lam.HTTP_CONTENT_TYPE_CD AS httpContentTypeCd
+				, lam.API_URL AS reqUrl
+				, lam.API_DESC AS apiDesc
+				, lam.STAT_CD AS statCd
+				, lam.RID_SYSTEM AS systemRid
+				, sm.HOST_NM AS host
+				, sm.PORT AS port
+				, lam.SP_NM AS spNm
+	FROM LOY.LOY_API_MGT lam
+	LEFT OUTER JOIN COM.SYSTEM_MGT sm ON lam.RID_SYSTEM = sm.RID AND sm.FLAG = 1 
+	WHERE lam.FLAG = 1 
+	AND lam.RID=#{rid}
+    </select>
+    
+       <select id="apiSpecFileList" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecFileListReqDto" 
+       										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiSpecFileListResDto">
+  /* SystemApiSpecMapper.apiSpecFileList */
+  SELECT 
+  	  ${strColumn},
+  	  lasa.rid as rid,
+	  lasa.FILE_NM AS fileNm,
+	  lasa.File_Path AS filePath,
+	  lasa.create_date AS createDate
+  FROM LOY_API_SPEC_ATTACH lasa
+  WHERE  ${strWhere}
+	  	 and lasa.flag = 1
+	  	 and lasa.RID_API_SPEC = #{rid}
+  order by ${strOrderby}
+		   ${strEndPaging}
+    </select>
+    
+    
+     <insert id="apiSpecUpload" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecFileListReqDto">
+     /* SystemApiSpecMapper.apiSpecUpload */
+   INSERT INTO LOY_API_SPEC_ATTACH
+	  (
+	  rid,
+	  create_by,
+	  MODIFY_BY,
+	  CREATE_DATE,
+	  MODIFY_DATE,
+	  flag,
+	  <!-- country, -->
+	  <!-- APP_SERVICE_TYPE, -->
+	  <!-- ACCNT_ID, -->
+	  RID_API_SPEC,
+	  FILE_NM,
+	  FILE_PATH
+	 
+	  )
+  VALUES
+	  (
+	  com.getNewID(''),
+	  #{createBy},
+	  #{modifyBy},
+	  SYSDATE,
+	  SYSDATE,
+	  1,
+	  <!-- #{country}, -->
+	  <!-- #{appServiceId}, -->
+	  <!-- #{accountId}, -->
+	  #{rid},
+	  #{fileNm},
+	  #{filePath}
+	    )
+	    
+    </insert>
+    
+    
+        
+    <update id="fileRemove"  parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecFileListReqDto">
+	   /* SystemApiSpecMapper.fileRemove */
+	UPDATE loy.LOY_API_SPEC_ATTACH
+	   SET MODIFY_BY    = #{modifyBy},
+	 	   MODIFY_DATE 	= SYSDATE,
+	 	   flag = flag + 1
+	 where rid = #{rid}    
+	</update>
+    
+    <select id="selectApiChnlList" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto"
+    											resultType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto">
+    /* SystemApiSpecMapper.selectApiChnlList */
+    SELECT lc.CHNL_NO AS chnlNo
+			, lc.CHNL_NM AS chnlNm
+			, lc.CHNL_TYPE_CD AS chnlTypeCd
+			, lc.STAT_CD AS statCd
+			, e.NAME AS createBy
+			, TO_CHAR(lac.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS createDate
+			, lac.RID AS rid
+			,${strColumn}
+	FROM LOY.LOY_API_CHNL lac
+	JOIN loy.LOY_CHNL lc ON lac.RID_CHNL = lc.RID AND lc.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER u ON lac.CREATE_BY = u.RID
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE ${strWhere}
+	AND lac.FLAG =1
+	AND lac.RID_API = #{rid}
+	ORDER BY ${strOrderby}
+		   ${strEndPaging}
+    </select>
+    
+    <select id="checkApiChnlCnt" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto"
+    											resultType="java.lang.Integer">
+    /* SystemApiSpecMapper.checkApiChnlCnt */
+    SELECT count(*)
+	FROM loy.LOY_API_CHNL
+	WHERE RID_API = #{apiSpecRid}
+	AND RID_CHNL = #{chnlRid}
+	AND FLAG = 1
+    </select>
+    
+    <insert id="insertApiSpectJoinChnl" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto">
+    /* SystemApiSpecMapper.insertApiSpecJoinChnl */
+    INSERT INTO LOY.LOY_API_CHNL(
+								RID
+							, CREATE_BY
+							, MODIFY_BY
+							, RID_API
+							, RID_CHNL
+	) VALUES (
+								#{rid}
+							, #{modifyBy}
+							, #{modifyBy}
+							, #{apiSpecRid}
+							, #{chnlRid}
+	)
+    </insert>
+    
+    <update id="deleteApiChnl"  parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto">
+    /* SystemApiSpecMapper.deleteApiChnl */
+    UPDATE LOY.LOY_API_CHNL
+	SET MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = SYSDATE
+		, flag = flag + 1
+	WHERE RID = #{rid}
+    </update>
+    
+    <select id="selectApiSpecNo" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto"
+    											resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiSpecListResDto">
+    /* SystemApiSpecMapper.selectApiSpecNo */
+    SELECT PKG_COM_UTIL.GET_API_NO(#{apiGrpCd})  AS apiNo
+    FROM DUAL
+    </select>
+    
+    <select id="selectApiSpecListPop" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+    										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiSpecListResDto">
+    /* SystemApiSpecMapper.selectApiSpecListPop */
+   	SELECT lam.RID AS rid
+				, lam.API_GRP_CD AS apiGrpCd
+				, lam.API_NO AS apiNo
+				, lam.API_NM AS apiNm
+				, lam.PROTOCOL AS protocol
+				, lam.HTTP_METHOD_CD AS httpMethodCd
+				, lam.HTTP_CONTENT_TYPE_CD AS httpContentTypeCd
+				, lam.API_URL AS reqUrl
+				, lam.API_DESC AS apiDesc
+				, lam.STAT_CD AS statCd
+				, TO_CHAR(lam.CREATE_DATE, 'YYYY-MM-DD hh24:mi:ss') AS createDate
+				, e.name AS createBy
+				, lam.SP_NM AS spNm
+				, ${strColumn}
+	  FROM LOY_API_MGT lam
+	  LEFT OUTER JOIN COM.CRM_USER cu ON lam.CREATE_BY = cu.RID AND cu.FLAG = 1
+      LEFT OUTER JOIN COM.EMPLOYEE e ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1 
+	  WHERE  ${strCondWhere}
+	  		 AND ${strWhere}
+		  	 AND lam.FLAG = 1
+		  	 AND NOT lam.RID = #{rid}
+	  order by ${strOrderby}
+			   ${strEndPaging}
+    </select>
+    
+    <insert id="copyApiChnl" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto">
+    /* SystemApiSpecMapper.copyApiChnl */
+    INSERT INTO loy.LOY_API_CHNL(
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, RID_API
+			, RID_CHNL
+		)SELECT com.getNewID('') AS RID
+				, #{modifyBy} AS CREATE_BY
+				, #{modifyBy} AS MODIFY_BY
+				, SYSDATE AS CREATE_DATE
+				, SYSDATE AS MODIFY_DATE
+				, '1' AS FLAG
+				, #{rid} AS RID_API
+				, A.RID_CHNL AS RID_CHNL
+		FROM loy.LOY_API_CHNL A
+		WHERE A.RID_API = #{copyRid}
+		AND A.FLAG = 1
+		AND A.RID_CHNL NOT IN (SELECT B.RID_CHNL
+												FROM loy.LOY_API_CHNL B
+												WHERE B.RID_API = #{rid}
+												AND B.FLAG = 1)
+    </insert>
+    
+    <select id="selectApiParamList" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+    										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiParamResDto">
+    /* SystemApiSpecMapper.selectApiParamList */
+   	SELECT        lap.SEQ_NO			AS seqNo
+   				, lap.PARAM_SUB_TYPE_CD	AS paramSubTypeCd
+   				, lap2.PARM_NM			AS parParamNm
+   				, CASE 
+			   		  	 WHEN lap.PAR_PRAM_RID IS NOT NULL 
+			   		  	 THEN 
+			   		  	 (
+			   		  	 SELECT PARM_NM 
+			   		  	 FROM LOY.LOY_API_PARAM lap2 
+			   		  	 WHERE lap2.RID = lap.PAR_PRAM_RID
+			   		  	 )
+			   		  	 || 
+			   		  	 (
+			   		  	 SELECT CASE 
+			   		  	 WHEN lap3.data_Type_Cd ='Array' THEN '.'
+			   		  	 WHEN lap3.data_Type_Cd = 'Object' THEN '[].' 
+			   		  	 END 
+			   		  	 FROM LOY.LOY_API_PARAM lap3 
+			   		  	 WHERE lap3.RID = lap.PAR_PRAM_RID
+			   		  	 )
+			   		  	 ||
+			   		  	 lap.PARM_NM 
+			   		  	 ELSE lap.PARM_NM END AS paramNm
+			   	, lap.PARAM_DESC		AS paramDesc	  	 				
+			    , lap.DATA_TYPE_CD		AS dataTypeCd
+   				, lap.DATA_FROMAT		AS dataFormat
+   				, lap.REQURIED_YN		AS requriedYn
+   				, lap.ADD_DESC			AS addDesc
+   				, e.name				AS createBy
+   				, TO_CHAR(lap.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+   				, lap.PAR_PRAM_RID		AS parRid
+   				, lap.RID				AS RID
+				, ${strColumn}			
+	  FROM LOY.LOY_API_PARAM lap
+	  LEFT OUTER JOIN COM.CRM_USER cu ON lap.CREATE_BY = cu.RID AND cu.FLAG = 1
+      LEFT OUTER JOIN COM.EMPLOYEE e ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1 
+      LEFT OUTER JOIN LOY.LOY_API_PARAM lap2 ON lap.PAR_PRAM_RID = lap2.RID AND lap.FLAG = 1
+      WHERE  ${strCondWhere}
+	  		 AND ${strWhere}
+		  	 AND lap.FLAG = 1
+		  	 AND lap.RID_API = #{rid}
+		  	 AND lap.PARAM_TYPE_CD = 'REQ'
+		  	<!--  AND lap.PARAM_SUB_TYPE_CD = #{paramSubTypeCd} -->
+      START WITH lap.PAR_PRAM_RID IS NULL
+	  CONNECT BY PRIOR lap.rid = lap.PAR_PRAM_RID 
+	 Order BY lap.PARAM_SUB_TYPE_CD desc, lap.seq_no, lap.PAR_PRAM_RID ASC
+			   ${strEndPaging}
+    </select>
+    
+    <select id="selectApiParamResList" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+    										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiParamResDto">
+    /* SystemApiSpecMapper.selectApiParamResList */
+   	SELECT        lap.SEQ_NO			AS seqNo
+   				, lap.PARAM_SUB_TYPE_CD	AS paramSubTypeCd
+   				, lap2.PARM_NM			AS parParamNm
+   				, CASE 
+			   		  	 WHEN lap.PAR_PRAM_RID IS NOT NULL 
+			   		  	 THEN 
+			   		  	 (
+			   		  	 SELECT PARM_NM 
+			   		  	 FROM LOY.LOY_API_PARAM lap2 
+			   		  	 WHERE lap2.RID = lap.PAR_PRAM_RID
+			   		  	 )
+			   		  	 || 
+			   		  	 (
+			   		  	 SELECT CASE 
+			   		  	 WHEN lap3.data_Type_Cd ='Object' THEN '.'
+			   		  	 WHEN lap3.data_Type_Cd = 'Array' THEN '[].' 
+			   		  	 END 
+			   		  	 FROM LOY.LOY_API_PARAM lap3 
+			   		  	 WHERE lap3.RID = lap.PAR_PRAM_RID
+			   		  	 )
+			   		  	 ||
+			   		  	 lap.PARM_NM 
+			   		  	 ELSE lap.PARM_NM END AS paramNm
+   				, lap.PARAM_DESC		AS paramDesc	  	 				
+			    , lap.DATA_TYPE_CD		AS dataTypeCd
+   				, lap.DATA_FROMAT		AS dataFormat
+   				, lap.REQURIED_YN		AS requriedYn
+   				, lap.ADD_DESC			AS addDesc
+   				, e.name				AS createBy
+   				, TO_CHAR(lap.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+   				, lap.PAR_PRAM_RID		AS parRid
+   				, lap.RID				AS RID
+				, ${strColumn}			
+	  FROM LOY.LOY_API_PARAM lap
+	  LEFT OUTER JOIN COM.CRM_USER cu ON lap.CREATE_BY = cu.RID AND cu.FLAG = 1
+      LEFT OUTER JOIN COM.EMPLOYEE e ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1 
+      LEFT OUTER JOIN LOY.LOY_API_PARAM lap2 ON lap.PAR_PRAM_RID = lap2.RID AND lap.FLAG = 1
+	  WHERE  ${strCondWhere}
+	  		 AND ${strWhere}
+		  	 AND lap.FLAG = 1
+		  	 AND lap.RID_API = #{rid}
+		  	 AND lap.PARAM_TYPE_CD = 'RES'
+		  	 <!-- AND lap.PARAM_SUB_TYPE_CD = #{paramSubTypeCd} -->
+	  START WITH lap.PAR_PRAM_RID IS NULL
+	  CONNECT BY PRIOR lap.rid = lap.PAR_PRAM_RID 
+	  Order BY lap.PARAM_SUB_TYPE_CD desc, lap.seq_no, lap.PAR_PRAM_RID ASC
+			   ${strEndPaging}
+    </select>
+    
+    <select id="selectParamReqDetail" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+    										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiParamResDto">
+    /* SystemApiSpecMapper.selectParamReqDetail */
+    	SELECT        
+				  lap2.PARAM_TYPE_CD		AS paramTypeCd
+   				, lap2.SEQ_NO			AS seqNo
+   				, lap2.PARM_NM			AS paramNm
+   				, lap2.DATA_TYPE_CD		AS dataTypeCd
+   				, lap2.DATA_FROMAT		AS dataFormat
+   				, lap.PARM_NM			AS parParamNm
+   				, lap2.REQURIED_YN		AS requriedYn
+   				, lap2.PAR_PRAM_RID		AS parRid
+   				, lap2.RID				AS RID
+   				, lap2.PARAM_DESC		AS paramDesc
+   				, lap2.ADD_DESC			AS addDesc
+   				, lap2.PARAM_SUB_TYPE_CD AS paramSubTypeCd
+	  FROM LOY.LOY_API_PARAM lap2
+      LEFT OUTER JOIN LOY.LOY_API_PARAM lap ON lap2.PAR_PRAM_RID = lap.rid AND lap.FLAG = 1
+      WHERE lap2.FLAG = 1
+      AND lap2.RID  = #{rid}
+	  AND lap2.PARAM_TYPE_CD = 'REQ'
+    </select>
+    
+    <select id="selectParamResDetail" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+    										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiParamResDto">
+    /* SystemApiSpecMapper.selectParamResDetail */
+   	SELECT        
+				  lap2.PARAM_TYPE_CD		AS paramTypeCd
+   				, lap2.SEQ_NO			AS seqNo
+   				, lap2.PARM_NM			AS paramNm
+   				, lap2.DATA_TYPE_CD		AS dataTypeCd
+   				, lap2.DATA_FROMAT		AS dataFormat
+   				, lap.PARM_NM			AS parParamNm
+   				, lap2.REQURIED_YN		AS requriedYn
+   				, lap2.PAR_PRAM_RID		AS parRid
+   				, lap2.RID				AS RID
+   				, lap2.PARAM_DESC		AS paramDesc
+   				, lap2.ADD_DESC			AS addDesc
+   				, lap2.PARAM_SUB_TYPE_CD AS paramSubTypeCd
+	  FROM LOY.LOY_API_PARAM lap2
+      LEFT OUTER JOIN LOY.LOY_API_PARAM lap ON lap2.PAR_PRAM_RID = lap.rid AND lap.FLAG = 1
+      WHERE lap2.FLAG = 1
+      AND lap2.RID  = #{rid}
+	  AND lap2.PARAM_TYPE_CD = 'RES'
+    </select>
+    
+    <insert id="insertApiParamReq" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiParamDetailReqDto">
+    /* SystemApiSpecMapper.insertApiParamReq */
+    INSERT INTO LOY.LOY_API_PARAM(
+							  RID
+							, CREATE_BY
+							, MODIFY_BY
+							, CREATE_DATE
+							, MODIFY_DATE
+							, FLAG
+							, RID_API
+							, PARAM_TYPE_CD
+							, SEQ_NO
+							, PARM_NM
+							, DATA_TYPE_CD
+							, DATA_FROMAT
+							, REQURIED_YN
+							, PARAM_DESC
+							, ADD_DESC
+							, PAR_PRAM_RID
+							, PARAM_SUB_TYPE_CD
+	) VALUES (
+						      #{rid}
+							, #{modifyBy}
+							, #{modifyBy}
+							, sysdate
+							, sysdate
+							, 1
+							, #{apiRid}
+							, #{paramTypeCd}
+							, #{seqNo}
+							, #{paramNm}
+							, #{dataTypeCd}
+							, #{dataFormat}
+							, #{requiredYn}
+							, #{paramDesc}
+							, #{addDesc}
+							, #{parRid}
+							, #{paramSubTypeCd}
+	)
+    </insert>
+    
+    <update id="updateApiParamReq" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiParamDetailReqDto">
+    /* SystemApiSpecMapper.updateApiParamReq */
+		UPDATE LOY.LOY_API_PARAM 				  
+		SET			   		 
+							  MODIFY_BY      = #{modifyBy}
+							, MODIFY_DATE    = sysdate
+							, RID_API		 = #{apiRid}
+							, PARAM_TYPE_CD  = #{paramTypeCd}
+							<!-- , SEQ_NO         = #{seqNo} -->
+							, PARM_NM        = #{paramNm}
+							, DATA_TYPE_CD   = #{dataTypeCd}
+							, DATA_FROMAT    = #{dataFormat}
+							, REQURIED_YN    = #{requiredYn}
+							, PARAM_DESC     = #{paramDesc}
+							, ADD_DESC       = #{addDesc}
+							, PAR_PRAM_RID   = #{parRid}
+							, PARAM_SUB_TYPE_CD = #{paramSubTypeCd}
+		WHERE     rid = #{rid}
+    </update>
+    
+    <update id="deleteApiParamReq" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiParamDetailReqDto">
+    /* SystemApiSpecMapper.deleteApiParamReq */
+		UPDATE LOY.LOY_API_PARAM 				  
+		SET			   		 
+							  MODIFY_BY      = #{modifyBy}
+							, MODIFY_DATE    = sysdate
+							, FLAG           = flag + 1
+		WHERE     rid = #{rid}
+    </update>
+    
+    <select id="selectParParamList" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiSpecListReqDto" 
+    										resultType="com.icignal.systemmanagement.apispec.dto.response.SystemApiParamResDto">
+    /* SystemApiSpecMapper.selectParParamList */
+   	SELECT        lap.RID				AS RID
+   				, lap.PARM_NM			AS paramNm
+   				, lap.PARAM_TYPE_CD		AS paramTypeCd
+   				, lap.DATA_TYPE_CD		AS dataTypeCd
+				, ${strColumn}			
+	  FROM LOY.LOY_API_PARAM lap
+	  WHERE  ${strCondWhere}
+	  		 AND ${strWhere}
+		  	 AND lap.FLAG = 1
+		  	 AND lap.RID_API = #{rid}
+		  	 AND lap.PARAM_TYPE_CD = #{paramTypeCd}
+		  	 <!-- AND lap.PARAM_SUB_TYPE_CD = #{paramSubTypeCd} -->
+		  	 AND lap.DATA_TYPE_CD in ('Array','Object')
+	  order by ${strOrderby}
+			   ${strEndPaging}
+    </select>
+    
+    <select id="selectParamSeqNo" parameterType="com.icignal.systemmanagement.apispec.dto.request.SystemApiParamDetailReqDto" 
+    										resultType="java.lang.String">
+    /* SystemApiSpecMapper.selectParamSeqNo */
+   	SELECT PKG_LOY_FN.GET_API_PARAM_SEQ_NO( #{apiRid}, #{paramTypeCd} , #{paramSubTypeCd} , #{grpYn}, #{parRid} ) FROM DUAL
+    </select>
+    
+   </mapper>

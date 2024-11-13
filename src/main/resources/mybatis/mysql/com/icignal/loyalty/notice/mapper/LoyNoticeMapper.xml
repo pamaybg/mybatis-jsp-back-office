@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.notice.mapper.LoyNoticeMapper">
+	
+	<select id="selectNoticeList" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeListReqDto" resultType="com.icignal.loyalty.notice.dto.response.LoyNoticeListResDto">
+	/* LoyNoticeMapper.selectNoticeList */
+		select  ${strColumn},
+				t1.*
+		from (
+			select
+				a.rid as rid,
+				a.notice_master_title as noticeNm,
+				substr(a.open_date,0, 4)||'-'||substr(a.open_date,5, 2)||'-'||substr(a.open_date,7, 2) as openDate,
+				a.EXPOSURE_YN as exposureYn,
+				e.name as createBy,
+				a.CREATE_DATE as createDate,
+				a.HIT_CNT as hitCnt,
+				case a.exposure_yn when 'Y' then '노출' when 'N' then '숨김' END as notice_status
+			from    loy.loy_notice_master a
+			left join com.crm_user us
+			on a.create_by = us.rid
+			left outer join com.employee e
+			on   	e.id = us.id_employee
+			where ${strSVCType}
+			<!-- and a.accnt_id = #{accountId} -->
+			and a.flag  = 1
+		) t1
+		where   ${strCondWhere}
+		and 	${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<update id="updateNotice" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeInsertReqDto">
+	/* LoyNoticeMapper.updateNotice */
+		update loy.loy_notice
+		set notice_nm = #{noticeName}
+			,notice_detail = #{noticeDesc}
+			,modify_by = #{modifyBy}
+			,modify_date = sysdate
+			,lang = #{lang}
+		where ${strSVCType}
+		and  notice_master_rid = #{noticeMasterId}
+		and notice_lang = #{noticeLang}
+	</update>
+	
+	<select id="getNoticeId" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeDetailReqDto" resultType="java.lang.String">
+	/* LoyNoticeMapper.getNoticeId */
+		select rid
+		from loy.loy_notice
+		where notice_master_rid = #{noticeId}
+		and notice_lang = #{noticeLang}
+		<!-- and ${strSVCType} -->
+	</select>
+	
+	<resultMap id="noticeDetailResultMap" type="com.icignal.loyalty.notice.dto.response.LoyNoticeDetailResDto">
+		<result property="noticeTitle" column="noticeTitle" />
+		<result property="noticeDesc" column="noticeDesc" />
+		<result property="noticeLang" column="noticeLang" />
+		<result property="noticeSubId" column="noticeSubId" />
+		<collection property="images" javaType="java.util.ArrayList" column="{parentId=noticeSubId, category=imageType, imageLang=imageLang}" select="com.icignal.common.base.mapper.CommonMapper.multiSelectImages" />
+	</resultMap>
+	
+	<select id="getNoticeDetail" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeDetailReqDto" resultMap="noticeDetailResultMap">
+	/* LoyNoticeMapper.getNoticeDetail */
+		SELECT  ln.notice_nm 		AS noticeTitle
+				,ln.notice_detail 	AS noticeDesc
+				,'com' 					AS schemas
+				,'NOTICE' 				AS imageType
+				,#{noticeId} 		AS noticeId
+				,ln.lang 					AS noticeLang
+				,#{noticeLang} 	AS imageLang
+				,#{noticeSubId} 	AS noticeSubId
+				,lnm.type				AS type
+		FROM LOY.LOY_NOTICE ln
+		JOIN LOY.LOY_NOTICE_MASTER lnm ON lnm.RID = ln.NOTICE_MASTER_RID
+		WHERE ${strSVCType}
+			AND NOTICE_MASTER_RID = #{noticeId}
+			AND NOTICE_LANG = #{noticeLang}
+			AND rownum = 1
+	</select>
+	
+	<update id="increaseNoticeCount" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeDetailReqDto">
+	/* LoyNoticeMapper.increaseNoticeCount */
+		update loy.loy_notice
+		set hit_cnt = hit_cnt + 1
+		where ${strSVCType}
+		and rid = #{noticeId}
+	</update>
+	
+	<update id="updateNoticeMaster" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeInsertReqDto">
+	/* LoyNoticeMapper.updateNoticeMaster */
+		update loy.loy_notice_master
+		set	notice_master_title = #{noticeName}
+			,exposure_yn = #{noticeStatus}
+			,open_date = #{openDate}
+			,IMG_URL1 = #{imgUrl1}
+			,modify_date = sysdate
+			,modify_by = #{modifyBy}
+			,type =#{type}
+		where rid = #{noticeId}
+	</update>
+	
+	<insert id="insertNoticeMaster" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeInsertReqDto">
+		<selectKey keyProperty="noticeId" resultType="java.lang.String" order="BEFORE">
+        	select com.getNewID('A') from dual
+    	</selectKey>
+    	/* LoyNoticeMapper.insertNoticeMaster */
+		insert into loy.loy_notice_master
+			(
+				rid
+				,notice_master_title
+				,exposure_yn
+				,open_date
+				<!-- ,accnt_id -->
+				,app_service_type
+				,country
+				,lang
+				,flag
+				,create_date
+				,create_by
+				,modify_date
+				,modify_by
+				,hit_cnt
+				,type
+				,IMG_URL1
+			)
+		values(
+		 	 #{noticeId}
+			,#{noticeName}
+			,#{noticeStatus}
+			,#{openDate}
+			<!-- ,#{accountId} -->
+			,#{appServiceId}
+			,#{country}
+			,#{lang}
+			,1
+			,sysdate
+			,#{createBy}
+			,sysdate
+			,#{modifyBy}
+			,0
+			,#{type}
+			,#{imgUrl1}
+		)
+	</insert>
+	
+	<select id="getNoticeMasterDetail" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeDetailReqDto" resultType="com.icignal.loyalty.notice.dto.response.LoyNoticeDetailResDto">
+	/* LoyNoticeMapper.getNoticeMasterDetail */
+		select lnm.notice_master_title as noticeTitle
+				,lnm.exposure_yn as noticeStatus
+				,substr(lnm.open_date,0, 4)||'-'||substr(lnm.open_date,5, 2)||'-'||substr(lnm.open_date,7, 2) as openDate
+				,lnm.type
+				,lnm.IMG_URL1 as imgUrl1
+		from loy.loy_notice_master lnm
+		where ${strSVCType}
+		and rid = #{noticeId}
+	</select>
+	
+	<update id="deleteMstNotice" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeInsertReqDto">
+	/* LoyNoticeMapper.deleteMstNotice */
+	UPDATE loy.LOY_NOTICE_MASTER
+	    SET modify_date = sysdate
+	     , modify_by = #{modifyBy}
+	     , flag = flag + 1
+	 WHERE rid = #{rid}
+	</update>
+	
+	<update id="deleteSubNotice" parameterType="com.icignal.loyalty.notice.dto.request.LoyNoticeInsertReqDto">
+	/* LoyNoticeMapper.deleteSubNotice */
+	UPDATE loy.LOY_NOTICE
+	    SET modify_date = sysdate
+	     , modify_by = #{modifyBy}
+	     , flag = flag + 1
+	 WHERE NOTICE_MASTER_RID = #{rid}
+	</update>
+	
+</mapper>

@@ -1,0 +1,90 @@
+@charset "utf-8";
+/*
+.set-theme{min-width:100px;margin:13px 10px 0 0}
+body#typeTheme1 *{color:green !important}
+body#typeTheme2 *{color:darkblue !important}
+body#typeTheme3 *{color:black !important}
+*/
+
+/* 좌측 네비 메뉴 아이콘 */
+#sideMenu .leftMenu > li:nth-child(1) > a{background-image:url(../../images/marketing/common/demo/ico_left_home.png)}
+#sideMenu .leftMenu > li:nth-child(2) > a{background-image:url(../../images/marketing/common/demo/ico_left_approval.png)}
+#sideMenu .leftMenu > li:nth-child(3) > a{background-image:url(../../images/marketing/common/demo/ico_left_member.png)}
+#sideMenu .leftMenu > li:nth-child(4) > a{background-image:url(../../images/marketing/common/demo/ico_left_point.png)}
+#sideMenu .leftMenu > li:nth-child(5) > a{background-image:url(../../images/marketing/common/demo/ico_left_calculate.png)}
+#sideMenu .leftMenu > li:nth-child(6) > a{background-image:url(../../images/marketing/common/demo/ico_left_manage.png)}
+#sideMenu .leftMenu > li:nth-child(7) > a{background-image:url(../../images/marketing/common/demo/ico_left_master.png)}
+#sideMenu .leftMenu > li:nth-child(8) > a{background-image:url(../../images/marketing/common/demo/ico_left_crm1.png)}
+#sideMenu .leftMenu > li:nth-child(9) > a{background-image:url(../../images/marketing/common/demo/ico_left_quick_campaign.png)}
+#sideMenu .leftMenu > li:nth-child(10) > a{background-image:url(../../images/marketing/common/demo/ico_left_crm2.png)}
+#sideMenu .leftMenu > li:nth-child(11) > a{background-image:url(../../images/marketing/common/demo/ico_left_crm3.png)}
+#sideMenu .leftMenu > li:nth-child(12) > a{background-image:url(../../images/marketing/common/demo/ico_left_crm4.png)}
+#sideMenu .leftMenu > li:nth-child(13) > a{background-image:url(../../images/marketing/common/demo/ico_left_crm5.png)}
+#sideMenu .leftMenu > li:nth-child(14) > a{background-image:url(../../images/marketing/common/demo/ico_left_cs1.png)}
+#sideMenu .leftMenu > li:nth-child(15) > a{background-image:url(../../images/marketing/common/demo/ico_left_cs2.png)}
+#sideMenu .leftMenu > li:nth-child(16) > a{background-image:url(../../images/marketing/common/demo/ico_left_analysis.png)}
+#sideMenu .leftMenu > li:nth-child(17) > a{background-image:url(../../images/marketing/common/demo/ico_left_crm6.png)}
+#sideMenu .leftMenu > li:nth-child(18) > a{background-image:url(../../images/marketing/common/demo/ico_left_qim.png)}
+#sideMenu .leftMenu > li > a,
+#sideMenu .leftMenu > li.open > a,
+#sideMenu .leftMenu > li.active > a,
+#sideMenu .leftMenu > li > a.active{background-repeat:no-repeat;background-position:7% 45%}
+
+/* 좌측 로고 */
+#sideMenu .ymAdminLogo{background-image:url(../../images/marketing/common/demo/icignal_mkt_logo.png)}
+.minified #sideMenu .ymAdminLogo{background-image:url(../../images/marketing/common/demo/DESCENTE_logo_BI.png)}
+
+/* content */
+.control_content.text_auto{width:auto;}
+.control_content.side_text{height: 25px; line-height: 25px;}
+.control_content.side_text.text_right {text-align: right}
+.row_part_line{margin-bottom:12px;border-bottom:1px solid #d5d5d5}
+.block_btn_area{margin-top:10px;padding-top:5px;border-top:1px dashed #ddd}
+.input-group.file{padding-right:80px}
+.input-group.file .pos_r{top:0}
+.row.row_uploadfile_preview,
+.row.row_uploadfile_preview .control-label{min-height:0}
+.row_uploadfile_preview .input-group.file{padding-right:0}
+.row_uploadfile_preview .input-group.file img{max-width:50%}
+
+/* grid */
+/*
+.e-gridwaitingpopup{display:none !important}
+.e-waitpopup-pane .e-image{}
+.e-grid{border-bottom:0 none}
+.ej-grid,
+.ej-grid .e-headercell{font-size:11px !important;color:#666}
+.e-grid .e-gridheader{color:#666;border-color:#ddd}
+.e-grid .e-headercell,
+.e-grid .e-grouptopleftcell{background-color:#f1f5f8;border-color:#ddd}
+.e-grid .e-headercell,
+.e-grid .e-headercell-hover{height:auto;padding:7px 2px}
+.e-grid .e-headercelldiv{height:auto;line-height:normal;margin:0;padding:0;text-align:center !important;font-weight:normal;font-size:11px}
+
+.e-grid .e-rowcell{padding:5px;color:#666}
+.e-grid .e-editcell,
+.e-grid .e-form-container,
+.e-grid .e-externalformedit,
+.e-grid .e-tabletd, .e-grid .e-rowcell{border-color:#ddd}
+.e-grid tr.e-hover{background-color:#ebebeb;cursor:pointer}
+.e-grid td.e-active{color:#3b9cca;background-color:#d9edf7}
+
+.e-pager,
+.e-grid .e-pagerstatusbar{padding:15px 10px 20px;background-color:transparent;text-align:center}
+.e-pager div.e-parentmsgbar{float:left}
+.e-pager .e-pagercontainer{border-radius:0;border:0 none;background-color:transparent;border-color:transparent}
+
+.e-pager .e-pagercontainer .e-first,
+.e-pager .e-pagercontainer .e-prev,
+.e-pager .e-pagercontainer .e-nextpage,
+.e-pager .e-pagercontainer .e-lastpage,
+.e-pager .e-numericitem{box-sizing:border-box;display:inline-block;width:22px;height:22px;margin:0 2px;padding:0;border:1px solid #ddd;line-height:20px;vertical-align:middle;background-color:#fff}
+
+.e-pager .e-numericitem,
+.e-pager .e-numericitem:hover,
+.e-pager .e-currentitem,
+.e-pager .e-currentitem:hover{padding:0 2px}
+.e-pager .e-currentitem,
+.e-pager .e-currentitem:hover{background-color:#55a9d0;border-color:#55a9d0}
+*/
+

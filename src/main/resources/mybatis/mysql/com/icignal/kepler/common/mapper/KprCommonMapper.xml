@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:04:15 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.common.mapper.KprCommonMapper">  
+
+	<!-- /**************************************
+	-	관련 파일		: KPRCommonMapper.java(getCommCodeList)
+	============================================
+	-	제목			: 공통코드 목록 조회
+	-	설명			: 1. CommonDAO에서 공통코드 목록을 조회
+						  2. 코드이름의 PROPERTY 값이 enableNA값이 같거나 'NA' 가 아니라면 공통코드 목록을 조회한다.
+	-	결과형태		: 복수
+	============================================
+	-	입력
+		groupCode		: 그룹 코드
+	-	출력
+		codeId			: 코드 Id
+		codeName		: 코드 이름
+		markName		: 표시 이름
+	============================================
+	-	작성자			: 류동균
+	-	작성일			: 2015. 9. 22.
+	***************************************/ -->
+	<select id="getCommCodeList" parameterType="com.icignal.kepler.common.dto.request.KprCommonCodeReqDto" 
+												resultType="com.icignal.kepler.common.dto.response.KprCommonCodeResDto">
+	/* KprCommonMapper.getCommCodeList */
+		SELECT	id				as codeId
+				, code_name		as codeName
+				, mark_name		as markName
+				, ATTRIB01		as attrib01
+				, ATTRIB02		as attrib02
+				, ATTRIB03		as attrib03
+				, ATTRIB04		as attrib04
+				, ATTRIB05		as attrib05
+		FROM	com.comm_code
+		WHERE	${strSVCType}
+		and		flag	= 1
+		<if test="groupCode != null and groupCode != ''">AND
+			group_code	= #{groupCode}
+		</if>
+		<if test="parCodeId != null and parCodeId != ''">AND
+			par_code_id	= #{parCodeId}
+		</if>
+		<if test="!enableNA">and 
+		
+			code_name	!= 'NA'
+		
+		</if>
+		order by seq
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일       : KPRCommonMapper.java(selectCommonDateCodeGridList)
+    ============================================
+    -   제목          : 공통 Date 코드 리스트 조회
+    -   설명          :
+    -   결과형태      : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 이기오
+    -   작성일         : 2019. 9. 20.
+    ***************************************/ -->    
+    <select id="selectCommonDateCodeGridList" parameterType="com.icignal.kepler.common.dto.request.KprCommonDateFunctionReqDto" 
+    															resultType="com.icignal.kepler.common.dto.response.KprCommonDateFunctionResDto">
+    /* KprCommonMapper.selectCommonDateCodeGridList */
+		select ${strColumn}
+			 , mark_name as markName
+			 , code_name as codeName
+			 , date_func as dateFunc
+		  from anl.anl_date_func
+		 where db_type = #{databaseType}
+		<if test="markName != null and markName != ''">
+		   and mark_name = #{markName}
+		 </if>
+		 <if test="codeName != null and codeName != ''">
+		   and code_name = #{codeName}
+		 </if>
+			   ${strEndPaging}
+    </select>
+    
+
+
+	<!-- /**************************************
+    -   관련 파일       : KPRCommonMapper.java(selectCommonDateCodeDetail)
+    ============================================
+    -   제목          : 공통 Date 코드 리스트 조회
+    -   설명          :
+    -   결과형태      : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 이기오
+    -   작성일         : 2019. 9. 20.
+    ***************************************/ -->   
+    <select id="selectCommonDateCodeDetail" parameterType="com.icignal.kepler.common.dto.request.KprCommonDateFunctionReqDto" 
+    														resultType="com.icignal.kepler.common.dto.response.KprCommonDateFunctionResDto">
+	/* KprCommonMapper.selectCommonDateCodeDetail */	
+		select mark_name as markName
+			 , code_name as codeName
+			 , date_func as dateFunc
+		  from anl.anl_date_func
+		 where db_type = #{databaseType}
+		<if test="markName != null and markName != ''">
+		   and mark_name = #{markName}
+		</if>
+		<if test="codeName != null and codeName != ''">
+		   and code_name = #{codeName}
+		</if>
+    </select>
+    
+    <select id="selectCommonDateCodeValue" parameterType="java.lang.String" resultType="java.lang.String">
+    /* KprCommonMappper.selectCommonDateCodeValue */
+    	SELECT	${value}	AS	funcValue
+    </select>
+    
+    <select id="getCommCodeDetail" parameterType="com.icignal.kepler.common.dto.request.KprCommonCodeReqDto" 
+    											resultType="com.icignal.kepler.common.dto.response.KprCommonCodeResDto">
+    /* KprCommonMappper.getCommCodeDetail */
+    	SELECT	ID			AS	codeId
+    		,	CODE_NAME	AS	codeName
+    		,	MARK_NAME	AS	markName
+    		,	ATTRIB01	AS	attrib01
+    		,	ATTRIB02	AS	attrib02
+    		,	ATTRIB03	AS	attrib03
+    		,	ATTRIB04	AS	attrib04
+    		,	ATTRIB05	AS	attrib05
+    	FROM	com.comm_code
+    	WHERE	${strSVCType}
+    	AND		FLAG		=	1
+    	AND		GROUP_CODE	=	#{groupCode}
+    	<if test="codeName != null and codeName != ''">AND
+    		CODE_NAME	=	#{codeName}
+    	</if>
+    	<if test="attrib01 != null and attrib01 != ''">AND
+    		ATTRIB01	=	#{attrib01}
+    	</if>
+    	<if test="attrib02 != null and attrib02 != ''">AND
+    		ATTRIB02	=	#{attrib02}
+    	</if>
+    	<if test="attrib03 != null and attrib03 != ''">AND
+    		ATTRIB03	=	#{attrib03}
+    	</if>
+    	<if test="attrib04 != null and attrib04 != ''">AND
+    		ATTRIB04	=	#{attrib04}
+    	</if>
+    	<if test="attrib05 != null and attrib05 != ''">AND
+    		ATTRIB05	=	#{attrib05}
+    	</if>
+    </select>
+    
+     <!-- /**************************************
+    -   관련 파일       : KPRCommonMapper.java(getCommCondList)
+    ============================================
+    -   제목         			 : 공통코드 목록 조회
+    -   설명          			 : 1. 공통코드 목록 조회
+    -   결과형태       		 : 복수
+    ============================================
+    -   입력          
+        screenId	     : 화면 아이디
+    -   출력           
+        condName         : 조건 명
+        condType         : 조건 유형
+        grpCode          : 조건 그룹 코드
+    ============================================
+    -   작성자         : 장용
+    -   작성일         : 2015.10.13
+    ***************************************/ -->
+<!--     <select id="selectCommCondList" parameterType="com.icignal.kepler.common.dto.request.KprCommonCondListReqDto" 
+    												resultType="com.icignal.kepler.common.dto.response.KprCommonCondListResDto">
+    select mcs.id as condId
+    	, mcs.SRCH_COND_DP_VAL as condName
+		, mcs.SRCH_COND_VAL_INPUT_GUIDE as condType
+	    , mcs.DDL_TYPE_COMPOSI_VAL as grpCode
+	    , mcs.DEFLT_DP_YN as defCon
+        , stl.tbl_eng_nm as baseTable 
+        , stl.tbl_schma_nm as baseSchema
+        , stl2.tbl_eng_nm as tgtTable
+        , stl2.tbl_schma_nm as tgtSchema
+        , scl.col_eng_nm as tgtCol
+        , scl2.col_eng_nm as joinSrcClm
+        , scl3.col_eng_nm as joinTgtClm
+        , mcs.base_tbl_alias as baseTblAlias
+        , mcs.compr_tgt_tbl_alias as comprTgtTblAlias
+	from COM.COM_SRCH mcs
+       left outer join COM.COM_SRCH_TBL_LIST as stl
+       on stl.id = mcs.BASE_TBL_NM
+        left outer join COM.COM_SRCH_TBL_LIST as stl2
+       on stl2.id = mcs.COMPR_TGT_TBL_NM
+       left outer join COM.COM_SRCH_COL_LIST scl
+       on scl.id = mcs.COMPR_TGT_COL_NM
+       left outer join COM.COM_SRCH_COL_LIST as scl2
+       on scl2.id = mcs.JOIN_SRC_COL
+       left outer join COM.COM_SRCH_COL_LIST as scl3
+       on scl3.id = mcs.COMPR_TGT_COL_NM
+	where ${strSVCType} and mcs.page_id = #{screenId} 
+	and mcs.flag = 1
+	order by mcs.create_date 
+    </select> -->
+    
+     <!-- /**************************************
+    -   관련 파일       : KPRCommonMapper.java(getAttributeGroupList)
+    ============================================
+    -   제목         			 : 공통 어트리뷰트그룹 목록
+    -   설명          			 : 공통 어트리뷰트그룹 목록
+    -   결과형태       		     : 복수
+    ============================================
+    -   입력          
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2016.07.07
+    ***************************************/ -->
+    <select id="selectAttributeGroupList" parameterType="com.icignal.kepler.segment.dto.request.KprAttributeGroupListReqDto" 
+    													resultType="com.icignal.kepler.common.dto.response.KprCommonAttributeGroupListResDto">
+        /* KprCommonMapper.selectAttributeGroupList */
+        select g.id as id
+             , g.atrib_group_nm as text
+        from anl.anl_atrib_group g
+        where ${strSVCType}
+        and g.flag = 1
+        and g.lgc_comp_id = #{logicalCompId}
+        order by g.seq
+    </select>
+    
+     <!-- /**************************************
+    -   관련 파일       : KPRCommonMapper.java(getAttributeGroupColumnList)
+    ============================================
+    -   제목                     : 공통 어트리뷰트그룹 컬럼 목록
+    -   설명          			 : 공통 어트리뷰트그룹 컬럼 목록
+    -   결과형태       		     : 복수
+    ============================================
+    -   입력          
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2016.07.07
+    ***************************************/ -->
+    <select id="selectAttributeGroupColumnList" parameterType="com.icignal.kepler.segment.dto.request.KprAttributeGroupListReqDto" 
+    															resultType="com.icignal.kepler.common.dto.response.KprCommonAttributeGroupColumnListResDto">
+        /* KprCommonMapper.selectAttributeGroupColumnList */
+        
+        select case when colType = 'P' then col_id else id end as id
+             , dp_nm as text
+             , case when colType = 'D' then col_id else '' end as parentId
+             , case when colType = 'M' and colTypeCd = 'DIMENSION' then 'D' when colType = 'M' and colTypeCd = 'MEASURE' then 'M' else colType end as colType
+             , id as atribGroupColId
+        from (
+            select ac.id
+                 , ac.col_id
+                 , ac.dp_nm
+                 , ac.seq
+                 , case when nvl(length(ac.dim_col_id), 0) <![CDATA[>]]> 0 then 'D' <!-- when ac2.cnt <![CDATA[>]]> 1 then 'P' --> else 'M' end as colType
+                 , c1.code_name as colTypeCd
+                 , (case when cm2.flag = 1 or not(nvl(length(ac.dim_col_id),0) <![CDATA[>]]> 1) then 1 else 0 end) as colFlag
+            from anl.anl_atrib_group_column ac
+            join anl.anl_column_mst cm  on cm.flag = 1 and cm.id = ac.col_id
+            left outer join anl.anl_column_mst cm2  on cm2.flag = 1 and cm2.id = ac.dim_col_id
+            join com.comm_code c1       on c1.flag = 1 and c1.code_name = cm.col_type_cd and c1.group_code = 'ANL_COL_TYPE_CD' and c1.lang = #{lang}
+            left outer join (select count(*) as cnt, col_id from anl.anl_atrib_group_column where flag = 1 and cal_col_yn = 0 and atrib_group_id = #{atribGroupId} group by col_id) ac2 on ac2.col_id = ac.col_id
+            where ${strSVCType}
+            and ac.flag = 1
+            and ac.atrib_group_id = #{atribGroupId}
+        ) t
+        where nvl(length(t.id), 0) <![CDATA[>]]> 0
+        and t.colFlag = 1
+        order by t.seq
+        
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRCommonMapper.java (getCMNLogicalComponentList)
+    ============================== ==============
+    -   제목                  : 공통 컴포넌트 목록 조회
+    -   설명                  : 공통 컴포넌트 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:   accountId
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectCommonLogicalComponentList" parameterType="com.icignal.kepler.common.dto.request.KprCommonLogicalComponentListReqDto" 
+    																	resultType="com.icignal.kepler.common.dto.response.KprCommonLogicalComponentListResDto">
+        /* KprCommonMapper.selectCommonLogicalComponentList */
+        select ${strColumn}
+             , l.ID as logicalCompId
+             , e.NAME as createByName
+             , TO_CHAR(l.CREATE_DATE,'YYYY-MM-DD') as createDate
+             , l.LGC_COMP_NM as logicalCompName
+             , l.LGC_DESC as logicalCompDesc
+             , l.logicalCompUseFlag as logicalCompUseFlag
+        from (select t.*
+                   , (case when t.CMPLT_YN = '1' and g.cnt = 1 then 'Y' else 'N' end) as logicalCompUseFlag 
+              from anl.anl_lgc_comp_mst t
+              left outer join (select t2.lgc_comp_id, count(*) as cnt
+            	   			   from anl.anl_atrib_group t2
+            				   join anl.anl_atrib_group_column t3 on t3.flag = 1 and t3.atrib_group_id = t2.id and t3.seg_key_yn = '1' 
+                               where t2.flag = 1
+                               group by t2.lgc_comp_id) g on g.lgc_comp_id = t.id 
+              where t.flag = 1) l
+        left outer join com.crm_user u on l.create_by = u.rid
+        left outer join com.employee e on e.flag = 1 and u.id_employee = e.id
+        where ${strSVCType}  
+        and ${strWhere}
+        and l.flag = 1
+        <if test="segmentFlag">
+        and l.logicalCompUseFlag = 'Y'
+        </if>
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+    
+	<select id="selectNodeList" parameterType="com.icignal.kepler.common.dto.request.KprNodeListReqDto" 
+										resultType="com.icignal.kepler.common.dto.response.KprNodeListResDto">
+		/* KprCommonMapper.selectNodeList */
+		<!-- 루트 폴더 -->
+		SELECT	CODE_NAME	AS	nodeId
+			,	MARK_NAME	AS	nodeText
+			,	NULL		AS	parNodeId
+			,	'F'			AS	nodeType
+			,	0			AS	modifyFlag
+			,	1			AS	expandedFlag
+			,	CASE
+					WHEN	CODE_NAME	=	'MY_FOLDER'	THEN	'1'
+					ELSE	'0'
+				END			AS	myFolderFlag
+		FROM	com.comm_code
+		WHERE	${strSVCType}
+		AND		FLAG		=	1
+		AND		GROUP_CODE	=	'FOLDER_TYPE_CD'
+		AND		LANG		=	#{lang}
+
+		UNION	ALL
+
+		<!-- 실제 폴더 -->
+		SELECT	ft.NODEID		AS	nodeId
+			,	ft.NODETEXT		AS	nodeText
+			,	ft.PARNODEID	AS	parNodeId
+			,	ft.NODETYPE		AS	nodeType
+			,	ft.MODIFYFLAG	AS	modifyFlag
+			,	ft.EXPANDEDFLAG	AS	expandedFlag
+			,	ft.MYFOLDERFLAG	AS	myFolderFlag
+		FROM	(
+			SELECT	ID				AS	nodeId
+				,	FOLDR_NM		AS	nodeText
+				,	PAR_FOLDR_ID	AS	parNodeId
+				,	'F'				AS	nodeType
+				,	1				AS	modifyFlag
+				,	0				AS	expandedFlag
+				,	MY_FOLDR_YN		AS	myFolderFlag
+			FROM	anl.anl_save_info
+			WHERE	${strSVCType}
+			AND		FLAG		=	1
+			AND		(
+					(
+						MY_FOLDR_YN	=	'1'
+					AND	CREATE_BY	=	#{empId}
+				)
+				OR	MY_FOLDR_YN		=	'0'
+			)
+			ORDER BY CREATE_DATE ASC
+		)	ft
+
+		<if test="reportFlag == &quot;Y&quot;">
+			<!-- 분석 리스트 -->
+			UNION	ALL
+
+			SELECT	rt.NODEID		AS	nodeId
+				,	rt.NODETEXT		AS	nodeText
+				,	rt.PARNODEID	AS	parNodeId
+				,	rt.NODETYPE		AS	nodeType
+				,	rt.MODIFYFLAG	AS	modifyFlag
+				,	rt.EXPANDEDFLAG	AS	expandedFlag
+				,	rt.MYFOLDERFLAG	AS	myFolderFlag
+			FROM	(
+				SELECT	ID					AS	nodeId
+					,	RPT_NM				AS	nodeText
+					,	ANL_SAVE_INFO_ID	AS	parNodeId
+					,	'R'					AS	nodeType
+					,	0					AS	modifyFlag
+					,	0					AS	expandedFlag
+					,	'0'					AS	myFolderFlag
+				FROM	anl.anl_rpt_mst
+				WHERE	${strSVCType}
+				AND		FLAG		=	1
+				AND		DASHBRD_YN	=	'0'
+				ORDER BY CREATE_DATE DESC
+			)	rt
+		</if>
+	</select>
+	
+	<select id="selectFolderDeletableCheck" parameterType="com.icignal.kepler.common.dto.request.KprNodeDetailReqDto" resultType="java.lang.Integer">
+		/* KprCommonMapper.selectFolderDeletableCheck */
+		SELECT	CASE
+					WHEN	SUM( t_cnt.CNT )	=	0	THEN	1
+					ELSE	0
+				END
+		FROM	(
+			<!-- 하위 폴더 조회 -->
+			SELECT	COUNT(1)	AS	CNT
+			FROM	anl.anl_save_info	asi
+			WHERE	${strSVCType}
+			AND		asi.FLAG			=	1
+			AND		asi.PAR_FOLDR_ID	=	#{nodeId}
+			
+			UNION	ALL
+			
+			<!-- 분석 Count -->
+			SELECT	COUNT(1)
+			FROM	anl.anl_save_info	asi
+			JOIN	anl.anl_rpt_mst		arm	ON	asi.ID		=	arm.ANL_SAVE_INFO_ID
+											AND	arm.FLAG	=	1
+			WHERE	${strSVCType}
+			AND		asi.FLAG		=	1
+			AND		asi.ID			=	#{nodeId}
+			
+			UNION	ALL
+			
+			<!-- 대시보드 Count -->
+			SELECT	COUNT(1)
+			FROM	anl.anl_save_info		asi
+			JOIN	anl.anl_dashbrd_mst		arm	ON	asi.ID		=	arm.ANL_SAVE_INFO_ID
+												AND	arm.FLAG	=	1
+			WHERE	${strSVCType}
+			AND		asi.FLAG		=	1
+			AND		asi.ID			=	#{nodeId}
+		)	t_cnt
+	</select>
+	
+	<insert id="insertFolder" parameterType="com.icignal.kepler.common.dto.request.KprNodeDetailReqDto">
+		/* KprCommonMapper.insertFolder */
+		INSERT INTO anl.anl_save_info (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	FOLDR_NM
+			,	PAR_FOLDR_ID
+			,	MY_FOLDR_YN
+		) VALUES (
+				#{nodeId}
+			,	#{empId}
+			,	#{empId}
+			,	SYSDATE
+			,	SYSDATE
+			,	1
+			,	#{nodeText}
+			,	#{parNodeId}
+			,	#{myFolderFlag}
+		)
+		
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			SELECT	1
+		</selectKey>
+	</insert>
+	
+	<update id="updateFolder" parameterType="com.icignal.kepler.common.dto.request.KprNodeDetailReqDto">
+		/* KprCommonMapper.updateFolder */
+		UPDATE	anl.anl_save_info
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	SYSDATE
+			,	FOLDR_NM	=	#{nodeText}
+		WHERE	ID	=	#{nodeId}
+	</update>
+	
+	<update id="deleteFolder" parameterType="com.icignal.kepler.common.dto.request.KprNodeDetailReqDto">
+		/* KprCommonMapper.deleteFolder */
+		UPDATE	anl.anl_save_info
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	SYSDATE
+			,	FLAG		=	flag + 1
+		WHERE	ID	=	#{nodeId}
+	</update>
+	
+	<select id="selectAnalysisCreaterCheck" parameterType="com.icignal.kepler.common.dto.request.KprAnalysisModifyCheckReqDto" resultType="java.lang.Integer">
+	/* KprCommonMapper.selectAnalysisCreaterCheck */
+		SELECT	(CASE
+					WHEN	CREATE_BY = #{empId} THEN 1
+					ELSE	0
+				END) as checkCnt 
+		<if test="analysisId != null and analysisId != ''">
+			FROM	anl.anl_rpt_mst
+			WHERE	FLAG	= 1
+			AND		ID		= #{analysisId}
+		</if>
+		<if test="analysisId == null or analysisId == ''">
+			FROM	anl.anl_dashbrd_mst
+			WHERE	FLAG	= 1
+			AND		ID		= #{dashboardId}
+		</if>
+	</select>
+	
+	<!-- 분석/대시보드 수정 가능여부 체크 -->
+	<select id="selectAnalysisModifyCheck" parameterType="com.icignal.kepler.common.dto.request.KprAnalysisModifyCheckReqDto" resultType="java.lang.Integer">
+		/* KprCommonMapper.selectAnalysisModifyCheck */
+		SELECT	COUNT(1)
+		<if test="analysisId != null and analysisId != ''">
+			FROM	anl.anl_rpt_mst_inst
+			WHERE	FLAG	= 1
+			AND		ID		= #{analysisId}
+		</if>
+		<if test="analysisId == null or analysisId == ''">
+			FROM	anl.anl_dashbrd_mst_inst
+			WHERE	FLAG	= 1
+			AND		ID		= #{dashboardId}		
+		</if>
+	</select>
+	
+	
+	<!-- kj.kang :: 분석 설정 내 항목을 SELECT함 -->
+	<!-- 1. COLUMN 항목 -->
+	<select id="selectAnalysisSetupColumnList" parameterType="com.icignal.kepler.common.dto.request.KprAnalysisSetupPropertyReqDto" 
+																resultType="com.icignal.kepler.common.dto.response.KprAnalysisColumnItemResDto">
+		/* KprCommonMapper.selectAnalysisSetupColumnList */
+		SELECT	arc.ID				AS	columnId
+			,	arc.RPT_COL_DP_NM	AS	columnDisplayName
+		FROM	anl.${tblRptMstNm}	arm
+		JOIN	anl.${tblColumnNm}	arc	ON	arm.ID				=	arc.RPT_ID
+										AND	arc.FLAG			=	1
+										AND	arc.COL_TYPE_CD		=	'DIMENSION'
+										AND	arc.COL_USE_TYPE_CD	=	'COLUMN'
+		WHERE	arm.ID	=	#{rptId}
+		ORDER BY arc.SEQ ASC
+	</select>
+	
+	<!-- 2. 프롬프트 항목 -->
+	<select id="selectAnalysisSetupPromptList" parameterType="com.icignal.kepler.common.dto.request.KprAnalysisSetupPropertyReqDto" 
+																resultType="com.icignal.kepler.common.dto.response.KprAnalysisPromptItemResDto">
+		/* KprCommonMapper.selectAnalysisSetupPromptList */
+		SELECT	arm.ID					AS	analysisId
+			,	rpm.ID					AS	promptId
+			,	rpm.PROMPT_VAL			AS	promptValue
+			,	rpm.RPT_PRPT_COL_ALIAS	AS	promptAlias
+			,	adi.ID					AS	databaseId
+			,	adi.CON_IP				AS	connectIp
+			,	adi.CON_PORT			AS	connectPort
+			,	adi.CON_ID				AS	connectId
+			,	adi.CON_PW				AS	connectPw
+			,	adi.CON_URL				AS	connectUrl
+			,	atm.SCHMA_NM			AS	tableSchemaName
+			,	atm.TBL_NM				AS	tableName
+			,	acm.COL_NM				AS	columnName
+			,	aag.ID					AS	atribGroupColumnId
+			,	aag.DP_NM				AS	atribGroupColumnName
+			,	dcm.CODE_NAME			AS	connectDatabaseType
+			,	dcm.ATTRIB01			AS	connectDatabaseClass
+			,	pcd.CODE_NAME			AS	promptTypeCode
+			, aag.tbl_alias_col_nm		as tableAliasColumnName
+		FROM	anl.anl_db_inform			adi
+		JOIN	anl.anl_subject_db_rel		sdr	ON	adi.ID				=	sdr.DB_ID
+												AND	sdr.FLAG			=	1
+		JOIN	anl.anl_table_mst			atm	ON	sdr.ID				=	atm.SUBJECT_DB_REL_ID
+												AND	atm.FLAG			=	1
+		JOIN	anl.anl_column_mst			acm	ON	atm.ID				=	acm.TBL_ID
+												AND	acm.FLAG			=	1
+		JOIN	anl.anl_atrib_group_column	aag	ON	acm.ID				=	CASE
+																				WHEN	LENGTH( aag.DIM_COL_ID )	&gt;	0	THEN	aag.DIM_COL_ID
+																				ELSE	aag.COL_ID
+																			END
+												AND	acm.FLAG			=	1
+		JOIN	anl.${tblPromptNm}			rpm	ON	aag.ID				=	rpm.ATRIB_GROUP_COL_ID
+												AND	rpm.FLAG			=	1
+		JOIN	anl.${tblRptMstNm}			arm	ON	rpm.RPT_ID			=	arm.ID
+												AND	arm.FLAG			=	1
+		JOIN	com.comm_code				dcm	ON	adi.CON_DB_TYPE		=	dcm.CODE_NAME
+												AND	dcm.GROUP_CODE		=	'ANL_DB_TYPE_CD'
+												AND	dcm.FLAG			=	1
+												AND	dcm.LANG			=	#{lang}
+		JOIN	com.comm_code				pcd	ON	rpm.PROMPT_TYPE_CD	=	pcd.CODE_NAME
+												AND	pcd.GROUP_CODE		=	'ANL_PRMT_TYPE_CD'
+												AND	pcd.FLAG			=	1
+												AND	pcd.LANG			=	#{lang}
+		WHERE	arm.ID	=	#{rptId}
+		ORDER BY rpm.SEQ ASC
+	</select>
+	
+	<select id="selectCommonColumnValueDetail" parameterType="com.icignal.kepler.common.dto.request.KprCommonColumnReqDto" 
+																resultType="com.icignal.kepler.common.dto.response.KprCommonColumnResDto">
+	/* KprCommonMapper.selectCommonColumnValueDetail */
+		select adi.con_ip		as connectIp
+			 , adi.con_port		as connectPort
+			 , adi.con_id		as connectId
+			 , adi.con_pw		as connectPw
+			 , adi.con_url		as connectUrl
+			 , dcd.code_name	as connectDatabaseType
+			 , dcd.attrib01		as connectDatabaseClass
+			 , atm.schma_nm		as schemaName
+			 , atm.tbl_nm		as tableName
+			 , acm.col_nm		as columnName
+			 , adi.aws_secret_nm as secretNm
+		  from anl.anl_column_mst		acm
+		  join anl.anl_table_mst		atm on acm.tbl_id = atm.id and atm.flag = 1
+		  join anl.anl_subject_db_rel	sdr on atm.subject_db_rel_id = sdr.id and sdr.flag = 1
+		  join anl.anl_db_inform		adi on sdr.db_id = adi.id and adi.flag = 1
+		  join com.comm_code			dcd on adi.con_db_type = dcd.code_name and dcd.group_code = 'ANL_DB_TYPE_CD' and dcd.flag = 1 and dcd.lang = #{lang}
+		 where acm.flag	= 1
+		   and acm.id	= #{columnId}
+	</select>
+</mapper>

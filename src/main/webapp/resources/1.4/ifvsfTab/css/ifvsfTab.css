@@ -1,0 +1,10 @@
+@CHARSET "UTF-8";
+
+.e-js.e-tab.e-js .e-header > .e-select, 
+.e-js.e-tab.e-js .e-header > .e-active, 
+.e-js.e-tab.e-js .e-left > .e-active, 
+.e-js.e-tab.e-js .e-right > .e-active, 
+.e-js.e-tab.e-js .e-left > .e-select, 
+.e-js.e-tab.e-js .e-right > .e-select {
+    background: #E2E2E2;
+}

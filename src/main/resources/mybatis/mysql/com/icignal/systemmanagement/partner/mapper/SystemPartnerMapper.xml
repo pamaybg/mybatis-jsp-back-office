@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.systemmanagement.partner.mapper.SystemPartnerMapper">  
+	
+	<select id="getPartnerList" parameterType="com.icignal.systemmanagement.partner.dto.request.SystemPartnerListReqDto" 
+										resultType="com.icignal.systemmanagement.partner.dto.response.SystemPartnerListResDto">
+	/* SystemPartnerMapper. */
+	select * from (
+		     SELECT  lp.rid					AS rid
+					,lp.CREATE_DATE			AS createDate
+					,c2.USER_ID				AS createBy
+	<![CDATA[		,CASE WHEN END_DATE>=TRUNC(SYSDATE) THEN lp.DISP_SEQ	ELSE null	end		as dispSeq ]]>
+					,case when lp.DISP_YN ='Y' then '활성'
+						  else '사용중지' end				AS dispYn
+					<!-- ,c1.MARK_NAME			AS category  -->
+					, lp.CATEGORY as categoryCdNm
+					,lp.PTNR_NM				AS ptnrNm
+					,${strColumn}
+			  FROM 	LOY.LOY_PARTNER		lp 
+   <!-- LEFT OUTER JOIN	com.COMM_CODE		c1 ON c1.GROUP_CODE ='PTNR_TYPE' and lp.CATEGORY=c1.CODE_NAME -->
+   LEFT OUTER JOIN  com.CRM_USER		c2 on c2.rid=lp.CREATE_BY
+			 WHERE ${strCondWhere}
+		  order by ${strOrderby}
+		 		   ${strEndPaging} 
+		 		   )
+		 		   where ${strWhere}
+	</select>
+	
+		<insert id="insertPartnerMaster" parameterType="com.icignal.systemmanagement.partner.dto.request.SystemPartnerInsertReqDto">
+		<selectKey keyProperty="ptnrId" resultType="java.lang.String" order="BEFORE">
+        	select com.getNewID('A') from dual
+    	</selectKey>
+    	/* SystemPartnerMapper. */
+    	INSERT INTO LOY.LOY_PARTNER
+						(  RID
+						 , CREATE_BY
+						 , CREATE_DATE
+						 , MODIFY_BY
+						 , MODIFY_DATE
+						 , FLAG
+						 , CATEGORY
+						 , DISP_YN
+						 , DISP_SEQ
+						 , SOL_PAY_YN
+						 , START_DATE
+						 , END_DATE)
+				  VALUES(
+				  		 #{ptnrId},
+				 		 #{createBy},
+				 		 SYSDATE,
+				 		 #{createBy},
+				 		 SYSDATE,
+				 		 1,
+				 		 #{category},
+				 		 #{ptnrStatus}, 
+				 		 #{dispSeq},
+				 		 #{solYn},
+				 		 TO_DATE(#{startDate},'YYYY-MM-DD'),
+				 		 TO_DATE(#{endDate},'YYYY-MM-DD'))
+	</insert>
+	
+	<update id="updatePartnerMaster" parameterType="com.icignal.systemmanagement.partner.dto.request.SystemPartnerInsertReqDto">
+		/* SystemPartnerMapper. */
+		UPDATE  LOY.LOY_PARTNER
+		   SET  MODIFY_BY=#{modifyBy}, 
+		   		MODIFY_DATE=SYSDATE, 
+		   		CATEGORY=#{category}, 
+		   		DISP_YN=#{ptnrStatus}, 
+		   		DISP_SEQ=#{dispSeq},
+		   		SOL_PAY_YN=#{solYn},
+		   		START_DATE=TO_DATE(#{startDate},'YYYY-MM-DD'),
+		   		END_DATE=TO_DATE(#{endDate},'YYYY-MM-DD')
+		 WHERE  RID=#{ptnrId}
+	</update>
+	
+	
+	<select id="getPartnerMasterDetail" parameterType="com.icignal.systemmanagement.partner.dto.request.SystemPartnerDetailReqDto" 
+													resultType="com.icignal.systemmanagement.partner.dto.response.SystemPartnerDetailResDto">
+	/* SystemPartnerMapper. */
+		SELECT  lp.RID				AS rid
+			   ,lp.CATEGORY			AS category
+			   ,lp.DISP_SEQ			AS dispSeq
+			   ,lp.DISP_YN			AS ptnrStatus
+			   ,lp.SOL_PAY_YN		as solYn
+			   ,lp.START_DATE		as startDate
+			   ,lp.END_DATE			as endDate
+		  FROM  loy.LOY_PARTNER  lp 
+		 WHERE  lp.RID =#{ptnrId}
+	</select>
+	
+		<update id="insertPartner" parameterType="com.icignal.systemmanagement.partner.dto.request.SystemPartnerInsertReqDto">
+		/* SystemPartnerMapper. */
+		UPDATE  LOY.LOY_PARTNER
+	       SET  MODIFY_BY=#{modifyBy}, 
+	       		MODIFY_DATE=SYSDATE, 
+	       		FLAG=1, 
+	       		PTNR_NM=#{ptnrName}, 
+	       		COMMENTS=#{ptnrDesc},
+	       		RANDING_URL= #{pageUrl}
+		 WHERE RID=#{ptnrId}
+		 
+	</update>
+	
+	<resultMap id="partnerDetailResultMap" type="com.icignal.systemmanagement.partner.dto.response.SystemPartnerDetailResDto">
+		<result property="ptnrTitle" column="ptnrTitle" />
+		<result property="ptnrDesc" column="ptnrDesc" />
+		<result property="ptnrLang" column="ptnrLang" />
+		<result property="ptnrSubId" column="ptnrSubId" />
+		<collection property="images" javaType="java.util.ArrayList" column="{parentId=ptnrSubId, category=imageType, imageLang=imageLang}" select="com.icignal.common.base.mapper.CommonMapper.multiSelectImages" />
+		<collection property="imagesDetail" javaType="java.util.ArrayList" column="{parentId=ptnrSubId, category=imageDetailType, imageLang=imageLang}" select="com.icignal.common.base.mapper.CommonMapper.multiSelectImages" />
+	</resultMap>
+
+	<select id="getPartnerDetail" parameterType="com.icignal.systemmanagement.partner.dto.request.SystemPartnerDetailReqDto" resultMap="partnerDetailResultMap">
+	/* SystemPartnerMapper. */
+			
+		select   lp.COMMENTS 	AS ptnrDesc
+				,lp.PTNR_NM		AS ptnrTitle
+				,lp.RANDING_URL	AS pageUrl
+				,'com' 				as schemas
+				,'PTNR_IMG' 		as imageType
+				,'PTNR_IMG_DETAIL'	as imageDetailType
+				,#{ptnrId} as ptnrId
+				,#{ptnrLang} as imageLang
+				,#{ptnrId} as ptnrSubId
+		from loy.LOY_PARTNER lp
+		where rid = #{ptnrId}
+			AND rownum = 1
+	</select>
+
+</mapper> 

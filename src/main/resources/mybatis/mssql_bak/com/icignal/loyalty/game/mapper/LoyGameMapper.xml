@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.game.mapper.LoyGameMapper">
+
+
+    <select id="selectGameList"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameReqDto"
+            resultType="com.icignal.loyalty.game.dto.response.LoyGameResDto">
+        /* LoyGameMapper.selectGameList */
+        SELECT
+            A.RID                             AS 	rid
+            ,A.GAME_NO                        AS 	gameNo
+            ,A.GAME_NM                        AS 	gameNm
+            ,A.STAT_CD                        AS 	statCd
+            ,A.GAME_TYPE_CD                   AS 	gameTypeCd
+            ,A.JOIN_TYPE_CD                   AS 	joinTypeCd
+            ,convert(A.GAME_START_DATE,'YYYY-MM-DD') AS  gameStartDate
+            ,convert(A.GAME_END_DATE,'YYYY-MM-DD')   AS  gameEndDate
+            ,convert(A.CREATE_DATE,'YYYY-MM-DD') 	AS  createDate
+            ,EM.NAME    	  						AS  createBy
+            ,${strColumn}
+        FROM LOY.LOY_GAME A WITH (NOLOCK) 
+        LEFT OUTER JOIN COM.CRM_USER US  WITH (NOLOCK) ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        ORDER BY ${strOrderby}
+            ${strEndPaging}
+    </select>
+
+    <select id="selectGameDetail"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameReqDto"
+            resultType="com.icignal.loyalty.game.dto.response.LoyGameResDto">
+        /* LoyGameMapper.selectGameDetail */
+        SELECT
+            A.RID                             AS 	rid
+            ,A.GAME_NO                        AS 	gameNo
+            ,A.GAME_NM                        AS 	gameNm
+            ,convert(A.GAME_START_DATE,'YYYY-MM-DD') AS  gameStartDate
+            ,convert(A.GAME_END_DATE,'YYYY-MM-DD')   AS  gameEndDate
+            ,A.DESC_TEXT                      AS 	descText
+            ,A.STAT_CD                        AS 	statCd
+            ,A.GAME_TYPE_CD                   AS 	gameTypeCd
+            ,A.JOIN_TYPE_CD                   AS 	joinTypeCd
+            ,A.BUDGT_AMT                      AS 	budgtAmt
+            ,A.TCKT_RUN_CNT                   AS 	tcktRunCnt
+            ,convert(A.CREATE_DATE,'YYYY-MM-DD') 	 AS  createDate
+            ,EM.NAME    	  						 AS  createBy
+        FROM LOY.LOY_GAME A WITH (NOLOCK) 
+        LEFT OUTER JOIN COM.CRM_USER US  WITH (NOLOCK) ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+        WHERE 1=1
+        AND A.RID = #{rid}
+        AND A.FLAG  = 1
+    </select>
+
+    <insert id="insertGame"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameReqDto">
+        /* LoyGameMapper.insertGame */
+        INSERT INTO LOY.LOY_GAME (
+            RID,
+            CREATE_BY,
+            MODIFY_BY,
+            GAME_NO,
+            GAME_NM,
+            GAME_START_DATE,
+            GAME_END_DATE,
+            DESC_TEXT,
+            STAT_CD,
+            GAME_TYPE_CD,
+            JOIN_TYPE_CD,
+            BUDGT_AMT,
+            TCKT_RUN_CNT
+        ) VALUES (
+            #{rid},
+            #{createBy},
+            #{modifyBy},
+            LOY.FN_GET_GAME_NO(),
+            #{gameNm},
+            TO_DATE(#{gameStartDate} , 'YYYY-MM-DD'),
+            TO_DATE(#{gameEndDate} , 'YYYY-MM-DD'),
+            #{descText},
+            #{statCd},
+            #{gameTypeCd},
+            #{joinTypeCd},
+            #{budgtAmt},
+            #{tcktRunCnt}
+        )
+    </insert>
+
+    <update id="updateGame"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameReqDto">
+        /* LoyGameMapper.updateGame */
+        UPDATE
+            LOY.LOY_GAME
+        SET
+            RID = #{rid},
+            MODIFY_BY = #{modifyBy},
+            MODIFY_DATE = getdate(),
+            GAME_NM = #{gameNm},
+            GAME_START_DATE = convert(date,#{gameStartDate}),
+            GAME_END_DATE = convert(date,#{gameEndDate}),
+            DESC_TEXT = #{descText},
+            STAT_CD = #{statCd},
+            GAME_TYPE_CD = #{gameTypeCd},
+            JOIN_TYPE_CD = #{joinTypeCd},
+            BUDGT_AMT = #{budgtAmt},
+            TCKT_RUN_CNT = #{tcktRunCnt}
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateGameDel" parameterType="com.icignal.loyalty.game.dto.request.LoyGameReqDto">
+        /* LoyGameMapper.updateGameDel */
+        UPDATE LOY.LOY_GAME
+        SET MODIFY_DATE	= getdate()
+            , MODIFY_BY	= #{modifyBy}
+            , FLAG		= 0
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateGameStop"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameReqDto">
+        /* StampBingoMapper.updateGameStop */
+        UPDATE LOY.LOY_GAME
+        SET STAT_CD	= 'E'
+        , MODIFY_BY	= #{modifyBy}
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <select id="selectGameSubDetail"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameSubReqDto"
+            resultType="com.icignal.loyalty.game.dto.response.LoyGameSubResDto">
+        /* LoyGameMapper.selectGameSubDetail */
+        SELECT
+            A.RID							  AS 	rid
+            ,A.RL_MISSION_TEXT                AS 	rlMissionText
+            ,A.RID_OFR1                       AS 	ridOfr1
+            ,B.OFR_NM						  AS	ofrNm1
+            ,A.RID_OFR2                       AS 	ridOfr2
+            ,C.OFR_NM						  AS	ofrNm2
+            ,A.OFR1_QTY                       AS 	ofr1Qty
+            ,A.OFR1_AVAIL_DAY                 AS 	ofr1AvailDay
+            ,A.OFR2_QTY                       AS 	ofr2Qty
+            ,A.OFR2_AVAIL_DAY                 AS 	ofr2AvailDay
+            ,A.RUN_ITEM_CNT                   AS 	runItemCnt
+            ,A.COMBI_MAX_AMT                  AS 	combiMaxAmt
+            ,A.LOST_RATE                      AS 	lostRate
+            ,A.WIN_RATE_1SLOT                 AS 	winRate1slot
+            ,A.WIN_RATE_FIRST                 AS 	winRateFirst
+            ,A.WIN_RATE_SPECIAL               AS 	winRateSpecial
+            ,convert(varchar(10),A.GAME_START_DATE,120) AS gameStartDate
+            ,convert(varchar(10),A.GAME_END_DATE,120) AS gameEndDate
+        FROM LOY.LOY_GAME A WITH (NOLOCK) 
+        LEFT OUTER JOIN LOY.LOY_OFR B WITH (NOLOCK) ON A.RID_OFR1 = B.RID AND B.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_OFR C WITH (NOLOCK) ON A.RID_OFR2 = C.RID AND C.FLAG = 1
+        WHERE 1=1
+        AND A.RID = #{rid}
+        AND A.FLAG  = 1
+    </select>
+
+    <update id="updateGameSub"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameSubReqDto">
+        /* LoyGameMapper.updateGameSub */
+        UPDATE
+            LOY.LOY_GAME
+        SET
+            MODIFY_DATE = getdate(),
+            MODIFY_BY = #{modifyBy},
+            RL_MISSION_TEXT  = #{rlMissionText},
+            RID_OFR1         = #{ridOfr1},
+            RID_OFR2         = #{ridOfr2},
+            OFR1_QTY         = #{ofr1Qty},
+            OFR1_AVAIL_DAY   = #{ofr1AvailDay},
+            OFR2_QTY         = #{ofr2Qty},
+            OFR2_AVAIL_DAY   = #{ofr2AvailDay},
+            RUN_ITEM_CNT     = #{runItemCnt},
+            COMBI_MAX_AMT    = #{combiMaxAmt},
+            LOST_RATE        = #{lostRate},
+            WIN_RATE_1SLOT   = #{winRate1slot},
+            WIN_RATE_FIRST   = #{winRateFirst},
+            WIN_RATE_SPECIAL = #{winRateSpecial}
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateGameSubDel" parameterType="com.icignal.loyalty.game.dto.request.LoyGameSubReqDto">
+        /* LoyGameMapper.updateGameSubDel */
+        UPDATE
+            LOY.LOY_GAME
+        SET
+            MODIFY_DATE	= getdate()
+            , MODIFY_BY	= #{modifyBy}
+            , RL_MISSION_TEXT = NULL
+            , RID_OFR1 = NULL
+            , RID_OFR2 = NULL
+            , OFR1_QTY = NULL
+            , OFR1_AVAIL_DAY = NULL
+            , OFR2_QTY = NULL
+            , OFR2_AVAIL_DAY = NULL
+            , RUN_ITEM_CNT = NULL
+            , COMBI_MAX_AMT = NULL
+            , LOST_RATE = NULL
+            , WIN_RATE_1SLOT = NULL
+            , WIN_RATE_FIRST = NULL
+            , WIN_RATE_SPECIAL = NULL
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <select id="selectGameRuleList"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameRuleReqDto"
+            resultType="com.icignal.loyalty.game.dto.response.LoyGameRuleResDto">
+        /* LoyGameRuleMapper.selectGameRuleList */
+        SELECT
+            A.RID AS rid,
+            A.LINE_NO AS lineNo,
+            A.LINE_NM AS lineNm,
+            A.PIE_SIZE_RATE AS pieSizeRate,
+            A.MISSION_CHAR AS missionChar,
+            B.OFR_NM AS lineOfrNm,
+            A.LINE_OFR_QTY AS lineOfrQty,
+            A.LINE_OFR_AVAIL_DAY AS lineOfrAvailDay,
+            A.LINE_WIN_RATE AS lineWinRate,
+            A.BUDGT_CLOSE_YN AS budgtCloseYn,
+            A.LINE_IMG_URL AS lineImgUrl,
+            A.LINE_OFR_YN AS lineOfrYn,
+            A.FIRST_SLOT_YN AS firstSlotYn,
+            A.SPECIAL_YN AS specialYn,
+            A.DICE_SUM_QTY AS diceSumQty,
+            convert(varchar(10),A.CREATE_DATE, 120) AS createDate,
+            ${strColumn}
+        FROM LOY.LOY_GAME_RULE A WITH (NOLOCK) 
+        LEFT OUTER JOIN LOY.LOY_OFR B WITH (NOLOCK) ON A.RID_LINE_OFR = B.RID AND B.FLAG = 1
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        AND A.RID_GAME = #{ridGame}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectGameRuleDetail"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameRuleReqDto"
+            resultType="com.icignal.loyalty.game.dto.response.LoyGameRuleResDto">
+        /* LoyGameRuleMapper.selectGameRuleDetail */
+        SELECT
+            A.RID AS rid,
+            A.LINE_NO AS lineNo,
+            A.LINE_NM AS lineNm,
+            A.PIE_SIZE_RATE AS pieSizeRate,
+            A.MISSION_CHAR AS missionChar,
+            A.RID_LINE_OFR AS ridLineOfr,
+            B.OFR_NM AS lineOfrNm,
+            A.LINE_OFR_QTY AS lineOfrQty,
+            A.LINE_OFR_AVAIL_DAY AS lineOfrAvailDay,
+            A.LINE_WIN_RATE AS lineWinRate,
+            A.BUDGT_CLOSE_YN AS budgtCloseYn,
+            A.LINE_IMG_URL AS lineImgUrl,
+            A.LINE_OFR_YN AS lineOfrYn,
+            A.FIRST_SLOT_YN AS firstSlotYn,
+            A.SPECIAL_YN AS specialYn,
+            A.DICE_SUM_QTY AS diceSumQty
+        FROM LOY.LOY_GAME_RULE A WITH (NOLOCK) 
+        LEFT OUTER JOIN LOY.LOY_OFR B WITH (NOLOCK) ON A.RID_LINE_OFR = B.RID AND B.FLAG = 1
+        WHERE 1=1
+        AND A.RID = #{rid}
+        AND A.FLAG  = 1
+    </select>
+
+    <insert id="insertGameRule"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameRuleReqDto">
+        /* LoyGameRuleMapper.insertGameRule */
+        INSERT INTO LOY.LOY_GAME_RULE (
+            RID,
+            CREATE_BY,
+            MODIFY_BY,
+            RID_GAME,
+            LINE_NO,
+            LINE_NM,
+            PIE_SIZE_RATE,
+            MISSION_CHAR,
+            RID_LINE_OFR,
+            LINE_OFR_QTY,
+            LINE_OFR_AVAIL_DAY,
+            LINE_WIN_RATE,
+            BUDGT_CLOSE_YN,
+            LINE_IMG_URL,
+            LINE_OFR_YN,
+            FIRST_SLOT_YN,
+            SPECIAL_YN,
+            DICE_SUM_QTY
+        ) VALUES (
+            #{rid},
+            #{createBy},
+            #{modifyBy},
+            #{ridGame},
+            #{lineNo},
+            #{lineNm},
+            #{pieSizeRate},
+            #{missionChar},
+            #{ridLineOfr},
+            #{lineOfrQty},
+            #{lineOfrAvailDay},
+            #{lineWinRate},
+            #{budgtCloseYn},
+            #{lineImgUrl},
+            #{lineOfrYn},
+            #{firstSlotYn},
+            #{specialYn},
+            #{diceSumQty}
+        )
+    </insert>
+
+    <update id="updateGameRule"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameRuleReqDto">
+        /* LoyGameRuleMapper.updateGameRule */
+        UPDATE
+            LOY.LOY_GAME_RULE
+        SET
+            MODIFY_BY = #{modifyBy},
+            MODIFY_DATE = getdate(),
+            RID_GAME = #{ridGame},
+            LINE_NO = #{lineNo},
+            LINE_NM = #{lineNm},
+            PIE_SIZE_RATE = #{pieSizeRate},
+            MISSION_CHAR = #{missionChar},
+            RID_LINE_OFR = #{ridLineOfr},
+            LINE_OFR_QTY = #{lineOfrQty},
+            LINE_OFR_AVAIL_DAY = #{lineOfrAvailDay},
+            LINE_WIN_RATE = #{lineWinRate},
+            BUDGT_CLOSE_YN = #{budgtCloseYn},
+            LINE_IMG_URL = #{lineImgUrl},
+            LINE_OFR_YN = #{lineOfrYn},
+            FIRST_SLOT_YN = #{firstSlotYn},
+            SPECIAL_YN = #{specialYn},
+            DICE_SUM_QTY = #{diceSumQty}
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateGameRuleDel" parameterType="com.icignal.loyalty.game.dto.request.LoyGameRuleReqDto">
+        /* LoyGameRuleMapper.updateGameRuleDel */
+        UPDATE LOY.LOY_GAME_RULE
+        SET MODIFY_DATE	= getdate()
+            ,MODIFY_BY	= #{modifyBy}
+            ,FLAG		= 0
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <select id="selectGameJoinList"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameJoinReqDto"
+            resultType="com.icignal.loyalty.game.dto.response.LoyGameJoinResDto">
+        /* LoyGameRuleMapper.selectGameJoinList */
+        SELECT
+            C.MBR_NO                             AS 	mbrNo,
+            convert(varchar,A.JOIN_DATE,120)    AS 	joinDate,
+            A.WIN_YN                             AS     winYn,
+            B.OFR_NM                             AS     ofrNm,
+            A.OFR_WIN_QTY                        AS 	ofrWinQty,
+            A.OFR_WIN_AVAIL_DAY                  AS 	ofrWinAvailDay,
+            convert(varchar,A.OFR_WIN_EARN_DATE,120)   AS 	ofrWinEarnDate,
+            ${strColumn}
+        FROM LOY.LOY_GAME_JOIN_MBR A WITH (NOLOCK) 
+        LEFT OUTER JOIN LOY.LOY_OFR B WITH (NOLOCK) ON A.RID_OFR_WIN = B.RID AND B.FLAG = 1
+        INNER JOIN LOY.LOY_MBR C WITH (NOLOCK) ON A.RID_MBR = C.RID AND C.FLAG = 1
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.RID_GAME = #{ridGame}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectGameTicketList"
+            parameterType="com.icignal.loyalty.game.dto.request.LoyGameTicketReqDto"
+            resultType="com.icignal.loyalty.game.dto.response.LoyGameTicketResDto">
+        /* LoyGameRuleMapper.selectGameTicketList */
+        SELECT
+            B.MBR_NO                             AS 	mbrNo,
+            convert(varchar,A.EARN_DT,120)      AS 	earnDt,
+            A.OFR_QTY                            AS 	ofrQty,
+            convert(varchar,A.CANCEL_EARN_DT,120)  AS 	cancelEarnDt,
+            convert(varchar,A.USE_DT,120)          AS 	useDt,
+            A.CANCEL_EARN_RSN                    AS 	cancelEarnRsn,
+            ${strColumn}
+        FROM LOY.LOY_GAME_TCKT_MBR A WITH (NOLOCK) 
+        INNER JOIN LOY.LOY_MBR B WITH (NOLOCK) ON A.RID_MBR = B.RID AND B.FLAG = 1
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.RID_GAME = #{ridGame}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+</mapper>

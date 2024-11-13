@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.qna.mapper.LoyQnaMapper">
+
+	<select id="getQnaList" parameterType="com.icignal.loyalty.qna.dto.request.LoyQnaReqDto" 
+	resultType="com.icignal.loyalty.qna.dto.response.LoyQnaResDto">
+		/* LOYQna.getQnaList */
+		SELECT VSR.RID AS rid  
+		     , vsr.SR_NO AS srNo
+		     , vsr.SR_TYPE_CD srTypeCd
+			 , lm.RID	AS ridMbr
+			 , lm.MBR_NO AS mbrNo
+			 , lc.CUST_NM AS custNm
+			 , CASE	
+			 	WHEN len(vsr.SR_REQ_TXT) > 20
+			 		THEN substring(vsr.SR_REQ_TXT,1,20) + ' .....'
+			 		ELSE vsr.SR_REQ_TXT
+			 	END AS srReqTxt
+			 , convert(varchar(16),vsr.SR_REQ_DT,120)AS srReqDt
+			 , VSR.SR_STATUS_CD as srStatusCd
+			 , convert(varchar(16),vsr.SR_CMPLT_DT,120) AS srCmpltDt 
+			 , em.NAME AS managerNm
+			 , (SELECT COUNT(*)  
+		 		  FROM loy.VOC_SRV_REQ vsr WITH (NOLOCK)  
+		 		  JOIN loy.LOY_MBR lm WITH (NOLOCK) ON lm.FLAG = 1 AND vsr.RID_MBR = lm.RID
+ 	       		  JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lc.FLAG = 1 AND lm.RID_CUST = lc.RID
+  				  LEFT OUTER JOIN com.COMM_CODE c1 WITH (NOLOCK) ON c1.FLAG = 1 AND c1.GROUP_CODE = 'SR_STATUS' 
+  				  			  AND c1.CODE_NAME = VSR.SR_STATUS_CD
+				  WHERE vsr.FLAG  = 1 AND vsr.SR_STATUS_CD = 'Open') AS receipt
+			 , ${strColumn}
+  		   FROM loy.VOC_SRV_REQ vsr WITH (NOLOCK) 
+ 	  	   JOIN loy.LOY_MBR lm WITH (NOLOCK) ON lm.FLAG = 1 AND vsr.RID_MBR = lm.RID
+ 	       JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lc.FLAG = 1 AND lm.RID_CUST = lc.RID
+LEFT OUTER JOIN com.crm_user cu WITH (NOLOCK) ON cu.FLAG = 1 AND cu.rid = vsr.SR_PER
+LEFT OUTER JOIN com.EMPLOYEE em WITH (NOLOCK) ON em.FLAG = 1 AND em.ID = cu.id_employee
+ LEFT OUTER JOIN com.COMM_CODE c2 WITH (NOLOCK) ON c2.FLAG = 1 AND c2.GROUP_CODE = 'SR_STATUS' AND c2.CODE_NAME = VSR.SR_STATUS_CD 
+ 		  WHERE vsr.FLAG = 1
+ 		    AND ${strCondWhere}
+		    AND ${strSVCType}
+		    AND ${strWhere}
+	   ORDER BY ${strOrderby}
+	    		${strEndPaging}
+	</select>
+	
+	<select id="getQnaDetail" parameterType="com.icignal.loyalty.qna.dto.request.LoyQnaReqDto" resultType="com.icignal.loyalty.qna.dto.response.LoyQnaResDto">
+	/* LOYQna.getQnaDetail */
+	SELECT vsr.SR_STATUS_CD AS srStatus
+		,  vsr.SR_NO	as srNo
+		,  vsr.SR_TYPE_CD AS srType
+		,  convert(varchar(16),vsr.SR_REQ_DT,120) AS srReqDt  
+		,  vsr.CNTC_DESK AS srTel
+		,  vsr.EMAIL_ADDR AS srEmail 
+		,  vsr.SR_REQ_TXT AS srReqTxt
+		,  vsr.SR_ANS_TXT AS srAnsTxt
+	  FROM loy.VOC_SRV_REQ vsr WITH (NOLOCK) 
+	  JOIN loy.LOY_MBR lm WITH (NOLOCK) ON lm.FLAG = 1 AND vsr.RID_MBR = lm.RID
+	 WHERE vsr.RID = #{rid} 
+	</select>
+	
+	<update id="updateQnaDetail" parameterType="com.icignal.loyalty.qna.dto.request.LoyQnaReqDto" >
+	/* LOYQna.updateQnaDetail */
+	UPDATE loy.VOC_SRV_REQ
+	   SET MODIFY_DATE = getdate()
+	      ,MODIFY_BY = #{modifyBy}
+	      ,SR_PER = #{modifyBy}
+	      ,SR_ANS_TXT = #{srAnsTxt}
+	      ,SR_STATUS_CD = #{srStatus}
+	      ,SR_CMPLT_DT = getdate()
+	  WHERE RID = #{rid}
+	</update>
+	
+	<select id="getQnaClearMaskMbr" parameterType="com.icignal.loyalty.qna.dto.request.LoyQnaReqDto" 
+	resultType="com.icignal.loyalty.qna.dto.response.LoyQnaResDto">
+		/* LoyQnaMapper.getQnaList */
+		SELECT VSR.RID AS rid  
+		     , vsr.SR_NO AS srNo
+		     , vsr.SR_TYPE_CD as srTypeCd
+			 , lm.MBR_NO AS mbrNo
+			 , lc.CUST_NM AS custNm
+			 , CASE	
+			 	WHEN len(vsr.SR_REQ_TXT) > 20
+			 		THEN substring(vsr.SR_REQ_TXT,1,20) + ' .....'
+			 		ELSE vsr.SR_REQ_TXT
+			 	END AS srReqTxt
+			 , convert(varchar(16),vsr.SR_REQ_DT,120)AS srReqDt
+			 , VSR.SR_STATUS_CD as srStatusCd
+			 , convert(varchar(16),vsr.SR_CMPLT_DT,120) AS srCmpltDt 
+			 , em.NAME AS managerNm
+			 , (SELECT COUNT(*)  
+		 		  FROM loy.VOC_SRV_REQ vsr 
+		 		  JOIN loy.LOY_MBR lm ON lm.FLAG = 1 AND vsr.RID_MBR = lm.RID
+ 	       		  JOIN loy.LOY_CUST lc ON lc.FLAG = 1 AND lm.RID_CUST = lc.RID
+  				  LEFT OUTER JOIN com.COMM_CODE c1 ON c1.FLAG = 1 AND c1.GROUP_CODE = 'SR_STATUS' 
+  				  			  AND c1.CODE_NAME = VSR.SR_STATUS_CD
+				  WHERE vsr.FLAG  = 1 AND vsr.SR_STATUS_CD = 'Open') AS receipt
+  		   FROM loy.VOC_SRV_REQ vsr WITH (NOLOCK) 
+ 	  	   JOIN loy.LOY_MBR lm WITH (NOLOCK) ON lm.FLAG = 1 AND vsr.RID_MBR = lm.RID
+ 	       JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lc.FLAG = 1 AND lm.RID_CUST = lc.RID
+LEFT OUTER JOIN com.crm_user cu WITH (NOLOCK) ON cu.FLAG = 1 AND cu.rid = vsr.SR_PER
+LEFT OUTER JOIN com.EMPLOYEE em WITH (NOLOCK) ON em.FLAG = 1 AND em.ID = cu.id_employee
+LEFT OUTER JOIN com.COMM_CODE c2 WITH (NOLOCK) ON c2.FLAG = 1 AND c2.GROUP_CODE = 'SR_STATUS' AND c2.CODE_NAME = VSR.SR_STATUS_CD
+ 		  WHERE vsr.FLAG = 1
+ 		    AND vsr.rid = #{rid} 
+ 		  </select>
+
+</mapper>

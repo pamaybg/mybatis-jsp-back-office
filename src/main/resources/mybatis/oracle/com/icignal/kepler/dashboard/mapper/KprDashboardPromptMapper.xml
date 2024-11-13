@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:14:07 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.dashboard.mapper.KprDashboardPromptMapper">
+
+	<select id="selectDashboardCommonColumnList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" 
+																	resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptResDto">
+	/* KprDashboardPromptMapper.selectDashboardCommonColumnList */
+		select acm.id		as nodeId
+			 , acm.dp_nm
+			 		|| '('
+			 		|| acm.col_nm
+			 		|| ')'
+			 				as nodeText
+			 , acm.dp_nm	as displayName
+			 , acm.col_nm	as columnName
+		  from anl.anl_column_mst	acm
+		  join anl.anl_table_mst	atm on acm.tbl_id = atm.id and atm.flag = 1
+		  join (
+			select acm.id
+			  from (
+				select arm.dashbrd_id			as id
+					 , coalesce(count(1), 0)	as anl_cnt
+				  from anl.anl_rpt_mst_inst		arm
+				 where arm.flag			= 1
+				   and arm.dashbrd_id	= #{dashboardId}
+				 group by arm.dashbrd_id
+			) tmp
+			  join anl.anl_rpt_mst_inst			arm on tmp.id = arm.dashbrd_id and arm.flag = 1
+			  join anl.anl_lgc_comp_mst			lcm on arm.lgc_comp_id = lcm.id and lcm.flag = 1
+			  join anl.anl_atrib_group			aag on lcm.id = aag.lgc_comp_id and aag.flag = 1
+			  join anl.anl_atrib_group_column	agc on aag.id = agc.atrib_group_id and agc.flag = 1
+			  join anl.anl_column_mst			acm on case when length(agc.dim_col_id) &gt; 0 then agc.dim_col_id else agc.col_id end = acm.id and acm.col_type_cd = 'DIMENSION' and acm.flag = 1
+			 group by acm.id
+			having count(acm.id) &gt;= max(tmp.anl_cnt)
+		) tmp on acm.id = tmp.id
+		  left join com.comm_code	tcd on atm.tbl_type_cd = tcd.code_name and tcd.group_code = 'ANL_TABLE_TYPE_CD' and tcd.flag = 1 and tcd.lang = #{lang}
+		 order by tcd.seq asc, atm.id asc, acm.seq asc
+	</select>
+	
+	<select id="selectDashboardPromptInstList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" 
+																resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptResDto">
+	/* KprDashboardPromptMapper.selectDashboardPromptInstList */
+		select dpi.rid				as nodeId
+			 , dpi.rid				as promptId
+			 , dpi.prompt_type_cd	as promptTypeCode
+			 , dpi.prompt_val		as promptValue
+			 , acm.dp_nm
+			 		|| '('
+			 		|| acm.col_nm
+			 		|| ')'
+			 						as nodeText
+			 , acm.id				as columnId
+			 , acm.dp_nm			as displayName
+			 , acm.col_nm			as columnName
+		  from anl.anl_dashbrd_mst_inst		adm
+		  join anl.anl_dashbrd_prompt_inst	dpi on adm.id = dpi.dashbrd_id and dpi.flag = 1
+		  join anl.anl_column_mst			acm on dpi.col_id = acm.id and acm.flag = 1
+		 where adm.flag	= 1
+		   and adm.id	= #{dashboardId}
+		 order by dpi.seq asc
+	</select>
+	
+	<select id="selectDashboardPromptMasterIdCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" resultType="java.lang.Integer">
+	/* KprDashboardPromptMapper.selectDashboardPromptMasterIdCheck */
+		select count(*)
+		  from anl.anl_dashbrd_prompt
+		 where flag	= 1
+		   and rid	= #{promptId}
+	</select>
+	
+	<select id="selectDashboardPromptInstIdCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" resultType="java.lang.Integer">
+	/* KprDashboardPromptMapper.selectDashboardPromptInstIdCheck */
+		select count(*)
+		  from anl.anl_dashbrd_prompt_inst
+		 where flag	= 1
+		   and rid	= #{promptId}
+	</select>
+	
+	<insert id="insertDashboardPromptMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptMaster */
+		insert into anl.anl_dashbrd_prompt (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select com.getNewID('A')
+			 , #{createBy}
+			 , #{modifyBy}
+			 , sysdate
+			 , sysdate
+			 , flag
+			 , #{dashboardId_New}
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt_inst
+		 where flag			= 1
+		   and dashbrd_id	= #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardPromptInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptInst */
+		insert into anl.anl_dashbrd_prompt_inst (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		) values (
+			#{promptId}
+		  , #{createBy}
+		  , #{modifyBy}
+		  , sysdate
+		  , sysdate
+		  , 1
+		  , #{dashboardId}
+		  , #{seq}
+		  , #{promptTypeCode}
+		  , #{promptValue}
+		  , #{columnId}
+		)
+		
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardPromptMasterToInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptMasterToInst */
+		insert into anl.anl_dashbrd_prompt_inst (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select rid
+			 , create_by
+			 , modify_by
+			 , create_date
+			 , modify_date
+			 , flag
+			 , dashbrd_id
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt
+		 where flag			= 1
+		   and dashbrd_id	= #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardPromptInstToMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptInstToMaster */
+		insert into anl.anl_dashbrd_prompt (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select rid
+			 , create_by
+			 , modify_by
+			 , create_date
+			 , modify_date
+			 , flag
+			 , dashbrd_id
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt_inst
+		 where flag	= 1
+		   and rid	= #{promptId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+
+	<insert id="insertDashboardPromptCopy" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptCopy */
+		insert into anl.anl_dashbrd_prompt_inst (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select com.getNewID('A')
+			 , #{createBy}
+			 , #{modifyBy}
+			 , sysdate
+			 , sysdate
+			 , flag
+			 , #{dashboardId_New}
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt
+		 where flag			= 1
+		   and dashbrd_id	= #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<update id="updateDashboardPromptInstToMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.updateDashboardPromptInstToMaster */
+		 update 
+		 (select adp.MODIFY_BY,api.MODIFY_BY AS apiModifyBy,adp.MODIFY_DATE,api.MODIFY_DATE AS apiModifyDate 
+		 		,adp.seq ,api.seq AS apiSeq ,adp.prompt_type_cd ,api.prompt_type_cd AS apiPromptTypeCd
+		 		,adp.prompt_val ,api.prompt_val AS apiPromptVal,adp.COL_ID ,api.COL_ID AS apiColId
+		 from anl.anl_dashbrd_prompt adp
+		 	JOIN anl.anl_dashbrd_prompt_inst api on adp.rid = api.rid 
+		 	WHERE 1=1 
+		 	AND adp.rid = api.rid 
+		 	AND api.rid = #{promptId} )		 
+		   set modify_by		= apiModifyBy
+		     , modify_date		= apiModifyDate
+		     , seq				= apiSeq
+		     , prompt_type_cd	= apiPromptTypeCd
+		     , prompt_val		= apiPromptVal
+		     , col_id			= apiColId
+	</update>
+	
+	<update id="updateDashboardPromptInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.updateDashboardPromptInst */
+		update anl.anl_dashbrd_prompt_inst
+		   set modify_by		= #{modifyBy}
+		     , modify_date		= sysdate
+		     , seq				= #{seq}
+		     , prompt_type_cd	= #{promptTypeCode}
+		     , prompt_val		= #{promptValue}
+		 where rid = #{promptId}
+	</update>
+	
+	<update id="deleteDashboardPromptMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.deleteDashboardPromptMaster */
+		update anl.anl_dashbrd_prompt
+		   set modify_by	= #{modifyBy}
+		     , modify_date	= sysdate
+		     , flag			= flag + 1
+		 where dashbrd_id = #{dashboardId}
+		<if test="promptList != null and promptList.size() > 0">
+		   and rid not in (
+			 <foreach collection="promptList" item="item" separator=",">
+				#{item.promptId}
+			</foreach>
+		 )
+		 </if>
+	</update>
+	
+	<delete id="deleteDashboardPromptInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.deleteDashboardPromptInst */
+		delete
+		  from anl.anl_dashbrd_prompt_inst
+		 where dashbrd_id = #{dashboardId}
+		 <if test="promptList != null and promptList.size() > 0">
+		   and rid not in (
+			 <foreach collection="promptList" item="item" separator=",">
+				#{item.promptId}
+			</foreach>
+		 )
+		 </if>
+	</delete>
+	
+	<select id="selectDashboardPromptMasterList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" 
+																	resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptResDto">
+	/* KprDashboardPromptMapper.selectDashboardPromptMasterList */
+		select adp.rid				as promptId
+			 , adp.prompt_type_cd	as promptTypeCode
+			 , adp.prompt_val		as promptValue
+			 , adp.col_id			as columnId
+			 , acm.dp_nm			as displayName
+			 , atm.tbl_nm			as tableName
+			 , acm.col_nm			as columnName
+			 , t.upper_prompt_id	as upperPromptId
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		  from anl.anl_dashbrd_prompt		adp
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		  from anl.anl_dashbrd_prompt_inst	adp
+		</if>
+		  join anl.anl_column_mst			acm on adp.col_id = acm.id and acm.flag = 1
+		  join anl.anl_table_mst			atm	on acm.tbl_id = atm.id and atm.flag = 1
+		  left join (
+			select adp.rid	as col_id
+				 , udp.rid	as upper_prompt_id
+				 , t.seq	as seq
+			<if test="analysisMasterFlag == &quot;Y&quot;">
+			  from anl.anl_dashbrd_prompt		adp
+			</if>
+			<if test="analysisMasterFlag != &quot;Y&quot;">
+			  from anl.anl_dashbrd_prompt_inst	adp
+			</if>
+			  join (
+				select t.col_id
+					 , t.lower_col_id
+					 , t.seq
+				  from (
+					select case col.seq when 1 then adg.lv1_col_id
+										when 2 then adg.lv2_col_id
+										when 3 then adg.lv3_col_id
+										when 4 then adg.lv4_col_id
+						   end as col_id
+						 , case col.seq when 1 then case lower_col.seq when 1 then adg.lv2_col_id
+																	   when 2 then adg.lv3_col_id
+																	   when 3 then adg.lv4_col_id
+																	   when 4 then adg.lv5_col_id
+													end
+										when 2 then case lower_col.seq when 1 then adg.lv3_col_id
+																	   when 2 then adg.lv4_col_id
+																	   when 3 then adg.lv5_col_id
+													end
+										when 3 then case lower_col.seq when 1 then adg.lv4_col_id
+																	   when 2 then adg.lv5_col_id
+													end
+										when 4 then adg.lv5_col_id
+						   end as lower_col_id
+						 , col.seq as seq
+					  from (
+						select 1 as seq from dual
+						 union
+						select 2 as seq from dual
+						 union
+						select 3 as seq from dual
+						 union
+						select 4 as seq from dual
+					) col
+					, (
+						select 1 as seq from dual
+						 union
+						select 2 as seq from dual
+						 union
+						select 3 as seq from dual
+						 union
+						select 4 as seq from dual
+					) lower_col
+					, anl.anl_drilldown_group adg
+				) t
+			 where length(t.lower_col_id) <![CDATA[>]]> 0
+			) t on adp.col_id = t.lower_col_id
+			<if test="analysisMasterFlag == &quot;Y&quot;">
+			  join anl.anl_dashbrd_prompt		udp
+			</if>
+			<if test="analysisMasterFlag != &quot;Y&quot;">
+			  join anl.anl_dashbrd_prompt_inst	udp
+			</if>
+			 on t.col_id = udp.col_id and adp.dashbrd_id = udp.dashbrd_id and udp.flag = 1
+			 where adp.flag			= 1
+			   and adp.dashbrd_id	= #{dashboardId}
+		) t on adp.rid = t.col_id
+		 where adp.flag			= 1
+		   and adp.dashbrd_id	= #{dashboardId}
+		 order by  adp.seq , t.seq
+				
+	</select>
+	
+    <!-- /**************************************
+    -   관련 파일             : KprDashboardPromptMapper.java
+    ============================== ==============
+    -   제목                  : prompt의 value값 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.07.10
+    ***************************************/ -->
+	<select id="selectDashBoardPromptCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptCheckReqDto" 
+																resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptCheckResDto">
+	/* KprDashboardPromptMapper.selectDashBoardPromptCheck */
+		select dpi.PROMPT_VAL as promptValue , dpi.PROMPT_TYPE_CD as promptTypeCd
+		  from anl.anl_dashbrd_mst		adm
+		  join anl.anl_dashbrd_prompt	dpi on adm.id = dpi.dashbrd_id and dpi.flag = 1
+		  join anl.anl_column_mst		acm on dpi.col_id = acm.id and acm.flag = 1
+		 where 1=1
+		   and adm.id	= #{dashboardId}
+		   and adm.flag	= 1
+	</select>
+</mapper>

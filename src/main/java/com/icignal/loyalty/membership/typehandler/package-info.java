@@ -1,0 +1,1 @@
+package com.icignal.loyalty.membership.typehandler;

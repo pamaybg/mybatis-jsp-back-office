@@ -1,0 +1,1300 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:28 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.batchrgst.mapper.SystemBatchRgstMapper">
+
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : 일괄등록 목록
+    -   설명                  : 일괄등록 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+	<select id="getBatchRgstList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstListReqDto" 
+								  					resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemBatchRgstListResDto">
+	/*SystemBatchRgstMapper.getBatchRgstList*/
+	SELECT luf.FILE_UPLD_DT as fileUpldDt
+		  	  ,luf.OFFER_TYPE as offerType
+	      	  ,luf.FILE_NM as fileNm
+		      ,luf.FILE_UPLD_SUCES_CNT as fileUpldSucesCnt
+		      ,luf.FILE_UPLD_FAIL_CNT as fileUpldFailCnt
+		      ,e.NAME as custNm
+		      ,luf.POINT_TRT_STATUS as pointTrtStautsCd
+		      ,lc.CHNL_NO as chnlNo
+		      ,lc.CHNL_NM as chnlNm
+		      ,luf.ACU_RDN as acuRdnCd
+		      ,e1.NAME as ridActcSbst
+		      ,luf.ACTC_TRT_DT as actcTrtDt
+		      ,e2.NAME as ridApv
+		      ,luf.APV_TRT_DT as apvTrtDt
+      		  ,luf.POINT_SUCES_CNT as pointSucesCnt
+      	 	  ,luf.POINT_FAIL_CNT as pointFailCnt
+		      ,e3.NAME as ridPointEmp
+		      ,luf.RID as rid
+		      ,luf.FILE_PATH as filePath
+		      ,${strColumn}
+		FROM loy.loy_upld_file luf WITH (NOLOCK)
+		LEFT OUTER JOIN com.employee 	e WITH (NOLOCK)	on e.id = luf.RID_UPLD_EMP
+		LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK)	on lc.rid = luf.RID_CHNL
+		LEFT OUTER JOIN com.employee 	e1 WITH (NOLOCK)	on e1.id = luf.RID_ACTC_SBST
+		LEFT OUTER JOIN com.employee 	e2 WITH (NOLOCK)	on e2.id = luf.RID_APV
+		LEFT OUTER JOIN com.employee 	e3 WITH (NOLOCK)	on e3.id = luf.RID_POINT_EMP
+	 	WHERE ${strCondWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : upld_item 목록
+    -   설명                  : upld_item 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력                  : parRid
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+	<select id="getUpldItemList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemUpldItemListReqDto"
+							  	 resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemUpldItemListResDto">
+	/*SystemBatchRgstMapper.getUpldItemList*/
+		SELECT lui.UPLOAD_RSLT as uploadRslt
+			  , lui.TYPE_CD as typeCdNm
+		      ,lui.WEB_LOGIN as webLogin
+		      ,lui.MBR_NO as mbrNo
+		      ,lui.REQ_POINT as reqPoint
+			  ,lm.MBR_NO  as e1MbrNo
+		      , lui.MEM_STATUS as memStatusCdNm
+			  ,lc.CHNL_NO as chnlNo
+		      , lui.STATUS_CD as statusCdNm
+		      ,lui.REQUEST_DT as requestDt
+		      ,lui.REQUEST_ID as requestId
+		      , lui.TERMINAL_CD as terminalCdNm
+		      ,lui.TXN_DT as txnDt
+		      ,lui.TXN_NUM as txnNum
+		      ,lui.APPROVAL_DT as approvalDt
+		      ,lui.APPROVAL_NUM as approvalNum
+		      , lui.RETURN_CD as returnCdNm
+		      ,lui.RETURN_TEXT as returnText
+		      ,lui.RID as rid
+		      ,lui.RID_PAR as ridPar
+		      , lm.RID as ridMbr
+		     , ${strColumn}
+		FROM loy.loy_upld_item lui WITH (NOLOCK)
+		INNER JOIN loy.loy_upld_file luf WITH (NOLOCK) on luf.rid = lui.RID_PAR
+		LEFT OUTER JOIN loy.loy_mbr lm WITH (NOLOCK) on lui.RID_MBR = lm.rid
+		left OUTER JOIN loy.loy_cust lct WITH (NOLOCK) on lct.rid = lm.rid_cust
+		LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) on lc.rid = lui.RID_CHNL
+		WHERE ${strCondWhere}
+        AND lui.RID_PAR = #{parRid}
+        <if test="uploadRslt != null and uploadRslt != ''">
+        AND lui.UPLOAD_RSLT = #{uploadRslt}
+        </if>
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : upld_item 등록
+    -   설명                  : upld_item 등록
+    -   결과형태              :
+    ============================================
+    -   입력                  :
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+ 	<insert id="insertUploadData" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstUploadReqDto">
+ 	/*SystemBatchRgstMapper.insertUploadData*/
+			INSERT INTO loy.loy_upld_item  (
+				rid
+			 	,CREATE_BY
+			 	,MODIFY_BY
+			 	,CREATE_DATE
+			 	,MODIFY_DATE
+			 	,FLAG
+			 	,RID_PAR
+			 	,OFFER_TYPE
+			 	,RID_MBR
+			 	,MEM_STATUS
+			 	,TYPE_CD
+			 	,UPLOAD_RSLT
+			 	,MBR_NO
+			 	,REQ_POINT
+			)
+			VALUES
+				  ( #{insertUploadDataRid}
+				   , #{empId}
+				   , #{empId}
+				   , GETDATE()
+				   , GETDATE()
+				   , 1
+				   ,#{rid}
+				   ,#{offerType}
+				   ,( select rid from loy.loy_mbr where mbr_no = #{mbrNo} TOP 1 )
+				   ,( SELECT MBR_STAT_CD FROM LOY.LOY_MBR WITH (NOLOCK) WHERE MBR_NO = #{mbrNo} TOP 1 )
+				   ,#{dedutionDiv}
+				   ,(select ISNULL( ( SELECT CASE WHEN RID IS NOT NULL THEN 'S'  END FROM LOY.LOY_MBR WITH (NOLOCK) WHERE MBR_NO = #{mbrNo} TOP 1 ),'F'))
+				   ,#{mbrNo}
+				   ,#{reqPoint}
+
+				)
+	</insert>
+
+	<resultMap id="batchRgstUpldMap" type="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstUploadReqDto">
+	    <result property="mbrNo" column="mbrNo"/>
+	    <result property="ridMbr" column="ridMbr"/>
+	</resultMap>
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : upld_file 상세화면
+    -   설명                  : upld_file 상세화면 조회
+    -   결과형태              :
+    ============================================
+    -   입력                  : rid
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+	<select id="getBatchRgstDetail" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto" 
+												resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemBatchRgstDetailResDto">
+	/*SystemBatchRgstMapper.getBatchRgstDetail*/
+		SELECT luf.FILE_NM as fileNm
+				  ,luf.FILE_PATH as filePath
+			      ,luf.ACU_RDN as acuRdn
+			      ,luf.POINT_TRT_STATUS as pointTrtStauts
+			      ,lc.CHNL_NO  as chnlNo
+			      ,lc.CHNL_NM as chnlNm
+			      ,lc.BIZR_NO as bizrNo
+			      ,e1.NAME as actcNm
+			      ,luf.ACTC_TRT_DT as actcTrtDt
+			      ,e2.NAME as apvNm
+			      ,luf.APV_TRT_DT as apvTrtDt
+			      ,luf.ACTC_SBST as actcSbst
+			      ,luf.APV_SBST as apvSbst
+			      ,luf.FILE_UPLD_DT as fileUpldDt
+			      ,e.NAME as upldEmpNm
+			      ,luf.FILE_UPLD_SUCES_CNT as fileUpldSucesCnt
+			      ,luf.FILE_UPLD_FAIL_CNT as fileUpldFailCnt
+			      ,luf.POINT_TRT_DT as pointTrtDt
+			      ,e3.NAME as pointEmpNm
+			      ,luf.POINT_SUCES_CNT as pointSucesCnt
+			      ,luf.POINT_FAIL_CNT as pointFailCnt
+			      ,luf.RID_ACTC_SBST as ridActcSbst
+			      ,luf.RID_APV as ridApv
+			      ,luf.RID_CHNL as ridChnl
+			      ,luf.RMARK as rmark
+			      ,luf.RID_UPLD_EMP as ridUpldEmp
+			      ,luf.OFFER_TYPE as offerType
+		FROM loy.loy_upld_file luf WITH (NOLOCK)
+		left outer join LOY.LOY_CHNL lc WITH (NOLOCK) on lc.RID = luf.RID_CHNL
+		LEFT OUTER JOIN com.employee e1 WITH (NOLOCK) on e1.id = luf.RID_ACTC_SBST
+		LEFT OUTER JOIN com.employee e2 WITH (NOLOCK) on e2.id = luf.RID_APV
+		LEFT OUTER JOIN com.employee e3 WITH (NOLOCK) on e3.id = luf.RID_POINT_EMP
+		LEFT OUTER JOIN com.employee e WITH (NOLOCK) on e.id = luf.RID_UPLD_EMP
+		WHERE luf.rid = #{rid}
+	</select>
+
+	<update id="updateBatchRgstTypeCd" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailInsertReqDto">
+	/*SystemBatchRgstMapper.updateBatchRgstTypeCd*/
+	UPDATE loy.loy_upld_file luf
+	LEFT JOIN LOY.LOY_UPLD_ITEM lui ON luf.RID = lui.RID_PAR
+	SET   luf.MODIFY_BY = #{empId}
+			 ,luf.MODIFY_DATE = GETDATE()
+			 ,luf.ACU_RDN = #{acuRdn}
+			 ,luf.RID_APV = #{ridApv}
+			 ,luf.RID_ACTC_SBST = #{ridActcSbst}
+			 ,luf.RID_CHNL  =#{ridChnl}
+			 ,luf.RMARK  = #{rmark}
+			 ,lui.TYPE_CD = #{typeCd}
+	WHERE luf.RID = #{rid}
+	</update>
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : 가맹점 고정여부  확인
+    -   설명                  : 가맹점 고정여부  확인
+    -   결과형태              : 목록
+    ============================================
+    -   입력                  :
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+	<select id="callLookUpValue" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto" resultType="java.lang.String">
+	/*SystemBatchRgstMapper.callLookUpValue*/
+	SELECT CODE_NAME AS codeName
+	FROM COM.COMM_CODE WITH (NOLOCK)
+	WHERE GROUP_CODE = 'POINT_TRANS_FLG'  
+	AND MARK_NAME = '10'
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : pointStatus 수정
+    -   설명                  : pointStatus 수정
+    -   결과형태              : 단일
+    ============================================
+    -   입력                  : rid
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+	<update id="updatePointStatusWorkingSet" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto">
+	/*SystemBatchRgstMapper./updatePointStatusWorkingSet*/
+	UPDATE LOY.LOY_UPLD_FILE
+	SET POINT_TRT_STATUS = '00'
+	    	,RID_POINT_EMP = #{vanEmpId}
+	WHERE RID = #{rid}
+	</update>
+
+
+	<resultMap id="getProdCodeCheckMap" type="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto">
+	    <result property="taxtnYn" column="taxtnYn"/>
+	    <result property="taxtnOccAmt" column="taxtnOccAmt"/>
+	    <result property="ridTaxfr" column="ridTaxfr"/>
+	    <result property="taxfrProdCd" column="taxfrProdCd"/>
+	    <result property="ridTaxtn" column="ridTaxtn"/>
+	    <result property="taxtnProdCd" column="taxtnProdCd"/>
+	    <result property="taxtnRate" column="taxtnRate"/>
+	    <result property="prodRid" column="prodRid"/>
+	</resultMap>
+	<resultMap id="getUpldItemListCheckMap" type="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto">
+	    <result property="reqPoint" column="reqPoint"/>
+	    <result property="typeCd" column="typeCd"/>
+	    <result property="taxPoints" column="taxPoints"/>
+	    <result property="webLogin" column="webLogin"/>
+	    <result property="reqPoint" column="reqPoint"/>
+	    <result property="ridProd" column="ridProd"/>
+	    <result property="prodId" column="prodId"/>
+	    <result property="mbrNo" column="mbrNo"/>
+	    <result property="rid" column="rid"/>
+	</resultMap>
+
+	<resultMap id="getUpldItemMemListMap" type="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto">
+	    <result property="ridMbr" column="ridMbr"/>
+	    <result property="mbrNo" column="mbrNo"/>
+	    <result property="memDiv" column="memDiv"/>
+	    <result property="mbrStatCd" column="mbrStatCd"/>
+	    <result property="memDivMarkName" column="memDivMarkName"/>
+	</resultMap>
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : 검수요청 결과 upld_file 상태 업데이트
+    -   설명                  : 검수요청 결과 upld_file 상태 업데이트
+    -   결과형태              :
+    ============================================
+    -   입력                  :
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+	<update id="updateUpldFileReqStatus" parameterType="com.icignal.onlineapproval.dto.request.CommonApprovalReqDto">
+	/*SystemBatchRgstMapper.updateUpldFileReqStatus*/
+	UPDATE LOY.LOY_UPLD_FILE
+	SET POINT_TRT_STATUS  = #{trtStatus}
+		<if test="status == 20">
+		   	,ACTC_TRT_DT = GETDATE()
+		</if>
+		<if test="status == 30">
+		 	,ACTC_TRT_DT = GETDATE()
+	 		,ACTC_RJT_RSN = #{rejectRsn}
+		</if>
+		<if test="status == 40">
+			,APV_TRT_DT = GETDATE()
+		</if>
+		<if test="status == 50">
+			,APV_TRT_DT = GETDATE()
+			,APV_RJT_RSN = #{rejectRsn}
+		</if>
+	WHERE RID = #{recordRid}
+	</update>
+
+	<!-- /**************************************
+    -   관련 파일             : SystemBatchRgstMapper.java
+    ============================================
+    -   제목                  : 자식 코드 구하기
+    -   설명                  : acu_rdn 의 자식 comm_code를 구한다
+    -   결과형태              :
+    ============================================
+    -   입력                  :
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.12. 1
+    ***************************************/ -->
+	<select id="getParentAcuRdn" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto" 
+												resultType="java.lang.String">
+	/*SystemBatchRgstMapper.getParentAcuRdn*/
+	SELECT	 CODE_NAME AS codeName
+	FROM COM.COMM_CODe WITH (NOLOCK)
+	WHERE ID = (SELECT PAR_CODE_ID
+						FROM COM.COMM_CODE cc WITH (NOLOCK)
+						WHERE code_name =#{acuRdn} 
+						AND GROUP_CODE = 'TXN_REASON_ALL_TYPE' )
+	</select>
+
+	<update id="updateBatchCancel" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto">
+	/*SystemBatchRgstMapper.updateBatchCancel*/
+	UPDATE loy.loy_upld_file luf
+	INNER JOIN COM.COM_ELEC_APRV mea ON luf.RID = mea.CAM_ID
+		SET  luf.POINT_TRT_STATUS = '45'
+			, luf.MODIFY_DATE = GETDATE()
+			, mea.ELEC_APRV_STATUS_CD = '002'
+	WHERE luf.RID = #{rid}
+	</update>
+
+	<update id="cancelBatchRequest" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchRgstDetailReqDto">
+	/*SystemBatchRgstMapper.cancelBatchRequest*/
+	UPDATE LOY.LOY_UPLD_FILE luf
+		SET  luf.POINT_TRT_STATUS = '45'
+			, luf.MODIFY_DATE = GETDATE()
+	WHERE luf.RID = #{rid}
+	</update>
+
+	<insert id="insertPntUpload" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto">
+	/*SystemBatchRgstMapper.insertPntUpload*/
+	INSERT INTO LOY.LOY_PNT_UPLOAD (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, UPLOAD_TYPE_CD
+			, PROC_TYPE_CD
+			, PROC_DETAIL_TYPE_CD
+			, FILE_PATH
+			, FILE_NAME
+			, FILE_UPLOAD_DT
+			, FILE_UPLOAD_USER_RID
+			, PNT_APPLY_DT
+			, CONFIRM_DT
+			, CONFIRM_USER_RID
+			, UPLOAD_CNT
+			, RID_OFFER
+			, BATCH_RESULT_CD
+			, BATCH_ERROR_DESC
+			, RID_PGM
+	) VALUES (
+			#{rid}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, #{uploadTypeCd}
+			, #{procTypeCd}
+			, #{procDtlTypeCd}
+			, #{filePath}
+			, #{fileName}
+			, GETDATE() 
+			, #{createBy}
+			, CONVERT(VARCHAR(6), GETDATE(), 112<!-- 'YYYYMM' -->)
+			, NULL <!-- confirmDt -->
+			, NULL <!-- confirmUserRid -->
+			, #{uploadCnt}
+			, #{ofrRid}
+			, NULL <!-- batchResultCd -->
+			, NULL <!-- batchErrorDesc -->
+			, #{pgmRid} <!-- batchErrorDesc -->
+	)
+	</insert>
+
+	<insert id="insertPntUploadItem" parameterType="java.util.List">
+	/*SystemBatchRgstMapper./insertPntUploadItem*/
+		<foreach collection="list" item="item" separator=" ">
+		INTO LOY.LOY_PNT_UPLOAD_ITEM (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, RID_PNT_UPLOAD
+			, MBR_NO
+			, TARGET_NM
+			, TARGET_HHP_NO
+			, ACRL_AMT
+			, BATCH_RESULT_CD
+			, BATCH_ERROR_DESC
+			, RID_MBR
+			, RID_CAM
+		) VALUES (
+			COM.GETNEWID('')
+			, #{item.createBy}
+			, #{item.modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, #{item.ridPntUpload}
+			, #{item.mbrNo}
+			, #{item.targetNm}
+			, #{item.targetHhpNo}
+			, TO_NUMBER(#{item.acrlAmt})
+			, NULL <!-- batchResultCd -->
+			, NULL <!-- batchErrorDesc -->
+			, CASE WHEN #{item.mbrNo} IS NOT NULL THEN (SELECT RID FROM LOY.LOY_MBR WITH (NOLOCK) WHERE MBR_NO = #{item.mbrNo})
+						ELSE (SELECT 	lm.RID
+									FROM 	LOY.LOY_MBR lm WITH (NOLOCK)
+									JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID
+									WHERE lm.HHP_NO = #{item.targetHhpNo}
+									AND lc.CUST_NM = #{item.targetNm}) 
+						END
+			, (SELECT ID FROM MKT.MKT_CAM_MST WITH (NOLOCK) WHERE DISP_NO = #{item.dispNo} AND FLAG = 1)
+		)
+		</foreach>
+	</insert>
+
+	<update id="updatePntUploadResult" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto">
+	/*SystemBatchRgstMapper./updatePntUploadResult*/
+	UPDATE 	LOY.LOY_PNT_UPLOAD
+	SET 	BATCH_RESULT_CD = #{batchResultCd}
+				, BATCH_ERROR_DESC = #{batchErrorDesc}
+				, TOTAL_ACRL_AMT = (SELECT SUM(ACRL_AMT) 
+													FROM LOY.LOY_PNT_UPLOAD_ITEM 
+													WHERE RID_PNT_UPLOAD = #{rid} 
+													AND FLAG = 1)
+				, MODIFY_DATE = GETDATE()
+	WHERE 	rid = #{rid}
+	</update> 
+
+	<select id="getPntBatchRgstList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstListReqDto" 
+												resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemPntBatchRgstListResDto">
+	/*SystemBatchRgstMapper.getPntBatchRgstList*/
+	SELECT DISTINCT lpu.RID AS rid
+				, c1.code_name AS uploadTypeCd
+				, c1.mark_name AS uploadTypeCdNm
+				, c2.code_name AS procTypeCd
+				, c2.mark_name AS procTypeCdNm
+				, c3.code_name AS batchResultCd
+				, c3.mark_name AS batchResultCdNm
+				, lpu.PROC_DETAIL_TYPE_CD	AS procDtlTypeCd
+				, lpu.file_path as filePath
+				, lpu.file_name as fileName
+				, CONVERT(VARCHR, lpu.file_upload_dt, 23 <!-- 'yyyy-mm-dd hh24:mi:ss' -->) as fileUploadDt
+				, lpu.file_upload_user_rid as fileUploadUserRid
+				, emp1.name as fileUploadUserRidNm
+				<!-- , CONVERT(TO_DATE(lpu.pnt_apply_dt, 'YYYYMM'), 'YYYY-MM') as pntApplyDt -->
+				, CONVERT(VARCHAR(7), lpu.pnt_apply_dt, 23) as pntApplyDt
+				, lpu.confirm_dt as confirmDt
+				, CASE WHEN lpu.confirm_dt IS NOT NULL THEN N'확정' ELSE N'미확정' END AS confirmDtNm
+				, lpu.confirm_user_rid as confirmUserRid
+				, emp2.name as confirmUserRidNm
+				, lpu.upload_cnt AS uploadCnt
+				, (SELECT COUNT(*) FROM loy.LOY_PNT_UPLOAD_ITEM WHERE RID_PNT_UPLOAD = lpu.RID AND FLAG = 1 AND BATCH_RESULT_CD = 'S') as batchSuccessCnt
+				, (SELECT COUNT(*) FROM loy.LOY_PNT_UPLOAD_ITEM WHERE RID_PNT_UPLOAD = lpu.RID AND FLAG = 1 AND BATCH_RESULT_CD = 'F')  as batchFailCnt
+				, lpu.BATCH_ERROR_DESC AS batchErrorDesc
+				, lpu.TOTAL_ACRL_AMT AS totalAcrlAmt
+				,  CEILING(COUNT(distinct lpu.rid) OVER()) totalCount
+		FROM LOY.LOY_PNT_UPLOAD lpu WITH (NOLOCK)
+		JOIN COM.COMM_CODE c1 WITH (NOLOCK) on c1.group_code = 'OFFER_TYPE_CD' and c1.CODE_NAME = lpu.upload_type_cd and c1.lang = #{lang} AND c1.flag = 1
+		JOIN COM.COMM_CODE c2 WITH (NOLOCK) on c2.group_code = 'PNT_TXN_TYPE' and c2.CODE_NAME = lpu.proc_type_cd and c2.lang = #{lang} AND c2.flag = 1
+		<!-- LEFT OUTER join com.comm_code c4 on c2.group_code = 'PNT_TXN_DTL_TYPE' and c2.code_name = lpu.proc_detail_type_cd and c2.lang = #{lang} and c2.flag = 1 -->
+		left outer join com.comm_code c3 WITH (NOLOCK) on c3.group_code = 'PNT_UPLOAD_BATCH_STATUS_CD' and c3.code_name = lpu.batch_result_cd and c3.lang = #{lang} and c3.flag = 1
+		JOIN COM.CRM_USER cu1 WITH (NOLOCK) on cu1.rid = lpu.FILE_UPLOAD_USER_RID
+		JOIN COM.EMPLOYEE emp1 WITH (NOLOCK) on emp1.id = cu1.ID_EMPLOYEE
+		LEFT OUTER JOIN COM.CRM_USER cu2 WITH (NOLOCK) on cu2.rid = lpu.CONFIRM_USER_RID
+		LEFT OUTER JOIN COM.EMPLOYEE emp2 WITH (NOLOCK) on emp2.id = cu2.ID_EMPLOYEE
+		WHERE 	${strCondWhere}
+			AND ${strWhere}
+			AND lpu.FLAG = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectAcrlPntMbrList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstListReqDto" resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemBatchRgstListResDto">
+	/* LOYBatchRgst.selectAcrlPntMbrList */
+	 SELECT lpui.rid     AS itemRid
+	 	  , lpui.RID_MBR AS ridMbr
+	      , lpui.ACRL_AMT AS acrlAmt
+	      , lpui.RID_CAM  AS promRid
+	      , lo.OFR_NM	AS ofrNm
+	      , lo.OFR_NO	AS ofrNo
+	      , lo.RID		AS ofrRid
+	      , lpu.RID_PGM	AS pgmRid
+	      , lp.PGM_NO	AS pgmNo
+	      , lpu.PROC_TYPE_CD AS procTypeCd
+	      , lpu.PROC_DETAIL_TYPE_CD AS procDtlTypeCd
+	      , ISNULL(lpui.TXN_AMT, 0) AS txnAmt 
+       FROM LOY.LOY_PNT_UPLOAD_ITEM lpui WITH (NOLOCK)
+	   JOIN LOY.LOY_PNT_UPLOAD lpu WITH (NOLOCK) ON lpui.RID_PNT_UPLOAD = lpu.RID AND lpu.FLAG = 1
+	   JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lpu.RID_PGM = lp.RID AND lp.FLAG = 1
+       JOIN  LOY.LOY_OFR lo WITH (NOLOCK) ON lpu.RID_OFFER = lo.RID AND lo.FLAG = 1
+      WHERE lpui.RID_PNT_UPLOAD = #{rid}
+        AND lpui.BATCH_RESULT_CD = 'W'
+        AND lpui.FLAG = 1
+	</select>
+	
+	<select id="selectNoExistMbr" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemAcrlPntManualReqDto" resultType="java.lang.Integer">
+		/*SystemBatchRgstMapper.selectNoExistMbr*/
+	SELECT COUNT(1)
+	  FROM LOY.LOY_MBR LM WITH (NOLOCK)
+	 WHERE LM.RID = #{ridMbr}
+	   AND LM.FLAG = 1
+	   AND LM.MBR_STAT_CD = 'A'
+	</select>
+	
+	<select id="selectOverLapMbrAcrlPnt" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemAcrlPntManualReqDto" resultType="java.lang.Integer">
+	/* LOYBatchRgst.selectOverLapMbrAcrlPnt */
+	SELECT count(1) 
+      FROM loy.LOY_PNT_TXN lpt  WITH (NOLOCK)
+      JOIN loy.LOY_PNT_ACRL lpa WITH (NOLOCK) ON lpt.rid = lpa.RID_PNT_TXN AND lpa.FLAG =1
+     WHERE lpt.APPR_DT <![CDATA[>]]> TRUNC(GETDATE())
+       AND lpt.APPR_DT <![CDATA[<]]> TRUNC(GETDATE()+1)
+       AND lpa.OFFER_NO= #{ofrNo}
+       AND lpa.RID_MBR = #{ridMbr} 
+       AND lpt.FLAG = 1
+	</select>
+	
+	<select id="selectOverLapMbrRdmlPnt" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemAcrlPntManualReqDto" resultType="java.lang.Integer">
+	/* LOYBatchRgst.selectOverLapMbrRdmlPnt */
+	SELECT count(1) 
+      FROM loy.LOY_PNT_TXN lpt  WITH (NOLOCK)
+      JOIN loy.LOY_PNT_RDM lpd WITH (NOLOCK) ON lpt.rid = lpd.RID_PNT_TXN AND lpd.FLAG =1
+     WHERE lpt.APPR_DT <![CDATA[>]]> TRUNC(GETDATE())
+       AND lpt.APPR_DT <![CDATA[<]]> TRUNC(GETDATE()+1)
+       AND lpd.OFFER_NO= #{ofrNo}
+       AND lpd.RID_MBR = #{ridMbr} 
+       AND lpt.FLAG = 1
+	</select>
+	
+	<!-- 적립요청 프로시저 실행 -->
+	<update id="callProcPointAcrl" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyPointAcrlRequestDTO" statementType="CALLABLE">
+	/* SystemBatchRgstMapper.callProcPointAcrl */
+		{
+			CALL LOY.PROC_POINT_ACRL(
+				#{isConTran} 
+				, #{pgmNo}
+				, #{identiType}
+				, #{identiVal}
+				, #{encryptKey}
+				, #{offerNo}
+				, #{offerType}
+				, #{ridIntactType}
+				, #{ridIntactDate}
+				, #{chnlNo}
+				, #{posNo}
+				, #{procTypeCd}
+				, #{procDtlTypeCd}
+				<!-- , #{txnTypeCd}
+				, #{txnTypeDtlCd} -->
+				, #{sndDate}
+				, #{sndTime}
+				, #{txnUniqNo}
+				, #{txnDate}
+				, #{txnTime}
+				, #{orgnApprDate}
+				, #{orgnApprNo}
+				, #{pntAmt}
+				, #{refNo}
+				, #{rcptNo}
+				, #{txnAmt}
+				, #{calcFlag}
+				, #{keyFieldType}
+				, #{tranDtlTypeDesc}
+				, #{modifyBy}
+				, #{rst, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstCd, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstMsg, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{applyPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{usePnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{preAcrlPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{expr1MonthPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{expr3MonthPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalAcrlPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalRdmPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalAcrlCancelPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalRdmCancelPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalExprPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{apprNo, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{apprDate, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{apprTime, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+			)
+		}
+	</update>
+	
+	<update id="callFraudMbrInsert" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemSmsUnSubscribeListReqDto" statementType="CALLABLE">
+		/* SystemBatchRgstMapper.callFraudMbrInsert */
+		{
+			CALL LOY.PKG_LOY_PNT.SP_FRAUD_MBR_INSERT(
+				 'Y' 
+				,'PTNER_ACRL'
+				, #{pRst, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{pRstCd, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{pRstMsg, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+			)
+		}
+	</update>
+	
+	<!-- 사용요청 프로시저 실행 -->
+	<update id="callUseProcPointAcrl" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyPointAcrlRequestDTO" statementType="CALLABLE">
+		/* SystemBatchRgstMapper.callUseProcPointAcrl */
+		{
+			CALL LOY.PROC_POINT_RDM(
+				#{isConTran} 
+				, #{pgmNo}
+				, #{identiType}
+				, #{identiVal}
+				, #{encryptKey}
+				, #{offerNo}
+				, 'P'
+				, #{ridIntactType}
+				, #{ridIntactDate}
+				, #{chnlNo}
+				, #{posNo}
+				, #{procTypeCd}
+				, #{procDtlTypeCd}
+				, #{sndDate}
+				, #{sndTime}
+				, #{txnUniqNo}
+				, #{txnDate}
+				, #{txnTime}
+				, #{orgnApprDate}
+				, #{orgnApprNo}
+				, #{pntAmt}
+				, #{refNo}
+				, 0
+				, #{txnAmt}
+				, #{calcFlag}
+				, #{keyFieldType}
+				, #{tranDtlTypeDesc}
+				, #{modifyBy}
+				, #{rst, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstCd, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstMsg, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{usePnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{preAcrlPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{expr1MonthPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{expr3MonthPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalAcrlPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalRdmPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalAcrlCancelPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalRdmCancelPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalExprPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{apprNo, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{apprDate, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{apprTime, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+			)
+		}
+	</update>
+	
+	<update id="updateUploadItemStatus" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstListReqDto">
+	/* LOYBatchRgst.updateUploadItemStatus */
+	UPDATE LOY_PNT_UPLOAD_ITEM
+	   SET ACRL_DATE = GETDATE()
+	     , BATCH_ERROR_DESC = #{errorDesc}
+	     , BATCH_RESULT_CD  = #{status}
+	     , modify_date = GETDATE()
+	     , modify_by   = #{modifyBy}
+	 WHERE rid = #{itemRid}
+	</update>
+
+	<update id="confirmPntBatchRgstList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstListReqDto">
+		/*SystemBatchRgstMapper.confirmPntBatchRgstList*/
+		UPDATE 	LOY.LOY_PNT_UPLOAD
+		SET 	CONFIRM_DT = GETDATE()
+				, MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+				, CONFIRM_USER_RID = #{modifyBy}
+		WHERE 	RID = #{rid}
+			AND CONFIRM_DT IS NULL
+	</update>
+
+	<update id="deletePntBatchRgstList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstListReqDto">
+		/*SystemBatchRgstMapper.deletePntBatchRgstList*/
+		UPDATE 	LOY.LOY_PNT_UPLOAD
+		SET 	flag = flag + 1
+				, MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		WHERE 	RID = #{rid}
+			AND FLAG = 1
+			AND CONFIRM_DT IS NULL
+	</update>
+
+	<select id="getPntUpldItemList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstItemReqDto" 
+												resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemPntBatchRgstItemResDto">
+		/*SystemBatchRgstMapper.getPntUpldItemList*/
+		SELECT	/*+ ordered no_merge(lpui) push_pred(lpui) INDEX(lpui RID_PNT_UPLOAD_IDX lopd LOY_OFFER_PNT_DTL_IX01) use_nl(lpui mcm r o lopd lm lc) */
+				  lpui.seq AS seq <!-- 순서 -->				
+				, lpui.mbr_no AS mbrNo
+				, lpui.target_nm AS targetNm
+				, lpui.target_hhp_no AS targetHhpNo
+				, lpui.web_id AS webId
+				<!-- , TO_CHAR(lpui.acrl_amt, '999,999,999,999,999') as acrlAmt -->
+				, REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, lpui.acrl_amt), 1), '.00', '') 	 AS acrlAmt
+				, CONVERT(VARCHAR(10), lpui.valid_start_date, 23<!-- 'YYYY-MM-DD' -->) AS validStartDate
+				, CONVERT(VARCHAR(10), lpui.valid_end_date, 23 <!-- 'YYYY-MM-DD' -->) AS validEndDate
+				, lpui.batch_result_cd AS batchResultCd
+				, lpui.batch_error_desc AS batchErrorDesc
+				, lm.mbr_no AS mbrNoChk
+				, lm.mbr_stat_cd AS mbrStatCdChk
+				, lpui.rid_mbr AS ridMbr
+				, lpui.acrl_date AS acrlDate <!-- 적립일시 -->
+				, lpui.CI AS ci
+				, lpui.rid AS rid
+				, lo.OFR_NO		AS ofrNo
+				, lo.OFR_NM		AS ofrNm
+				, lo.RID		AS ofrRid
+				, t1.totalCount
+		from 	(	SELECT 	*
+					from 	LOY.LOY_PNT_UPLOAD_ITEM lpui WITH (NOLOCK)
+					where 	${strCondWhere}
+						and lpui.rid_pnt_upload = #{ridPntUpload}
+						and lpui.flag = 1
+						<if test="batchResultCd != null and batchResultCd != ''">
+						and lpui.batch_result_cd = #{batchResultCd}
+						</if>
+					<if test="sidx == 'lpui.seq' or sidx == 'lpui.acrl_date' or sidx == 'lpui.mbr_no' or sidx == 'lpui.target_nm'
+							or sidx == 'lpui.target_hhp_no' or sidx == 'lpui.acrl_amt' or sidx == 'lpui.batch_error_desc'
+							or sidx == 'lpui.rid' or sidx == 'lpui.batch_result_cd'">
+						ORDER BY ${strOrderby}
+						${strEndPaging}
+					</if>
+				) lpui
+		LEFT JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON lm.RID = lpui.RID_MBR
+		LEFT JOIN LOY.LOY_CUST lc WITH (NOLOCK) ON lc.RID = lm.RID_CUST
+		JOIN LOY.LOY_PNT_UPLOAD lpu WITH (NOLOCK) ON lpui.RID_PNT_UPLOAD = lpu.RID AND lpu.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_OFR lo WITH (NOLOCK) ON lpu.RID_OFFER = lo.RID AND lo.FLAG = 1
+		, (
+			SELECT 	/*+ INDEX(lpui RID_PNT_UPLOAD_IDX) */
+					COUNT(1) AS totalCount
+			FROM 	LOY.LOY_PNT_UPLOAD_ITEM lpui WITH (NOLOCK)
+			WHERE 	lpui.RID_PNT_UPLOAD = #{ridPntUpload}
+				AND FLAG = 1
+		) t1
+		where 	${strWhere}
+		<if test="sidx == 'c1.mark_name' or sidx == 'mcm.cam_nm' or sidx == 'c13.mark_name' or sidx == 'lopd.VALID_START_DTNUM'
+				or sidx == 'lopd.VALID_END_DTNUM' or sidx == 'lc.chnl_nm' or sidx == 'mcm.PNT_ACCNT_CODE_VAL'
+				or sidx == 'c9.mark_name' or sidx == 'c10.mark_name' or sidx == 'c11.mark_name' or sidx == 'c12.mark_name'
+				or sidx == 'lm.mbr_no' or sidx == 'lc.cust_nm' or sidx == 'c2.mark_name' or sidx == 'lm.mbr_stat_cd'">
+			ORDER BY ${strOrderby}
+			${strEndPaging}
+		</if>
+		<if test="sidx != null and sidx.startsWith('lpui')">
+			ORDER BY ${strOrderby}
+		</if>
+	</select>
+	
+	<select id="getExcelDownPntUpldItemList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstItemReqDto" 
+															resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemPntBatchRgstItemResDto">
+		/*SystemBatchRgstMapper.getExcelDownPntUpldItemList*/
+		SELECT	/*+ ordered no_merge(lpui) push_pred(lpui) INDEX(lpui RID_PNT_UPLOAD_IDX lopd LOY_OFFER_PNT_DTL_IX01) use_nl(lpui mcm r o lopd lm lc) */
+				  lpui.SEQ AS seq <!-- 순서 -->				
+				, lpui.MBR_NO AS mbrNo
+				, lpui.TARGET_NM AS targetNm
+				, lpui.TARGET_HHP_NO AS targetHhpNo
+				, lpui.WEB_ID AS webId
+				<!-- , TO_CHAR(lpui.acrl_amt, '999,999,999,999,999') as acrlAmt -->
+				,  REPLACE(CONVERT(VARCHAR, CONVERT(MONEY, lpui.ACRL_AMT), 1), '.00', '') AS acrlAmt
+				, CONVERT(VARCHAR(10), lpui.VALID_START_DATE, 23<!-- 'YYYY-MM-DD' -->) AS validStartDate
+				, CONVERT(VARCHAR(10), lpui.VALID_END_DATE, 23<!-- 'YYYY-MM-DD' -->) AS validEndDate
+				, lpui.BATCH_RESULT_CD AS batchResultCd
+				, lpui.BATCH_ERROR_DESC AS batchErrorDesc
+				, lm.MBR_NO AS mbrNoChk
+				, lm.MBR_STAT_CD AS mbrStatCdChk
+				, lpui.RID_MBR AS ridMbr
+				, lpui.ACRL_DATE AS acrlDate <!-- 적립일시 -->
+				, lpui.CI AS ci
+				, lpui.RID AS rid
+				, lo.OFR_NO		AS ofrNo
+				, lo.OFR_NM		AS ofrNm
+				, lo.RID		AS ofrRid
+				, t1.totalCount
+		FROM 	(	SELECT 	*
+					FROM 	LOY.LOY_PNT_UPLOAD_ITEM lpui WITH (NOLOCK)
+					WHERE 	${strCondWhere}
+						AND lpui.RID_PNT_UPLOAD = #{ridPntUpload}
+						AND lpui.FLAG = 1
+						<if test="batchResultCd != null and batchResultCd != ''">
+						AND lpui.BATCH_RESULT_CD = #{batchResultCd}
+						</if>
+					<if test="sidx == 'lpui.seq' or sidx == 'lpui.acrl_date' or sidx == 'lpui.mbr_no' or sidx == 'lpui.target_nm'
+							or sidx == 'lpui.target_hhp_no' or sidx == 'lpui.acrl_amt' or sidx == 'lpui.batch_error_desc'
+							or sidx == 'lpui.rid' or sidx == 'lpui.batch_result_cd'">
+						ORDER BY ${strOrderby}
+						${strEndPaging}
+					</if>
+				) lpui
+		LEFT JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON lm.RID = lpui.RID_MBR
+		LEFT JOIN LOY.LOY_CUST lc WITH (NOLOCK) ON lc.RID = lm.RID_CUST
+		JOIN LOY.LOY_PNT_UPLOAD lpu WITH (NOLOCK) ON lpui.RID_PNT_UPLOAD = lpu.RID AND lpu.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_OFR lo WITH (NOLOCK) ON lpu.RID_OFFER = lo.RID AND lo.FLAG = 1
+		, (
+			SELECT 	/*+ INDEX(lpui RID_PNT_UPLOAD_IDX) */
+					COUNT(1) AS totalCount
+			FROM 	LOY.LOY_PNT_UPLOAD_ITEM lpui WITH (NOLOCK)
+			WHERE 	lpui.RID_PNT_UPLOAD = #{ridPntUpload}
+				AND FLAG = 1
+		) t1
+		WHERE 	${strWhere}
+		<if test="sidx == 'c1.mark_name' or sidx == 'mcm.cam_nm' or sidx == 'c13.mark_name' or sidx == 'lopd.VALID_START_DTNUM'
+				or sidx == 'lopd.VALID_END_DTNUM' or sidx == 'lc.chnl_nm' or sidx == 'mcm.PNT_ACCNT_CODE_VAL'
+				or sidx == 'c9.mark_name' or sidx == 'c10.mark_name' or sidx == 'c11.mark_name' or sidx == 'c12.mark_name'
+				or sidx == 'lm.mbr_no' or sidx == 'lc.cust_nm' or sidx == 'c2.mark_name' or sidx == 'lm.mbr_stat_cd'">
+			ORDER BY ${strOrderby}
+			${strEndPaging}
+		</if>
+		<if test="sidx != null and sidx.startsWith('lpui')">
+			ORDER BY ${strOrderby}
+		</if>
+	</select>
+
+	<select id="setBatchLog" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchLogListReqDto"
+										resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemBatchLogListResDto">
+	/* SystemBatchRgstMapper.setBatchLog */
+	SELECT  REQ_CREATE_DATE            AS createDt
+          , TR_NO                     AS trNo
+          , REQ_MSG_TYPE               AS logType
+          , REQ_API_NO               AS typeNo
+          , CONVERT(VARCHAR, REQ_CREATE_DATE,120 <!-- 'YYYY-MM-DD HH24:MI:SS' -->)            AS reqTrDt
+          , S1.CHNL_NO                  AS storeCd
+          , CHNL_NM                  AS storeNm
+          , DVC_NO                     AS posCd
+          , RES_MSG_TYPE               AS blogType
+          , RES_API_NO               AS btypeNo
+          , CONVERT(VARCHAR, RES_CREATE_DATE, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)            AS resSendDt
+          , RST                     AS rst
+          , S1.REQ_API_NO  	as telNmCdNm
+          , S1.RST_CD 				as rstCdNm
+          , RST_MSG                  AS rstMsg
+          , lam.API_NM  			AS  apiNm
+          <!-- , ROUND( TO_CHAR(RES_CREATE_DATE, 'SSSSS.FF') - TO_CHAR(REQ_CREATE_DATE, 'SSSSS.FF'), 1 )   AS actTime -->
+          <!-- , (RES_CREATE_DATE - REQ_CREATE_DATE) * 24 * 60 * 60 AS actTime -->
+          , datediff( S , S1.REQ_CREATE_DATE, S1.RES_CREATE_DATE) AS actTime
+          , S1.SEQ_NO		AS seqNo
+          , S1.totalCount AS totalCount
+    FROM (
+                SELECT   T1.CREATE_DATE AS REQ_CREATE_DATE
+                             ,T1.TR_NO       AS TR_NO
+                             ,T1.MSG_TYPE    AS REQ_MSG_TYPE
+                             ,T1.API_NO  AS REQ_API_NO
+                             ,T1.CHNL_NO    AS CHNL_NO
+                             ,T1.DVC_NO      AS DVC_NO
+                             ,T2.MSG_TYPE    AS RES_MSG_TYPE
+                             ,T2.API_NO     AS RES_API_NO
+                             ,T2.CREATE_DATE AS RES_CREATE_DATE
+                             ,T2.RST         AS RST
+                             ,T2.RST_CD      AS RST_CD
+                             ,T2.RST_MSG     AS RST_MSG
+                             ,T1.SEQ_NO
+                             ,T1.totalCount AS totalCount
+                    FROM (
+                                  SELECT /*+ INDEX_DESC(A I_APPRO_MSG_LOG_IX05) */
+                                            A.CREATE_DATE
+                                           ,A.TR_NO
+                                           ,A.MSG_TYPE
+                                           ,A.API_NO
+                                           ,A.TR_TIME
+                                           ,A.CHNL_NO
+                                           ,A.DVC_NO
+                                           ,A.SEQ_NO
+                                           ,C.totalCount
+                                  FROM LOGS.API_MSG_LOG A  WITH (NOLOCK)  ,
+                                        (    SELECT /*+ INDEX(A I_APPRO_MSG_LOG_IX05) */
+                                        		 		count(*)   AS totalCount
+                                            FROM    LOGS.API_MSG_LOG A WITH (NOLOCK)
+                                            WHERE 		${strWhere}
+											AND 		${strCondWhere}
+                                            AND  A.MSG_TYPE ='REQ') C
+                                  WHERE 		${strWhere}
+									AND 		${strCondWhere}
+                                    AND A.MSG_TYPE = 'REQ'
+                                  ORDER BY A.CREATE_DATE  DESC
+                                  ${strEndPaging}
+                             ) T1  LEFT JOIN (
+                                           SELECT A.TR_NO
+                                                 ,A.MSG_TYPE
+                                                 ,A.API_NO
+                                                 ,A.CREATE_DATE
+                                                 ,A.RST
+                                                 ,A.RST_CD
+                                                 ,A.RST_MSG
+                                                 ,A.SEQ_NO
+                                            FROM  LOGS.API_MSG_LOG A WITH (NOLOCK)
+                                            WHERE 		${strWhere}
+											--AND 		${strCondWhere}
+                                            AND A.MSG_TYPE = 'RES'
+                                            ) T2 ON T1.TR_NO = t2.TR_NO
+          ) S1
+    LEFT JOIN LOY.LOY_CHNL S2 WITH (NOLOCK) ON  S1.CHNL_NO = S2.CHNL_NO
+    LEFT JOIN LOY.LOY_API_MGT lam WITH (NOLOCK) ON S1.RES_API_NO = lam.API_NO
+    ORDER BY ${strOrderby}
+	</select>
+
+	<select id="getAprLogDetail" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchLogListReqDto" 
+											resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemAprLogDetailResDto">
+		/*SystemBatchRgstMapper.getAprLogDetail*/
+		SELECT  las.TR_NO						AS trNo 			--거래번호
+			   ,las.LOG_TYPE					AS logType			--로그유형
+			   ,las.OCCU_PGM_TYPE				AS occuPgmType		--발생프로그램유형
+			   ,las.PGM_NM						AS pgmNm			--프로그램설명
+			   ,las.SRC_NUM						AS errSrcNum		--에러발생 소스번호
+			   ,las.MSG							AS errMsg			--에러메시지
+			   ,las.MSG_DESC					AS errDesc
+			   ,${strColumn}
+	      FROM (
+				 	SELECT a.TR_NO
+				   	FROM LOGS.API_MSG_LOG A WITH (NOLOCK)
+			     	LEFT JOIN LOGS.API_MSG_LOG B WITH (NOLOCK) ON A.TR_NO = B.TR_NO   AND B.MSG_TYPE='RES'
+				    WHERE 1=1
+				    AND  A.MSG_TYPE ='REQ') lam
+     	LEFT JOIN LOGS.API_SVR_LOG las	WITH (NOLOCK) ON las.TR_NO =lam.TR_NO
+		 WHERE ${strWhere}
+		   AND ${strCondWhere}
+		   AND lam.tr_no =#{trNo}
+	  	ORDER BY ${strOrderby}
+	  		   ${strEndPaging}
+	</select>
+
+	<select id="setApprFailList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchLogListReqDto" 
+										resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemBatchLogListResDto">
+	/* SystemBatchRgstMapper.setApprFailList */
+	SELECT S1.REQ_DT 						AS createDt     -- 생성일시
+				,S1.TR_NO 						AS trNo			-- 거래번호
+				, S1.REQ_TYPE 					AS typeNo		-- 요청유형
+				, (SELECT TOP 1  MARK_NAME FROM COM.COMM_CODE WITH (NOLOCK) WHERE CODE_NAME = S1.REQ_TYPE
+				                                                   AND FLAG = 1
+				                                                   AND GROUP_CODE = 'APPR_SERVER_TR_TYPE' <!-- AND ROWNUM = 1 --> ) AS telNm
+			    , CONVERT(VARCHAR, S1.REQ_DT, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->) 		AS reqTrDt  --요청일자
+				, S1.CHNL_NO 					AS storeCd				--storeCd
+				, (SELECT TOP 1 CHNL_NM FROM LOY.LOY_CHNL A WHERE A.CHNL_NO = S1.CHNL_NO <!-- AND ROWNUM =1 --> ) AS storeNm --매장명
+				, S1.DVC_NO 					AS posCd			--포스코드
+				, S1.RES_TYPE 					AS blogType			--로그유형
+				, CONVERT(VARCHAR, S1.RES_DT, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)  	AS resSendDt -- 응답일자
+				, S1.RES_TYPE 					AS btypeNo					--응답 유형
+				<!-- , ROUND( TO_CHAR(S1.RES_DT, 'SSSSS.FF') - TO_CHAR(S1.REQ_DT, 'SSSSS.FF') , 1)       AS actTime -->
+				<!-- , (S1.RES_DT - S1.REQ_DT) * 24 * 60 * 60 AS actTime -->
+				, datediff( S , S1.REQ_DT, S1.RES_DT) AS actTime
+				, S1.RST AS rst					--결과
+				, S1.RST_CD AS rstCd			-- 결과코드
+				, S1.SEQ_NO 	AS seqNo
+				, (SELECT TOP 1  MARK_NAME FROM COM.COMM_CODE WITH (NOLOCK) WHERE CODE_NAME = S1.RST_CD
+				                                                   AND FLAG = 1
+				                                                   AND GROUP_CODE = 'APPR_SERVER_RPLY_CD' <!-- AND ROWNUM = 1 --> ) AS resNm
+				, S1.RST_MSG AS rstMsg		--결과메시지
+				, C1.*
+	FROM (
+		            SELECT T1.TR_NO 
+		            			, T1.RST
+		            			, T1.RST_CD
+		            			, T1.RST_MSG 
+		            			, T1.CREATE_DATE AS RES_DT 
+		            			, T1.API_NO AS RES_TYPE
+		            			, T2.CHNL_NO
+		            			, T2.DVC_NO 
+		            			, T2.CREATE_DATE AS REQ_DT
+		            			, T2.API_NO AS REQ_TYPE
+		            			, T1.SEQ_NO
+		            FROM (
+					            SELECT /*+ INDEX_DESC(A I_APPRO_MSG_LOG_IX05) */
+					             			A.TR_NO
+					             			, A.RST 
+					             			, A.RST_CD, A.RST_MSG 
+					             			, A.CREATE_DATE
+					             			, A.API_NO
+					             			, A.SEQ_NO
+					            FROM LOGS.API_MSG_LOG A WITH (NOLOCK)
+			                    WHERE 1=1
+			                    AND A.RST ='F'
+			                    AND A.MSG_TYPE ='RES'
+		           ) T1
+		            JOIN (
+					            SELECT /*+ INDEX_DESC(A I_APPRO_MSG_LOG_IX05) */
+					            			A.TR_NO
+					            			, A.CHNL_NO
+					            			, A.DVC_NO
+					            			, A.CREATE_DATE
+					            			, A.API_NO
+					            			, A.SEQ_NO
+					            FROM       LOGS.API_MSG_LOG A WITH (NOLOCK)
+			                    WHERE ${strCondWhere}
+			                    AND A.MSG_TYPE ='REQ'
+		           ) T2 ON T1.TR_NO = T2.TR_NO 
+		) S1,
+        (
+            SELECT    /*+ INDEX(A I_APPRO_MSG_LOG_IX05) */
+            			count(*)   AS totalCount
+            FROM        LOGS.API_MSG_LOG A WITH (NOLOCK)
+            WHERE       ${strCondWhere}
+            AND        A.MSG_TYPE ='RES' AND A.RST ='F'
+         ) C1
+    ORDER BY   ${strOrderby}
+					${strEndPaging}
+	</select>
+	<select id="setReqResData" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemBatchLogListReqDto" 
+											resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemAprReqResResDto">
+	/* SystemBatchRgstMapper.setReqResData */	
+	SELECT       A.MSG 						AS reqMsg       -- 요청 전문
+	            , B.MSG 					AS resMsg       -- 응답 전문
+	FROM 		LOGS.API_MSG_LOG A WITH (NOLOCK)
+	LEFT JOIN 	LOGS.API_MSG_LOG B WITH (NOLOCK) ON A.TR_NO = B.TR_NO   AND B.MSG_TYPE='RES'
+	WHERE  a.TR_NO =#{trNo}
+	AND  		A.MSG_TYPE ='REQ'
+	</select>
+
+	<!-- 포인트 수동일괄등록 업로드 건수 조회 -->
+	<select id="selectPntUploadItemCnt" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto" 
+													resultType="java.lang.Integer">
+	/*SystemBatchRgstMapper./selectPntUploadItemCnt*/
+	SELECT 	COUNT(1)
+	FROM 	LOY.LOY_PNT_UPLOAD_ITEM WITH (NOLOCK)
+	WHERE 	RID_PNT_UPLOAD = #{rid}
+	</select>
+
+	<!-- 포인트 수동일괄등록 아이템 업로드 건수 조회 by batchResultCd -->
+	<select id="selectPntUploadItemCntByBatchResultCd" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto" 
+																			resultType="java.lang.Integer">
+	/*SystemBatchRgstMapper./selectPntUploadInvalidItemCnt*/
+	SELECT 	COUNT(1)
+	FROM 	LOY.LOY_PNT_UPLOAD lpu WITH (NOLOCK)
+	JOIN 	LOY.LOY_PNT_UPLOAD_ITEM lpui WITH (NOLOCK) ON lpu.RID = lpui.RID_PNT_UPLOAD
+	WHERE 	lpu.RID = #{rid}
+		AND lpu.FLAG = 1
+		AND lpui.FLAG = 1
+		AND lpui.BATCH_RESULT_CD = #{batchResultCd}
+	</select>
+
+	<!-- 포인트 수동일괄등록 유효하지않은 아이템 업로드 결과 업데이트 -->
+	<update id="updatePntUploadInvalidItemRslt" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto">
+		/*SystemBatchRgstMapper./updatePntUploadInvalidItemRslt*/
+		UPDATE 	LOY.LOY_PNT_UPLOAD_ITEM
+		SET 	BATCH_RESULT_CD = #{batchResultCd}
+				, BATCH_ERROR_DESC = #{batchErrorDesc}
+				, MODIFY_DATE = GETDATE()
+		WHERE 	RID_PNT_UPLOAD = #{rid}
+			AND FLAG = 1
+			AND BATCH_RESULT_CD != #{batchResultCd}
+		<if test='procTypeCd != null and procTypeCd.equals("TARGET_MEMBER")'>
+			<if test='validType != null and validType.equals("1")'>
+				AND RID_MBR IS NULL
+			</if>
+			<if test='validType != null and validType.equals("2")'>
+				AND (ACRL_AMT IS NULL OR ACRL_AMT <![CDATA[<=]]> 0)
+			</if>
+			<if test='validType != null and validType.equals("3")'>
+				AND RID_CAM IS NULL
+			</if>
+		</if>
+		<if test='procTypeCd != null and procTypeCd.equals("TARGET_EVENT")'>
+			<if test='validType != null and validType.equals("1")'>
+				AND MBR_NO IS NULL
+			</if>
+			<if test='validType != null and validType.equals("2")'>
+				AND (ACRL_AMT IS NULL OR ACRL_AMT <![CDATA[<=]]> 0)
+			</if>
+			<if test='validType != null and validType.equals("3")'>
+				AND RID_CAM IS NULL
+			</if>
+		</if>
+		<if test='procTypeCd != null and procTypeCd.equals("TARGET_MEMBER_CI")'>
+			<if test='validType != null and validType.equals("1")'>
+				AND RID_MBR IS NULL
+			</if>
+			<if test='validType != null and validType.equals("2")'>
+				AND (ACRL_AMT IS NULL OR ACRL_AMT <![CDATA[<=]]> 0)
+			</if>
+			<if test='validType != null and validType.equals("3")'>
+				AND RID_CAM IS NULL
+			</if>
+		</if>
+		<if test='procTypeCd != null and procTypeCd.equals("TARGET_SURVEY")'>
+			<if test='validType != null and validType.equals("1")'>
+				AND MBR_NO IS NULL
+			</if>
+			<if test='validType != null and validType.equals("2")'>
+				AND TARGET_HHP_NO IS NULL
+			</if>
+			<if test='validType != null and validType.equals("3")'>
+				AND (ACRL_AMT IS NULL OR ACRL_AMT <![CDATA[<=]]> 0)
+			</if>
+			<if test='validType != null and validType.equals("4")'>
+				AND RID_CAM IS NULL
+			</if>
+		</if>
+
+	</update>
+
+	<select id="getUnSubExcelUploadList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemSmsUnSubscribeListReqDto" 
+														resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemSmsUnSubscribeListResDto">
+	/* SystemBatchRgstMapper.getUnSubExcelUploadList */	
+		SELECT  CONVERT(VARCHAR(16), t1.FILE_UPLD_DT, 120<!-- 'YYYY-MM-DD hh24:mm' -->) AS fileUpldDt
+				,	t1.FILE_NM	AS fileNm
+				,	t1.FILE_UPLD_TOT_CNT AS fileTotCnt
+				,	t1.FILE_UPLD_SUCES_CNT AS fileUpldSucesCnt
+				,	t1.FILE_UPLD_FAIL_CNT	AS fileUpldFailCnt
+				,	t1.POINT_TRT_STATUS	AS pointTrtStatus
+				,	t3.NAME		AS ridUpldEmp
+				,	t1.RID	AS rid
+				,   CEILING(COUNT(distinct t1.rid) OVER()) totalCount
+		  FROM loy.LOY_UPLD_FILE t1 WITH (NOLOCK)
+		  JOIN com.CRM_USER t2 WITH (NOLOCK) ON t2.RID = t1.RID_UPLD_EMP AND t2.FLAG = 1
+		  JOIN com.EMPLOYEE t3 WITH (NOLOCK) ON t3.ID = t2.ID_EMPLOYEE AND t3.FLAG = 1
+		 WHERE ${strWhere}
+		   AND ${strCondWhere}
+		   AND t1.flag = 1
+	 ORDER BY  ${strOrderby}
+		  	   ${strEndPaging}
+	</select>
+	<select id="smsUpldItemList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemSmsUnSubscribeListReqDto" 
+											resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemSmsUnSubscribeListResDto">
+	/* SystemBatchRgstMapper.smsUpldItemList */	
+		SELECT	t1.APPROVAL_NUM		AS approvalNum
+			, 	t1.TXN_NUM			AS txnNum
+			,	t1.REQUEST_DT		AS requestDt
+			,	t1.UPLOAD_RSLT		AS uploadRslt
+			,	t1.ERR_MSG			AS errMsg
+		FROM loy.LOY_UPLD_ITEM t1 WITH (NOLOCK)
+		JOIN loy.LOY_UPLD_FILE t2 WITH (NOLOCK) ON t2.RID = t1.RID_PAR AND t2.FLAG = 1
+	   WHERE t1.flag = 1
+		 AND t1.RID_PAR = #{ridPar}
+		 AND ${strWhere}
+		 AND ${strCondWhere}
+	ORDER BY ${strOrderby}
+			 ${strEndPaging}
+	</select>
+	
+		<insert id="addTargetSmsUploadData" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto">
+		/*SystemBatchRgstMapper.addTargetSmsUploadData*/
+		INSERT INTO LOY.LOY_UPLD_FILE (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, FILE_PATH
+			, FILE_NM
+			, FILE_UPLD_DT
+			, RID_UPLD_EMP
+			, FILE_UPLD_TOT_CNT
+			, POINT_TRT_STATUS
+		) VALUES (
+			#{rid}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, #{filePath}
+			, #{fileName}
+			, GETDATE()
+			, #{createBy}
+			, #{uploadCnt}
+			, 'W'
+		)
+	</insert>
+
+	<update id="updateSmsUnSubUploadResult" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto">
+		/*SystemBatchRgstMapper./updatePntUploadResult*/
+		UPDATE 	LOY.LOY_UPLD_FILE
+		SET 	POINT_TRT_STATUS = #{batchResultCd}
+				, MODIFY_DATE = GETDATE()
+		WHERE 	rid = #{rid}
+	</update>
+
+	<!-- 수신자거부 프로시저 -->
+	<parameterMap id="unSubSmsMap" type="com.icignal.systemmanagement.batchrgst.dto.request.SystemSmsUnSubscribeListReqDto">
+		<parameter property="pRid" 	  jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="pType"   jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="pRst" 	  jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="pRstCd"  jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="pRstMsg" jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 	</parameterMap>
+	<update id="callUnSubscribeSms" parameterMap="unSubSmsMap" statementType="CALLABLE">
+	/* SystemBatchRgstMapper.callUnSubscribeSms */	
+		{
+		CALL LOY.PROC_MBR_UNSUBSCRIBE_SMS(?, ?, ?, ?, ?)
+		}
+ 	</update>
+
+	<update id="updateSmsUnSubUploadCnt" parameterType = "com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto">
+	/* SystemBatchRgstMapper.updateSmsUnSubUploadCnt */
+	UPDATE LOY.LOY_UPLD_FILE
+	SET FILE_UPLD_SUCES_CNT = #{uploadCnt}
+		     , FILE_UPLD_FAIL_CNT  = #{failUploadCnt}
+			 , modify_date = GETDATE()
+	WHERE RID = #{rid}
+	</update>
+
+	<update id="updateOverLapPromotionUser" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstItemReqDto">
+	/* SystemBatchRgstMapper.updateOverLapPromotionUser */
+	UPDATE loy.LOY_PNT_UPLOAD_ITEM
+  	   SET BATCH_RESULT_CD = 'F'
+         	, BATCH_ERROR_DESC = N'금일 프로모션 중복'
+     WHERE FLAG = 1
+       AND TARGET_NM = secu.fn_getEncrypt(#{cipherKey},#{custNm})
+       AND TARGET_HHP_NO = secu.fn_getEncrypt(#{cipherKey},#{hhpNo})
+       AND RID = #{rid}
+	</update>
+
+	<select id="selectValidMbrDetailInfo2" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto" 
+													resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemPntBatchRgstUploadResDto">
+	/* SystemBatchRgstMapper.selectValidMbrDetailInfo2 */
+	SELECT lm.mbr_no as mbrNo
+	    	,  lm.rid    as rid
+	  FROM LOY.LOY_MBR LM with (nolock)
+	  JOIN LOY.LOY_CUST LC with (nolock) ON LM.RID_CUST = LC.RID AND LC.FLAG = 1
+	  WHERE LM.FLAG = 1
+	   AND LM.MBR_STAT_CD = 'A'
+	   AND LC.CUST_NM = #{custNm}
+	   AND LC.HHP = #{hhpNo}
+	</select>
+	<select id="selectValidMbrDetailCnt" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstUploadReqDto" 
+													resultType="java.lang.Integer">
+	/* SystemBatchRgstMapper.selectValidMbrDetailCnt */
+	SELECT count(*)
+	  FROM LOY.LOY_MBR LM with (nolock)
+	  JOIN LOY.LOY_CUST LC with (nolock) ON LM.RID_CUST = LC.RID AND LC.FLAG = 1
+	  WHERE LM.FLAG = 1
+	   AND LM.MBR_STAT_CD = 'A'
+	   AND LC.CUST_NM = #{custNm}
+	   AND LC.HHP = #{hhpNo}
+	</select>
+	
+	<select id="selectTxnCodeList" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstItemReqDto" 
+													resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemTxnCodeListResDto">
+	/* SystemBatchRgstMapper.selectTxnCodeList */
+	  SELECT    c1.CODE_NAME		AS codeName
+			  , c1.MARK_NAME		AS markNAme
+	  FROM COM.COMM_CODE c1 with (nolock)
+	  WHERE c1.FLAG = 1
+	  AND   c1.GROUP_CODE = 'PNT_TXN_DTL_TYPE'
+	  AND   c1.PAR_CODE_ID
+	  IN    (SELECT ID FROM COM.COMM_CODE with (nolock) WHERE GROUP_CODE='PNT_TXN_TYPE' AND CODE_NAME=#{pntTxnCode})
+	  <if test="pntTxnCode == &quot;100&quot;">
+	  AND   c1.CODE_NAME NOT IN ('130','131')
+	  </if>
+	  <if test="pntTxnCode == &quot;200&quot;">
+	  AND   c1.CODE_NAME NOT IN ('210','220','250','270','211')
+	  </if>
+	  ORDER BY c1.SEQ ASC
+	</select>
+	
+	<select id="selectClearMaskPntItemMbr" parameterType="com.icignal.systemmanagement.batchrgst.dto.request.SystemPntBatchRgstItemReqDto" 
+													resultType="com.icignal.systemmanagement.batchrgst.dto.response.SystemPntBatchRgstItemResDto">
+	/* SystemBatchRgstMapper.selectClearMaskPntItemMbr */
+	SELECT  lpui.TARGET_NM AS unMaskCustNm
+	  		, lpui.TARGET_HHP_NO AS unMaskHhp
+	  		, lpui.WEB_ID		 AS unMaskWebId
+	FROM LOY.LOY_PNT_UPLOAD_ITEM lpui with (nolock)
+	WHERE lpui.FLAG = 1
+	AND   lpui.RID  = #{rid}
+	</select>
+
+</mapper>

@@ -1,0 +1,2480 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:35:55 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.tiers.tiermaster.mapper.LoyTiersMapper">
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierGroupList)
+    ============================================
+    -   제목                   : 등급 그룹 목록 조회
+    -   설명                   : 등급 그룹 목록 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <select id="getTierGroupList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierGroupListResDto">
+        /* LoyTiersMapper.getTierGroupList */
+		SELECT	ltg.RID 				AS rid
+				, ltg.TIER_GRP_NM 		AS tierGrpNm
+				, lp.PGM_NM 			AS pgmNm
+				<!-- , c1.MARK_NAME 			AS statusCdNm -->
+				, ltg.STATUS_CD as statusCdNm
+				, emp.NAME 				AS name
+				, to_char(ltg.MODIFY_DATE, 'yyyy-mm-dd hh24:mi:ss') 		AS modifyDate
+				, ${strColumn}
+		FROM	LOY.LOY_TIERS_GRP ltg
+		JOIN 	LOY.LOY_PGM lp ON ltg.RID_PGM = lp.RID AND lp.FLAG = 1
+		<!-- LEFT OUTER JOIN	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_TIER_MST_STAT_CD' AND c1.CODE_NAME = ltg.STATUS_CD AND c1.LANG = #{lang} AND c1.FLAG = 1 -->
+		JOIN 	COM.CRM_USER cu ON cu.RID = ltg.MODIFY_BY
+		JOIN 	COM.EMPLOYEE emp ON emp.ID = cu.ID_EMPLOYEE
+		WHERE 	${strCondWhere}
+			AND ${strSVCType}
+			AND ${strWhere}
+			AND ltg.FLAG = 1
+			AND ltg.RID_PGM = #{loyProgramId}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierGrpDtl)
+    ============================================
+    -   제목                   : 등급 그룹 조회
+    -   설명                   : 등급 그룹 조회
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <select id="getTierGrpDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierGroupListResDto">
+        /* LoyTiersMapper.getTierGrpDtl */
+        select ltg.rid                       as rid
+             , ltg.rid_pgm                   as ridPgm               /* 로열티 프로그램 rid */
+             , ltg.tier_grp_nm               as tierGrpNm            /* 등급그룹명 */
+             , lt.tier_nm                    as tierNm               /* 기본등급명 */
+             , ltg.tierup_cycl_mm_val        as tierupCyclMmVal      /* 승급주기 월값 */
+             , ltg.valid_period_mm_val       as validPeriodMmVal     /* 유효기간 월값 */
+             , ltg.rslt_extr_period_mm_val   as rsltExtrPeriodMmVal  /* 실적추출 기간 월값 */
+             , ltg.rid_tier_dflt              as ridTierDflt           /* RID등급기본 */
+             , e.NAME                        as createBy
+             , TO_CHAR( ltg.create_date,'YYYY-MM-DD HH24:MI:SS' ) as createDate
+             , ltg.status_cd                     as statusCd
+             , ltg.TIERUP_RULE_BAS_TYPE     as tierupRuleBasType
+             , TIERUP_APLY_MM				as tierupAplyMm
+             , ltg.base_yn                       as baseYn
+             , to_char( ltg.aply_start_dd,'YYYY-MM-DD' )               as aplyStartDd
+             , ltg.PUR_CNT_MIN_AMT 				AS purCntMinAmt
+             , ltg.TIERUP_TXN_TERMS_MM 			AS tierupTxnTermsMm
+             , ltg.TIER_NOTICE 					AS tierNotice
+          from LOY.LOY_TIERS_GRP ltg
+          left outer join loy.loy_tiers lt on ltg.rid_tier_dflt = lt.rid and lt.flag = 1
+          left outer join com.crm_user cu on ltg.create_by = cu.rid
+          left outer join com.employee e on cu.id_employee = e.id
+         where ${strSVCType}
+           and ltg.flag = 1
+           and ltg.rid = #{rid}
+           and ltg.rid_pgm = #{loyProgramId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (setTierGrp)
+    ============================================
+    -   제목                   : 등급 그룹 저장
+    -   설명                   : 등급 그룹 저장
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <insert id="setTierGrp" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoySetTierGroupListReqDto">
+     /* LoyTiersMapper.setTierGrp */
+        insert into LOY.LOY_TIERS_GRP (
+              rid
+            , rid_pgm
+            , tier_grp_nm
+            , tierup_cycl_mm_val
+            , valid_period_mm_val
+            , rslt_extr_period_mm_val
+            , rid_tier_dflt
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+            , tierup_rule_bas_type
+            , TIERUP_APLY_MM
+            , status_cd
+            , aply_start_dd
+            , PUR_CNT_MIN_AMT
+            , TIERUP_TXN_TERMS_MM
+            , TIER_NOTICE
+        ) values (
+              #{rid}
+            , #{loyProgramId}
+            , #{tierGrpNm}
+            , #{tierupCyclMmVal}
+            , #{validPeriodMmVal}
+            , #{rsltExtrPeriodMmVal}
+            , #{ridTierDflt}
+            , 1
+            , 0
+            , sysdate
+            , #{createBy}
+            , sysdate
+            , #{modifyBy}
+            , #{tierupRuleBasType}
+            , #{tierupAplyMm}
+            , #{statusCd}
+            , #{aplyStartDd}
+            , #{purCntMinAmt}
+            , #{tierupTxnTermsMm}
+            , #{tierNotice}
+        )
+
+        <selectKey keyProperty="" resultType="java.lang.String">
+	         select 1 from dual
+         </selectKey>
+
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (editTierGrp)
+    ============================================
+    -   제목                   : 등급 그룹 수정
+    -   설명                   : 등급 그룹 수정
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <update id="editTierGrp" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+        /* LoyTiersMapper.editTierGrp */
+        update LOY.LOY_TIERS_GRP
+          set tier_grp_nm               = #{tierGrpNm}
+            , tierup_cycl_mm_val        = #{tierupCyclMmVal}
+            , valid_period_mm_val       = #{validPeriodMmVal}
+            , rslt_extr_period_mm_val   = #{rsltExtrPeriodMmVal}
+            , rid_tier_dflt              = #{ridTierDflt}
+            , modify_date               = sysdate
+            , modify_by                 = #{modifyBy}
+            , mod_num                   = mod_num +1
+            , tierup_rule_bas_type      = #{tierupRuleBasType}
+            , TIERUP_APLY_MM 			= #{tierupAplyMm}
+            , aply_start_dd             = case when #{aplyStartDd} = '' then null else #{aplyStartDd} end
+            , PUR_CNT_MIN_AMT 			= #{purCntMinAmt}
+            , TIERUP_TXN_TERMS_MM 		= #{tierupTxnTermsMm}
+            , TIER_NOTICE		 		= #{tierNotice}
+        where rid                       = #{rid}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierDtlList)
+    ============================================
+    -   제목                   : 등급상세 목록 조회
+    -   설명                   : 등급상세 목록 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <select id="getTierDtlList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGrpDtlListReqDto" 
+    											resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierGrpDtlListResDto">
+        /* LoyTiersMapper.getTierDtlList */
+        select
+               lt.rid                as rid
+             , lt.rid_tier_group     as ridTierGroup     /* 등급그룹마스터 rid */
+             , lt.tier_cd            as tierCd           /* 등급코드 */
+             , lt.tier_nm            as tierNm           /* 등급명 */
+             , lt.seq_no             as seqNo            /* 순서번호 */
+             , to_char(lt.valid_start_date,'YYYY-MM-DD') as validStartDate
+             , to_char(lt.valid_end_date,'YYYY-MM-DD') as validEndDate
+             , lt.tier_cd_stat_cd    as tierCdStatCd     /* 등급코드상태코드 */
+             <!-- , c.MARK_NAME           as tierCdStatNm -->
+             , e.NAME                as createBy
+             , to_char(lt.create_date,'YYYY-MM-DD') as createDate
+             , ${strColumn}
+          from loy.loy_tiers lt
+          join LOY.LOY_TIERS_GRP ltg on ltg.rid = lt.rid_tier_group and ltg.flag = 1
+          <!-- left outer join com.comm_code c on c.code_name = lt.tier_cd_stat_cd and c.lang = #{lang} and c.group_code = 'LOY_TIER_MST_STAT_CD' -->
+          left outer join com.crm_user cu on lt.create_by = cu.rid
+          left outer join com.employee e on cu.id_employee = e.id
+         where ${strSVCType}
+           and ${strWhere}
+           and lt.flag = 1
+           and lt.rid_tier_group = #{ridTierGroup}
+         order by ${strOrderby}
+         ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierDtl)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-등급 목록 조회
+    -   설명                   : 등급 그룹 상세(탭)-등급 목록 조회
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <select id="getTierDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGrpDtlListReqDto" 
+    									resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierGrpDtlListResDto">
+        /* LoyTiersMapper.getTierDtl */
+        select lt.rid                as rid
+             , lt.rid_tier_group     as ridTierGroup     					/* 등급그룹마스터 rid */
+             , lt.tier_cd            as tierCd           					/* 등급코드 */
+             , lt.tier_nm            as tierNm           					/* 등급명 */
+             , lt.seq_no             as seqNo           			 		/* 순서번호 */
+             ,to_char(lt.valid_start_date,'YYYY-MM-DD')	as validStartDate	/* 유효시작일자 */
+             ,to_char(lt.valid_end_date,'YYYY-MM-DD')	as validEndDate 	/* 유효종료일자 */
+             , lt.tier_cd_stat_cd    as tierCdStatCd     					/* 등급코드상태코드 */
+             <!-- , c.MARK_NAME           as tierCdStatNm -->
+             , e.NAME                as createBy
+             , to_char(lt.create_date,'YYYY-MM-DD') as createDate
+          from loy.loy_tiers lt
+          join LOY.LOY_TIERS_GRP ltg on ltg.rid = lt.rid_tier_group and ltg.flag = 1
+          <!-- left outer join com.comm_code c on c.code_name = lt.tier_cd_stat_cd and c.lang = #{lang} and c.group_code = 'LOY_TIER_MST_STAT_CD' -->
+          left outer join com.crm_user cu on lt.create_by = cu.rid
+          left outer join com.employee e on cu.id_employee = e.id
+         where ${strSVCType}
+           and lt.flag = 1
+           <if test="ridTierGroup != null and ridTierGroup != ''">
+           and lt.rid_tier_group = #{ridTierGroup}
+           </if>
+           <if test="tiersRid != null and tiersRid != ''">
+           and lt.rid = #{tiersRid}
+           </if>
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (chkValid)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-등급 중복 순서_기간 조회
+    -   설명                   : 등급 그룹 상세(탭)-등급 중복 순서_기간 조회
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <select id="chkValid" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoySetTierDtlReqDto" 
+    							resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierGrpDtlListResDto">
+        /* LoyTiersMapper.chkValid */
+        select lt.seq_no             as seqNo            /* 순서번호 */
+             , lt.valid_start_date   as validStartDate   /* 유효시작일자 */
+             , lt.valid_end_date     as validEndDate     /* 유효종료일자 */
+          from loy.loy_tiers lt
+         where ${strSVCType}
+           and lt.flag = 1
+           <if test="ridTierGroup != null and ridTierGroup != ''">
+           and lt.rid_tier_group = #{ridTierGroup}
+           </if>
+           and lt.seq_no = #{seqNo}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierListPop)
+    ============================================
+    -   제목                   : 등급목록 팝업 조회
+    -   설명                   : 등급목록 팝업 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <select id="getTierListPop" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGrpDtlListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierGrpDtlListResDto">
+        /* LoyTiersMapper.getTierListPop */
+        select
+               lt.rid                as rid
+             , lt.rid_tier_group     as ridTierGroup     /* 등급그룹마스터 rid */
+             , lt.tier_cd            as tierCd           /* 등급코드 */
+             , lt.tier_nm            as tierNm           /* 등급명 */
+             , lt.seq_no             as seqNo            /* 순서번호 */
+             , lt.valid_start_date   as validStartDate   /* 유효시작일자 */
+             , lt.valid_end_date     as validEndDate     /* 유효종료일자 */
+             , lt.tier_cd_stat_cd    as tierCdStatCd     /* 등급코드상태코드 */
+             <!-- , c.MARK_NAME           as tierCdStatNm -->
+             , ${strColumn}
+          from loy.loy_tiers lt
+          <!-- left outer join com.comm_code c on c.code_name = lt.tier_cd_stat_cd and c.lang = #{lang} and c.group_code = 'LOY_TIER_MST_STAT_CD' -->
+         where ${strSVCType}
+           and ${strWhere}
+           and lt.flag = 1
+           and lt.rid_tier_group = #{ridTierGroup}
+           and lt.tier_cd_stat_cd != 'I'
+         order by ${strOrderby}
+         ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (setTierDtl)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-등급 목록 저장
+    -   설명                   : 등급 그룹 상세(탭)-등급 목록 저장
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <insert id="setTierDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoySetTierDtlReqDto">
+     /* LoyTiersMapper.setTierDtl */
+        insert into loy.loy_tiers(
+              rid
+            , rid_tier_group
+            , tier_cd
+            , tier_nm
+            , seq_no
+            <if test="validStartDate != null and validStartDate != ''">
+            , valid_start_date
+            </if>
+            <if test="validEndDate != null and validEndDate != ''">
+            , valid_end_date
+            </if>
+            , tier_cd_stat_cd
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+        )values(
+              #{rid}
+            , #{ridTierGroup}
+            , #{tierCd}
+            , #{tierNm}
+            , #{seqNo}
+            <if test="validStartDate != null and validStartDate != ''">
+            , TO_DATE(#{validStartDate}, 'YYYY-MM-DD')
+            </if>
+            <if test="validEndDate != null and validEndDate != ''">
+            , TO_DATE(#{validEndDate}, 'YYYY-MM-DD')
+            </if>
+            , #{tierCdStatCd}
+            , 1
+            , 0
+            , sysdate
+            , #{createBy}
+            , sysdate
+            , #{modifyBy}
+        )
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select rid from loy.loy_tiers where rid = #{rid} rownum = 1
+        </selectKey>
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (editTierDtl)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-등급 목록 수정
+    -   설명                   : 등급 그룹 상세(탭)-등급 목록 수정
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <update id="editTierDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierDtlReqDto">
+        /* LoyTiersMapper.editTierDtl */
+        update loy.loy_tiers
+          set rid_tier_group    = #{ridTierGroup}
+            , tier_cd           = #{tierCd}
+            , tier_nm           = #{tierNm}
+            , seq_no            = #{seqNo}
+            <if test="validStartDate != null and validStartDate != ''">
+            , valid_start_date    = TO_DATE(#{validStartDate}, 'YYYYMMDDHH24MISS')
+            </if>
+            <if test="validEndDate != null and validEndDate != ''">
+            , valid_end_date    = TO_DATE(#{validEndDate}, 'YYYYMMDDHH24MISS')
+
+            </if>
+            , tier_cd_stat_cd   = #{tierCdStatCd}
+            , modify_date       = sysdate
+            , modify_by         = #{modifyBy}
+            , mod_num           = mod_num +1
+        where rid               = #{rid}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierChnlList)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-채널 목록 조회
+    -   설명                   : 등급 그룹 상세(탭)-채널 목록 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <select id="getTierChnlList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierChnlListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierChnlListResDto">
+        /* LoyTiersMapper.getTierChnlList */
+        select
+               ltgc.rid              as rid
+             , ltgc.rid_chnl         as ridChnl         /* 채널 rid */
+             , ltgc.rid_tier_group   as ridTierGroup    /* 등급그룹마스터 rid */
+             , lc1.CHNL_NO           as chnlNo          /* 채널번호 */
+             , lc1.CHNL_NM           as chnlNm          /* 채널명 */
+             , lc1.CHNL_TYPE_CD      as chnlTypeCd      /* 채널유형 */
+             <!-- , c.mark_name           as chnlTypeNm      /* 채널유형명 */ -->
+             , lc1.CHNL_TYPE_CD 	as chnlTypeCdNm
+             , lc1.PAR_RID           as parRid          /* 상위채널아이디 */
+             , lc2.CHNL_NM           as parChnlNm       /* 상위채널명 */
+             , lc1.PAR_RID_TOP       as parRidTop       /* 최상위채널아이디 */
+             , lc3.CHNL_NM           as parTopChnlNm        /* 최상위채널명 */
+             , case lc1.chnl_lvl_no WHEN 1 then 'Y' else 'N' end as parTopYn    /* 최상위여부 */
+             , ltgc.sub_incl_yn      as subInclYn       /* 하위포함여부 */
+             , ${strColumn}
+          from loy.loy_tier_grp_chnl ltgc
+          left outer join LOY.LOY_CHNL lc1 on lc1.rid = ltgc.rid_chnl and lc1.flag = 1
+          left outer join LOY.LOY_CHNL lc2 on lc2.rid = lc1.par_rid and lc2.flag = 1
+          left outer join LOY.LOY_CHNL lc3 on lc3.rid = lc1.par_rid_top and lc3.flag = 1
+          <!-- left outer join com.comm_code c on c.code_name = lc1.CHNL_TYPE_CD and c.flag = 1 and c.lang = #{lang} and c.group_code = 'LOY_CHNL_TYPE_CD' -->
+         where ${strSVCType}
+           and ${strWhere}
+           and ltgc.flag = 1
+           and ltgc.rid_tier_group = #{ridTierGroup}
+         order by ${strOrderby}
+         ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (setTierChnl)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-채널 목록 저장
+    -   설명                   : 등급 그룹 상세(탭)-채널 목록 저장
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <insert id="setTierChnl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoySetTierChnlReqDto">
+     /* LoyTiersMapper.setTierChnl */
+        insert into loy.loy_tier_grp_chnl(
+              rid
+            , rid_chnl
+            , rid_tier_group
+            , sub_incl_yn
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+        ) values (
+              #{rid}
+            , #{ridChnl}
+            , #{ridTierGroup}
+            , 'N'
+            , 1
+            , 0
+            , sysdate
+            , #{createBy}
+            , sysdate
+            , #{modifyBy}
+        )
+         <selectKey keyProperty="" resultType="java.lang.String">
+             select rid from loy.loy_tier_grp_chnl where rid = #{rid} and rownum = 1
+         </selectKey>
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (editTierChnl)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-채널 목록 수정
+    -   설명                   : 등급 그룹 상세(탭)-채널 목록 수정
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : rid
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <update id="editTierChnl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierChnlReqDto">
+        /* LoyTiersMapper.editTierChnl */
+        update loy.loy_tier_grp_chnl
+           set
+             sub_incl_yn = <foreach collection="subInclYn" item="item">
+             #{item}
+             </foreach>
+             , modify_date      = sysdate
+             , modify_by        = #{modifyBy}
+             , mod_num          = mod_num+1
+         where 1=1
+         <if test="rid.size() > 0">
+         and rid in
+         <foreach collection="rid" item="item" separator="," close=")" open="(">
+           #{item}
+         </foreach>
+         </if>
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (removeTierChnl)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-채널 목록 삭제
+    -   설명                   : 등급 그룹 상세(탭)-채널 목록 삭제
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : rid
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.18
+    ***************************************/ -->
+    <delete id="removeTierChnl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyDelTierChnlReqDto">
+        /* LoyTiersMapper.removeTierChnl */
+        delete from loy.loy_tier_grp_chnl
+        where 1=1
+         and rid in 
+         <foreach collection="rid" item="item" separator="," close=")" open="(">
+           #{item}
+         </foreach>
+    </delete>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierUpMatrixList)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 매트릭스 조회
+    -   설명                   : 등급 그룹 상세(탭)-승급 매트릭스 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <select id="getTierUpMatrixList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierupMatrixListReqDto" 
+    												resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierupMatrixListResDto">
+              /* LoyTiersMapper.getTierUpMatrixList */
+		select
+				ltm.rid                 as rid
+		       ,ltm.rid_tier_group      as ridTierGroup
+		       ,ltm.rid_tier_cur        as ridTierCur
+		       ,lt1.tier_nm             as ridTierCurNm
+		       ,ltm.rid_tier_next       as ridTierNext
+		       ,lt2.tier_nm             as ridTierNextNm
+		       ,ltm.tierup_stat_cd      as tierupStatCd
+		       <!-- ,c.mark_name             as tierupStatNm -->
+		          ,LISTAGG( case when ltmd.seq = '1' THEN
+		                        	    ltmd.logic_oper||
+		                                case when frnt_brkt_yn = '1' then '(' else '' END||
+		                                '('||
+		                                sect_start_val || ' <![CDATA[<=]]>  '|| c2.mark_name|| ' AND ' ||sect_end_val || '  >  '|| c2.mark_name || ')'
+		                                || case when back_brkt_yn = '1' then ')' else '' end
+
+		                     	when ltmd.seq = '2' then
+		                          	' ' || ltmd.logic_oper || ' ' ||
+		                                 case when frnt_brkt_yn = '1' then '(' else '' END ||
+		                                 '(' ||
+		                                 sect_start_val || '  <![CDATA[<=]]>  ' || c2.mark_name || ' AND ' ||sect_end_val || '  >  ' || c2.mark_name || ')' ||
+		                                 case when back_brkt_yn = '1' then ')' else '' end
+
+		                     	when ltmd.seq = '3' then
+		                          	' ' || ltmd.logic_oper || ' ' ||
+		                                 case when frnt_brkt_yn = '1' then '(' else '' END ||
+										   '(' ||
+										   sect_start_val ||  '  <![CDATA[<=]]>  ' || c2.mark_name  || ' AND ' ||sect_end_val || '  >  ' || c2.mark_name || ')' ||
+										   case when back_brkt_yn = '1' then ')' else '' end
+
+		                     	when ltmd.seq = '4' then
+     								' ' ||  ltmd.logic_oper ||  ' ' ||
+										   case when frnt_brkt_yn = '1' then '(' else '' END ||
+										   '(' ||
+										   sect_start_val|| '  <![CDATA[<=]]>  ' || c2.mark_name || ' AND ' ||sect_end_val || '  >  ' || c2.mark_name|| ')'||
+										   case when back_brkt_yn = '1' then ')' else '' end
+
+		                     	when ltmd.seq = '5' then
+       								' '|| ltmd.logic_oper|| ' '||
+										   case when frnt_brkt_yn = '1' then '(' else '' end||
+										   '('||
+										   sect_start_val|| '  <![CDATA[<=]]>  '|| c2.mark_name|| ' AND '||sect_end_val|| '  >  '|| c2.mark_name|| ')'||
+										   case when back_brkt_yn = '1' then ')' else '' end
+		                  			else ''
+		                  			END||
+		                  			 ',') WITHIN group(ORDER BY 1) AS tierupVal
+		        , e.NAME                        as createBy
+				, ltm.create_date as createDate
+		     from loy.loy_tierup_matrix ltm
+		     left join loy.loy_tierup_matrix_dtl ltmd on ltmd.rid_tierup_matrix = ltm.rid and ltmd.flag = 1
+		     join loy.loy_tiers lt1 on lt1.rid = ltm.rid_tier_cur  and lt1.flag = 1
+		     join loy.loy_tiers lt2 on lt2.rid = ltm.rid_tier_next and lt2.flag = 1
+		     <!-- left outer join com.comm_code c  on c.code_name = ltm.tierup_stat_cd     and c.lang = #{lang}  and c.group_code = 'LOY_TIERUP_STAT_CD' -->
+		     left outer join com.comm_code c2 on c2.code_name = ltmd.rslt_bas_type_cd and c2.lang = #{lang} and c2.group_code = 'LOY_TIERUP_BASE_CD'
+		     left outer join com.crm_user cu  on ltm.create_by = cu.rid
+		     left outer join com.employee e   on cu.id_employee = e.id
+		    where ${strSVCType}
+		      and ${strWhere}
+		      and ltm.flag = 1
+		      and ltm.rid_tier_group = #{ridTierGroup}
+		      and ltm.type = #{type}
+		    GROUP BY ltm.rid
+		       ,ltm.rid_tier_group
+		       ,ltm.rid_tier_cur
+		       ,lt1.tier_nm
+		       ,ltm.rid_tier_next
+		       ,lt2.tier_nm
+		       ,ltm.tierup_stat_cd
+		       ,c.mark_name
+		        , e.NAME
+		        ,ltm.create_date
+		    order by ${strOrderby}
+		    ${strEndPaging}
+
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getMbrMstPop)
+    ============================================
+    -   제목                   : 회원마스터 조회
+    -   설명                   : 회원마스터 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <select id="getMbrMstPop" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetMbrMstPopReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetMbrMstPopResDto">
+        /* LoyTiersMapper.getMbrMstPop */
+           select
+                  lm.RID            as rid
+                , lcm.RID_CHNL      as ridChnl
+                , lm.RID_PGM        as ridPgm
+                , lm.MBR_NO         as mbrNo
+                , lm.RID_CUST       as ridCust
+                , lc.CUST_NM        as custNm
+                , lm.RID_TIER_CUR   as ridTierCur
+                , lt.TIER_NM        as tierNm
+                , lm.MBR_TYPE_CD    as mbrTypeCd
+                <!-- , c1.MARK_NAME      as mbrTypeNm -->
+                , lm.MBR_STAT_CD    as mbrStatCd
+                <!-- , c2.MARK_NAME      as mbrStatNm -->
+                , lm.HHP_NO         as hpNo
+           from loy.loy_mbr lm
+           left outer join LOY.LOY_CHNLbr lcm on lcm.RID_MBR = lm.RID and lcm.FLAG = 1
+           join loy.loy_cust lc on lc.RID = lm.RID_CUST and lc.FLAG = 1
+           join loy.loy_tiers lt on lt.RID = lm.RID_TIER_CUR and lt.FLAG = 1
+           <!-- left outer join com.comm_code c1 on c1.CODE_NAME = lm.MBR_TYPE_CD and c1.LANG = #{lang} and c1.GROUP_CODE = 'LOY_MEM_TYPE_CD' -->
+           <!-- left outer join com.comm_code c2 on c2.CODE_NAME = lm.MBR_STAT_CD and c2.LANG = #{lang} and c2.GROUP_CODE = 'LOY_MEM_STAT_CD' -->
+          where ${strSVCType}
+            <!-- and lm.accnt_id = #{accountId} -->
+            and lm.flag = 1
+            <if test="ridChnl != null and ridChnl != ''">
+            and lcm.RID_CHNL = #{ridChnl}
+            </if>
+          order by ${strOrderby}
+          ${strEndPaging}
+    </select>
+
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierBnftList)
+    ============================================
+    -   제목                   : 등급별 혜택 조회
+    -   설명                   : 등급별 혜택 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <select id="getTierBnftList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierBnftListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierBnftListResDto">
+		/* LoyTiersMapper.getTierBnftList */
+		SELECT 		a.DISP_NO AS dispNo
+		            , a.CAM_NM AS camNm
+		            , f.OFFER_NO AS offerNo
+		            , f.OFFER_NM AS offerNm
+		            , a.PNT_ACCNT_CUST_DISP_TXT AS tierBnftNm
+		            , b.ACRL_AMT AS acrlAmt
+		            , to_char(a.CAM_START_DD, 'yyyy-mm-dd hh24:mi:ss') AS validStartDate
+		            , to_char(a.CAM_END_DD, 'yyyy-mm-dd hh24:mi:ss') AS validEndDate
+		            , e.NAME AS modifyBy
+		            , to_char(a.MODIFY_DATE, 'yyyy-mm-dd hh24:mi:ss') AS modifyDate
+		FROM 		MKT.MKT_CAM_MST a
+		INNER JOIN  LOY.LOY_RULESET_MST b ON b.RID_MKT_CAM_MST = a.ID AND b.flag = 1
+		INNER JOIN 	MKT.MKT_CAM_OFFER_REL c on a.ID = c.CAM_ID AND c.FLAG = 1
+		INNER JOIN 	LOY.LOY_OFFER_PNT_DTL d on c.OFFER_ID = d.RID_MKT_OFFER_MST AND d.FLAG =1
+		INNER JOIN 	MKT.MKT_OFFER_MST f on f.id = c.offer_id  AND f.FLAG =1
+		LEFT JOIN 	com.crm_user cu on a.MODIFY_BY = cu.rid
+		LEFT JOIN 	com.employee e on cu.id_employee = e.id
+		WHERE 		a.CAM_STATUS_CD ='A'
+				AND a.PROM_TYPE = 'PNT' /* 포인트 : 'PNT' */
+				AND a.PROM_SUB_TYPE IN ('P003','P014')
+				AND a.CAM_START_DD <![CDATA[<=]]> trunc(sysdate)
+				AND a.CAM_END_DD   >= trunc(sysdate)
+				AND a.FLAG = 1      
+				AND b.RID_TIERS = #{tiersRid}
+       order by ${strOrderby}
+       ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierBnft)
+    ============================================
+    -   제목                   : 등급별 혜택 조회
+    -   설명                   : 등급별 혜택 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <select id="getTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierBnftListReqDto" 
+    									resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierBnftListResDto">
+        /* LoyTiersMapper.getTierBnft */
+        select ltb.rid                   as rid
+             , ltb.rid_tiers             as ridTiers           /* 등급상세마스터 rid */
+             , ltb.tier_bnft_type1_cd    as tierBnftType1Cd    /* 등급혜택 유형1 코드 */
+             , ltb.tier_bnft_type2_cd    as tierBnftType2Cd    /* 등급혜택 유형2 코드 */
+             , ltb.tier_bnft_nm          as tierBnftNm         /* 등급혜택명 */
+             , ltb.sply_cycl_cd          as splyCyclCd         /* 제공 주기 코드 */
+             , ltb.tier_bnft_desctxt     as tierBnftDesctxt    /* 등급혜택설명 */
+             , ltb.valid_start_date      as validStartDate     /* 유효시작일자 */
+             , ltb.valid_end_date        as validEndDate       /* 유효종료일자 */
+             , ltb.rid_camp_mst          as ridCampMst         /* RID 캠페인마스터 */
+             , mcm.id                    as camId              /* 캠페인 아이디 */
+             , mcm.cam_nm                as camNm              /* 캠페인 명 */
+             , e.name                    as createBy
+             , to_char(ltb.create_date,'YYYY-MM-DD') as createDate
+        from loy.loy_tier_bnft ltb
+        join loy.loy_tiers lt on lt.rid = ltb.rid_tiers and lt.flag = 1
+        <!-- left join com.comm_code c1 on c1.code_name = ltb.tier_bnft_type1_cd and c1.lang = 'ko' and c1.group_code = 'LOY_TIER_BNFT_TYPE1_CD' -->
+        <!-- left join com.comm_code c2 on c2.code_name = ltb.tier_bnft_type2_cd and c2.lang = 'ko' and c2.group_code = 'LOY_TIER_BNFT_TYPE2_CD' -->
+        <!-- left join com.comm_code c3 on c3.code_name = ltb.sply_cycl_cd and c3.lang = 'ko' and c3.group_code = 'LOY_TIER_BNFT_OFFERING_CD' -->
+        left join mkt.mkt_cam_mst mcm   on mcm.id = ltb.rid_camp_mst and mcm.flag = 1
+        left join com.crm_user cu on lt.create_by = cu.rid
+        left join com.employee e on cu.id_employee = e.id
+       where ${strSVCType}
+         <!-- and ltb.accnt_id = #{accountId} -->
+         and ltb.flag = 1
+         and ltb.rid = #{tierBnftRid}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (setTierBnft)
+    ============================================
+    -   제목                   : 등급별 혜택 저장
+    -   설명                   : 등급별 혜택 저장
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <insert id="setTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoySetTierBnftReqDto">
+     /* LoyTiersMapper.setTierBnft */
+        insert into loy.loy_tier_bnft(
+              rid
+            , rid_tiers
+            , tier_bnft_type1_cd
+            , tier_bnft_type2_cd
+            , sply_cycl_cd
+            , tier_bnft_nm
+            , tier_bnft_desctxt
+            , valid_start_date
+            , valid_end_date
+            , rid_camp_mst
+            <!-- , accnt_id -->
+            <!-- , app_service_type -->
+            <!-- , country -->
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+        )values(
+              #{rid}
+            , #{ridTiers}
+            , #{tierBnftType1Cd}
+            , #{tierBnftType2Cd}
+            , #{splyCyclCd}
+            , #{tierBnftNm}
+            , #{tierBnftDesctxt}
+            , TO_DATA(#{validStartDate},'YYYY-MM-DD')
+            , #{validEndDate}
+            , #{ridCampMst}
+            <!-- , #{accountId} -->
+            <!-- , #{appServiceId} -->
+            <!-- , #{country} -->
+            , 1
+            , 0
+            , sysdate
+            , #{createBy}
+            , sysdate
+            , #{modifyBy}
+        )
+         <selectKey keyProperty="" resultType="java.lang.String">
+            select rid from loy.loy_tier_bnft where rid = #{rid} and rownum = 1
+        </selectKey>
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (editTierBnft)
+    ============================================
+    -   제목                   : 등급별 혜택 수정
+    -   설명                   : 등급별 혜택 수정
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <update id="editTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierBnftReqDto">
+        /* LoyTiersMapper.editTierBnft */
+        update loy.loy_tier_bnft
+           set rid_tiers             = #{ridTiers}
+             , tier_bnft_type1_cd    = #{tierBnftType1Cd}
+             , tier_bnft_type2_cd    = #{tierBnftType2Cd}
+             , sply_cycl_cd          = #{splyCyclCd}
+             , tier_bnft_nm          = #{tierBnftNm}
+             , tier_bnft_desctxt     = #{tierBnftDesctxt}
+             , valid_start_date      = #{validStartDate}
+             , valid_end_date        = #{validEndDate}
+             , rid_camp_mst          = #{ridCampMst}
+             , modify_date           = sysdate
+             , modify_by             = #{modifyBy}
+         where rid                   = #{rid}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierupMatrix)
+    ============================================
+    -   제목                   : 승급 매트릭스 조회
+    -   설명                   : 승급 매트릭스 조회
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <select id="getTierUpMatrix" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierupMatrixListReqDto" 
+    											resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierupMatrixListResDto">
+        /* LoyTiersMapper.getTierUpMatrix */
+        select ltm.rid               as rid
+             , ltm.rid_tier_group    as ridTierGroup        /* 등급그룹마스터 rid */
+             , ltm.rid_tier_cur      as ridTierCur          /* 현재 등급코드 */
+             , lt1.tier_nm           as ridTierCurNm
+             , ltm.rid_tier_next     as ridTierNext         /* 다음 등급코드 */
+             , lt2.tier_nm           as ridTierNextNm
+             , ltm.tierup_stat_cd    as tierupStatCd        /* 승급 활성화 코드 */
+             <!-- , c.mark_name           as tierupStatNm -->
+          from loy.loy_tierup_matrix ltm
+          <!-- left join com.comm_code c on c.code_name = ltm.tierup_stat_cd and c.lang = #{lang} and c.group_code = 'LOY_TIERUP_STAT_CD' -->
+          join loy.loy_tiers lt1 on lt1.rid = ltm.rid_tier_cur and lt1.flag = 1
+          join loy.loy_tiers lt2 on lt2.rid = ltm.rid_tier_next and lt2.flag = 1
+         where ${strSVCType}
+           <!-- and ltm.accnt_id = #{accountId} -->
+           and ltm.flag         = 1
+           and ltm.rid      = #{tierupMatrixRid}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierupMatrixDtl)
+    ============================================
+    -   제목                   : 승급 매트릭스 상세조회
+    -   설명                   : 승급 매트릭스 상세조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <select id="getTierUpMatrixDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierupMatrixListReqDto" 
+    												resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierupMatrixDtlResDto">
+        /* LoyTiersMapper.getTierUpMatrixDtl */
+        select ltmd.rid                  as rid
+             , ltmd.rid_tierup_matrix    as ridTierupMatrix  /* 승급기준정책 rid */
+             , ltmd.rslt_bas_type_cd     as rsltBasTypeCd    /* 실적기준 유형코드 */
+             <!-- , c1.mark_name              as rsltBasTypeNm    /* 실적기준 유형코드명 */ -->
+             , ltmd.sect_start_val       as sectStartVal     /* 구간시작 값 */
+             , ltmd.sect_end_val         as sectEndVal       /* 구간종료 값 */
+             , ltmd.logic_oper           as logicOper        /* 논리연산자 */
+             <!-- , c2.mark_name              as logicOperNm      /* 논리연산자 명 */ -->
+             , ltmd.frnt_brkt_yn         as frntBrktYn
+             , ltmd.back_brkt_yn         as backBrktYn
+             , ltmd.seq                  as seq
+          from loy.loy_tierup_matrix_dtl ltmd
+          join loy.loy_tierup_matrix ltm on ltm.rid = ltmd.rid_tierup_matrix and ltm.flag = 1
+          <!-- left join com.comm_code c1 on c1.code_name = ltmd.rslt_bas_type_cd and c1.lang = #{lang} and c1.group_code = 'LOY_TIERUP_BASE_CD' -->
+          <!-- left join com.comm_code c2 on c2.code_name = ltmd.logic_oper       and c2.lang = #{lang} and c2.group_code = 'LGC_OPRT_TYPE_CD' -->
+         where ${strSVCType}
+           and ltmd.flag                = 1
+           and ltmd.rid_tierup_matrix   = #{tierupMatrixRid}
+         order by ltmd.seq asc
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (editTierupMatrix)
+    ============================================
+    -   제목                   : 승급 매트릭스 수정
+    -   설명                   : 승급 매트릭스 수정
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <update id="editTierUpMatrix" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierupMatrixReqDto">
+        /* LoyTiersMapper.editTierUpMatrix */
+        update loy.loy_tierup_matrix
+           set rid_tier_cur     = #{ridTierCur}
+             , rid_tier_next    = #{ridTierNext}
+             , tierup_stat_cd   = #{tierupStatCd}
+             , modify_date      = sysdate
+             , modify_by        = #{modifyBy}
+             , mod_num          = mod_num+1
+             , tierup_mtx_set_type = #{tierupMtxSetType}
+         where rid              = #{ridTierupMatrix}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (setTierupMatrixDtl)
+    ============================================
+    -   제목                   : 승급 매트릭스 상세 저장
+    -   설명                   : 승급 매트릭스 상세 저장
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <insert id="setTierUpMatrix" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierupMatrixDtlReqDto">
+     /* LoyTiersMapper.setTierUpMatrix */
+        insert into loy.loy_tierup_matrix_dtl(
+              rid
+            , rid_tierup_matrix
+            , rslt_bas_type_cd
+            , sect_start_val
+            , sect_end_val
+            , logic_oper
+            , seq
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+        ) values (
+              #{rid}
+            , #{ridTierupMatrix}
+            , #{rsltBasTypeCd}
+            , #{sectStartVal}
+            , #{sectEndVal}
+            , #{logicOper}
+            , #{seq}
+            , 1
+            , 0
+            , sysdate
+            , #{createBy}
+            , sysdate
+            , #{modifyBy}
+        )
+         <selectKey keyProperty="" resultType="java.lang.String">
+             select rid from loy.loy_tierup_matrix_dtl where rid = #{rid} and rownum =1
+         </selectKey>
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (editTierupMatrixDtl)
+    ============================================
+    -   제목                   : 승급 매트릭스 상세 수정
+    -   설명                   : 승급 매트릭스 상세 수정
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <update id="editTierUpMatrixDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierupMatrixDtlReqDto">
+        /* LoyTiersMapper.editTierUpMatrixDtl */
+        update loy.loy_tierup_matrix_dtl
+           set rslt_bas_type_cd      = #{rsltBasTypeCd}
+             , sect_start_val        = #{sectStartVal}
+             , sect_end_val          = #{sectEndVal}
+             , logic_oper            = #{logicOper}
+             , modify_date           = sysdate
+             , modify_by             = #{modifyBy}
+             , mod_num               = mod_num+1
+         where rid                   = #{rid}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (delTierupMatrixDtl)
+    ============================================
+    -   제목                   : 승급 매트릭스 상세 삭제
+    -   설명                   : 승급 매트릭스 상세 삭제
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <delete id="delTierUpMatrixDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierupMatrixReqDto">
+        /* LoyTiersMapper.delTierUpMatrixDtl */
+        delete from loy.loy_tierup_matrix_dtl
+        where rid in 
+        <foreach collection="delRidRierupMatrixDtl" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+        and rid_tierup_matrix = #{ridTierupMatrix}
+    </delete>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (delTierupMatrixList)
+    ============================================
+    -   제목                   : 승급 매트릭스 삭제
+    -   설명                   : 승급 매트릭스 삭제
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <delete id="removeTierupMatrix" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyDelTierupMatrixReqDto">
+        /* LoyTiersMapper.removeTierupMatrix */
+        delete from loy.loy_tierup_matrix
+        where rid in 
+        <foreach collection="ridTierupMatrix" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+        and rid_tier_group = #{ridTierGroup}
+    </delete>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (delTierUpMatrixDtlList)
+    ============================================
+    -   제목                   : 승급 매트릭스 상세 삭제
+    -   설명                   : 승급 매트릭스 상세 삭제
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            :
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.11.24
+    ***************************************/ -->
+    <delete id="removeTierupMatrixDtl" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyDelTierupMatrixReqDto">
+        /* LoyTiersMapper.removeTierupMatrixDtl */
+        delete from loy.loy_tierup_matrix_dtl
+        where rid_tierup_matrix in 
+        <foreach collection="ridTierupMatrix" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+    </delete>
+
+
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (removeTierGrp)
+    ============================================
+    -   제목                   : 등급 그룹 삭제
+    -   설명                   : 등급 그룹 삭제
+    -   결과형태             : 단수
+    ============================================
+    -   입력            : rid
+    -   출력            :
+    ============================================
+    -   작성자                : 이성원
+    -   작성일                : 2017.03.20
+    ***************************************/ -->
+    <update id="removeTierGrp" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+        /* LoyTiersMapper.removeTierGrp */
+        update LOY.LOY_TIERS_GRP
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+    
+    <update id="removeTierupMatrixDtlByRidTiers" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+    	/* LoyTiersMapper.removeTierupMatrixDtlByRidTiers */
+    	update loy.loy_tierup_matrix_dtl
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid_tierup_matrix in (select rid_tier_group from loy.loy_tierup_matrix where flag = 1 and rid_tier_group = #{rid})
+    	  and flag = 1
+    </update>
+    
+    <update id="removeTierupMatrixByRidTiers" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+    	/* LoyTiersMapper.removeTierupMatrixByRidTiers */
+    	update loy.loy_tierup_matrix
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid_tier_group = #{rid}
+    	  and flag = 1
+    </update>
+    
+    <update id="removeTiersCondByRidTiers" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+    	/* LoyTiersMapper.removeTiersCondByRidTiers */
+    	update loy.loy_tiers_cond
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid_tiers in (select rid from loy.loy_tiers where flag = 1 and rid_tier_group = #{rid})
+    	  and flag = 1
+    </update>
+    
+    <update id="removeTierBnftByRidTiers" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+    	/* LoyTiersMapper.removeTierBnftByRidTiers */
+    	update loy.loy_tiers_cond
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid_tiers in (select rid from loy.loy_tiers where flag = 1 and rid_tier_group = #{rid})
+    	  and flag = 1
+    </update>
+    
+    <update id="removeTiersByRidTiers" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+    	/* LoyTiersMapper.removeTiersByRidTiers */
+    	update loy.loy_tiers
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid_tier_group = #{rid}
+    	  and flag = 1
+    </update>
+    
+    <update id="removeTierGrpChnlByRidTiers" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierGroupListReqDto">
+    	/* LoyTiersMapper.removeTierGrpChnlByRidTiers */
+    	update loy.loy_tier_grp_chnl
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid_tier_group = #{rid}
+    	  and flag = 1
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (removeTierGrp)
+    ============================================
+    -   제목                 : 등급 그룹에 속한 채널 목록 조회
+    -   설명                 : 등급 그룹에 속한 채널 목록 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력                 : rid
+    -   출력                 :
+    ============================================
+    -   작성자               : jh.kim
+    -   작성일               : 2017.07.06
+    ***************************************/ -->
+    <select id="getTierRuleDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierupMatrixListReqDto" 
+    											resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyGetTierupMatrixListResDto">
+        /* LoyTiersMapper.getTierRuleDetail */
+        select  rid  as ridTierupMatrix
+                , rid  as rid
+                , a.rid_tier_group as ridTierGroup
+                , a.mem_type_cd as memTypeCd
+               ,a.tier_cd as tierCd
+               ,a.value_tier_cd as valueTierCd
+               ,round(a.start_value) as startValue
+               ,round(a.limit_value) as limitValue
+
+        from loy.loy_tier_rule a
+            where a. rid = #{tierupMatrixRid}
+    </select>
+
+
+
+    <insert id="saveTierRuleDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierupMatrixReqDto">
+     /* LoyTiersMapper.saveTierRuleDetail */
+        insert into loy.loy_tier_rule(
+              rid
+            , flag
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+            , rid_tier_group
+            , tier_cd
+            , value_tier_cd
+            , start_value
+            , limit_value
+            , mem_type_cd
+
+        ) values (
+             #{rid}
+            , 1
+            , sysdate
+            , #{createBy}
+            , sysdate
+            , #{modifyBy}
+            , #{ridTierGroup}
+            , #{tierCd}
+            , #{valueTierCd}
+            , #{startValue}
+            , #{limitValue}
+            , #{memTypeCd}
+        )
+		<selectKey keyProperty="" resultType="java.lang.String">
+	         select 1 from dual
+         </selectKey>
+    </insert>
+
+    <update id="editTierRuleDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierupMatrixReqDto">
+        /* LoyTiersMapper.editTierRuleDetail */
+        update loy.loy_tier_rule
+           set tier_cd     = #{tierCd}
+             , value_tier_cd    = #{valueTierCd}
+             , start_value      = #{startValue}
+             , limit_value      = #{limitValue}
+             , mem_type_cd      = #{memTypeCd}
+             , modify_date      = sysdate
+             , modify_by        = #{modifyBy}
+         where rid              = #{ridTierupMatrix}
+    </update>
+
+    <update id="removeTierRuleDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyEditTierupMatrixReqDto">
+        /* LoyTiersMapper.removeTierRuleDetail */
+        update loy.loy_tier_rule
+           set modify_date      = sysdate
+             , modify_by        = #{modifyBy}
+             , flag = flag + 1
+         where rid              = #{ridTierupMatrix}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : LoyTiersMapperDAO.java (getTierListByGroup)
+    ============================================
+    -   제목                  : 그룹별 등급 목록
+    -   설명                  :
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017. 11. 22.
+    ***************************************/ -->
+    <select id="getTierListByGroup" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondListReqDto" 
+    											resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListResDto">
+    /*LoyTiersMapper.getTierListByGroup*/
+        select
+              t2.rid          as ridTier
+            , t1.tier_grp_nm  as tierGrpNm
+            , t2.tier_nm      as tierNm
+            , t2.tier_cd      as tierCd
+        from LOY.LOY_TIERS_GRP t1
+        join loy.loy_tiers      t2 on t2.flag = 1 and t2.rid_tier_group = t1.rid
+        where ${strSVCType}
+          and ${strWhere}
+        order by rid_tier_group desc, t2.seq_no asc
+
+    </select>
+
+    <select id="getCondTierList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListResDto" >
+    /*LoyTiersMapper.getCondTierList*/
+           SELECT
+        	  	lt.TIER_NM					AS	tierNm			/*	등급명	*/
+                ,lrm.CUST_GRADE_CD 			AS  custGradeCd		/*	등급코드	*/
+                ,lrm.ACRL_TYPE 				AS  acrlType		/*	적립구분 코드	*/
+                <!-- ,cc.MARK_NAME				AS	acrlName		/*	적립구분 명		*/ -->
+                ,lrm.ACRL_AMT  				AS  acrlAmt			/*	금액		*/
+                ,lt.RID						AS	ridTier
+                ,lrm.Rid					AS  ridRulesetMbr
+		   FROM loy.loy_tiers lt
+		   LEFT outer join loy.loy_ruleset_mbr lrm  on lrm.CUST_GRADE_CD = lt.TIER_CD
+		   <!-- LEFT outer join com.comm_code cc on cc.CODE_NAME = lrm.ACRL_TYPE and cc.GROUP_CODE = 'LOY_ACRL_TYPE' -->
+		   WHERE lt.tier_cd_stat_cd ='I'
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTierCondList)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 조회
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+    <select id="getTierCondList"  parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondListReqDto"
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierCondListResDto">
+    	/* LoyTiersMapper.getTierCondList */
+    	SELECT 	t3.rid
+		    	, t3.tierCd
+		    	, t3.tierNm
+		    	<!-- , t3.tierCdStatCdNm -->
+		    	, t3.tierCdStatCd
+		    	, t3.seqNo
+		    	, t3.modifyBy
+		    	, t3.modifyDate
+		    	, t3.sectStartValStr
+		    	, ${strColumn}
+    	FROM 	(
+			SELECT 	DISTINCT t2.rid
+					, t2.tierCd
+					, t2.tierNm
+					<!-- , t2.tierCdStatCdNm -->
+					, t2.tierCdStatCd
+					, t2.rn
+					, t2.seqNo
+					, t2.modifyBy
+					, t2.modifyDate
+					, LISTAGG(t2.sectStartValStr, ' ') WITHIN GROUP(ORDER BY t2.rn) OVER(PARTITION BY t2.RID) AS sectStartValStr
+			FROM 	(
+				SELECT  t1.rid
+						, t1.tierCd
+						, t1.tierNm
+						<!-- , t1.tierCdStatCdNm -->
+						, t1.tierCdStatCd
+						<if test="type == 'UP'">
+						, nvl2(t1.LOGIC_OPER,t1.LOGIC_OPER || ' ','') || DECODE(t1.FRNT_BRKT_YN,'1','(','') || t1.rsltBasTypeCd || ' >= ' || t1.sectStartVal || DECODE(t1.BACK_BRKT_YN,'1',')','') AS sectStartValStr
+						</if>
+						<if test="type == 'DOWN'">
+						, nvl2(t1.LOGIC_OPER,t1.LOGIC_OPER || ' ','') || DECODE(t1.FRNT_BRKT_YN,'1','(','') || t1.rsltBasTypeCd || ' &lt; ' || t1.sectStartVal || DECODE(t1.BACK_BRKT_YN,'1',')','') AS sectStartValStr
+						</if>
+						, t1.rn
+						, t1.seqNo
+						, t1.modifyBy
+						, to_char(t1.modifyDate,'yyyy-mm-dd hh24:mi:ss') AS modifyDate
+				FROM 	(
+				SELECT 	lt.RID 			AS rid
+						, lt.TIER_CD 		AS tierCd
+						, lt.TIER_NM 		AS tierNm
+						<!-- , c1.MARK_NAME 		AS tierCdStatCdNm -->
+						, lt.TIER_CD_STAT_CD as tierCdStatCd
+						, c2.MARK_NAME 		AS rsltBasTypeCd 
+						, ltc.FRNT_BRKT_YN
+						, ltc.BACK_BRKT_YN
+						, ltc.LOGIC_OPER
+						, lt.SEQ_NO 		AS seqNo
+						, emp.NAME			AS modifyBy
+						, ltc.MODIFY_DATE	AS modifyDate
+						, SUM(ltc.SECT_START_VAL) OVER(PARTITION BY lt.RID, ltc.RSLT_BAS_TYPE_CD, ltc.RID) 	AS sectStartVal
+						, ROW_NUMBER() OVER(PARTITION BY lt.RID ORDER BY ltc.SEQ ASC) 						AS rn
+				FROM 	LOY.LOY_TIERS lt
+				JOIN 	LOY.LOY_TIERS_COND ltc ON lt.RID = ltc.RID_TIERS AND ltc.FLAG = 1
+				<!-- JOIN 	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_TIERUP_STAT_CD' AND c1.CODE_NAME = lt.TIER_CD_STAT_CD AND c1.LANG = #{lang} AND c1.FLAG = 1 -->
+				JOIN 	COM.COMM_CODE c2 ON c2.GROUP_CODE = 'LOY_TIERUP_BASE_CD' AND c2.CODE_NAME = ltc.RSLT_BAS_TYPE_CD AND c2.LANG = #{lang} AND c2.FLAG = 1
+				LEFT JOIN COM.CRM_USER cu ON ltc.MODIFY_BY = cu.RID
+				LEFT JOIN COM.EMPLOYEE emp ON emp.ID = cu.ID_EMPLOYEE
+				WHERE 	lt.RID_TIER_GROUP = #{ridTierGroup}
+				AND lt.FLAG = 1
+				AND ltc.TYPE = #{type}
+				) t1
+			) t2
+		) t3
+		WHERE 	${strWhere}
+			AND t3.rn = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (removeTiersCond)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+    <update id="removeTiersCondAll" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondReqDto">
+    	/* LoyTiersMapper.removeTiersCondAll */
+		UPDATE 	LOY.LOY_TIERS_COND 
+		SET 	flag = flag + 1
+				, MODIFY_DATE = sysdate
+				, MODIFY_BY = #{modifyBy}
+		WHERE 	RID_TIERS = #{ridTier}
+		AND FLAG = 1
+		AND TYPE = #{type}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (removeTiersCond)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+    <update id="removeTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.removeTiersCond */
+		UPDATE 	LOY.LOY_TIERS_COND 
+		SET 	flag = flag + 1
+				, MODIFY_DATE = sysdate
+				, MODIFY_BY = #{modifyBy}
+		WHERE 	RID = #{rid}
+			AND FLAG = 1
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (saveTiersCond)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 저장
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 저장
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+    <insert id="saveTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.saveTiersCond */
+    	INSERT INTO LOY.LOY_TIERS_COND (
+			RID
+			, CREATE_DATE
+			, CREATE_BY
+			, MODIFY_DATE
+			, MODIFY_BY
+			, FLAG
+			, MOD_NUM
+			, RID_TIERS
+			, SEQ
+			, LOGIC_OPER
+			, FRNT_BRKT_YN
+			, RSLT_BAS_TYPE_CD
+			, SECT_START_VAL
+			, BACK_BRKT_YN
+			, TYPE
+    	) VALUES (
+			#{saveRid}
+			, sysdate
+			, #{modifyBy}
+			, sysdate
+			, #{modifyBy}
+			, 1
+			, 0
+			, #{ridTier}
+			, #{seq}
+			, #{logicOper}
+			, #{frntBrktYn}
+			, #{rsltBasTypeCd}
+			, #{sectStartVal}
+			, #{backBrktYn}
+			, #{type}
+    	)
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (getTiersCond)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 상세 조회
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 상세 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+	<resultMap id="LoyTierCondResultMap" type="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondReqDto">
+		<result property="ridTier" column="ridTier" />
+		<result property="tierCd"  column="tierCd" />
+		<result property="tierNm"  column="tierNm" />
+		<result property="type"    column="type" />
+		<collection property="tierCondDetail" javaType="java.util.ArrayList" column="{ridTier=ridTier, type=type}" select="getTiersCondDetail" />
+	</resultMap>
+    <select id="getTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondReqDto" resultMap="LoyTierCondResultMap">
+    	/* LoyTiersMapper.getTiersCond */
+    	SELECT 	RID 				AS ridTier
+    			, TIER_CD 			AS tierCd
+    			, TIER_NM 			AS tierNm
+    			, TIER_CD_STAT_CD 	AS tierCdStatCd
+    			, #{type}			AS type
+    	FROM 	LOY.LOY_TIERS
+		WHERE 	RID = #{ridTier}
+			AND FLAG = 1
+    </select>
+    
+    <select id="getTiersCondDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.getTiersCondDetail */
+    	SELECT 	RID 					AS rid
+				, SEQ 					AS seq
+				, LOGIC_OPER 			AS logicOper
+				, FRNT_BRKT_YN 			AS frntBrktYn
+				, RSLT_BAS_TYPE_CD 		AS rsltBasTypeCd
+				, SECT_START_VAL 		AS sectStartVal
+				, BACK_BRKT_YN 			AS backBrktYn
+    	FROM 	LOY.LOY_TIERS_COND
+    	WHERE 	RID_TIERS = #{ridTier}
+    	AND		type = #{type}
+		AND 	flag = 1
+    </select>
+    
+    <update id="editTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.editTiersCond */
+		UPDATE 	LOY.LOY_TIERS_COND
+		SET 	SEQ = #{seq}
+				, LOGIC_OPER = #{logicOper}
+				, FRNT_BRKT_YN = #{frntBrktYn}
+				, RSLT_BAS_TYPE_CD = #{rsltBasTypeCd}
+				, SECT_START_VAL = #{sectStartVal}
+				, BACK_BRKT_YN = #{backBrktYn}
+				, MODIFY_BY = #{modifyBy}
+				, MODIFY_DATE = SYSDATE
+				, MOD_NUM = MOD_NUM + 1
+		WHERE 	RID = #{rid}
+			AND FLAG = 1
+    </update>
+    
+    <select id="selectTierGroupListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewResDto" >
+    /*LoyTiersMapper.selectTierGroupListNew*/
+          SELECT 	  lp.PGM_NM				AS pgmNm
+          			, ltg.MBR_TYPE_CD		AS loyMbrTypeCd
+          			, ltg.TIERS_GRP_NM		AS tiersGrpNm
+          			, ltg.VAILD_START_DT	AS vaildStartDt
+          			, ltg.MBR_TIER_COL		AS mbrTierCol
+          			, ltg.STAT_CD			AS statCd
+          			, e.name				AS name
+          			, TO_CHAR( ltg.create_date,'YYYY-MM-DD HH24:MI:SS' ) as createDate
+          			, ltg.RID				AS rid
+					, ${strColumn}
+		FROM	LOY.LOY_TIERS_GRP ltg
+		JOIN 	LOY.LOY_PGM lp ON ltg.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT JOIN com.crm_user 		cu ON cu.rid = ltg.CREATE_BY AND cu.FLAG = 1
+   		LEFT JOIN com.employee 		e  ON cu.ID_EMPLOYEE = e.id AND e.FLAG = 1
+		WHERE 	${strCondWhere}
+			AND ${strWhere}
+			AND ltg.FLAG = 1
+			<if test="evtLimitTier != null and evtLimitTier != ''">
+          	and ltg.STAT_CD = 'A'
+          	</if>
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierGroupDetailNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGroupDetailResDto" >
+    /*LoyTiersMapper.selectTierGroupDetailNew*/
+          SELECT  	  lp.PGM_NM						AS pgmNm
+          			, ltg.TIERS_GRP_NM			    AS tiersGrpNm
+          			, ltg.RID_PGM					AS pgmRid
+          			, ltg.MBR_TYPE_CD				AS loyMbrTypeCd
+          			, ltg.RID_MBR_DS				AS dataSetRid
+          			, ltg.VAILD_START_DT			AS vaildStartDt
+          			, ltg.TG_COMMENT				AS tgComment
+          			, ltg.UP_KEEP_MM				AS upKeepMm
+          			, ld.DS_NM						AS dsNm
+          			, ltg.STAT_CD					AS statCd
+          			, ltg.MBR_TIER_COL				AS mbrTierCol
+		FROM	LOY.LOY_TIERS_GRP ltg
+		JOIN 	LOY.LOY_PGM lp ON ltg.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT OUTER JOIN    LOY.LOY_DATASET	ld ON ltg.RID_MBR_DS = ld.RID AND ld.FLAG = 1
+		WHERE   ltg.FLAG = 1
+		AND     ltg.rid = #{rid}
+    </select>
+    
+    <insert id="insertTierGroup" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGroupDetailReqDto">
+    /*LoyTiersMapper.insertTierGroup*/
+    	INSERT INTO LOY.LOY_TIERS_GRP
+    	(
+      		  RID
+      		, CREATE_BY
+      		, MODIFY_BY
+      		, CREATE_DATE
+      		, MODIFY_DATE
+      		, FLAG
+      		, TIERS_GRP_NM
+      		, RID_PGM
+      		, MBR_TYPE_CD
+      		, VAILD_START_DT
+      		, RID_MBR_DS
+      		, UP_KEEP_MM
+      		, TG_COMMENT
+      		, STAT_CD
+      		, MBR_TIER_COL
+      	)
+      	VALUES
+      	(
+      		  #{rid}
+      		, #{createBy}
+      		, #{modifyBy}
+      		, SYSDATE
+      		, SYSDATE
+      		, '1'
+      		, #{tiersGrpNm}
+      		, #{pgmRid}
+      		, #{loyMbrTypeCd}
+      		, #{vaildStartDt}
+      		, #{dataSetRid}
+      		, #{upKeepMm}
+      		, #{tgComment}
+      		, 'W'
+      		, #{mbrTierCol}
+      	)
+    </insert>
+    
+    <update id="updateTierGroup" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGroupDetailReqDto">
+    /*LoyTiersMapper.updateTierGroup*/
+    	UPDATE LOY.LOY_TIERS_GRP
+    	SET   RID_PGM			= #{pgmRid}
+    		, TIERS_GRP_NM		= #{tiersGrpNm}
+      		, MBR_TYPE_CD		= #{loyMbrTypeCd}
+      		, VAILD_START_DT	= TRUNC(#{vaildStartDt},'DD')
+      		, RID_MBR_DS		= #{dataSetRid}
+      		, UP_KEEP_MM		= #{upKeepMm}
+      		, TG_COMMENT		= #{tgComment}
+      		, STAT_CD			= #{statCd}
+      		, MBR_TIER_COL		= #{mbrTierCol}
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectDatasetList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetListResDto" >
+    /*LoyTiersMapper.selectDatasetList*/
+        SELECT 	  ld.CATE_CD		AS cateCd
+        		, ld.DS_NM			AS dsNm
+        		, ld.OBJ_NM			AS objNm
+          		, ld.RID			AS rid
+          		, ${strColumn}
+		FROM	 LOY.LOY_DATASET ld
+		WHERE    ld.FLAG = 1
+		<if test="cateMbr != null and cateMbr != ''">
+		AND      ld.CATE_CD = #{cateMbr}
+		</if>
+		AND      ${strCondWhere}
+		AND      ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierListNewPage" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto" >
+    /*LoyTiersMapper.selectTierListNewPage*/
+        SELECT 	  lt.SEQ_NO			AS seqNo
+        		, lt.TIER_NM		AS tierNm
+        		, lt.TIER_TYPE_CD	AS tierTypeCd
+        		, lt.BASE_TIER_YN	AS baseTierYn
+        		, em.NAME			AS createBy
+        		, TO_CHAR(lt.create_date,'YYYY-MM-DD HH24:MI:SS') as createDate
+        		, lt.RID			AS rid
+        		, ${strColumn}
+		FROM	 LOY.LOY_TIERS lt
+		LEFT OUTER JOIN com.crm_user us on lt.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em on us.id_employee = em.id AND em.FLAG = 1
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID_TG = #{tierGroupRid}
+		AND      ${strCondWhere}
+		AND      ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto" >
+    /*LoyTiersMapper.selectTierDetail*/
+        SELECT 	  lt.SEQ_NO			AS seqNo
+        		, lt.TIER_NM		AS tierNm
+        		, lt.TIER_TYPE_CD	AS tierTypeCd
+        		, lt.BASE_TIER_YN	AS baseTierYn
+        		, lt.UP_KEEP_MM		AS tiersUpKeepMm
+        		, lt.RID			AS rid
+		FROM	 LOY.LOY_TIERS lt
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID = #{rid}
+    </select>
+    
+    <insert id="insertTier" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.insertTier*/
+    INSERT INTO LOY.LOY_TIERS
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG 
+		, RID_TG
+		, TIER_TYPE_CD
+		, TIER_NM
+		, SEQ_NO
+		, BASE_TIER_YN
+		, UP_KEEP_MM
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, SYSDATE
+		, SYSDATE
+		, 1
+		, #{tierGroupRid}
+		, #{tierTypeCd}
+		, #{tierNm}
+		, #{seqNo}
+		, #{baseTierYn}
+		, #{tiersUpKeepMm}
+    )
+    </insert>
+    
+    <update id="updateTier" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.updateTier*/
+    UPDATE  LOY.LOY_TIERS
+    SET       RID_TG		= #{tierGroupRid}
+    		, TIER_TYPE_CD  = #{tierTypeCd}
+			, TIER_NM	    = #{tierNm}
+			, SEQ_NO	 	= #{seqNo} 
+			, BASE_TIER_YN  = #{baseTierYn}
+			, UP_KEEP_MM    = #{tiersUpKeepMm}
+	WHERE   RID = #{rid}
+    </update>
+    
+    <select id="selectTierCnt" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="java.lang.Integer" >
+    /*LoyTiersMapper.selectTierCnt*/
+        SELECT 	 count(*)
+		FROM	 LOY.LOY_TIERS lt
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID_TG = #{tierGroupRid}
+		AND      lt.SEQ_NO = #{seqNo}
+		AND      RID NOT IN  (
+				 SELECT RID FROM LOY.LOY_TIERS lt2
+				 WHERE lt2.RID = #{rid}
+				 AND seq_No = #{seqNo}
+				 )
+    </select>
+    
+    <select id="selectBaseTierCnt" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="java.lang.Integer" >
+    /*LoyTiersMapper.selectBaseTierCnt*/
+        SELECT 	 count(*)
+		FROM	 LOY.LOY_TIERS lt
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID_TG = #{tierGroupRid}
+		AND      lt.BASE_TIER_YN = 'Y'
+		AND      RID NOT IN  (
+				 SELECT RID FROM LOY.LOY_TIERS lt2
+				 WHERE lt2.RID = #{rid}
+				 AND BASE_TIER_YN = 'Y'
+				 )
+    </select>
+    
+    <select id="selectTierBnftListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierBnftListResDto" >
+    /*LoyTiersMapper.selectTierBnftListNew*/
+        SELECT    ltb.TIER_BNFT_TYPE_CD			AS tierBnftTypeCd
+        		<!-- , ltb.BNFT_NM					AS bnftNm -->
+        		, mom.OFR_NM					AS ofrNm
+        		, mom.OFR_NO					AS ofrNo
+        		, cc1.MARK_NAME 				AS ofrTypeCd
+        		, mom.OFR_VAL_TYPE				AS ofrValType
+        		, mom.OFR_VAL_AMT				AS ofrValAmt
+        		, mom.CPN_YN					AS cpnYn
+        		, ltb.QTY						AS qty
+        		, CASE WHEN mom.OFR_VAL_TYPE ='F' THEN TO_CHAR(ltb.AMT,'999,999,999,999,999') || '원'
+        		       WHEN mom.OFR_VAL_TYPE ='A' THEN TO_CHAR(ltb.AMT,'999,999,999,999,999') || '원'
+        		  ELSE 	ltb.AMT || '%' END 	AS amt
+        		, ltb.BNFT_ACT_CYCLE_CD			AS bnftActCycleCd
+        		, ltb.BNFT_ACT_ROT_CYCEL_CD		AS bnftActRotCycleCd
+        		, cc2.MARK_NAME					AS ofrSubType
+        		<!-- , ltb.TIER_BNFT_GIVE_CYCLE_CD	AS tierBnftGiveCycleCd -->
+        		, ltb.RID						AS rid
+        		, ltb.RID_TIER					AS tierRid
+        		, ${strColumn}
+        FROM   LOY.LOY_TIERS_BNFT ltb
+        JOIN   LOY_OFR mom ON ltb.RID_OFFER = mom.RID AND mom.FLAG = 1
+        LEFT OUTER JOIN COM.COMM_CODE cc1 ON cc1.CODE_NAME = mom.OFR_TYPE AND cc1.GROUP_CODE = 'LOY_OFR_TYPE' AND cc1.FLAG = 1 AND cc1.LANG = 'ko'
+        LEFT OUTER JOIN COM.COMM_CODE cc2 ON cc2.CODE_NAME = mom.OFR_SUB_TYPE AND cc2.GROUP_CODE = 'LOY_OFR_SUB_TYPE' AND cc2.FLAG = 1 AND cc2.LANG = 'ko'
+        WHERE  ltb.FLAG = 1
+        AND    ltb.RID_TIER = #{tierRid}
+        AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <select id="selectTierBnftDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierBnftDetailResDto" >
+    /*LoyTiersMapper.selectTierBnftDetail*/
+        SELECT    ltb.TIER_BNFT_TYPE_CD			AS tierBnftTypeCd
+        		<!-- , ltb.BNFT_NM					AS bnftNm -->
+        		, mom.OFR_NM					AS offerNm
+        		, mom.OFR_NO					AS offerNo
+        		, mom.OFR_TYPE					AS ofrType
+        		, mom.OFR_SUB_TYPE				AS ofrSubType
+        		, mom.OFR_VAL_TYPE				AS ofrValType
+        		, mom.OFR_VAL_AMT				AS ofrValAmt
+        		, mom.CPN_YN					AS cpnYn
+        		, ltb.QTY						AS qty
+        		, BNFT_ACT_CYCLE_CD				AS bnftActCycleCd
+        		, BNFT_ACT_ROT_CYCEL_CD			AS bnftActRotCycleCd
+        		, AMT							AS amt
+        		<!-- , ltb.TIER_BNFT_GIVE_CYCLE_CD	AS tierBnftGiveCycleCd -->
+        		, ltb.RID						AS rid
+        		, ltb.RID_TIER					AS tierRid
+        		, ltb.RID_OFFER					AS offerRid
+        FROM   LOY.LOY_TIERS_BNFT ltb
+        JOIN   LOY_OFR mom ON ltb.RID_OFFER = mom.RID AND mom.FLAG = 1
+        WHERE  ltb.FLAG = 1
+        AND    ltb.RID = #{rid}
+    </select>
+    
+    <insert id="insertTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierBnftReqDto">
+    /*LoyTiersMapper.insertTierBnft*/
+    INSERT INTO LOY.LOY_TIERS_BNFT
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG 
+		, RID_TIER
+		<!-- , BNFT_NM -->
+		, TIER_BNFT_TYPE_CD
+		, BNFT_ACT_CYCLE_CD
+		, BNFT_ACT_ROT_CYCEL_CD
+		, RID_OFFER
+		, QTY
+		, AMT
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, SYSDATE
+		, SYSDATE
+		, 1
+		, #{tierRid}
+		<!-- , #{bnftNm} -->
+		, #{tierBnftTypeCd}
+		, #{bnftActCycleCd}
+		, #{bnftActRotCycleCd}
+		, #{offerRid}
+		, #{qty}
+		, #{amt}
+    )
+    </insert>
+    
+    <update id="updateTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierBnftReqDto">
+    /*LoyTiersMapper.updateTierBnft*/
+    UPDATE  LOY.LOY_TIERS_BNFT
+    SET         RID_TIER				 = #{tierRid}
+			  <!-- , BNFT_NM					 = #{bnftNm} -->
+			  , TIER_BNFT_TYPE_CD		 = #{tierBnftTypeCd}
+			  , BNFT_ACT_CYCLE_CD  		 = #{bnftActCycleCd}
+			  , BNFT_ACT_ROT_CYCEL_CD  	 = #{bnftActRotCycleCd}
+			  , RID_OFFER				 = #{offerRid}
+			  , QTY						 = #{qty}
+			  , AMT						 = #{amt}
+	WHERE   RID = #{rid}
+    </update>
+    
+    <update id="deleteTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.deleteTierBnft*/
+    UPDATE  LOY.LOY_TIERS_BNFT
+    SET       MODIFY_DATE = SYSDATE
+			, MODIFY_BY	  = #{modifyBy}
+			, FLAG        = flag + 1
+	WHERE  RID = #{rid}
+    </update>
+    
+    <select id="selectTierGroupJobList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpJobListResDto">
+    /*LoyTiersMapper.selectTierGroupJobList*/
+    SELECT    t1.tierBatchJobCd
+    		, t1.execCycleCd
+    		, LISTAGG(DECODE(SUBSTR(t1.execMm, lv, 1), '1', lv||'월'), '/') 
+ 			  WITHIN GROUP(ORDER BY lv) execMm
+    		, t1.useYn
+    		, t1.name
+    		, t1.createDate
+    		, t1.rid
+    		, ${strColumn}
+    FROM   (SELECT   ltgj.TIER_BATCH_JOB_CD	AS tierBatchJobCd
+    		, ltgj.EXEC_CYCLE			AS execCycleCd
+    		, ltgj.EXEC_MM				AS execMm
+    		, ltgj.USE_YN				AS useYn
+    		, e.name					AS name
+    		, TO_CHAR(ltgj.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS')			AS createDate
+    		, ltgj.rid					AS rid
+    FROM   LOY.LOY_TIERS_GRP_JOB ltgj
+    LEFT JOIN com.crm_user 		cu ON cu.rid = ltgj.CREATE_BY AND cu.FLAG = 1
+   	LEFT JOIN com.employee 		e  ON cu.ID_EMPLOYEE = e.id AND e.FLAG = 1
+    WHERE  ltgj.FLAG = 1
+    AND    ltgj.RID_TG = #{tierGroupRid}
+    AND    ${strCondWhere}
+	AND    ${strWhere}
+    ) t1
+	, (SELECT LEVEL lv FROM DUAL CONNECT BY LEVEL <![CDATA[<=]]> 12)
+	   GROUP BY t1.tierBatchJobCd ,t1.execCycleCd, t1.execMm, t1.useYn, t1.name, t1.createDate, t1.RID
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+    </select>
+    
+    <select id="selectTierGrpJobDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpJobMasterReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpJobDetailResDto">
+    /*LoyTiersMapper.selectTierGrpJobDetail*/
+    SELECT    ltgj.TIER_BATCH_JOB_CD	AS tierBatchJobCd
+    		, ltgj.EXEC_MM				AS execMm
+    		, ltgj.USE_YN				AS useYn
+    		, ltgj.EXEC_CYCLE			AS execCycle
+    FROM   LOY.LOY_TIERS_GRP_JOB ltgj
+    WHERE  ltgj.FLAG = 1
+    AND    ltgj.rid = #{rid}  
+    </select>
+    
+    <insert id="insertTierGrpJob" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpJobDetailReqDto">
+    /*LoyTiersMapper.insertTierGrpJob*/
+    INSERT INTO LOY.LOY_TIERS_GRP_JOB
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, RID_TG
+		, TIER_BATCH_JOB_CD
+		, EXEC_MM
+		, USE_YN
+		, EXEC_CYCLE
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, #{tierGroupRid}
+		, #{tierBatchJobCd}
+		, #{execMm}
+		, #{useYn}
+		, #{execCycle}
+    )
+    </insert>
+    
+    <update id="updateTierGrpJob" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.updateTierGrpJob*/
+    UPDATE  LOY.LOY_TIERS_GRP_JOB
+    SET       RID_TG			 = #{tierGroupRid}
+    		, TIER_BATCH_JOB_CD  = #{tierBatchJobCd}
+			, EXEC_MM	    	 = #{execMm}
+			, USE_YN	 		 = #{useYn} 
+			, EXEC_CYCLE         = #{execCycle}
+	WHERE   RID = #{rid}
+    </update>
+    
+    <select id="selectTierGrpDsListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpDsListResDto">
+    /*LoyTiersMapper.selectTierGrpDsListNew*/
+    SELECT    ld.DS_NM									AS dsNm
+    		, ld.OBJ_NM									AS objNm
+    		, '직전 ' || ltgd.EXT_RANGE || '개월'			AS extRange
+    		, em.name									AS createBy
+    		, TO_CHAR(ltgd.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS')							AS createDate
+    		, ltgd.RID									AS rid
+    		, ${strColumn}
+    FROM   LOY.LOY_TIERS_GRP_DS ltgd
+    JOIN   LOY.LOY_DATASET ld ON ltgd.RID_DS = ld.RID AND ld.FLAG = 1
+    JOIN   LOY.LOY_TIERS_GRP_JOB ltgj ON ltgd.RID_TG_JOB = ltgj.RID AND ltgj.FLAG = 1
+    LEFT OUTER JOIN   LOY.LOY_DATASET_ITEM ldt ON ltgd.RID_DS_ITEM	= ldt.RID AND ldt.FLAG = 1
+    LEFT OUTER JOIN COM.CRM_USER us ON us.RID = ltgd.CREATE_BY AND us.FLAG = 1
+    LEFT OUTER JOIN COM.employee em ON us.ID_EMPLOYEE = em.id AND em.FLAG = 1
+    WHERE  ltgd.FLAG = 1
+    AND    ltgd.RID_TG_JOB = #{tierGrpJobRid}
+    AND    ltgj.TIER_BATCH_JOB_CD = #{tierBatchJobCd}
+    AND    ${strCondWhere}
+	AND    ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging} 
+    </select>
+    
+    <select id="selectTierGrpDsDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpDsListResDto">
+    /*LoyTiersMapper.selectTierGrpDsDetail*/
+    SELECT    ld.DS_NM				AS dsNm
+    		, ld.OBJ_NM				AS objNm
+    		, ltgd.EXT_RANGE		AS extRange
+    		, ltgd.RID_DS			AS dsRid
+    		, ldi.FIELD_NM			AS fieldNm
+    		, ldi.FIELD_DESC		AS fieldDesc
+    FROM   LOY.LOY_TIERS_GRP_DS ltgd
+    JOIN   LOY.LOY_DATASET ld ON ltgd.RID_DS = ld.RID AND ld.FLAG = 1
+    LEFT OUTER JOIN LOY.LOY_DATASET_ITEM ldi ON ldi.RID = ltgd.RID_DS_ITEM AND ldi.FLAG = 1
+    WHERE  ltgd.FLAG = 1
+    AND    ltgd.rid = #{rid}  
+    </select>
+    
+    <insert id="insertTierGrpDs" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto">
+     /*LoyTiersMapper.insertTierGrpDs*/
+     INSERT INTO LOY.LOY_TIERS_GRP_DS
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG 
+		, RID_TG_JOB
+		, RID_DS
+		, EXT_RANGE
+		, RID_DS_ITEM
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, SYSDATE
+		, SYSDATE
+		, 1
+		, #{tierGrpJobRid}
+		, #{dsRid}
+		, #{extRange}
+		, #{dsItemRid}
+    )
+    </insert>
+    
+    <update id="updateTierGrpDs" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.updateTierGrpDs*/
+    UPDATE  LOY.LOY_TIERS_GRP_DS
+    SET         RID_TG_JOB  = #{tierGrpJobRid}
+			  , RID_DS		= #{dsRid}
+			  , RID_DS_ITEM	= #{dsItemRid}
+			  , EXT_RANGE   = #{extRange}
+	WHERE   RID = #{rid}
+    </update>
+    
+    <delete id="deleteTierGrpDs" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    DELETE FROM LOY.LOY_TIERS_GRP_DS
+    WHERE rid = #{rid}
+    </delete>
+    
+    <select id="selectTierGrpDsDatasetList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetListResDto" >
+    /*LoyTiersMapper.selectTierGrpDsDatasetList*/
+        SELECT 	  ld.DS_NM			AS dsNm
+        		, ld.OBJ_NM			AS objNm
+          		, ld.RID			AS rid
+          		, ${strColumn}
+		FROM	 LOY.LOY_DATASET ld
+		WHERE    ld.FLAG = 1
+		AND      NOT EXISTS (
+				 		SELECT 1 
+				 		FROM  LOY.LOY_TIERS_GRP_DS ltgd 
+				 		WHERE ltgd.RID_ds = ld.RID 
+				 		AND   ltgd.RID_TG_JOB = #{tierGrpJobRid}
+				 		)
+		AND      ${strCondWhere}
+		AND      ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierRuleListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierRuleResDto" >
+    /*LoyTiersMapper.selectTierRuleListNew*/
+        SELECT    
+     DISTINCT t3.tierTypeCd
+			, t3.tierNm
+			, t3.tierTypeCd
+			, t3.condVal
+			, t3.createBy				
+			, TO_CHAR(t3.createDate,'YYYY-MM-DD HH24:Mi:SS')		AS createDate
+			, t3.tiersRulesTierRid
+			, t3.tierSeqNo
+			, ${strColumn}
+	FROM (SELECT DISTINCT  t2.rid
+					,t2.tierNm
+					,t2.tierTypeCd
+					,t2.tiersRulesTierRid
+					,t2.createDate
+					,t2.createBy
+					,t2.rn
+					,t2.tierSeqNo
+					,LISTAGG(t2.condVal, ' ') WITHIN GROUP(ORDER BY t2.seqNo) OVER(PARTITION BY t2.RID) AS condVal
+	FROM (
+	SELECT  t1.rid
+		   ,t1.tierNm
+		   ,t1.tierTypeCd
+		   ,nvl2(t1.logicOper,t1.logicOper || ' ','') || DECODE(t1.frntBrktYn,'1','(','') || t1.dsNm || '.' || t1.fieldDesc || ' >= ' || TO_CHAR(t1.condVal,'FM9,999,999') || DECODE(t1.backBrktYn,'1',')','') AS condVal
+		   <!-- <if test="tierBatchJobCd == null or tierBatchJobCd.equals('')">
+		   ,t1.condVal
+		   </if> -->
+		   ,t1.rn
+		   ,t1.dsNm
+		   ,t1.tiersRulesTierRid
+		   ,t1.createDate
+		   ,t1.createBy
+		   ,t1.seqNo
+		   ,t1.tierSeqNo
+	FROM (SELECT    	      lt.RID					AS rid
+					, lt.TIER_NM				AS tierNm
+        			, lt.TIER_TYPE_CD			AS tierTypeCd
+        			, ltr.COND_VAL				AS condVal
+           			, ld.DS_NM					AS dsNm
+           			, ldi.FIELD_DESC			AS fieldDesc
+           			, ltr.RID_TIER				AS tiersRulesTierRid
+           			, ltr.L_OP					AS logicOper
+           			, ltr.F_BRKT_FLG			AS frntBrktYn
+           			, ltr.B_BRKT_FLG			AS backBrktYn
+           			, ltr.CREATE_Date			AS createDate
+           			, emp.name					AS createBy
+           			, ltr.SEQ_NO				AS seqNo
+           			, lt.SEQ_NO					AS tierSeqNo
+           			, ROW_NUMBER() OVER(PARTITION BY lt.RID ORDER BY ltr.SEQ_NO ASC)   AS rn
+		FROM	 LOY.LOY_TIERS_RULE ltr
+		JOIN     LOY.LOY_TIERS lt ON ltr.RID_TIER = lt.RID AND lt.FLAG = 1
+		JOIN     LOY.LOY_TIERS_GRP_JOB ltgj ON ltr.RID_TG_JOB = ltgj.RID AND ltgj.FLAG = 1
+		JOIN     LOY.LOY_DATASET ld ON ltr.RID_DS = ld.RID AND ld.FLAG =1
+		JOIN     LOY.LOY_DATASET_ITEM ldi ON ltr.RID_DS_ITEM = ldi.RID AND ldi.FLAG = 1
+		LEFT JOIN COM.CRM_USER cu ON ltr.CREATE_BY = cu.RID
+        LEFT JOIN COM.EMPLOYEE emp ON emp.ID = cu.ID_EMPLOYEE
+		WHERE    ltr.FLAG = 1
+		AND      ltr.RID_TG_JOB  = #{tierGrpJobRid}
+		AND      ltgj.TIER_BATCH_JOB_CD  = #{tierBatchJobCd}
+		AND      ${strCondWhere}
+		AND      ${strWhere}
+		ORDER BY ltr.L_OP desc
+		) t1
+	) t2
+) t3
+	  WHERE       t3.rn = 1
+ 	  ORDER BY ${strOrderby}
+			   ${strEndPaging}                                             
+    </select>
+    
+    <resultMap id="LoyTierCondRuleResultMap" type="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+		<result property="ridTier" column="ridTier" />
+		<result property="tierCd"  column="tierCd" />
+		<result property="tierNm"  column="tierNm" />
+		<result property="type"    column="type" />
+		<result property="tierGrpJobRid"    column="tierGrpJobRid" />
+		<collection property="tierCondDetail" javaType="java.util.ArrayList" column="{ridTier=ridTier,tierGrpJobRid=tierGrpJobRid}" select="selectTierGrpRuleDetail" />
+	</resultMap>
+    <select id="selectTierGrpRuleList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" resultMap="LoyTierCondRuleResultMap">
+    	/* LoyTiersMapper.selectTierGrpRuleList */
+    	SELECT 	  RID 			    AS ridTier
+    			, TIER_TYPE_CD 		AS tierTypeCd
+    			, TIER_NM 			AS tierNm
+    			, 'UP'				AS type
+    			, #{tierGrpJobRid}  AS tierGrpJobRid
+    	FROM 	LOY.LOY_TIERS
+    	WHERE FLAG = 1
+		AND   RID = #{ridTier}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierGrpRuleDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierRuleResDto">
+    	/* LoyTiersMapper.selectTierGrpRuleDetail */   	   	   	     	
+    	SELECT 	  ltr.RID 					AS rid
+				, ld.DS_NM					AS dsNm
+				, ldt.FIELD_NM				AS fieldNm 
+				, TO_CHAR( ltr.COND_VAL,'FM9,999,999')				AS condVal
+				, ldt.FIELD_DESC			AS fieldDesc
+				, lt.TIER_NM				AS tierNm
+				, ltr.RID_TIER				AS tierRid
+				, ltr.RID_DS				AS tierGrpDataSetRid
+				, ltr.RID_DS_ITEM			AS tierGrpDataSetItemRid
+				, ltr.L_OP					AS logicOper
+				, ltr.F_BRKT_FLG			AS frntBrktYn
+				, ltr.B_BRKT_FLG			AS backBrktYn
+    	FROM 	LOY.LOY_TIERS_RULE ltr
+    	JOIN    LOY.LOY_DATASET ld ON ld.RID = ltr.RID_DS AND ld.FLAG = 1
+    	JOIN    LOY.LOY_DATASET_ITEM ldt ON ltr.RID_DS_ITEM = ldt.RID AND ldt.FLAG = 1
+    	JOIN    LOY.LOY_TIERS lt ON ltr.RID_TIER = lt.RID AND lt.FLAG = 1
+    	WHERE 	    ltr.flag = 1
+    	AND 	    ltr.RID_TG_JOB = #{tierGrpJobRid}
+    	AND 		ltr.RID_TIER   = #{ridTier}
+    	ORDER BY    ltr.seq_NO ASC
+	</select>
+    
+    <!-- <select id="selectTierGrpRuleList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierRuleResDto">
+    	/* LoyTiersMapper.selectTierGrpRuleList */
+    	SELECT 	  RID 			    AS ridTier
+    			, TIER_TYPE_CD 		AS tierTypeCd
+    			, TIER_NM 			AS tierNm
+    			, 'UP'				AS type
+    	FROM 	LOY.LOY_TIERS
+		WHERE 	RID = #{ridTier}
+		AND FLAG = 1
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierGrpRuleDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    								     resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierRuleResDto">
+    	/* LoyTiersMapper.selectTierGrpRuleDetail */
+    	SELECT 	  ltr.RID 					AS rid
+				, ld.DS_NM					AS dsNm
+				, ldt.FIELD_NM				AS fieldNm 
+				, ltr.COND_VAL				AS condVal
+				, ldt.FIELD_TYPE_CD			AS fieldTypeCd
+				, lt.TIER_NM				AS tierNm
+				, lt.RID					AS tierRid
+				, ${strColumn}
+    	FROM 	LOY.LOY_TIERS_RULE ltr
+    	JOIN    LOY.LOY_DATASET ld ON ld.RID = ltr.RID_DS AND ld.FLAG = 1
+    	JOIN    LOY.LOY_DATASET_ITEM ldt ON ltr.RID_DS_ITEM = ldt.RID AND ldt.FLAG = 1
+    	JOIN    LOY.LOY_TIERS lt ON ltr.RID_TIER = lt.RID AND lt.FLAG = 1
+    	WHERE 	ltr.RID_TG_JOB = #{tierGrpJobRid}
+    	AND		ltr.RID_TIER   = #{tierRid}
+		AND 	ltr.flag = 1
+    </select> -->
+    
+    <select id="selectDataSetListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpDsListResDto">
+    	/* LoyTiersMapper.selectDataSetListNew */
+    	SELECT    ld.DS_NM									AS dsNm
+    		, ld.OBJ_NM									AS objNm
+    		, '직전 ' || ltgd.EXT_RANGE || '개월'			AS extRange
+    		, em.name									AS createBy
+    		, ltgd.CREATE_DATE							AS createDate
+    		, ltgd.RID									AS rid
+    		, ld.RID									AS tierDataSetRid
+    		, ${strColumn}
+	    FROM   LOY.LOY_TIERS_GRP_DS ltgd
+	    JOIN   LOY.LOY_DATASET ld ON ltgd.RID_DS = ld.RID AND ld.FLAG = 1
+	    LEFT OUTER JOIN COM.CRM_USER us ON us.RID = ltgd.CREATE_BY AND us.FLAG = 1
+	    LEFT OUTER JOIN COM.employee em ON us.ID_EMPLOYEE = em.id AND em.FLAG = 1
+	    WHERE  ltgd.FLAG = 1
+	    AND    ltgd.RID_TG_JOB = #{tierGrpJobRid}
+	    AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <select id="selectDataSetItemList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetItemListResDto">
+    	/* LoyTiersMapper.selectDataSetItemList */
+    	SELECT     ld.DS_NM				AS dsNm
+    			 , ldt.FIELD_NM			AS fieldNm
+    			 , ldt.FIELD_DESC		AS fieldDesc
+    			 , ldt.RID_DS			AS tierDataSetRid
+    			 , ldt.RID				AS tierDataSetItemRid
+    			 , ${strColumn}
+	    FROM   LOY.LOY_DATASET_ITEM ldt
+	    JOIN   LOY.LOY_DATASET ld ON ldt.RID_DS = ld.RID AND ld.FLAG = 1
+	    WHERE  ldt.FLAG = 1
+	    AND    ldt.RID_DS = #{tierGrpDataSetRid}
+	    AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <insert id="saveTiersRule" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.saveTiersCond */
+    	INSERT INTO LOY.LOY_TIERS_RULE (
+			  RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, RID_TG_JOB
+			, RID_TIER
+			, RID_DS
+			, RID_DS_ITEM
+			, SEQ_NO
+			, COND_VAL
+			, L_OP
+			, F_BRKT_FLG
+			, B_BRKT_FLG
+    	) VALUES (
+    		  #{saveRid}
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, #{tierGrpJobRid}
+			, #{tierRid}
+			, #{tierGrpDataSetRid}
+			, #{tierGrpDataSetItemRid}
+			, #{seqNo}
+			, #{condVal}
+			, #{logicOper}
+			, #{frntBrktYn}
+			, #{backBrktYn}
+    	)
+    </insert>
+    
+     <update id="editTiersRule" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.editTiersRule */
+    	UPDATE  LOY.LOY_TIERS_RULE
+    	SET     RID_TG_JOB	 =  #{tierGrpJobRid}
+			  , RID_TIER 	 =  #{tierRid}
+			  , RID_DS		 =  #{tierGrpDataSetRid}
+			  , RID_DS_ITEM  =  #{tierGrpDataSetItemRid}
+			  , SEQ_NO  	 =  #{seqNo}
+			  , COND_VAL	 =  #{condVal}
+			  , L_OP		 =  #{logicOper}
+			  , F_BRKT_FLG   =  #{frntBrktYn}
+			  , B_BRKT_FLG   =  #{backBrktYn}
+		WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTiersCond */
+    	update LOY.LOY_TIERS_RULE
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+    
+    <update id="deleteTierGrpJob" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTierGrpJob */
+    	delete FROM LOY.LOY_TIERS_GRP_JOB
+    	WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectTiersDatasetItemList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetItemListResDto">
+    	/* LoyTiersMapper.selectTiersDatasetItemList */
+    	SELECT     ldt.FIELD_NM			AS fieldNm
+    			 , ldt.FIELD_DESC		AS fieldDesc
+    			 , ldt.RID				AS rid
+    			 , ${strColumn}
+	    FROM   LOY.LOY_DATASET_ITEM ldt
+	    WHERE  ldt.FLAG = 1
+	    AND    ldt.RID_DS = #{dataSetRid}
+	    AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <delete id="deleteTierRule" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTierRule */
+    	DELETE FROM LOY.LOY_TIERS_RULE
+    	WHERE  RID_TG_JOB = #{tierGrpJobRid}
+    	AND    RID_TIER   = #{tiersRulesTierRid}
+    </delete>
+    
+    <update id="deleteTiersGrp" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTiersGrp */
+    	update LOY.LOY_TIERS_GRP
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+    
+    <update id="deleteTier" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTier */
+    	update LOY.LOY_TIERS
+    	   set modify_date = sysdate
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+    
+    <select id="tierBatchCall" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	/* LoyTiersMapper.callTableList */
+        CALL LOY.SP_TIER_MONTHLY_KE('20200201')
+    </select>
+    
+     <select id="tierInitCall" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	/* LoyTiersMapper.callTableList */
+        CALL LOY.SP_TIER_CLEAR()
+    </select>
+    
+    <select id="selectTierGroupListPop" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto"
+		resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto">
+	/* LoyTiersMapper.selectTierGroupListPop */
+        SELECT    ltg.RID				AS rid
+        		, ltg.TIERS_GRP_NM		AS tierGroupNm
+        		, ${strColumn}
+        FROM   LOY.LOY_TIERS_GRP ltg
+        WHERE  ltg.FLAG = 1
+        AND    ltg.RID_PGM = #{pgmRid}
+        AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <select id="selectTiersListPop" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto"
+		resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto">
+	/* LoyTiersMapper.selectTiersListPop */
+        SELECT    lt.TIER_NM				AS tierNm
+        		, lt.TIER_TYPE_CD			AS tierTypeCd
+        		, lt.RID					AS rid
+        		, ${strColumn}
+        FROM   LOY.LOY_TIERS lt
+        WHERE  lt.FLAG = 1
+        AND    lt.RID_TG = #{tierGroupRid}
+        AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+</mapper>

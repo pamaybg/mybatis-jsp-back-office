@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.targetGroup.targetSimple.mapper.KprTargetSimpleMapper">
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 기존 컬럼 이름 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.13
+    ***************************************/ -->
+    <select id="aleadySelectGroupColName" parameterType="com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListReqDto"
+    resultType="com.icignal.kepler.targetGroup.targetSimple.dto.response.KprGetTargetSimpleListResDto">
+    /* KprTargetSimpleMapper.aleadySelectGroupColName */
+
+		          SELECT   agc.id                           as id
+		        		   ,agc.dp_nm                       as text
+		        		   ,agc.ATRIB_GROUP_ID              as parentId
+		        		   ,0                           	as hasChild
+		        		   ,0                           	as expanded
+		        		   ,'C'				              	as colType
+		        		   ,agc.id							as attributeGroupColumnId
+		        		   ,''								as tempAttributeGroupColumnId
+		        		   ,agc.LGC_COMP_TBL_REL_ID			as lgcCompTblRelId
+		        		   ,agc.seq            				as seq
+		        		   ,agc.COL_ID                      as colId
+		        		   ,agc.COL_ALIAS                   as colAlias
+		        		   ,agc.DP_NM                       as dpNm
+		        		   ,agc.DIM_COL_ID                  as dimColId
+		        		   ,agc.CAL_COL_YN                  as calColYn
+		        		   ,agc.CAL_DTL                     as calDtl
+		        		   ,agc.CAL_DTL_HIS                 as calDtlHis
+		        		   ,agc.TBL_ALIAS_COL_NM            as tblAliasColNm
+		        		   ,agc.ATRIB_GROUP_ID              as atribGroupId
+		        		   ,agc.SEG_KEY_YN                  as segKeyYn
+		        		   ,agc.DATE_KEY_YN                 as dateKeyYn
+		        		   ,agc.EVT_TRIGGER_KEY_YN          as evtTriggerKeyYn
+		        		   ,agc.VAL_SQL						as sqlValue
+		        		   ,aag.ATRIB_GROUP_NM 
+		        		   ,acm.DATA_TYPE_CD				as dataTypeCd
+		      	  FROM    anl.anl_atrib_group aag
+		          JOIN anl.anl_atrib_group_column agc ON aag.ID = agc.atrib_group_id AND aag.flag = 1
+		          JOIN anl.anl_column_mst acm ON acm.id = agc.col_id
+		          WHERE   1=1
+		          AND     agc.flag = 1
+		          AND     aag.lgc_comp_id = (SELECT LGC_COMP_ID FROM  anl.ANL_TGT_GROUP WHERE id = #{targetGroupId})
+		          AND     agc.DIM_COL_ID is NULL
+		          ORDER BY aag.ATRIB_GROUP_NM, agc.SEQ 
+    </select>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 그룹 이름 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.14
+    ***************************************/ -->
+    <select id="aleadySelectGroupName" parameterType="com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListReqDto"
+    resultType="com.icignal.kepler.targetGroup.targetSimple.dto.response.KprGetTargetSimpleGroupNameResDto">
+    /* KprTargetSimpleMapper.aleadySelectGroupName */
+
+        SELECT   aag.id as id, aag.ATRIB_GROUP_NM as text
+		    FROM    anl.anl_atrib_group aag
+		    WHERE   1=1
+		    AND     aag.flag = 1
+		    AND     aag.lgc_comp_id = (SELECT LGC_COMP_ID FROM  anl.ANL_TGT_GROUP WHERE id = #{targetGroupId})
+    </select>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 신규 컬럼 이름 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.15
+    ***************************************/ -->
+    <select id="selectGroupColNameCondition" parameterType="com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListNewReqDto"
+    resultType="com.icignal.kepler.targetGroup.targetSimple.dto.response.KprGetTargetSimpleListResDto">
+    /* KprTargetSimpleMapper.selectGroupColNameCondition */
+
+		          SELECT   agc.id                           as id
+		        		   ,agc.dp_nm                       as text
+		        		   ,agc.ATRIB_GROUP_ID              as parentId
+		        		   ,0                           	as hasChild
+		        		   ,0                           	as expanded
+		        		   ,'C'				              	as colType
+		        		   ,agc.id							as attributeGroupColumnId
+		        		   ,''								as tempAttributeGroupColumnId
+		        		   ,agc.LGC_COMP_TBL_REL_ID			as lgcCompTblRelId
+		        		   ,agc.seq            				as seq
+		        		   ,agc.COL_ID                      as colId
+		        		   ,agc.COL_ALIAS                   as colAlias
+		        		   ,agc.DP_NM                       as dpNm
+		        		   ,agc.DIM_COL_ID                  as dimColId
+		        		   ,agc.CAL_COL_YN                  as calColYn
+		        		   ,agc.CAL_DTL                     as calDtl
+		        		   ,agc.CAL_DTL_HIS                 as calDtlHis
+		        		   ,agc.TBL_ALIAS_COL_NM            as tblAliasColNm
+		        		   ,agc.ATRIB_GROUP_ID              as atribGroupId
+		        		   ,agc.SEG_KEY_YN                  as segKeyYn
+		        		   ,agc.DATE_KEY_YN                 as dateKeyYn
+		        		   ,agc.EVT_TRIGGER_KEY_YN          as evtTriggerKeyYn
+		        		   ,agc.VAL_SQL						as sqlValue
+		        		   ,aag.ATRIB_GROUP_NM 
+		        		   ,acm.DATA_TYPE_CD				as dataTypeCd
+		      	  FROM    anl.anl_atrib_group aag
+		          JOIN anl.anl_atrib_group_column agc ON aag.ID = agc.atrib_group_id AND aag.flag = 1
+		          JOIN anl.anl_column_mst acm on acm.id = agc.col_id
+		          WHERE   1=1
+		          AND     agc.flag = 1
+		          AND     aag.lgc_comp_id = (SELECT cc.attrib01 AS ID FROM com.COMM_CODE cc WHERE cc.GROUP_CODE = 'TGT_GROUP_SIMPLE_LC_TYPE' AND cc.CODE_NAME =#{dbInfo})
+		          AND     agc.DIM_COL_ID is NULL
+		          ORDER BY aag.ATRIB_GROUP_NM, agc.SEQ 
+    </select> 
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 그룹 이름 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.15
+    ***************************************/ -->
+    <select id="selectGroupTopNameCondition" parameterType="com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListNewReqDto"
+    resultType="com.icignal.kepler.targetGroup.targetSimple.dto.response.KprGetTargetSimpleGroupNameResDto">
+    /* KprTargetSimpleMapper.selectGroupTopNameCondition */
+
+        SELECT   aag.id as id, aag.ATRIB_GROUP_NM as text
+		    FROM    anl.anl_atrib_group aag
+		    WHERE   1=1
+		    AND     aag.flag = 1
+		    AND     aag.lgc_comp_id = (SELECT cc.attrib01 AS ID FROM com.COMM_CODE cc WHERE cc.GROUP_CODE = 'TGT_GROUP_SIMPLE_LC_TYPE' AND cc.CODE_NAME =#{dbInfo})		    
+    </select>   
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 신규 삽입 - 타겟그룹 조건
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.15
+    ***************************************/ -->
+    <insert id="insertGroupNameTargetingGroupCondition" parameterType="com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListNewSaveDataReqDto">
+    /* KprTargetSimpleMapper.insertGroupNameTargetingGroupCondition */
+      	INSERT INTO anl.ANL_TGT_GROUP_COND(
+      		ID,
+      		CREATE_BY,
+      		MODIFY_BY,
+      		CREATE_DATE,
+      		MODIFY_DATE,
+      		FLAG,
+      		TGT_GROUP_ID,
+      		LGC_COMP_ID,
+      		LGC_FLD_ID,
+      		COMP_OPER,
+      		COMP_VAL 
+      		)
+      	values(
+      		com.getNewID(''),
+      		#{createBy},
+      		#{modifyBy},
+      		SYSDATE,
+      		SYSDATE,
+      		1,
+      		#{targetGroupId},
+      		(SELECT cc.attrib01 AS ID FROM com.COMM_CODE cc WHERE cc.GROUP_CODE = 'TGT_GROUP_SIMPLE_LC_TYPE' AND cc.CODE_NAME =#{dbInfo}),
+      		#{lgcFldId},
+      		#{compOper},
+      		#{compVal}
+      	) 	    
+    </insert>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 신규 삽입 - 타겟그룹 등록
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.16
+    ***************************************/ -->
+    <insert id="insertGroupNameTargetingGroupEnRoll" parameterType="com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListNewSaveReqDto">
+    /* KprTargetSimpleMapper.insertGroupNameTargetingGroupEnRoll */
+      	INSERT INTO anl.ANL_TGT_GROUP(
+      		ID,
+      		CREATE_BY,
+      		MODIFY_BY,
+      		CREATE_DATE,
+      		MODIFY_DATE,
+      		FLAG,
+      		TYPE,
+      		TGT_GROUP_NM,
+			TGT_GROUP_DESC,
+			LGC_COMP_ID,
+			CNT,
+			TGT_GROUP_NO,
+			FILTER_SQL,
+			FILTER_SQL_COUNT	
+		)values(
+      		#{targetGroupId},
+      		#{createBy},
+      		#{modifyBy},
+      		SYSDATE,
+      		SYSDATE,
+      		1,
+      		'CND',
+      		#{tgtGroupNm},
+      		#{tgtGroupDesc},
+      		(SELECT cc.attrib01 AS ID FROM com.COMM_CODE cc WHERE cc.GROUP_CODE = 'TGT_GROUP_SIMPLE_LC_TYPE' AND cc.CODE_NAME =#{dbInfo}),
+			#{cnt},
+			ANL.fn_gettgtgroupno,
+			#{filterSql},
+			#{filterSqlCount}
+      	) 	    
+    </insert>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 타겟 그룹 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.16
+    ***************************************/ -->    
+    <select id = "selectTargetGroup" parameterType = "com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListTagetGroupReqDto" 
+    		resultType = "com.icignal.kepler.targetGroup.targetSimple.dto.response.KprGetTargetSimpleListTagetGroupResDto">
+    /* KprTargetSimpleMapper.selectTargetGroup */
+    	 select  tg.tgt_group_nm as targetGroupName
+             , tg.tgt_group_desc as targetGroupDesc
+             , tg.CNT AS cnt 
+        from anl.anl_tgt_group tg
+        where tg.id = #{targetGroupId}
+    </select>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 타겟그룹에 해당하는 값들 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.16
+    ***************************************/ -->    
+    <select id = "aleadySelectGroupValue" parameterType = "com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListTagetGroupReqDto" 
+    		resultType = "com.icignal.kepler.targetGroup.targetSimple.dto.response.KprGetTargetSimpleListTargetGroupValueResDto">
+   /* KprTargetSimpleMapper.aleadySelectGroupValue */
+       SELECT ID as id,COMP_OPER as compOper, COMP_VAL as compVal , LGC_FLD_ID as lgcFldId 
+       FROM anl.ANL_TGT_GROUP_COND 
+       WHERE 1=1 
+       AND TGT_GROUP_ID =  #{targetGroupId} 
+       AND COMP_VAL IS NOT null
+    </select>
+   <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 타겟 그룹 수정
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.16
+    ***************************************/ -->   
+    <update id="tarGetGroupValueUpdate" parameterType = "com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListUpdateTagetGroupReqDto"   >
+        UPDATE anl.ANL_TGT_GROUP 
+      	SET	
+	      	MODIFY_BY = #{modifyBy}, 
+	      	MODIFY_DATE = SYSDATE, 
+	      	TGT_GROUP_NM = #{tgtGroupNm},
+	      	TGT_GROUP_DESC = #{tgtGroupDesc},
+			CNT = #{cnt},
+			FILTER_SQL = #{filterSql},
+			FILTER_SQL_COUNT = #{filterSqlCount}
+		WHERE ID = #{targetGroupId}		
+    </update>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 심플 타겟팅 수정
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.16
+    ***************************************/ -->   
+    <update id="tarGetGroupTargetingValueUpdate" parameterType = "com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListNewSaveDataReqDto"   >
+    	UPDATE anl.ANL_TGT_GROUP_COND
+      	SET	
+	      	MODIFY_BY = #{modifyBy}, 
+	      	MODIFY_DATE = SYSDATE, 
+	      	COMP_VAL = #{compVal},
+			COMP_OPER = #{compOper}
+		WHERE 1=1
+		AND TGT_GROUP_ID = #{targetGroupId}
+		AND LGC_FLD_ID = #{lgcFldId}		
+    </update>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 로지컬 컴포넌트 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.17
+    ***************************************/ -->    
+    <select id = "selectLogicalComponentInfo" parameterType = "com.icignal.kepler.targetGroup.targetSimple.dto.request.KprGetTargetSimpleListNewReqDto" 
+    		resultType = "com.icignal.kepler.targetGroup.targetSimple.dto.response.KprLogicalComponentInfoResDto">
+   /* KprTargetSimpleMapper.selectLogicalComponentInfo */
+        select di.id as dbId
+			 , di.con_ip as conIp
+			 , di.con_port as conPort
+			 , di.con_id as conId
+			 , di.con_pw as conPassword
+			 , di.con_url as conUrl
+			 , c.code_name as conDbType
+			 , c.attrib01 as conDbClass
+			 , l.lgc_sql as lgcSql
+             , ac.col_alias as colAlias
+             , ac.tbl_alias_col_nm as tblAliasColNm
+             , di.aws_secret_nm as awsSecretNm
+             , l.id as id
+		from anl.anl_db_inform di
+		join anl.anl_subject_db_rel sdr on sdr.flag = 1 and di.id = sdr.db_id
+		join anl.anl_table_mst tm on tm.flag = 1 and sdr.id = subject_db_rel_id
+		join anl.anl_lgc_comp_table_rel lct  on lct.flag = 1 and tm.id = lct.tbl_id
+		join com.comm_code c on c.flag = 1 and c.lang = 'ko' and c.code_name = di.con_db_type and c.group_code = 'ANL_DB_TYPE_CD'
+		join anl.anl_lgc_comp_mst l on l.flag = 1 and l.id = lgc_comp_id
+        join anl.anl_atrib_group g on g.flag = 1 and g.lgc_comp_id = l.id
+        join anl.anl_atrib_group_column ac on ac.flag = 1 and ac.atrib_group_id = g.id and ac.seg_key_yn = 1
+		where 1=1 
+		and lct.lgc_comp_id = ( SELECT attrib01 FROM com.comm_code WHERE group_code ='TGT_GROUP_SIMPLE_LC_TYPE' AND code_name = #{dbInfo})
+		and di.flag = 1
+		and rownum = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : query 대상수 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.17
+    ***************************************/ -->        
+    <select id="selectTargetCountQuery" parameterType="String" resultType="Integer">
+    /* KprTargetSimpleMapper.selectTargetCountQuery */
+		${query}	 	
+	</select>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : query 대상자 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.17
+    ***************************************/ -->    	
+	<select id="selectTargetQuery" parameterType="String" resultType="String">
+	/* KprTargetSimpleMapper.selectTargetQuery */
+		${query}	 	
+	</select>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroup)
+    ============================================
+    -   제목            : 타겟그룹 상세 조회
+    -   설명            : 타겟그룹 상세 조회
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGridGroup" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupResDto">
+        /* KPRTargetGroup.selectTargetGroup */
+
+		select tg.id as targetGroupId
+             , e.name as createByName
+             , tg.create_date as createDate
+             , tg.seg_filter_id as segFilterId
+             , tg.filter_sql_count as filterSqlCount
+             , tg.tgt_group_nm as targetGroupName
+             , tg.tgt_group_desc as targetGroupDesc
+             , c.code_name as comprGroupTypeCode
+             , c.mark_name as comprGroupTypeName
+             , tg.compr_group_dtl as comprGroupDtl
+             , tg.dp_cond as dpCond
+             , db.con_db_type as conDbType
+        from anl.anl_tgt_group tg
+        left outer join com.crm_user u on tg.create_by = u.rid
+        left outer join com.employee e on u.id_employee = e.id
+        LEFT OUTER join com.comm_code c on c.flag = 1 and tg.compr_group_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_COMPR_TYPE_CD'
+        join anl.anl_lgc_comp_mst lc on lc.ID = tg.LGC_COMP_ID
+        join anl.anl_db_inform db on db.ID = lc.DB_INFORM_ID
+        where tg.id = #{targetGroupId}
+    </select>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetSimpleMapper.java
+    ============================================
+    -   제목            : 심플타겟팅 목록 조회
+    -   설명            : 
+    -   결과형태       : 
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : GyeongYoung.LEE
+    -   작성일         : 2020.07.17
+    ***************************************/ -->
+    <select id="selectSimpleList" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupListReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupListResDto">
+        /* KPRTargetGroup.selectSimpleList */
+               select  CEIL(COUNT(1) OVER()) totalCount
+             , tg.id as targetGroupId
+             , e.name as createByName
+             , tg.create_date as createDate
+             , tg.seg_filter_id as segFilterId
+             , tg.tgt_group_nm as targetGroupName
+             , tg.tgt_group_desc as targetGroupDesc
+             , c.code_name as comprGroupTypeCode
+             , c.mark_name as comprGroupTypeName
+             , tg.compr_group_dtl as comprGroupDtl
+             , tg.TGT_GROUP_NO as tgtGroupNo
+             , tg.TYPE AS type 
+        from anl.anl_tgt_group tg
+        left outer join com.crm_user u on tg.create_by = u.rid
+        left outer join com.employee e on u.id_employee = e.id
+        LEFT OUTER join com.comm_code c on c.flag = 1 and tg.compr_group_type_cd = c.code_name and c.lang = 'ko' and c.group_code = 'ANL_COMPR_TYPE_CD'
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and tg.flag = 1
+        AND tg.TYPE = 'CND'
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+            
+</mapper>

@@ -1,0 +1,916 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.program.mapper.SystemProgramMapper">
+<!-- 
+     **** XML 파일  coding gide ****
+          1. 반드시 엘리먼트 추가시 아래의 샘플 주석을 복사하여 해당 쿼리의 내용을 알 수 있도록 상세히 작성. 
+          2. sql  쿼리는 대문자로 작성
+          3. id 명명규칙 : 
+             select 문장 -> selectXXX
+             insert 문장 -> insertXXX
+             update 문장 -> updateXXX
+             delete 문장 -> deleteXXX !-->
+    
+	<!-- 권한관리 프로그램 목록 -->
+	<select id="selectProgList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemProgramMapper.selectProgList */
+		select 
+			p.id as id
+			, p.pgm_no as pgmNo
+			, p.pgm_nm as pgmNm
+			, p.pgm_path as pgmPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as progKey
+			, p.MENU_CHK_YN as menuChkYn
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where ${strCondWhere}
+			and p.flag = 1
+			<!-- and ${strCondWhere} -->
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectProgListDetail" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgDetailResDto">
+	/* SystemProgramMapper.selectProgListDetail */
+		SELECT
+			p.id AS progId
+			, p.pgm_no AS progNo
+			, p.pgm_nm AS progName
+			, cc.code_name AS progType
+			, p.pgm_path AS progPath
+			, e.name AS progCreater
+			, p.create_date AS progCreateDate
+			, p.MAIN_PGM_ID as mainPgmId
+			, p.PAR_PGM_ID as parPgmId
+			, p2.pgm_nm as mainPgmNm
+			, p3.pgm_nm as parPgmNm
+			, p.MENU_CHK_YN as menuChkYn
+			, p.TAB_LABEL	AS tabLabelName
+			, p.TAB_SEQ	AS tabSeq
+		FROM com.program p WITH (NOLOCK)
+			JOIN com.comm_code cc WITH (NOLOCK) ON cc.code_name = p.pgm_type_cd AND cc.lang = #{lang}
+				AND cc.group_code = 'ADMIN_PROG_TYPE'
+			JOIN com.crm_user u WITH (NOLOCK) ON u.rid = p.create_by
+			JOIN com.employee e WITH (NOLOCK) ON e.id = u.id_employee
+			LEFT OUTER JOIN com.program p2 WITH (NOLOCK) ON p.MAIN_PGM_ID = p2.id AND P2.FLAG =1
+			LEFT OUTER JOIN com.program p3 WITH (NOLOCK) ON p.PAR_PGM_ID = p3.id AND P3.FLAG = 1
+		WHERE
+			p.id = #{prgId}
+	</select>
+	
+	
+		<update id="deleteProgRel" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.deleteProgRel */
+		UPDATE com.menu_pgm_rel
+		SET
+			flag = flag + 1
+			, modify_by = #{empId}
+			, modify_date = getdate()
+		WHERE
+			${strSVCType}
+			<if test="progId.size != 0">
+			AND pgm_id in
+				<foreach collection="progId" item="item" separator="," close=")" open="(">
+						#{item}
+				</foreach>
+			</if>
+	</update>
+	
+
+	<update id="deleteProgList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.deleteProgList */
+		UPDATE com.program
+		SET
+			flag = flag + 1
+			, modify_by = #{empId}
+			, modify_date = getdate()
+		WHERE ${strSVCType} 
+			<if test="progId.size != 0">
+				AND id in
+				 <foreach collection="progId" item="item" separator="," close=")" open="(">
+						#{item}
+				</foreach>
+			</if>
+	</update>
+	
+	<update id="updateMainPgmId" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.updateMainPgmId */
+		UPDATE com.program
+		SET MAIN_PGM_ID = null
+		WHERE MAIN_PGM_ID = #{prgId}
+	</update>
+	
+	<update id="updateParPgmId" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.updateParPgmId */
+		UPDATE com.program
+		SET PAR_PGM_ID = null
+		WHERE PAR_PGM_ID = #{prgId}
+	</update>
+	
+	
+	<update id="updateProgramDetail" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertProgDetailReqDto">
+	/* SystemProgramMapper.updateProgramDetail */
+		UPDATE
+			com.program
+		SET
+			pgm_no = #{progNo}
+			, pgm_nm = #{progName}
+			, pgm_type_cd = #{progType}
+			, pgm_path = #{progPath}
+			, MAIN_PGM_ID = #{mainPgmId}
+			, PAR_PGM_ID = #{parPgmId}
+			, MENU_CHK_YN = #{menuChkYn}
+			, modify_by = #{empId}
+			, modify_date = getdate()
+			, TAB_LABEL   = #{tabLabelName}
+			, TAB_SEQ   = #{tabSeq}
+		WHERE
+			${strSVCType}
+			AND id = #{progId}
+			AND flag = 1
+	</update>
+	
+
+    
+    <insert id="insertProgramDetail" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertProgDetailReqDto" 
+    useGeneratedKeys="false">
+	/* SystemProgramMapper.insertProgramDetail */
+		INSERT INTO com.program
+		(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, pgm_no
+			, pgm_nm
+			, pgm_type_cd
+			, pgm_path
+			, MAIN_PGM_ID
+			, PAR_PGM_ID
+			, MENU_CHK_YN
+			, TAB_LABEL
+			, TAB_SEQ
+		)
+		VALUES(
+			#{id}
+			, #{empId}
+			, #{empId}
+			, getdate()
+			, getdate()
+			, 1
+			, #{lang}
+			, #{progNo}
+			, #{progName}
+			, #{progType}
+			, #{progPath}
+			, #{mainPgmId}
+			, #{parPgmId}
+			, #{menuChkYn}
+			, #{tabLabelName}
+			, #{tabSeq}
+		)
+	</insert>
+	
+	<select id="selectObjectListNew" parameterType="com.icignal.systemmanagement.program.dto.request.SystemObjectListReqDto" 
+					resultType="com.icignal.systemmanagement.program.dto.response.SystemObjectListResDto">
+		/* SystemProgramMapper.selectObjectListNew */
+		SELECT 
+			cc.mark_name as objTypeCd 
+			, o.OBJ_CD as objCd 
+			, o.OBJ_NM as objNm 
+			, o.OBJ_DESC as objDesc 
+			, e.name as modifyBy 
+			, CONVERT(varchar, o.modify_date, 120) as modifyDate
+			, o.id as id
+			, ${strColumn}
+		FROM com.object o WITH (NOLOCK)
+			JOIN com.crm_user u WITH (NOLOCK) on u.rid = o.create_by
+			JOIN com.employee e WITH (NOLOCK) on e.id = u.id_employee AND o.lang = #{lang} and o.flag= '1'
+			JOIN com.comm_code cc WITH (NOLOCK) on o.OBJ_TYPE_CD = cc.code_name AND cc.lang = #{lang}
+				AND cc.flag = '1' AND group_code = 'OBJ_TYPE_CD'
+		WHERE ${strSVCType}
+			AND ${strWhere}
+			AND ${strCondWhere}
+			AND NOT EXISTS (SELECT 1 FROM com.UI_OBJECT UI with(nolock) WHERE UI.OBJ_ID = o.ID AND UI.FLAG='1')
+			AND o.flag = '1'
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : SystemAuthDAO.java (deleteUIObjectList)
+	============================================
+	- 제목 : UI오브젝트 삭제
+	- 설명 : UI오브젝트 삭제
+	- 결과형태 :
+	============================================
+	- 입력 : empId, id ,ids(UI오브젝트)
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<update id="deleteUIObjectList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemDeleteUIObjectListReqDto">
+		/* SystemProgramMapper.deleteUIObjectList */
+		UPDATE com.ui_object
+		SET
+			flag = flag + 1
+			, modify_by = #{empId}
+			, modify_date = getdate()
+		WHERE
+			${strSVCType}
+			<if test="ids.size != 0">
+			AND id in
+				 <foreach collection="ids" item="item" separator="," close=")" open="(">
+					#{item}
+				</foreach>
+			</if>
+	</update>
+	
+	<!-- 오브젝트에 걸려있는 모든 권한 삭제 -->
+	<update id="delAuthObjRelAll" parameterType="com.icignal.systemmanagement.program.dto.request.SystemDeleteUIObjectListReqDto">
+	/* SystemAuthMapper.delAuthObjRelAll */
+		DELETE FROM com.AUTH_OBJECT_REL
+		WHERE UI_OBJ_ID IN
+			<foreach collection="ids" item="item" separator="," close=")" open="(">
+				#{item}
+			</foreach>
+	</update>
+	
+	<!-- 프로그램 관리 상세 오브젝트 권한 목록 -->
+	<select id="selectObjAuthList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemAuthGroupListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemAuthGroupListResDto">
+		/* SystemProgramMapper.getObjAuthList */
+		SELECT
+			h.AUT_NM AS autNm
+		   ,h.AUT_DESC AS autDesc
+		   ,h.AUT_NUM AS autNum
+		   ,h.CREATE_DATE AS authCreateDate
+		   ,c.ID AS id
+		   ,${strColumn}
+		FROM
+			 COM.UI_OBJECT uo WITH (NOLOCK)
+		JOIN COM.AUTH_OBJECT_REL c WITH (NOLOCK) ON uo.id=c.UI_OBJ_ID AND c.FLAG = 1
+		JOIN COM.AUTH h WITH (NOLOCK) on h.id = c.AUT_ID	AND h.FLAG = 1
+		WHERE uo.id = #{rid}
+			and ${strWhere}
+			AND uo.FLAG = 1
+	</select>
+	
+	<!-- /**************************************
+	- 관련 파일 : SystemAuthDAO.java (insertUIObjectDetail)
+	============================================
+	- 제목 : UI오브젝트 추가
+	- 설명 : UI오브젝트 추가
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.03.15
+	***************************************/ -->
+	<insert id="insertUIObjectDetail" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertUIObjectDetailReqDto" 
+	useGeneratedKeys="false">
+		/* SystemProgramMapper.insertUIObjectDetail */
+		INSERT INTO com.ui_object
+		(
+			id
+			, obj_type_cd
+			, obj_id
+			, ui_obj_nm
+			, ui_obj_desc
+			, use_flag
+			, create_by
+			, create_date
+			, modify_by
+			, modify_date
+			, flag
+			, lang
+			, pgm_id
+		)
+		VALUES
+		(
+			#{id}
+			, #{objTypeCd}
+			, #{objId}
+			, #{uiObjNm}
+			, #{uiObjDesc}
+			, #{useFlag}
+			, #{empId}
+			, getdate()
+			, #{empId}
+			, getdate()
+			, '1'
+			, #{lang}
+			, #{pgmId}
+		)
+	</insert>
+	
+	<select id="selectAuthListPop" parameterType="com.icignal.systemmanagement.program.dto.request.SystemAuthListReqDto" 
+												resultType="com.icignal.systemmanagement.program.dto.response.SystemAuthListResDto">
+		/* SystemProgramMapper.selectAuthListPop */
+		SELECT 
+			h.id as id
+			, h.aut_num as authNo
+			, h.aut_nm as authName
+			, h.aut_desc as authDesc
+			, e.name as authCreater
+			, CONVERT (VARCHAR, h.create_date, 120) as authCreateDate
+			, ${strColumn}
+		FROM  com.auth h WITH (NOLOCK)
+			JOIN com.crm_user u WITH (NOLOCK) on u.rid = h.create_by
+			JOIN com.employee e WITH (NOLOCK) on e.id = u.id_employee AND e.flag = 1
+			<!-- JOIN com.account acc on acc.id = h.accnt_id AND acc.flag = 1 -->
+		WHERE ${strSVCType}
+			and h.flag = 1
+			and NOT EXISTS (SELECT * FROM COM.AUTH_OBJECT_REL B with(nolock) WHERE h.id = B.AUT_ID AND B.PGM_ID=#{pgmId} AND b.UI_OBJ_ID=#{uiObjId})
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+	</select>
+    	
+    	<!-- 권한 팝업 등록 -->
+	<insert id="insertAuthObjRelPopup" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertAuthObjRelReqDto">
+		/* SystemProgramMapper.insertAuthObjRelPopup */
+		<foreach collection="authIdList" item="item" separator=" ">
+		INSERT INTO com.auth_object_rel(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, aut_id
+			, ui_obj_id
+			, ui_view_cd
+			, pgm_Id
+		)
+		VALUES(	
+			#{id}
+			, #{empId}
+			, #{empId}
+			, getdate()
+			, getdate()
+			, 1
+			, #{lang}
+			, #{item}
+			, #{objId}
+			, 'VISIBLE'
+			, #{pgmId}
+		)
+		</foreach>
+	</insert>
+	
+	<select id="selectProgramAuthList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+		/* SystemProgramMapper.selectProgramAuthList */
+		select 
+			p.id as id
+			, p.pgm_no as pgmNo
+			, p.pgm_nm as pgmNm
+			, p.pgm_path as pgmPath
+			, cc.mark_name as progType
+			, p.pgm_type_cd as pgmTypeCd
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as progKey
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where 
+			p.MAIN_PGM_ID = #{prgId}
+			and p.flag = 1
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectProgramList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+		/* SystemProgramMapper.selectProgramList */
+		select 
+			p.id as id
+			, p.pgm_no as progId
+			, p.pgm_nm as progName
+			, p.pgm_path as progPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as progKey
+			, p.MENU_CHK_YN as menuChkYn
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where  ${strWhere}
+			<!-- and p.pgm_type_cd != 'LIST' -->
+			AND (p.MENU_CHK_YN != 'Y' OR p.MENU_CHK_YN IS NULL)
+			and p.flag = 1
+			AND NOT EXISTS (
+			SELECT 1 
+			FROM COM.PROGRAM p2 with(nolock)
+			WHERE p2.id = p.main_pgm_id
+			AND   FLAG = 1
+			)
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<update id="updateProgramDown" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.updateProgramDown */
+		UPDATE COM.PROGRAM
+		SET   MAIN_PGM_ID = #{prgId}
+		WHERE ID = #{childprgId}
+	</update>
+	
+	<update id="deleteProgramDown" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.deleteProgramDown */
+		update COM.PROGRAM
+		SET   MAIN_PGM_ID = null
+		WHERE ID = #{childprgId}
+	</update>
+	
+	<select id="selectprogramAuthCheck" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+		/* SystemProgramMapper.selectprogramAuthCheck */
+		SELECT pgm_id as id
+		FROM   com.auth_pgm_rel with(nolock)
+		WHERE  pgm_id = #{childprgId}
+	</select>
+	
+	<delete id="deleteProgramAuth" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+		/* SystemProgramMapper.selectprogramAuthCheck */
+		DELETE 
+		FROM   com.auth_pgm_rel with(nolock)
+		WHERE  pgm_id = #{childprgId}
+	</delete>
+	
+	<select id="selectAuthProgramList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemAuthListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemAuthListResDto">
+		/* SystemProgramMapper.selectAuthProgramList */
+		SELECT 
+			h.id as id
+			, h.aut_num as authNo
+			, h.aut_nm as authName
+			, h.aut_desc as authDesc
+			, e.name as authCreater
+			, h.create_date as authCreateDate
+			, ${strColumn}
+		FROM com.auth h WITH (NOLOCK)
+			JOIN com.crm_user u WITH (NOLOCK) on u.rid = h.create_by
+			JOIN com.employee e WITH (NOLOCK) on e.id = u.id_employee AND e.flag = 1
+		<!-- JOIN com.account acc on acc.id = h.accnt_id AND acc.flag = 1 -->
+		WHERE ${strSVCType}
+			and h.flag = 1
+			and NOT EXISTS (SELECT * FROM COM.AUTH_PGM_REL B WHERE h.id = B.AUTH_ID AND B.PGM_ID=#{pgmId})
+			and ${strWhere}
+	</select>
+	
+	<insert id="insertAuthProgramRelPopup" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertAuthObjRelReqDto">
+		/* SystemProgramMapper.insertAuthProgramRelPopup */
+	 	<foreach collection="authIdList" item="item" open="" separator=" " close="">
+		INSERT INTO com.auth_pgm_rel(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, auth_id
+			, pgm_Id
+		)
+		VALUES(	
+			#{id}
+			, #{empId}
+			, #{empId}
+			, getdate()
+			, getdate()
+			, 1
+			, #{item}
+			, #{pgmId}
+		)
+		</foreach>
+	</insert>
+	
+	<select id="selectLowProgramRel"	parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+													resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+		/* SystemProgramMapper.selectLowProgramRel */
+		select 
+			p.id as id
+			, p.pgm_no as pgmNo
+			, p.pgm_nm as pgmNm
+			, p.pgm_path as pgmPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as id
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where 
+			p.PAR_PGM_ID = #{prgId}
+			and p.flag = 1
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<update id="updateParProgramDown" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.updateParProgramDown */
+		UPDATE COM.PROGRAM
+		SET   PAR_PGM_ID = #{prgId}
+		WHERE ID = #{childprgId}
+	</update>
+	
+	<update id="deleteParProgramDown" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+	/* SystemProgramMapper.deleteParProgramDown */
+		update COM.PROGRAM
+		SET   PAR_PGM_ID = null
+		WHERE ID = #{childprgId}
+	</update>
+	
+	<select id="selectLowProgList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemProgramMapper.selectLowProgList */
+		select 
+			p.id as id
+			, p.pgm_no as progId	
+			, p.pgm_nm as progName
+			, p.pgm_path as progPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as progKey
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where p.flag = 1
+			<!-- 자기자신 제외  -->
+			AND p.id != #{prgId}
+			<!-- 메뉴가 될수 있는 프로그램 제외  -->
+			AND (P.MENU_CHK_YN = 'N' OR  P.MENU_CHK_YN IS NULL )
+			and ${strWhere}
+			AND NOT EXISTS (
+				SELECT 1 
+				FROM COM.PROGRAM p2
+				WHERE p2.id = p.PAR_PGM_ID 
+				AND   FLAG = 1
+			)
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+		<select id="selectDetailParProgList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemProgramMapper.selectDetailParProgList */
+		select 
+			p.id as id
+			, p.pgm_no as pgmNo
+			, p.pgm_nm as pgmNm
+			, p.pgm_path as pgmPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as progKey
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where 
+			p.flag = 1
+			<if test="prgId != null">
+				AND p.id != #{prgId}
+			</if>
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+		<select id="selectDetailProgramList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemProgramMapper.selectDetailProgramList */
+		select 
+			p.id as id
+			, p.pgm_no as pgmNo
+			, p.pgm_nm as pgmNm
+			, p.pgm_path as pgmPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as progKey
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where 
+			p.flag = 1
+			and p.MENU_CHK_YN = 'Y'
+			<!-- <if test="prgId != null">
+				AND p.id != #{prgId}
+			</if> -->
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectExcelDownloadList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDownloadListReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemExcelDownloadListResDto">
+	/* SystemProgramMapper.selectExcelDownloadList */
+		select
+			e.rid as rid,
+			e.pgm_id AS pgmId ,
+			e.title AS title ,
+			e.templete_file AS templateFile ,
+			e.excel_create_type AS excelCreateTypeCd,
+			e.excel_seq AS excelSeq,
+			e.OBJCODE as objCode,
+			${strColumn}
+		FROM com.excel_down_h e WITH (NOLOCK)
+			JOIN com.PROGRAM p WITH (NOLOCK) ON p.id=e.PGM_ID
+		WHERE
+			e.flag = 1
+			AND e.PGM_ID=#{pgmId}
+		ORDER BY ${strOrderby}
+				${strEndPaging}
+	</select>
+	
+	<insert id="insertProgramExcelFile" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDownloadListReqDto" >
+		/* SystemProgramMapper.insertProgramExcelFile */
+		INSERT INTO com.excel_down_h
+		(	rid
+			, create_by
+			, modify_by
+			,pgm_id
+			,title
+			,templete_file
+			,excel_create_type
+			,excel_seq
+			,OBJCODE
+		)
+		VALUES
+		(	
+			#{rid}
+			,#{empId}
+			,#{empId}
+			,#{pgmId}
+			,#{title}
+			,#{templateFile}
+			,#{excelCreateType}
+			, (SELECT NVL(MAX(excel_seq)+1,0) FROM com.excel_down_h WHERE pgm_id = #{pgmId})
+			,#{objCode}
+		)
+	</insert>
+	
+	<delete id="deleteExcelFile" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDownloadListReqDto">
+		/* SystemProgramMapper.deleteExcelFile */
+		DELETE 
+		FROM   com.excel_down_h
+		WHERE  rid = #{rid}
+	</delete>
+	
+	<select id="selectDtlExcel" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDownloadListReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemExcelDownloadListResDto">
+	/* SystemProgramMapper.selectDtlExcel */
+		select
+			rid as rid,
+			pgm_id AS pgmId ,
+			title AS title ,
+			templete_file AS templateFile ,
+			excel_create_type AS excelCreateTypeCd,
+			excel_seq AS excelSeq,
+			OBJCODE as objCode
+		FROM
+			com.excel_down_h
+		WHERE
+			rid=#{rid}
+			AND flag = 1
+	</select>
+	
+	<select id="selectProgRelList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgRelExcelDnReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemProgramMapper.selectProgRelList */
+		SELECT LEVEL
+			, CONNECT_BY_ROOT ID 	AS topPgmId
+			, PAR_PGM_ID 				AS parPgmId
+			, ID         						AS id
+			, PGM_NM 						AS pgmNm
+			, PGM_NO 						AS pgmNo
+			, PGM_TYPE_CD 				AS progType
+		FROM COM.PROGRAM p
+		WHERE 1=1
+			AND FLAG = '1'
+			START WITH MENU_CHK_YN = 'Y'
+		CONNECT BY PRIOR ID = PAR_PGM_ID
+	</select>
+	
+	<update id="updateExcelFile" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDownloadListReqDto">
+	/* SystemProgramMapper.updateExcelFile */
+		UPDATE
+			com.excel_down_h
+		SET
+			 title = #{title}
+			, templete_file = #{templateFile}
+			, excel_create_type = #{excelCreateType}
+			, OBJCODE = #{objCode}
+			, modify_date = getdate()
+		WHERE
+			rid = #{rid}
+			AND flag = 1
+	</update>
+	
+	<select id="selectDataMapList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDataMapReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemExcelDataMapResDto">
+	/* SystemProgramMapper.selectDataMapList */
+		select
+			head_nm as headNm,
+			excel_cell AS excelCell ,
+			data_field AS dataField,
+			rid as rid,
+			${strColumn}
+		FROM
+			com.excel_down_d
+		WHERE rid_excel_h=#{ridExcelH}
+		AND flag = 1
+		ORDER BY EXCEL_CELL
+	</select>
+	
+	<insert id="insertExcelData" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDataMapReqDto" >
+		/* SystemProgramMapper.insertExcelData */
+		INSERT INTO com.excel_down_d
+		(	rid
+			, create_by
+			, modify_by
+			,rid_Excel_H
+			,data_field
+			,head_nm
+			,excel_cell
+			, create_date
+			, modify_date
+			, flag
+		)
+		VALUES
+		(	
+			#{dRid}
+			,#{empId}
+			,#{empId}
+			,#{ridExcelH}
+			,#{dataField}
+			,#{headNm}
+			,#{excelCell}
+			, getdate()
+			, getdate()
+			, 1
+		)
+	</insert>
+	
+	<select id="selectDtlExcelData" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDataMapReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemExcelDataMapResDto">
+	/* SystemProgramMapper.selectDtlExcelData */
+		select
+			data_field as dataField
+			,head_nm as headNm
+			,excel_cell as excelCell
+		FROM
+			com.excel_down_d
+		WHERE
+			flag = 1
+			AND rid=#{dRid}
+			AND rid_excel_h=#{ridExcelH}
+
+	</select>
+	<update id="updateExcelData" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDataMapReqDto">
+	/* SystemProgramMapper.updateExcelData */
+		UPDATE
+			com.excel_down_d
+		SET
+			 data_field = #{dataField}
+			, head_nm = #{headNm}
+			, excel_cell = #{excelCell}
+			, modify_date = getdate()
+		WHERE
+			rid_excel_h=#{rid}
+			and rid =#{dRid}
+			AND flag = 1
+	</update>
+	
+	<delete id="deleteDataMap" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDataMapReqDto">
+	/* SystemProgramMapper.deleteDataMap */
+		DELETE
+		FROM
+			com.excel_down_d
+		WHERE
+			rid = #{rid}
+			AND flag = 1
+	</delete>
+
+	<delete id="deleteExcelFileDataMap" parameterType="com.icignal.systemmanagement.program.dto.request.SystemExcelDataMapReqDto">
+	/* SystemProgramMapper.deleteExcelFileDataMap */
+		DELETE
+		FROM
+			com.excel_down_d
+		WHERE
+			rid_excel_h = #{ridExcelH}
+			AND flag = 1
+	</delete>
+
+	<select id="selectTemplateTestProgAllList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemProgramMapper.selectTemplateTestProgAllList */
+		select 
+			p.id as id
+			, p.pgm_no as progId
+			, p.pgm_nm as progName
+			, p.pgm_path as progPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as progKey
+			, p.MENU_CHK_YN as menuChkYn
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang= 'ko' and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where p.flag = 1
+	</select>
+	
+	<select id="selectProgramChildTab"	parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+													resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+		/* SystemProgramMapper.selectProgramChildTab */
+		select 
+			p.id as id
+			, p.pgm_no as pgmNo
+			, p.pgm_nm as pgmNm
+			, p.pgm_path as pgmPath
+			, cc.mark_name as progType
+			, e.name as prog_crea
+			, CONVERT(varchar(10), p.create_date, 120) as createDate
+			, p.id as id
+			, ${strColumn}
+		from com.program p WITH (NOLOCK)
+			join com.crm_user u WITH (NOLOCK) on u.rid = p.create_by
+			join com.employee e WITH (NOLOCK) on e.id = u.id_employee
+			join com.comm_code cc WITH (NOLOCK) on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE'
+		where 
+			p.PAR_PGM_ID = #{prgId}
+			AND p.pgm_type_cd='TAB'
+			and p.flag = 1
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<insert id="insertAuthObjRelOne" parameterType="com.icignal.systemmanagement.program.dto.request.SystemInsertUIObjectDetailReqDto">
+		/* SystemProgramMapper.insertAuthObjRelOne */
+		INSERT INTO com.auth_object_rel(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, aut_id
+			, ui_obj_id
+			, ui_view_cd
+			, pgm_Id
+		)
+		VALUES(	
+			#{id}
+			, #{empId}
+			, #{empId}
+			, getdate()
+			, getdate()
+			, 1
+			, #{lang}
+			, #{authId}
+			, #{id}
+			, 'VISIBLE'
+			, #{pgmId}
+		)
+	</insert>
+	
+</mapper>
+    

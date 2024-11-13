@@ -1,0 +1,851 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.loyprogram.mapper.LoyProgramMapper">
+
+    <select id="selectPgmList"  parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmReqDto" 
+    							resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmResDto">
+       /* LoyProgramMapper.selectPgmList */
+       SELECT  
+       		   A.RID            													AS  rid         		/* RID */
+			  ,A.REP_YN           											AS  repYn       	/* 대표 프로그램 여부*/
+		      ,A.PGM_NO         												AS  pgmNo       	/* 프로그램 번호 */
+		      ,A.PGM_NM        	 											AS  pgmNm       /* 프로그램 명 */
+		      ,A.STAT_CD        												AS  pgmStat     	/* 프로그램 상태 코드 */
+		      ,A.JOIN_TYPE_CD   											AS  pgmType     	/* 프로그램 유형 코드 */
+		      ,CONVERT(varchar(10), A.CREATE_DATE, 120) 	AS  createDate
+		      ,EM.NAME    	  												AS  createBy      /* CREATE BY */
+		      ,CONVERT(varchar(10), A.MODIFY_DATE, 120) 	AS  modifyDate 
+		      ,EM1.NAME    	  												AS  modifyBy      /* MODIFY BY */
+		      ,B.CHNL_NM      												AS  chnlNm      	 /* 채널명 (주관사)*/
+		      ,${strColumn}
+		FROM 
+			LOY.LOY_PGM A WITH (NOLOCK)
+        INNER JOIN LOY.LOY_CHNL B	WITH (NOLOCK) ON A.RID_CHNL_PR = B.RID AND B.FLAG = 1
+        LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.CRM_USER US1 WITH (NOLOCK) ON A.MODIFY_BY = US1.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+        LEFT OUTER JOIN COM.EMPLOYEE EM1 WITH (NOLOCK) ON US1.ID_EMPLOYEE = EM1.ID
+		WHERE  
+			${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+		ORDER BY 
+			${strOrderby}
+			${strEndPaging}
+    </select>
+
+    <select id="selectPgm"  parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmReqDto" 
+    						resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmResDto">
+       	/* LoyProgramMapper.selectPgm */
+		SELECT
+		       A.RID         					AS  rid                		/* RID */
+		      ,A.PGM_NO      				AS  pgmNo              	/* 프로그램 번호 */
+		      ,A.PGM_NM      				AS  pgmNm              	/* 프로그램 명 */
+		      ,A.STAT_CD  	 				AS  pgmStat            	/* 프로그램 상태  코드*/
+		      ,A.JOIN_TYPE_CD   			AS  pgmType     	  		/* 프로그램 유형 코드 */
+		      ,A.JOIN_SUB_TYPE_CD   	AS  pgmSubType     	/* 프로그램 상세 유형 코드 */
+			  ,A.REP_YN         				AS  repYn              	/* 대표 프로그램 여부*/
+			  ,A.PAR_PGM_RID    			AS  parPgmRid          /* 상위 프로그램 RID */
+			  ,C.PGM_NM         				AS  parPgmNm          /* 상위 프로그램명 */ 
+			  ,A.CONTENTS	    			AS  contents           	/* 프로그램 소개 */
+		      ,A.RID_CHNL_PR 				AS  chnlRid            	/* 채널 RID */
+		      ,B.CHNL_NM     				AS  chnlNm             	/* 채널명 */
+			  ,D.CARD_KIND_NM   		AS  cardKindPrNm      /* 대표 카드 유형명 */
+			  ,A.RID_CARD_KIND_PR  	AS  cardKindPrRid      /* 대표 카드 유형 RID */
+			  ,E.PGM_NM 		 				AS  repPgmNm           /* 대표 프로그램명 */
+			  ,A.RID_REP_PGM 	  		AS  repPgmRid          	/* 대표 프로그램 RID */
+		FROM LOY.LOY_PGM A WITH (NOLOCK)
+		INNER JOIN LOY.LOY_CHNL B	WITH (NOLOCK) ON A.RID_CHNL_PR = B.RID AND B.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_PGM C WITH (NOLOCK)	ON A.PAR_PGM_RID = C.RID AND C.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CARD_KIND D WITH (NOLOCK)	ON A.RID_CARD_KIND_PR = D.RID AND D.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_PGM E WITH (NOLOCK)	ON A.RID_REP_PGM = E.RID AND E.FLAG = 1
+	    WHERE 1=1
+			AND A.RID = #{rid}
+			AND A.FLAG  = 1
+    </select>
+
+    <update id="updatePgm" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmReqDto">
+		/* LoyProgramMapper.updatePgm */
+		UPDATE
+			LOY.LOY_PGM
+		SET
+			MODIFY_BY 				= #{modifyBy},
+			MODIFY_DATE	 		=  getDate(),
+			PGM_NM 					= #{pgmNm},
+			RID_CHNL_PR 			= #{chnlRid},
+			STAT_CD 					= #{pgmStat},
+			PAR_PGM_RID 			= #{parPgmRid},
+			REP_YN 					= #{repYn},
+			CONTENTS 				= #{contents},
+			JOIN_TYPE_CD 			= #{pgmType},
+			JOIN_SUB_TYPE_CD  = #{pgmSubType},
+			RID_CARD_KIND_PR  = #{cardKindPrRid},
+			RID_REP_PGM 			= #{repPgmRid}
+		WHERE 1 = 1
+			AND RID = #{rid}
+	</update>
+
+	<insert id="insertPgm" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmReqDto">
+		/* LoyProgramMapper.insertPgm */
+		INSERT INTO LOY.LOY_PGM (
+		         RID
+                ,PGM_NO
+                ,PGM_NM
+				,RID_CHNL_PR
+				,STAT_CD
+				,PAR_PGM_RID
+				,REP_YN
+				,CONTENTS
+				,JOIN_TYPE_CD
+				,JOIN_SUB_TYPE_CD
+                ,CREATE_BY
+                ,MODIFY_BY
+				,RID_CARD_KIND_PR
+				,RID_REP_PGM
+		) VALUES (
+       			 #{rid}
+                , LOY.FN_GET_PGM_NO()
+                ,#{pgmNm}
+                ,#{chnlRid}
+				,#{pgmStat}
+				,#{parPgmRid}
+				,#{repYn}
+				,#{contents}
+				,#{pgmType}
+				,#{pgmSubType}
+                ,#{createBy}
+                ,#{modifyBy}
+				,#{cardKindPrRid}
+				,#{repPgmRid}
+		)
+	</insert>
+
+	<update id="updatePgmDel" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmReqDto">
+		/* LoyProgramMapper.updatePgmDel */
+		UPDATE 
+			LOY.LOY_PGM
+		SET 
+			MODIFY_DATE	=  getDate()
+			,MODIFY_BY	= #{modifyBy}
+		    ,flag = flag + 1
+		 WHERE 
+		 	1 = 1
+		    AND RID = #{rid}
+	</update>
+    
+    <select id="selectPgmJoinPlcyList"  parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmJoinPlcyReqDto" 
+    									resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmJoinPlcyResDto">
+       	/* LoyProgramMapper.selectPgmJoinPlcyList */
+		SELECT
+		       A.RID          														AS   rid           		/* RID */
+		      ,A.CATE_CD      													AS   joinCate      	/* 가임 정책 속성 코드 */
+		      ,A.RANGE_CD     													AS   joinRange     	/* 가임 구간 코드 */
+		      ,A.COND_CD      													AS   joinCond      	/* 가임 조건 코드  */
+		      ,A.DATE_CD     	 												AS   joinDate      	/* 가임 날짜 구분 코드 */
+		      ,A.VAL          														AS   val          		/* 속성값 */
+		      ,CONVERT(varchar(10), A.MODIFY_DATE, 120) 		AS   modifyDate  	/* 수정일시 */
+		      ,EM1.NAME		  													AS   modifyBy     	/* 수정자 */
+		      ,${strColumn}
+   		FROM LOY.LOY_JOIN_PLCY A WITH (NOLOCK)
+        INNER JOIN COM.CRM_USER US1 WITH (NOLOCK) ON A.MODIFY_BY = US1.RID
+        INNER JOIN COM.EMPLOYEE EM1 WITH (NOLOCK) ON US1.ID_EMPLOYEE = EM1.ID
+        WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+			AND A.RID_PGM = #{pgmRid}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+   <select id="selectPgmJoinPlcy"   parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmJoinPlcyReqDto" 
+   									resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmJoinPlcyResDto">
+       	/* LoyProgramMapper.selectPgmJoinPlcy */
+       	SELECT
+		    A.RID          				AS   rid           				/* RID */
+		    ,A.CATE_CD      			AS   joinCate     			/* 가임 정책 속성 코드 */
+		    ,A.RANGE_CD     			AS   joinRange     			/* 가임 구간 코드 */
+		    ,A.COND_CD     			AS   joincond      			/* 가임 조건 코드  */
+		    ,A.DATE_CD      			AS   joinDate      			/* 가임 날짜 구분 코드 */
+		    ,A.VAL          				AS   val           				/* 속성값 */
+   		FROM 
+   			LOY.LOY_JOIN_PLCY A
+        WHERE 1=1
+			AND A.FLAG  = 1
+			AND A.RID_PGM =  #{pgmRid}
+			AND A.RID = #{rid}
+    </select>
+	
+	<insert id="insertPgmJoinPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmJoinPlcyReqDto">
+		/* LoyProgramMapper.insertPgmJoinPlcy */
+		 INSERT INTO LOY.LOY_JOIN_PLCY (
+				RID
+				,CREATE_BY
+				,MODIFY_BY
+				,RID_PGM
+				,CATE_CD
+				,RANGE_CD
+				,COND_CD
+				,VAL
+				,DATE_CD
+		) VALUES (
+				#{rid}
+				,#{createBy}
+				,#{modifyBy}
+				,#{pgmRid}
+				,#{joinCate}
+				,#{joinRange}
+				,#{joinCond}
+				,#{val}
+				,#{joinDate}
+		)
+	</insert>
+	
+	<update id="updatePgmJoinPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmJoinPlcyReqDto">
+		/* LoyProgramMapper.updatePgmJoinPlcy */
+		UPDATE
+			LOY.LOY_JOIN_PLCY
+		SET
+			MODIFY_BY 		= #{modifyBy},
+			MODIFY_DATE 	=  getDate(),
+			FLAG 				= 1,
+			CATE_CD 			= #{joinCate},
+			RANGE_CD 		= #{joinRange},
+			COND_CD 			= #{joinCond},
+			VAL 					= #{val},
+			DATE_CD 			= #{joinDate}
+		WHERE 
+			1=1
+			AND RID = #{rid}
+	</update>
+
+	<update id="updatePgmJoinPlcyDel" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmJoinPlcyReqDto">
+		/* LoyProgramMapper.updatePgmJoinPlcyDel */
+		UPDATE 
+			LOY.LOY_JOIN_PLCY
+		SET 
+			MODIFY_DATE	=  getDate()
+			, MODIFY_BY	= #{modifyBy}
+		    , FLAG		= 0
+		 WHERE 
+		 	1 = 1
+		   AND RID = #{rid}
+	</update>
+	
+	<select id="selectPgmPntPlcy"   parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmPntPlcyReqDto" 
+									resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmPntPlcyResDto">
+       	/* LoyProgramMapper.selectPgmPntPlcy */
+		SELECT
+			A.RID								AS rid			    /* RID */
+			,A.CALC_TYPE_CD		    	AS pntCalcType      /* 계산 방식 */
+			,A.ROUND_TYPE_CD  	    	AS pntRoundType     /* 절삭 방식 */
+			<!-- ,A.ROUND_NUM			AS roundNum		    /* 적립절삭자리수 */ -->
+            ,A.USE_RDM_SEQ_CD 	    AS pntUseRdmSeq     /* 차감 순서 */
+            ,A.USE_HUDL			    		AS useHudl	        /* 사용허들 */
+            ,A.USE_UNIT			    		AS useUnit	        /* 사용단위 */
+            ,A.USE_PER_MAX		    	AS usePerMax	    /* 1회 최대 사용 금액 */
+            ,A.USE_1DAY_MAX		    	AS use1DayMax       /* 1일 최대 사용 금액 */
+            ,A.USE_GIFT_RANGE_CD 	AS pntUseGiftRange  /* 선물 가능 범위 */
+           <!--  ,A.USE_GIFT_CANC_YN 	AS useGiftCancYn    /* 선물 취소 여부 */ -->
+            ,A.USE_PW_YN 					AS usePwYn       	/* 비밀번호 사용 여부 */
+            ,A.USE_MINUS_YN 			AS useMinusYn    	/* 마이너스 포인트 여부 */
+            ,A.USE_GIFT_MAX_AMT  	AS useGiftMaxAmt
+            ,A.RID_GIFT_OFR				AS ofrRid
+            ,lo.OFR_NM						AS ofrNm
+            , A.GIFT_END_TYPE_CD 		AS giftEndTypeCd
+			, A.RDM_CNCL_ET_DAY 		AS rdmCnclEtDay
+            , A.GIFT_FEE_CNT_AMT 		AS giftFeeCntAmt
+			, A.GIF_FEE_MILEAGE_AMT AS giftFeeMileageAmt
+		FROM
+			LOY.LOY_PNT_PLCY A WITH (NOLOCK)
+			LEFT OUTER JOIN LOY.LOY_OFR lo WITH (NOLOCK) ON lo.RID = A.RID_GIFT_OFR AND A.FLAG = 1
+		WHERE 1=1
+			AND A.FLAG  = 1
+			AND A.RID_PGM = #{pgmRid}
+    </select>
+    
+    <insert id="insertPgmPntPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmPntPlcyReqDto">
+		/* LoyProgramMapper.insertPgmPntPlcy */
+		 INSERT INTO LOY.LOY_PNT_PLCY (
+		            RID
+		            ,CREATE_BY
+		            ,MODIFY_BY
+		            ,RID_PGM
+		            ,CALC_TYPE_CD
+		            ,ROUND_TYPE_CD 
+		           <!--  ,ROUND_NUM	 -->
+		            ,USE_RDM_SEQ_CD
+		            ,USE_HUDL	
+		            ,USE_UNIT
+		            ,USE_PER_MAX	
+		            ,USE_1DAY_MAX
+		            ,USE_GIFT_RANGE_CD
+		            <!-- ,USE_GIFT_CANC_YN -->
+		            ,USE_PW_YN
+		            ,USE_MINUS_YN
+		            , USE_GIFT_MAX_AMT
+		            , RID_GIFT_OFR
+		            , GIFT_END_TYPE_CD
+		            , RDM_CNCL_ET_DAY
+		            , GIFT_FEE_CNT_AMT
+					, GIF_FEE_MILEAGE_AMT
+            	) VALUES (
+		            #{rid}
+		            ,#{createBy}
+		            ,#{modifyBy}
+		            ,#{pgmRid}
+		            ,#{pntCalcType}
+		            ,#{pntRoundType}
+		            <!-- ,#{roundNum} -->
+		            ,#{pntUseRdmSeq}
+		            ,#{useHudl}
+		            ,#{useUnit}
+		            ,#{usePerMax}
+		            ,#{use1DayMax}
+		            ,#{pntUseGiftRange}
+		            <!-- ,#{useGiftCancYn} -->
+		            ,#{usePwYn}
+		            ,#{useMinusYn}
+		            ,#{useGiftMaxAmt}
+		            ,#{ofrRid}
+		            , #{giftEndTypeCd}
+		            , #{rdmCnclEtDay}
+		            ,#{giftFeeCntAmt}
+		            ,#{giftFeeMileageAmt}
+		)
+	</insert>
+	
+	<update id="updatePgmPntPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmPntPlcyReqDto">
+		/* LoyProgramMapper.updatePgmPntPlcy */
+		UPDATE
+			LOY.LOY_PNT_PLCY
+		SET
+			CREATE_BY					= #{createBy}
+			,MODIFY_BY					= #{modifyBy}
+			,CREATE_DATE				=  getDate()
+			,MODIFY_DATE				=  getDate()
+			,FLAG				   	 		= 1
+            ,RID_PGM 			    		= #{pgmRid}
+            ,CALC_TYPE_CD				= #{pntCalcType}
+            ,ROUND_TYPE_CD  		= #{pntRoundType}
+            <!-- ,ROUND_NUM			= #{roundNum} -->
+            ,USE_RDM_SEQ_CD 		= #{pntUseRdmSeq}
+            ,USE_HUDL					= #{useHudl}
+            ,USE_UNIT					= #{useUnit}
+            ,USE_PER_MAX				= #{usePerMax}
+            ,USE_1DAY_MAX			= #{use1DayMax}
+            ,USE_GIFT_RANGE_CD 	= #{pntUseGiftRange}
+            <!-- ,USE_GIFT_CANC_YN 	= #{useGiftCancYn} -->
+            ,USE_PW_YN 				= #{usePwYn}
+            ,USE_MINUS_YN 			= #{useMinusYn}
+            , USE_GIFT_MAX_AMT 	= #{useGiftMaxAmt}
+            , RID_GIFT_OFR      		= #{ofrRid}
+           	, GIFT_END_TYPE_CD 	= #{giftEndTypeCd}
+			, RDM_CNCL_ET_DAY 	= #{rdmCnclEtDay}
+            , GIFT_FEE_CNT_AMT  	= #{giftFeeCntAmt}
+			, GIF_FEE_MILEAGE_AMT  = #{giftFeeMileageAmt}
+		WHERE 1=1
+			AND RID = #{rid}
+			AND RID_PGM = #{pgmRid}
+	</update>
+	
+	<update id="updatePgmPntPlcyDel" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmPntPlcyReqDto">
+		/* LoyProgramMapper.updatePgmMgtPlcyDel */
+		UPDATE 
+			LOY.LOY_PNT_PLCY
+		SET 
+			MODIFY_DATE	=  getDate()
+			, MODIFY_BY		= #{modifyBy}
+		    , FLAG				= 0
+		 WHERE 
+		 	1 = 1
+		   AND RID = #{rid}
+		   AND RID_PGM = #{pgmRid}
+	</update>
+    
+    <select id="selectPgmFmlyPlcy"  parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmFmlyPlcyReqDto" 
+    								resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmFmlyPlcyResDto">
+		/* LoyProgramMapper.selectPgmFmlyPlcy */
+		SELECT
+			 A.RID								AS rid			    	/* RID */
+			 ,A.MAX_NUM			    	AS maxNum      		/* 최대 인원수 */
+			 ,A.MIN_NUM  					AS minNum     		/* 최소 인원수 */
+			 ,A.RECR_DELAY_NUM	    AS recrDelayNum	/* 재가입 제한월 */
+			 ,A.PNT_SHARE_YN 	 		AS pntShareYn	    /* 포인트합산 사용여부 */
+			 ,A.TIER_SHARE_YN			AS tierShareYn	    /* 패밀리내 최고 등급 공유 */
+		FROM
+		 	LOY.LOY_FMLY_PLCY A
+		WHERE 1=1
+		 	AND A.FLAG  = 1
+		 	AND A.RID_PGM = #{pgmRid}
+	</select>
+		
+	<insert id="insertPgmFmlyPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmFmlyPlcyReqDto">
+		/* LoyProgramMapper.insertPgmFmlyPlcy */
+		INSERT INTO LOY.LOY_FMLY_PLCY (
+		     RID
+		     ,CREATE_BY
+		     ,MODIFY_BY
+		     ,RID_PGM
+		     ,MAX_NUM
+		     ,MIN_NUM
+		     ,RECR_DELAY_NUM
+		     ,PNT_SHARE_YN
+		     ,TIER_SHARE_YN
+		) VALUES (
+		     #{rid}
+		     ,#{createBy}
+		     ,#{modifyBy}
+		     ,#{pgmRid}
+		     ,#{maxNum}
+		     ,#{minNum}
+		     ,#{recrDelayNum}
+		     ,#{pntShareYn}
+		     ,#{tierShareYn}
+		)
+	</insert>
+		
+	<update id="updatePgmFmlyPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmFmlyPlcyReqDto">
+		/* LoyProgramMapper.updatePgmFmlyPlcy */
+		UPDATE
+		 	LOY.LOY_FMLY_PLCY
+		SET
+			 CREATE_BY				= #{createBy}
+			 ,MODIFY_BY				= #{modifyBy}
+			 ,CREATE_DATE			=  getDate()
+			 ,MODIFY_DATE			=  getDate()
+			 ,FLAG						= 1
+			 ,RID_PGM 				= #{pgmRid}
+			 ,MAX_NUM				= #{maxNum}
+			 ,MIN_NUM  				= #{minNum}
+			 ,RECR_DELAY_NUM	= #{recrDelayNum}
+			 ,PNT_SHARE_YN 	 	= #{pntShareYn}
+			 ,TIER_SHARE_YN		= #{tierShareYn}
+		WHERE 1=1
+		 	AND RID = #{rid}
+		 	AND RID_PGM = #{pgmRid}
+	</update>
+		
+	<update id="updatePgmFmlyPlcyDel" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmFmlyPlcyReqDto">
+		/* LoyProgramMapper.updatePgmFmlyPlcyDel */
+		UPDATE 
+			LOY.LOY_FMLY_PLCY
+		SET 
+			MODIFY_DATE	=  getDate()
+		   , MODIFY_BY		= #{modifyBy}
+		   , FLAG				= 0
+		WHERE 1 = 1
+		 	AND RID = #{rid}
+		 	AND RID_PGM = #{pgmRid}
+	</update>
+    
+    <select id="selectPgmMgtPlcyList"   parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmMgtPlcyReqDto" 
+    									resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmMgtPlcyResDto">
+        /* LoyProgramMapper.selectPgmMgtPlcyList */
+        SELECT
+        	A.RID						AS RID
+            ,A.RID_PGM 				AS pgmRid
+            ,A.CATE_CD 				AS mgtCate
+            ,A.CATE_SUB_CD 		AS mgtCateSub
+            ,A.RANGE_CD 			AS mgtRange
+            ,A.COND_CD 				AS mgtCond
+            ,A.DATE_CD 				AS mgtDate
+            ,A.VAL 						AS val
+            ,CONVERT(varchar(10), A.MODIFY_DATE, 120) AS modifyDate
+            ,EM1.NAME		  		AS modifyBy     /* 수정자 */
+            ,${strColumn}
+        FROM
+            LOY.LOY_MGT_PLCY A WITH (NOLOCK)
+	        LEFT OUTER JOIN COM.CRM_USER US1 WITH (NOLOCK) ON A.MODIFY_BY = US1.RID
+	        LEFT OUTER JOIN COM.EMPLOYEE EM1 WITH (NOLOCK) ON US1.ID_EMPLOYEE = EM1.ID
+        WHERE  ${strCondWhere}
+            AND ${strWhere}
+            AND A.FLAG  = 1
+            AND A.RID_PGM = #{pgmRid}
+        ORDER BY ${strOrderby}
+            ${strEndPaging}
+    </select>
+
+    <select id="selectPgmMgtPlcy"   parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmMgtPlcyReqDto" 
+    								resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmMgtPlcyResDto">
+        /* LoyProgramMapper.selectPgmMgtPlcy */
+        SELECT
+             A.RID							AS RID
+            ,A.CATE_CD 					AS mgtCate
+            ,A.CATE_SUB_CD 			AS mgtCateSub
+            ,A.RANGE_CD 				AS mgtRange
+            ,A.COND_CD 					AS mgtCond
+            ,A.DATE_CD 					AS mgtDate
+            ,A.VAL 							AS val
+        FROM
+            LOY.LOY_MGT_PLCY A
+        WHERE 1=1
+            AND A.FLAG  = 1
+            AND A.RID_PGM =  #{pgmRid}
+            AND A.RID = #{rid}
+    </select>
+
+    <insert id="insertPgmMgtPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmMgtPlcyReqDto">
+        /* LoyProgramMapper.insertPgmMgtPlcy */
+        INSERT INTO LOY.LOY_MGT_PLCY (
+                RID
+                ,CREATE_BY
+                ,MODIFY_BY
+                ,RID_PGM
+                ,CATE_CD
+                ,CATE_SUB_CD
+                ,RANGE_CD
+                ,COND_CD
+                ,DATE_CD
+                ,VAL 
+        ) VALUES (
+                #{rid}
+                ,#{createBy}
+                ,#{modifyBy}
+                ,#{pgmRid}
+                ,#{mgtCate}
+                ,#{mgtCateSub}
+                ,#{mgtRange}
+                ,#{mgtCond}
+                ,#{mgtDate}
+                ,#{val}
+        )
+    </insert>
+
+    <update id="updatePgmMgtPlcy" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmMgtPlcyReqDto">
+        /* LoyProgramMapper.updatePgmMgtPlcy */
+            UPDATE
+                LOY.LOY_MGT_PLCY
+            SET
+                CREATE_BY 		= #{createBy},
+                MODIFY_BY 		= #{modifyBy},
+                CREATE_DATE 	=  getDate(),
+                MODIFY_DATE 	=  getDate(),
+                FLAG 				= 1,
+                RID_PGM 			= #{pgmRid},
+                CATE_CD 			= #{mgtCate},
+                CATE_SUB_CD   = #{mgtCateSub},
+                RANGE_CD 		= #{mgtRange},
+                COND_CD 			= #{mgtCond},
+                DATE_CD 			= #{mgtDate},
+                VAL = #{val}
+            WHERE 1=1
+                AND RID = #{rid}
+    </update>
+
+    <update id="updatePgmMgtPlcyDel" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmMgtPlcyReqDto">
+        /* LoyProgramMapper.updatePgmMgtDel */
+            UPDATE 
+            	LOY.LOY_MGT_PLCY
+            SET 
+            	MODIFY_DATE	=  getDate()
+                ,MODIFY_BY	= #{modifyBy}
+                ,FLAG		= 0
+            WHERE 1 = 1
+            AND RID = #{rid}
+    </update>
+    
+    <select id="selectPgmClubPlcyList"  parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto" 
+    									resultType="com.icignal.loyalty.club.dto.response.LoyClubListResDto">
+        /* LoyProgramMapper.selectPgmClubPlcyList */
+			SELECT
+				A.RID															 	AS RID
+				,A.CLUB_NO 													 	AS clubNo
+				,A.CLUB_NM 													 	AS clubNm
+				,A.CTG_CD 													 	AS ctgCd
+				,A.CLUB_STAT_CD											 	AS clubStatCd
+				,A.ATCH_YN													 	AS atchYn
+				,CONVERT(varchar(10), A.MODIFY_DATE, 120) 	AS MODIFYDATE   /* 수정일시 */
+		      	,EM1.NAME		  											 	AS MODIFYBY     /* 수정자 */
+		      	,${strColumn}
+			FROM
+				LOY.LOY_CLUB A WITH (NOLOCK)
+	        LEFT OUTER JOIN COM.CRM_USER US1 WITH (NOLOCK) ON A.MODIFY_BY = US1.RID
+	        LEFT OUTER JOIN COM.EMPLOYEE EM1 WITH (NOLOCK) ON US1.ID_EMPLOYEE = EM1.ID
+	        WHERE  ${strCondWhere}
+				AND ${strWhere}
+				AND A.FLAG  = 1
+				AND A.RID_PGM = #{ridPgm}
+			ORDER BY ${strOrderby}
+			${strEndPaging}
+    </select>
+    
+	<select id="selectPgmChnlList"  parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlReqDto" 
+									resultType="com.icignal.loyalty.channel.dto.response.LoyChnlResDto">
+		/* LoyProgramMapper.selectPgmChnlList */
+			SELECT
+			    B.CHNL_NO           										 		AS chnlNo
+			    ,B.CHNL_NM          										 		AS chnlNm
+			    ,B.CHNL_TYPE_CD     										 		AS chnlTypeCd
+			    ,A.RID							  								 		AS rid
+			    ,A.PNT_ACRL_YN      										 		AS pntAcrlYn
+			    ,A.PNT_RDM_YN       										 		AS pntRdmYn
+			    ,CONVERT(varchar(10), A.MODIFY_DATE, 120) 		AS MODIFYDATE  /* 수정일시 */
+			    ,EM1.NAME		  													AS MODIFYBY   /* 수정자 */
+			    ,${strColumn}
+			FROM
+			    LOY.LOY_CHNL_PGM A WITH (NOLOCK)
+			INNER JOIN  LOY.LOY_CHNL B WITH (NOLOCK) ON A.RID_CHNL = B.RID
+	        LEFT OUTER JOIN COM.CRM_USER US1 WITH (NOLOCK) ON A.MODIFY_BY = US1.RID
+	        LEFT OUTER JOIN COM.EMPLOYEE EM1 WITH (NOLOCK) ON US1.ID_EMPLOYEE = EM1.ID
+			WHERE  ${strCondWhere}
+			    AND ${strWhere}
+			    AND A.FLAG  = 1
+			    AND A.RID_PGM = #{ridPgm}
+			ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectBLPlcyList"   parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmBLPlcyReqDto" 
+									resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmBLPlcyResDto">
+	/* LoyProgramMapper.selectBLPlcyList */
+			SELECT    lfm.FRAUD_NO												AS blCd
+						, lfm.FRAUD_NM												AS blNm
+						, lfm.FRAUD_TYPE_CD										AS fraudTypeCd
+						, lfm.FRAUD_SUB_TYPE_CD								AS fraudSubTypeCd
+						, lfm.STAT_CD													AS statCd
+						, em.name															AS modifyBy
+						, CONVERT(varchar, lfm.MODIFY_DATE, 120) 		AS modifyDate
+						, lfm.RID															AS rid
+						,  ${strColumn}
+	FROM LOY.LOY_FRAUD_MST lfm WITH (NOLOCK)
+	LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lfm.RID_PGM = lp.RID AND lp.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON lfm.MODIFY_BY = cu.RID AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE em WITH (NOLOCK) ON cu.ID_EMPLOYEE = em.ID AND em.FLAG = 1
+	WHERE lfm.flag  = 1
+	AND lp.RID = #{pgmRid}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+
+    <select id="selectPgmHistList"  parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmHistReqDto" 
+    								resultType="com.icignal.loyalty.loyprogram.dto.response.LoyPgmHistResDto">
+        /* LoyProgramMapper.selectPgmHistList */
+        SELECT 
+		     A.RID                 										AS rid
+			,A.TYPE_CD             									AS histType
+			,A.CHG_COL             									AS chgCol
+			,A.CHG_CATE            									AS chgCate
+			,A.CHG_BF_VAL          								AS chgBfVal
+			,A.CHG_AF_VAL          								AS chgAfVal
+			,CONVERT(varchar, A.MODIFY_DATE, 120) 	AS MODIFYDATE
+			,EM.NAME    	       										AS MODIFYBY   
+			,${strColumn}
+        FROM LOY.LOY_PGM_CHG_HIST A WITH (NOLOCK)
+        LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.MODIFY_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+		WHERE ${strSVCType}
+		AND ${strWhere}
+		AND A.RID_PGM =  #{pgmRid}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+		
+	<insert id="insertPgmHist" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmHistReqDto">
+		INSERT INTO
+			LOY.LOY_PGM_CHG_HIST (
+			RID,
+			RID_PGM,
+			TYPE_CD,
+			CHG_COL,
+			CHG_CATE,
+			CHG_BF_VAL,
+			CHG_AF_VAL,
+			CREATE_BY,
+			MODIFY_BY
+		) VALUES (
+            #{rid},
+			#{pgmRid},
+			#{histType},
+			#{chgCol},
+			#{chgCate},
+			#{chgBfVal},
+			#{chgAfVal},
+			#{createBy},
+			#{modifyBy}
+		)
+	</insert>
+	
+	<select id="selectCustItemConfList" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto"
+															resultType="com.icignal.loyalty.loyprogram.dto.response.LoyCustItemConfListResDto">
+	/* LoyProgramMapper.selectCustItemConfList */
+	SELECT lcic.CUST_TYPE_CD 			 					  AS custTypeCd
+			, lcic.FIELD_NM 											  AS fieldNm
+			, lcic.FIELD_DESC 										  AS fieldDesc
+			, lcic.REQUIRED_YN 									  AS requiredYn
+			, lcic.ENCODE_YN 										  AS encodeYn
+			, lcic.FIELD_VAL_CD 									  AS fieldValCdNm
+			, lcic.GRP_CD_NM 										  AS gpCdNm
+			, CONVERT(varchar, lcic.CREATE_DATE, 120) AS createDate
+			, lcic.RID AS rid
+			, ${strColumn}
+	FROM loy.LOY_CUST_ITEM_CONF lcic
+	WHERE lcic.FLAG = 1
+	AND lcic.RID_PGM = #{ridPgm}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustItemConfDetail" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto"
+																resultType="com.icignal.loyalty.loyprogram.dto.response.LoyCustItemConfResDto">
+	/* LoyProgramMapper.selectCustItemConfDetail */
+	SELECT 
+		  lcic.CUST_TYPE_CD 									AS custTypeCd
+		, lcic.FIELD_NM 												AS fieldNm
+		, lcic.FIELD_DESC 											AS fieldDesc
+		, lcic.REQUIRED_YN 										AS requiredYn
+		, lcic.ENCODE_YN 											AS encodeYn
+		, lcic.FIELD_VAL_CD 										AS fieldValCd
+		, lcic.GRP_CD_NM 											AS gpCdNm
+		, lp.RID AS pgmRid
+		, lp.PGM_NM AS pgmNm
+		, lp.PGM_NO AS pgmNo
+		, lcic.RID AS rid
+		, (SELECT DISTINCT cc.GROUP_NAME FROM  COM.COMM_CODE cc WHERE cc.GROUP_CODE = lcic.GRP_CD_NM AND cc.FLAG = 1) AS gpNm 
+		, CONVERT(varchar, lcic.create_date, 120) as createDate
+	FROM 
+		loy.LOY_CUST_ITEM_CONF lcic
+	JOIN LOY.LOY_PGM lp ON lcic.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE 
+		lcic.FLAG = 1
+		AND lcic.RID = #{rid}
+	</select>
+	
+	<insert id="insertCustItemConfDetail" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto">
+	/* LoyProgramMapper.insertCustItemConfDetail */
+	INSERT INTO loy.LOY_CUST_ITEM_CONF (
+						RID
+						, CREATE_BY
+						, MODIFY_BY
+						, RID_PGM
+						, CUST_TYPE_CD
+						, FIELD_NM
+						, FIELD_DESC
+						, REQUIRED_YN
+						, ENCODE_YN
+						, FIELD_VAL_CD 
+						, GRP_CD_NM
+	) VALUES (
+						#{rid}
+						 , #{empId}
+						 , #{empId}
+						 , #{ridPgm}
+						 , #{custTypeCd}
+						 , #{fieldNm}
+						 , #{fieldDesc}
+						 , #{requiredYn}
+						 , #{encodeYn}
+						 , #{fieldValCd}
+						 , #{gpCdNm}
+					)
+	</insert>
+	
+	<update id="updateCustItemConfDetail" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto">
+	/* LoyProgramMapper.updateCustItemConfDetail */
+	UPDATE 
+		loy.LOY_CUST_ITEM_CONF
+	SET 
+		  MODIFY_BY 		= #{empId}
+		, MODIFY_DATE 		=  getDate()
+		, CUST_TYPE_CD 	= #{custTypeCd}
+		, FIELD_NM 			= #{fieldNm}
+		, FIELD_DESC 		= #{fieldDesc}
+		, REQUIRED_YN 	= #{requiredYn}
+		, ENCODE_YN 		= #{encodeYn}
+		, FIELD_VAL_CD 	= #{fieldValCd} 
+		, GRP_CD_NM 		= #{gpCdNm}
+	WHERE 
+		RID = #{rid}
+	</update>
+	
+	<update id="deleteCustItemConfDetail" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto">
+	/* LoyProgramMapper.deleteCustItemConfDetail */
+	UPDATE 
+		loy.LOY_CUST_ITEM_CONF
+	SET 
+		MODIFY_BY 		= #{empId}
+		, MODIFY_DATE =  getDate()
+		, FLAG 				= 0
+	WHERE 
+		RID 			= #{rid}
+	</update>
+	
+    <select id="selectItemCodeList" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO"
+   										 resultType="com.icignal.systemmanagement.commcode.dto.response.MKTCommonCodeResponseDTO">
+   	/* LoyProgramMapper.selectItemCodeList */
+	 SELECT 
+	 			ID 					as codeId,
+		        CODE_NAME		as codeName,
+		        MARK_NAME 		as markName,
+		        PAR_CODE_ID 	as parCodeId,
+		        TYPE 				as type,
+		        SEQ 					as seq,
+		        ${strColumn}
+	 FROM 
+	 	COM.COMM_CODE
+	 WHERE ${strWhere}
+	     AND FLAG = 1
+	     AND GROUP_CODE = #{groupCode}
+	ORDER BY 
+		${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="checkLoyPgmCnt" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyPgmReqDto"
+    												resultType="java.lang.Integer">
+    /* LoyProgramMapper.checkLoyPgmCnt */
+    SELECT  
+    	COUNT(*)
+	FROM 
+		LOY.LOY_PGM lp
+	WHERE 
+		lp.FLAG  = 1 
+		AND lp.REP_YN = 'Y'
+	<if test="rid != null">
+		AND NOT lp.RID = #{rid}
+    </if>
+    </select>
+    
+   	<select id="selectGroupCodeListPop" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExGridReqDto" 
+															resultType="com.icignal.systemmanagement.commcode.dto.response.SystemCommCodeExGridResDto">
+    /* LoyProgramMapper.selectGroupCodeListPop */
+    SELECT   
+    	a.GROUP_CODE 			AS groupCode
+    	,a.GROUP_NAME  			AS groupName
+    	,a.LANG 						AS lang
+    	,a.TYPE 							AS type
+        ,${strColumn}
+    FROM(
+	        SELECT 
+	        		DISTINCT GROUP_CODE
+					, GROUP_NAME			
+				    , LANG					
+		            , TYPE
+			FROM 
+					COM.COMM_CODE
+	        WHERE 
+	        	${strWhere}
+	            AND 1=1
+	            AND FLAG = 1
+			ORDER BY ${strOrderby}
+			) a
+	${strEndPaging}
+    </select>
+    
+    <select id="checkCustItemVal" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto"
+    												resultType="java.lang.Integer">
+    /* LoyProgramMapper.checkCustItemVal */
+    SELECT 
+    	COUNT(*)
+    FROM 
+    	LOY.LOY_CUST_ITEM_CONF
+    WHERE 
+    	FLAG = 1
+    	AND RID_PGM = #{ridPgm}
+    	AND FIELD_NM = #{fieldNm}
+    	AND NOT RID = #{rid}
+    </select>
+    
+</mapper>

@@ -1,0 +1,663 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.club.mapper.LoyClubMasterMapper">
+
+	<select id="selectClubList" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto"
+											resultType="com.icignal.loyalty.club.dto.response.LoyClubListResDto">
+	/* LoyClubMasterMapper.selectClubList */
+	SELECT lp.PGM_NM		AS pgmNm
+				, lc.CLUB_NO		AS clubNo
+				, lc.CLUB_NM	AS clubNm
+				, lc.CTG_CD		AS ctgCd
+				, lc.CLUB_STAT_CD	AS clubStatCd
+				, lc.ATCH_YN		AS atchYn
+				, e.NAME			AS createBy
+				, TO_CHAR(lc.CREATE_DATE , 'YYYY-MM-DD hh24:mi:ss')	AS createDate
+				, lc.RID 		AS rid
+				, ${strColumn}
+	FROM loy.LOY_CLUB lc
+	JOIN loy.LOY_PGM lp ON lc.RID_PGM = lp.RID AND lp.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER u ON lc.CREATE_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE ${strCondWhere}
+			   AND  ${strWhere}
+			   AND  lc.FLAG = 1
+	ORDER BY 	${strOrderby}
+		  			${strEndPaging}
+	</select>
+	
+	<select id="selectClubAttrList" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto"
+													resultType="com.icignal.loyalty.club.dto.response.LoyClubAttrListResDto">
+	/* LoyClubMasterMapper.selectClubAttrList */
+	SELECT lca.rid       					 	AS rid
+				, lca.FIELD_TYPE_CD		AS fieldTypeCd
+				, lca.CODE						AS code
+				, lca.VAL						AS val
+				, e.NAME						AS modifyBy
+				, TO_CHAR(lca.MODIFY_DATE , 'YYYY-MM-DD hh24:mi:ss')	AS modifyDate
+				, ${strColumn}
+	FROM loy.LOY_CLUB_ATTR lca
+	LEFT OUTER JOIN COM.CRM_USER u ON lca.MODIFY_BY  = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE ${strCondWhere}
+			   AND  ${strWhere}
+			   AND  lca.FLAG = 1
+			   AND  lca.RID_CLUB = #{rid}
+	ORDER BY 	${strOrderby}
+		  			${strEndPaging}
+	</select>
+	
+	<select id="selectClubDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubDetailReqDto"
+													resultType="com.icignal.loyalty.club.dto.response.LoyClubDetailResDto">
+	/* LoyClubMasterMapper.selectClubDetail */
+	SELECT lc.CLUB_NO AS clubNo
+				, lc.CLUB_NM AS clubNm
+				, lc.CTG_CD AS ctgCd
+				, lc.CLUB_STAT_CD AS clubStatCd
+				, lc.ATCH_YN AS atchYn
+				, lc.PUBLIC_YN AS publicYn
+				, lc.REJOIN_LIMIT_YN AS rejoinLimitYn
+				, lc.REJOIN_LIMIT_DAYCNT AS rejoinLimitDaycnt
+				, lp.PGM_NM AS pgmNm
+				, lc.RID_PGM AS ridPgm
+				, lc.PERIOD_MM AS periodMm
+				, e.NAME AS createBy
+				, TO_CHAR(lc.CREATE_DATE, 'YYYY-MM-DD') AS createDate
+				, lc.ETC AS etc
+	FROM loy.LOY_CLUB lc
+	LEFT OUTER JOIN loy.LOY_PGM lp ON lc.RID_PGM = lp.RID AND lp.FLAG = 1 
+	LEFT OUTER JOIN COM.CRM_USER u ON lc.CREATE_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE lc.FLAG =1
+	AND lc.RID = #{rid}
+	</select>
+	
+	<insert id="insertClubDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubDetailReqDto">
+	/* LoyClubMasterMapper.insetClubDetail */
+	INSERT INTO loy.LOY_CLUB(
+				RID
+				, CREATE_BY
+				, MODIFY_BY
+				, CREATE_DATE
+				, MODIFY_DATE
+				, FLAG
+				, CLUB_NO
+				, CLUB_NM
+				, CTG_CD
+				, ETC
+				, CLUB_STAT_CD
+				, PUBLIC_YN
+				, ATCH_YN
+				, REJOIN_LIMIT_YN
+				, REJOIN_LIMIT_DAYCNT
+				, PERIOD_MM
+				, RID_PGM
+				)
+	VALUES(
+				#{rid}
+				, #{empId}
+				, #{empId}
+				, SYSDATE
+				, SYSDATE
+				, 1
+				, (SELECT loy.FN_GET_CLUB_NO() FROM DUAL)
+				, #{clubNm}
+				, #{ctgCd}
+				, #{etc}
+				, #{clubStatCd}
+				, #{publicYn}
+				, #{atchYn}
+				, #{rejoinLimitYn}
+				, #{rejoinLimitDaycnt}
+				, #{periodMm}
+				, #{ridPgm}
+				)
+	</insert>
+	
+	<update id="updateClubDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubDetailReqDto">
+	/* LoyClubMasterMapper.updateClubDetail */
+	UPDATE LOY.LOY_CLUB
+	SET 
+		 MODIFY_BY = #{empId} 
+		, MODIFY_DATE = SYSDATE
+		, CLUB_NM = #{clubNm}
+		, CTG_CD =  #{ctgCd}
+		, CLUB_STAT_CD = #{clubStatCd}
+		, PUBLIC_YN = #{publicYn}
+		, ATCH_YN = #{atchYn}
+		, REJOIN_LIMIT_YN = #{rejoinLimitYn}
+		, REJOIN_LIMIT_DAYCNT = #{rejoinLimitDaycnt}
+		, PERIOD_MM = #{periodMm}
+		, RID_PGM = #{ridPgm}
+		, ETC = #{etc}
+	WHERE RID = #{rid}
+	</update>
+	
+	<update id="deleteClub" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto">
+	/* LoyClubMasterMapper.deleteClub */
+	UPDATE LOY.LOY_CLUB
+	SET
+		MODIFY_BY = #{empId} 
+		, MODIFY_DATE = SYSDATE
+		, flag = flag + 1
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectClubAttrDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubAttrDetailReqDto"
+														resultType="com.icignal.loyalty.club.dto.response.LoyClubDetailResDto">
+	/* LoyClubMasterMapper.selectClubAttrDetail */
+	SELECT lca.FIELD_TYPE_CD AS fieldTypeCd
+				, lca.REQ_YN 			AS reqYn
+				, lca.CODE 				AS code
+				, lca.VAL 				AS val
+				, lca.REQ_YN 				AS reqYn
+				, e.NAME 	AS createBy
+				, TO_CHAR(lca.CREATE_DATE, 'YYYY-MM-DD hh24:mi:ss') AS createDate
+	FROM loy.LOY_CLUB_ATTR lca
+	LEFT OUTER JOIN COM.CRM_USER u ON lca.CREATE_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE RID_CLUB = #{parRid}
+	AND lca.RID = #{rid}
+	AND lca.FLAG = 1
+	</select>
+	
+	<insert id="insertClubAttrDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubDetailReqDto">
+	/* LoyClubMasterMapper.insertClubAttrDetail */
+	INSERT INTO loy.LOY_CLUB_ATTR(
+					  RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_CLUB
+					, FIELD_TYPE_CD
+					, CODE
+					, VAL
+					, REQ_YN
+	)VALUES(
+					#{rid}
+					, #{empId}
+					, #{empId}
+					, SYSDATE
+					, SYSDATE
+					, 1
+					, #{ridClub}
+					, #{fieldTypeCd}
+					, #{code}
+					, #{val}
+					, #{reqYn}
+				)
+	</insert>
+	
+	<update id="updateClubAttrDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubAttrDetailReqDto">
+	/* LoyClubMasterMapper.updateClubAttrDetail */
+	UPDATE LOY.LOY_CLUB_ATTR 
+	SET
+			MODIFY_BY = #{empId}
+			, MODIFY_DATE = SYSDATE
+			, FIELD_TYPE_CD = #{fieldTypeCd}
+			, REQ_YN = #{reqYn}
+			, CODE = #{code}
+			, val = #{val}
+	WHERE RID = #{rid}
+	</update>
+	
+	<update id="deleteClubAttr" parameterType="com.icignal.loyalty.club.dto.request.LoyClubAttrDetailReqDto">
+	/* LoyClubMasterMapper.updateClubAttrDetail */
+	UPDATE LOY.LOY_CLUB_ATTR 
+	SET
+			MODIFY_BY = #{empId}
+			, MODIFY_DATE = SYSDATE
+			, flag = flag + 1
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectClubOfferList" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto"
+													resultType="com.icignal.loyalty.club.dto.response.LoyClubOfferListResDto">
+	/* LoyClubMasterMapper.selectClubOfferList */
+      SELECT lco.RID AS rid
+			, lo.OFR_NO AS ofrNo
+			, lo.OFR_NM AS ofrNm
+			, lo.OFR_TYPE AS ofrTypeCd
+			, lco.BNFT_TYPE_CD AS bnftTypeCd
+			, lco.OFR_AMT AS ofrAmt
+			, lco.ACRL_CYCLE_TYPE_CD AS acrlCycleTypeCd
+			, e.NAME AS modifyBy
+			, TO_CHAR(lco.MODIFY_DATE, 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+			, ${strColumn}
+	FROM loy.LOY_CLUB_OFFER lco
+	JOIN loy.LOY_OFR lo ON lco.RID_OFR = lo.RID AND lo.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER u ON lco.MODIFY_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE ${strCondWhere}
+			   AND ${strWhere}
+			   AND lco.RID_CLUB = #{rid}
+			   AND lco.FLAG = 1
+	ORDER BY 	${strOrderby}
+		  			${strEndPaging}
+	</select>
+	
+	<insert id="insertClubOfferDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubOfferDetailReqDto">
+	/* LoyClubMasterMapper.insertClubOfferDetail */
+	INSERT INTO LOY.LOY_CLUB_OFFER(
+					  RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_CLUB
+					, RID_OFR
+					, BNFT_TYPE_CD
+					, OFR_AMT
+					, ACRL_CYCLE_TYPE_CD
+	)VALUES( 
+					#{rid}
+					, #{empId}
+					, #{empId}
+					, SYSDATE
+					, SYSDATE
+					, 1
+					, #{parRid}
+					, #{ridOfr}
+					, #{bnftTypeCd}
+					, #{ofrAmt}
+					, #{acrlCycleTypeCd}
+				)
+	</insert>
+	
+	<update id="updateClubOfferDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubOfferDetailReqDto">
+	/* LoyClubMasterMapper.updateClubOfferDetail */
+	UPDATE LOY_CLUB_OFFER
+	SET 
+			MODIFY_BY = #{empId}
+			, MODIFY_DATE = SYSDATE
+			, RID_OFR = #{ridOfr}
+			, BNFT_TYPE_CD = #{bnftTypeCd}
+			, OFR_AMT = #{ofrAmt}
+			, ACRL_CYCLE_TYPE_CD = #{acrlCycleTypeCd}
+	WHERE RID = #{rid}
+	</update>
+	
+	<update id="deleteClubOffer" parameterType="com.icignal.loyalty.club.dto.request.LoyClubOfferDetailReqDto">
+	/* LoyClubMasterMapper.deleteClubOffer */
+	UPDATE LOY_CLUB_OFFER
+	SET 
+			MODIFY_BY = #{empId}
+			, MODIFY_DATE = SYSDATE
+			, flag = flag + 1
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectClubOfferDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubOfferDetailReqDto"
+														resultType="com.icignal.loyalty.club.dto.response.LoyClubDetailResDto">
+	/* LoyClubMasterMapper.selectClubOfferDetail */
+      SELECT    lo.OFR_NO AS ofrNo
+					, lo.OFR_NM AS ofrNm
+					, lo.OFR_TYPE AS ofrTypeCd
+					, lco.BNFT_TYPE_CD AS bnftTypeCd
+					, lco.OFR_AMT AS ofrAmt
+					, lco.ACRL_CYCLE_TYPE_CD AS acrlCycleTypeCd
+					, lco.RID_OFR AS ridOfr
+	FROM loy.LOY_CLUB_OFFER lco
+	JOIN loy.LOY_OFR lo ON lco.RID_OFR = lo.RID AND lo.FLAG = 1
+	WHERE lco.FLAG = 1
+		AND lco.RID = #{rid}
+	</select>
+	
+	<select id="selectClubMbrList" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto"
+													resultType="com.icignal.loyalty.club.dto.response.LoyClubMbrListResDto">
+	/* LoyClubMasterMapper.selectClubMbrList */
+	SELECT lm.MBR_NO AS mbrNo
+				, lc.CUST_NM AS custNm
+				, lc.HHP AS hhp
+				, lcm.STAT_CD AS statCd
+				, (SELECT FILE_P_NM 
+					FROM LOY.LOY_CLUB_MBR_ATTR 
+				   WHERE RID_CLUB_MBR = lcm.RID
+				   	 AND FILE_P_NM IS NOT NULL) AS fileName
+				, (SELECT FILE_L_NM
+					FROM LOY.LOY_CLUB_MBR_ATTR 
+				   WHERE RID_CLUB_MBR = lcm.RID
+				   	 AND FILE_P_NM IS NOT NULL) AS fileLName
+				, (SELECT VAL 
+					FROM LOY.LOY_CLUB_MBR_ATTR 
+				   WHERE RID_CLUB_MBR = lcm.RID
+				   	 AND FILE_P_NM IS NOT NULL) AS path
+				, TO_CHAR(lcm.CREATE_DATE, 'YYYY-MM-DD') AS createDate
+				, TO_CHAR(lcm.PROCESS_DATE, 'YYYY-MM-DD') AS processDate
+				, TO_CHAR(lcm.VALID_START_DATE, 'YYYY-MM-DD') AS validStartDate
+				, TO_CHAR(lcm.VALID_END_DATE, 'YYYY-MM-DD') AS validEndDate
+				, e.NAME AS modifyBy
+				, lcm.RID AS rid
+				, ${strColumn}
+	FROM LOY.LOY_CLUB_MBR lcm
+	JOIN LOY.LOY_MBR lm ON lcm.RID_MBR = lm.RID AND lm.FLAG = 1
+	JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER u ON lcm.MODIFY_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE ${strWhere}
+		AND ${strCondWhere}
+		<if test="startDt != null and endDt != null">
+		AND lcm.CREATE_DATE BETWEEN #{startDt} AND #{endDt}
+		</if>
+		AND lcm.FLAG = 1
+		AND lcm.RID_CLUB = #{rid}
+	ORDER BY ${strOrderby}
+		  			${strEndPaging}
+	</select>
+	
+	<select id="selectClubAttrInMbr" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto"
+													resultType="com.icignal.loyalty.club.dto.response.LoyClubAttrListResDto">
+	/* LoyClubMasterMapper.selectClubAttrInMbr */
+	SELECT lca.rid       					 	AS rid
+				, lca.FIELD_TYPE_CD		AS fieldTypeCd
+				, lca.CODE						AS code
+				, lca.VAL						AS val
+				, lca.REQ_YN 				AS reqYn
+				, e.NAME						AS modifyBy
+				, TO_CHAR(lca.MODIFY_DATE , 'YYYY-MM-DD hh24:mi:ss')	AS modifyDate
+				, ${strColumn}
+	FROM loy.LOY_CLUB_ATTR lca
+	LEFT OUTER JOIN COM.CRM_USER u ON lca.MODIFY_BY  = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE  lca.FLAG = 1
+		AND  lca.RID_CLUB = #{rid}
+	ORDER BY  lca.FIELD_TYPE_CD	
+	</select>
+	
+	<select id="selectMbrListPop" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto" 
+												resultType="com.icignal.common.base.dto.response.LoyMbrListPopResDto">
+	/* LoyClubMasterMapper.selectMbrListPop */
+	SELECT lmm.MBR_NO AS mbrNo
+			, lc.CUST_NM AS custNm
+			, lc.HHP AS unMaskHhp
+			, lc.EMAIL AS unMaskEmail
+			, lc.CUST_NM AS unMaskCustNm
+			, lc.HHP AS hhp
+			, lc.EMAIL AS email
+			, lmm.MBR_TYPE_CD AS mbrTypeCd
+			, lmm.MBR_STAT_CD AS mbrStatCd
+			<!-- , TO_CHAR(lc.SBSC_DATE, 'YYYY-MM-DD') AS sbscDate -->
+			<!-- , lc.RID_SBSC_CHNL AS ridSbscChnl -->
+			<!-- , lchnl.CHNL_NM AS chnlNm -->
+			, TO_CHAR(lmm.CREATE_DATE, 'YYYY-MM-DD') AS createDate
+			, lmm.RID AS rid
+			, lc.RID	AS custRid
+			, ${strColumn}
+	FROM loy.LOY_MBR lmm
+	JOIN loy.LOY_CUST lc ON lmm.RID_CUST = lc.RID AND lc.FLAG = 1
+	<!-- LEFT OUTER JOIN loy.LOY_CHNL lchnl ON lc.RID_SBSC_CHNL = lchnl.RID AND lchnl.FLAG = 1 -->
+	WHERE ${strWhere}
+		AND ${strCondWhere}
+		AND lmm.FLAG = 1
+		<if test="ridPgm != null and ridPgm != ''">
+		AND lmm.RID_PGM = #{ridPgm}
+		</if>
+		<!-- <if test="pgmNo != null and pgmNo != ''">
+		AND lmm.RID_PGM = SELECT RID FROM LOY.LOY_PGM WHERE PGM_NO = #{pgmNo}
+		</if> -->
+	ORDER BY ${strOrderby}
+		  			${strEndPaging} 
+	</select>
+	
+    <select id="clearMaskMbrNew" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto" 
+												resultType="com.icignal.common.base.dto.response.LoyMbrListPopResDto">
+	/* LoyClubMasterMapper.clearMaskMbrNew */
+	SELECT lc.CUST_NM	AS custNm,
+			lc.HHP		AS hhp,
+			lc.EMAIL	AS email
+	FROM loy.LOY_MBR lm
+	JOIN loy.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	WHERE lm.RID = #{rid}
+	</select> 
+	
+	<insert id="insertClubMbr" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto">
+	/* LoyClubMasterMapper.insertClubMbr */
+	INSERT INTO LOY.LOY_CLUB_MBR(
+				RID
+				, CREATE_BY
+				, MODIFY_BY
+				, CREATE_DATE
+				, MODIFY_DATE
+				, FLAG
+				, RID_CLUB
+				, RID_MBR
+				, STAT_CD
+				, PROCESS_DATE
+				, VALID_START_DATE
+				, VALID_END_DATE
+				, SECSN_RESN_CD
+				, SECSN_RESN_ETC
+	)VALUES(
+				#{ridClubMbr}
+				, #{empId}
+				, #{empId}
+				, SYSDATE
+				, SYSDATE
+				, 1
+				, #{ridClub}
+				, #{ridMbr}
+				, #{statCd}
+				, #{processDate}
+				, #{validStartDate}
+				, #{validEndDate}
+				, #{secsnResnCd}
+				, #{secsnResnEtc}
+			)
+	</insert>
+	
+	<insert id="insertClubMbrAttrDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto">
+	/* LoyClubMasterMapper.insertClubMbrAttrDetail */
+		<foreach collection="mbrAttrList" item="item" index="index"   separator="  " open="INSERT ALL " close="SELECT * FROM DUAL">
+		INTO LOY.LOY_CLUB_MBR_ATTR(
+					RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_CLUB_MBR
+					, RID_ATTR
+					, VAL
+					, FILE_P_NM
+					, FILE_L_NM
+		) VALUES(
+					com.getNewId('')
+					, #{empId}
+					, #{empId}
+					, SYSDATE
+					, SYSDATE
+					, 1
+					, #{ridClubMbr}
+					, #{item.ridAttr}
+					, #{item.val}
+					, #{item.filePName}
+					<if test="item.filePName != null">
+					, com.getNewId('')
+					</if>
+					<if test="item.filePName == null">
+					, #{item.fileLName}
+					</if>
+					)
+		</foreach>
+	</insert>
+	
+	<update id="updateClubMbrDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto">
+	/* LoyClubMasterMapper.updateClubMbrDetail */
+		<foreach collection="mbrAttrList" item="item" index="index"   separator=";" open="DECLARE BEGIN" close="; END;">
+		UPDATE LOY.LOY_CLUB_MBR_ATTR
+		SET
+			 MODIFY_BY = #{empId} 
+			, MODIFY_DATE = SYSDATE
+			, VAL = #{item.val}
+			, FILE_P_NM = #{item.filePName}
+			<!-- , FILE_L_NM = #{item.fileLName} -->
+		WHERE RID_CLUB_MBR = #{rid} 
+		AND RID_ATTR = #{item.ridAttr}
+		</foreach>
+	</update>
+	
+	<!-- List로 넘겨야하는데 단건으로 넘김.. -->
+	<update id="mergeClubMbrDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto">
+	/* LoyClubMasterMapper.mergeClubMbrDetail */
+	MERGE INTO LOY.LOY_CLUB_MBR_ATTR T
+	USING (SELECT S.RID FROM loy.LOY_CLUB_ATTR S WHERE S.RID_CLUB = #{ridClub}  AND S.FLAG = 1 AND S.RID =#{ridAttr}) S
+	ON (T.RID_ATTR = S.RID 
+			AND T.FLAG = 1
+			AND T.RID_CLUB_MBR = #{rid}
+			)
+	WHEN MATCHED THEN
+		UPDATE 
+		SET MODIFY_BY = #{empId} 
+			, MODIFY_DATE = SYSDATE
+			, VAL = #{val}
+			, FILE_P_NM = #{filePName}
+		WHERE RID_ATTR = #{ridAttr}
+	WHEN NOT MATCHED THEN
+		INSERT (
+				RID
+				, CREATE_BY
+				, MODIFY_BY
+				, CREATE_DATE
+				, MODIFY_DATE
+				, FLAG
+				, RID_CLUB_MBR
+				, RID_ATTR
+				, VAL
+				, FILE_P_NM
+				, FILE_L_NM
+		) VALUES(
+				com.getNewId('')
+				, #{empId}
+				, #{empId}
+				, SYSDATE
+				, SYSDATE
+				, 1
+				, #{rid}
+				, #{ridAttr}
+				, #{val}
+				, #{filePName}
+				<if test="filePName != null">
+					, com.getNewId('')
+				</if>
+				<if test="filePName == null">
+					, #{fileLName}
+				</if>
+				)
+	</update>
+	
+	
+	<select id="selectClubMbrDetail" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto"
+														resultType="com.icignal.loyalty.club.dto.response.LoyClubMbrAttrDetailResDto">
+	/* LoyClubMasterMapper.selectClubMbrDetail */
+		SELECT lcma.RID AS ridClubMbrAttr
+					, lca.RID AS ridAttr
+					, lm.RID AS ridMbr
+					, lc.CUST_NM 	AS custNm
+					, lca.FIELD_TYPE_CD AS fieldTypeCd
+					, lcma.VAL 		AS VAL
+					, lcma.FILE_P_NM AS fileName
+					<!-- , lcma.FILE_P_NM AS fileLName -->
+					, ${strColumn}
+		FROM LOY.LOY_CLUB_MBR lcm
+		JOIN LOY.LOY_CLUB_MBR_ATTR lcma ON lcma.RID_CLUB_MBR = lcm.RID AND lcma.FLAG = 1 
+		LEFT OUTER JOIN LOY.LOY_CLUB_ATTR lca ON lcma.RID_ATTR = lca.RID AND lca.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_MBR lm ON lcm.RID_MBR = lm.RID AND lm.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+		WHERE lcm.RID_CLUB = #{ridClub}
+			AND lcm.RID = #{rid}
+			AND lcm.FLAG = 1
+	</select>
+	
+	<select id="clearMaskClubMbr" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto"
+													resultType="com.icignal.loyalty.club.dto.response.LoyClubMbrListResDto">
+	/* LoyClubMasterMappper.clearMaskClubMbr */	
+	SELECT lc.CUST_NM AS custNm
+		 , lc.HHP AS hhp
+	FROM LOY.LOY_CLUB_MBR lcm
+	JOIN LOY.LOY_MBR lm ON lcm.RID_MBR = lm.RID AND lm.FLAG = 1
+	JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	WHERE lcm.FLAG = 1
+	AND lcm.RID = #{clubMbrRid}
+	</select>
+	
+	<update id="apprClubMbr" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto">
+	/* LoyClubMasterMapper.apprClubMbr */
+	UPDATE LOY.LOY_CLUB_MBR
+	SET
+		 MODIFY_BY = #{empId} 
+		, MODIFY_DATE = SYSDATE
+		, PROCESS_DATE = SYSDATE
+		, STAT_CD = 'A'
+		, VALID_START_DATE = SYSDATE
+		, VALID_END_DATE = (SELECT add_months(SYSDATE, (SELECT PERIOD_MM FROM LOY.LOY_CLUB WHERE RID = #{rid})) from dual) 
+	WHERE RID IN 
+		<foreach collection="ridList" item="item" index="index"   separator="," open="(" close=")">
+				#{item}
+		</foreach>
+	</update>
+	
+	<update id="saveResnRgst" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto">
+	/* LoyClubMasterMapper.saveResnRgst */
+	UPDATE LOY.LOY_CLUB_MBR
+	SET
+		 MODIFY_BY = #{empId} 
+		, MODIFY_DATE = SYSDATE
+		, PROCESS_DATE = SYSDATE
+		, SECSN_RESN_ETC = #{reason}
+		, STAT_CD = #{statCd}
+	WHERE RID IN 
+		<foreach collection="ridList" item="item" index="index"   separator="," open="(" close=")">
+				#{item}
+		</foreach>
+	</update>
+
+	<select id="selectFileValueCnt" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto"
+												resultType="java.lang.Integer">
+	/* LoyClubMasterMapper.selectFileValueCnt */											
+	SELECT count(*)
+	FROM LOY.LOY_CLUB_MBR_ATTR lcma 
+	LEFT OUTER JOIN loy.LOY_CLUB_ATTR lca ON lca.RID = lcma.RID_ATTR AND lca.FLAG = 1
+	WHERE lcma.FLAG = 1
+	AND lca.FIELD_TYPE_CD = 'F'
+	AND lcma.RID_CLUB_MBR = #{rid}
+	</select>
+	
+	<select id="selectFileValue" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto"
+												resultType="com.icignal.loyalty.club.dto.response.LoyClubDetailResDto">
+	/* LoyClubMasterMapper.selectFileValue */											
+	SELECT lcma.FILE_P_NM AS filePName
+			, lcma.FILE_L_NM AS fileLName 
+	FROM LOY.LOY_CLUB_MBR_ATTR lcma 
+	LEFT OUTER JOIN loy.LOY_CLUB_ATTR lca ON lca.RID = lcma.RID_ATTR AND lca.FLAG = 1
+	WHERE lcma.FLAG = 1
+	AND lca.FIELD_TYPE_CD = 'F'
+	AND lcma.RID_CLUB_MBR = #{rid}
+	</select>
+    
+    <update id="updateLogicalFileName" parameterType="String">
+    /* LoyClubMasterMapper.updateLogicalFileName */
+    UPDATE LOY.LOY_CLUB_MBR_ATTR
+	SET 
+		 FILE_L_NM = #{fileName}
+	WHERE RID_CLUB_MBR = #{clubMbrRid}
+	AND RID_ATTR =#{ridAttr}
+    </update>
+    
+    <select id="selectClubMbrValidCheck" parameterType="com.icignal.loyalty.club.dto.request.LoyClubMbrDetailReqDto"
+    														 resultType="java.lang.Integer">
+    /* LoyClubMasterMapper.selectClubMbrValidCheck */
+    SELECT count(*)
+	FROM loy.LOY_CLUB_MBR lcm
+	WHERE lcm.FLAG = 1
+	AND RID_CLUB = #{ridClub} 
+	AND RID_MBR = #{ridMbr}
+	<if test="rid !=null">
+	AND NOT RID = #{rid}
+	</if>
+    </select>
+	
+</mapper>

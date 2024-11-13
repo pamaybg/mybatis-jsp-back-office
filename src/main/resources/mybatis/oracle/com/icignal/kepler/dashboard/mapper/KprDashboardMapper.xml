@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:14:06 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.dashboard.mapper.KprDashboardMapper">
+	
+	<!-- /**************************************
+	-   관련 파일			 : KprDashboardMapper.java
+	============================================
+	-   제목				  : 대시보드의 레이아웃 LIST를 셀렉트함
+	-   설명				  : 대시보드의 레이아웃 LIST를 셀렉트함
+	-   결과형태			  : 복수
+	============================================
+	-   입력				:   
+	-	출력				:	
+	============================================
+	-   작성자				: kj.kang
+	-   작성일				: 2016.07.14
+	***************************************/ -->
+	<select id="selectDashboardLayoutList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto" 
+														resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardDetailResDto">
+		/* KprDashboardMapper.selectDashboardLayoutList */
+		select id	as layoutId
+			 , html	as layoutHtml
+			 , seq	as layoutSeq
+			 , img  as layoutImage
+		  from anl.anl_dashbrd_layout
+		 where ${strSVCType}
+		   and flag		= 1
+		 order by seq asc
+	</select>
+	
+	<select id="selectDashboardDetailInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto" 
+														resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardDetailResDto">
+		/* KprDashboardMapper.selectDashboardDetailInst */
+		select adi.id					as dashboardId
+			 , adi.dashbrd_nm			as dashboardName
+			 , adi.anl_save_info_id		as folderId
+			 , adi.dashbrd_layout_id	as layoutId
+			 , adl.html					as layoutHtml
+		  from anl.anl_dashbrd_mst_inst	adi
+		  join anl.anl_dashbrd_layout	adl on adi.dashbrd_layout_id = adl.id and adl.flag = 1 and ${strSVCType}
+		 where adi.flag	= 1
+		   and adi.id	= #{dashboardId}
+	</select>
+	
+	<select id="selectDashboardIdCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto" resultType="java.lang.Integer">
+		/* KprDashboardMapper.selectDashboardIdCheck */
+		select count(*) as idCnt
+		  from anl.anl_dashbrd_mst
+		 where id = #{dashboardId}
+	</select>
+	
+	<select id="selectDashboardNameCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto" resultType="java.lang.Integer">
+		/* KprDashboardMapper.selectDashboardNameCheck */
+		select count(*) as nameCnt
+		  from anl.anl_dashbrd_mst
+		 where ${strSVCType}
+		   and flag				=  1
+		   and anl_save_info_id	=  #{folderId}
+		   and dashbrd_nm		=  #{dashboardName}
+		   and id				!= #{dashboardId}
+	</select>
+	
+	<insert id="insertDashboardDetailInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.insertDashboardDetailInst */
+		insert into anl.anl_dashbrd_mst_inst (
+			  id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, type
+			, dashbrd_nm
+			, anl_save_info_id
+			, dashbrd_layout_id
+		) values (
+			  #{dashboardId}
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, 'DASHBOARD'
+			, #{dashboardName}
+			, #{folderId}
+			, #{layoutId}
+		)
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardDetailMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.insertDashboardDetailMaster */
+		insert into anl.anl_dashbrd_mst (
+			  id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, type
+			, dashbrd_nm
+			, anl_save_info_id
+			, dashbrd_layout_id
+		)
+		select #{dashboardId_New}
+			 , #{createBy}
+			 , #{modifyBy}
+			 , sysdate
+			 , sysdate
+			 , 1
+			 , type
+			 , #{dashboardName}
+			 , #{folderId}
+			 , dashbrd_layout_id
+		  from anl.anl_dashbrd_mst_inst
+		 where flag	= 1
+		   and id	= #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardDetailMasterToInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.insertDashboardDetailMasterToInst */
+		insert into anl.anl_dashbrd_mst_inst (
+			  id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, type
+			, dashbrd_nm
+			, anl_save_info_id
+			, dashbrd_layout_id
+		)
+		select id
+			 , create_by
+			 , modify_by
+			 , create_date
+			 , modify_date
+			 , flag
+			 , type
+			 , dashbrd_nm
+			 , anl_save_info_id
+			 , dashbrd_layout_id
+		  from anl.anl_dashbrd_mst
+		 where id = #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardDetailInstToMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.insertDashboardDetailInstToMaster */
+		insert into anl.anl_dashbrd_mst (
+			  id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, type
+			, dashbrd_nm
+			, anl_save_info_id
+			, dashbrd_layout_id
+		)
+		select id
+			 , create_by
+			 , modify_by
+			 , create_date
+			 , modify_date
+			 , flag
+			 , type
+			 , dashbrd_nm
+			 , anl_save_info_id
+			 , dashbrd_layout_id
+		  from anl.anl_dashbrd_mst_inst
+		 where id = #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<update id="updateDashboardDetailInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.updateDashboardDetailInst */
+		update anl.anl_dashbrd_mst_inst
+		   set modify_by			= #{modifyBy}
+			 , modify_date			= sysdate
+			 <if test="dashboardName != null and dashboardName != ''">
+			 , dashbrd_nm			= #{dashboardName}
+			 </if>
+			 <if test="folderId != null and folderId != ''">
+			 , anl_save_info_id		= #{folderId}
+			 </if>
+			 <if test="layoutId != null and layoutId != ''">
+			 , dashbrd_layout_id	= #{layoutId}
+			 </if>
+		 where id = #{dashboardId}
+	</update>
+	
+	<update id="updateDashboardDetailInstToMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.updateDashboardDetailInstToMaster */
+		 update 
+		 (select mst.MODIFY_BY,ins.MODIFY_BY AS insModifyBy,mst.MODIFY_DATE,ins.MODIFY_DATE AS insModifyDate 
+		 		,mst.DASHBRD_NM ,ins.DASHBRD_NM AS insDashBrdNm ,mst.ANL_SAVE_INFO_ID ,ins.ANL_SAVE_INFO_ID AS insAnlSaveInfoId 
+		 		,mst.DASHBRD_LAYOUT_ID ,ins.DASHBRD_LAYOUT_ID AS insDashBrdLayout
+		 from anl.anl_dashbrd_mst mst 
+		 	JOIN anl.anl_dashbrd_mst_inst ins on mst.id = ins.id 
+		 	WHERE 1=1 
+		 	AND mst.id = ins.id 
+		 	AND ins.id = #{dashboardId} )
+		 SET modify_by			= insModifyBy
+		   , modify_date		= insModifyDate
+		   , dashbrd_nm			= insDashBrdNm
+		   , anl_save_info_id	= insAnlSaveInfoId
+		   , dashbrd_layout_id	= insDashBrdLayout
+	</update>
+	
+	<update id="deleteDashboardDetailMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.deleteDashboardDetailMaster */
+		update anl.anl_dashbrd_mst
+		   set modify_by	= #{modifyBy}
+			 , modify_date	= sysdate
+			 , flag			= flag + 1
+		 where id = #{dashboardId}
+	</update>
+	
+	<delete id="deleteDashboardDetailInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.deleteDashboardDetailInst */
+		delete
+		  from anl.anl_dashbrd_mst_inst
+		 where id = #{dashboardId}
+	</delete>
+	
+	<select id="selectDashboardAnalysisList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto" 
+															resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardDetailResDto">
+		/* KprDashboardMapper.selectDashboardAnalysisList */
+		select arm.id				as analysisId
+			 , arm.rpt_nm			as analysisName
+			 , arm.dashbrd_ebd_type as dashboardEmbedType
+			 , arm.dashbrd_seq		as dashboardSeq
+		<if test="dashboardMasterFlag == &quot;Y&quot;">
+		  from anl.anl_dashbrd_mst		adm
+		  join anl.anl_rpt_mst			arm on adm.id = arm.dashbrd_id and arm.flag = 1
+		</if>
+		<if test="dashboardMasterFlag != &quot;Y&quot;">
+		  from anl.anl_dashbrd_mst_inst	adm
+		  join anl.anl_rpt_mst_inst		arm on adm.id = arm.dashbrd_id and arm.flag = 1
+		</if>
+		 where adm.flag	= 1
+		   and adm.id	= #{dashboardId}
+		 order by arm.dashbrd_seq asc
+	</select>
+	
+	<select id="selectDashboardAnalysisDeleteList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto" resultType="java.lang.String">
+		/* KprDashboardMapper.selectDashboardAnalysisDeleteList */
+		select arm.id as analysisId
+		  from anl.anl_dashbrd_mst	adm
+		  join anl.anl_rpt_mst		arm on adm.id = arm.dashbrd_id and arm.flag = 1
+		 where adm.flag	= 1
+		   and adm.id	= #{dashboardId}
+		   and arm.id	not in (
+					select arm.id
+					  from anl.anl_dashbrd_mst_inst	adm
+					  join anl.anl_rpt_mst_inst		arm on adm.id = arm.dashbrd_id and arm.flag = 1
+					 where adm.flag	= 1
+					   and adm.id	= #{dashboardId}
+		)
+	</select>
+	
+	<!-- Publish 및 External 용으로 사용 -->
+	<select id="selectPublishDashboardDetail" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPublishDataReqDto" 
+															resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPublishDataResDto">
+		/* KprDashboardMapper.selectPublishDashboardDetail */
+		SELECT	adm.ID				AS dashboardId
+				, adm.DASHBRD_NM	AS dashboardName
+				, adl.HTML			AS layoutHtml
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		FROM	anl.anl_dashbrd_mst		adm
+		</if>
+		
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		FROM	anl.anl_dashbrd_mst_inst	adm
+		</if>
+		
+		JOIN	anl.anl_dashbrd_layout	adl ON adm.DASHBRD_LAYOUT_ID = adl.ID AND adl.FLAG = 1 AND ${strSVCType}
+		WHERE	adm.FLAG	= 1
+		AND		adm.ID		= #{dashboardId}
+	</select>
+	
+	<select id="selectPublishAnalysisDetail" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPublishDataReqDto" 
+														resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPublishDataResDto">
+		/* KprDashboardMapper.selectPublishAnalysisDetail */
+		SELECT	arm.ID					AS analysisId
+				, arm.RPT_NM			AS analysisName
+				, arm.DASHBRD_EBD_TYPE	AS dashboardEmbedType
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		FROM	anl.anl_dashbrd_mst		adm
+		JOIN	anl.anl_rpt_mst			arm ON adm.ID = arm.DASHBRD_ID AND arm.FLAG = 1
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		FROM	anl.anl_dashbrd_mst_inst	adm
+		JOIN	anl.anl_rpt_mst_inst		arm ON adm.ID = arm.DASHBRD_ID AND arm.FLAG = 1
+		</if>
+		WHERE	${strSVCType}
+		AND		adm.FLAG	= 1
+		AND		adm.ID		= #{dashboardId}
+		ORDER BY arm.DASHBRD_SEQ ASC
+	</select>
+	
+	<update id="insertDashboardDetailCopy" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto">
+		/* KprDashboardMapper.insertDashboardDetailCopy */
+		INSERT INTO anl.anl_dashbrd_mst_inst (
+			ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, DASHBRD_NM
+			, ANL_SAVE_INFO_ID
+			, DASHBRD_LAYOUT_ID
+		)
+		SELECT	#{dashboardId_New}
+				, #{createBy}
+				, #{modifyBy}
+				, sysdate
+				, sysdate
+				, FLAG
+				, TYPE
+				, STORE_ID
+				, DASHBRD_NM
+				, ANL_SAVE_INFO_ID
+				, DASHBRD_LAYOUT_ID
+		FROM	anl.anl_dashbrd_mst
+		WHERE   ID  = #{dashboardId}
+	</update>
+	
+	<select id="selectDashboardAnalysisIdList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardDetailReqDto" resultType="java.lang.String">
+		/* KprDashboardMapper.selectDashboardAnalysisIdList */
+		SELECT	arm.ID
+		FROM	anl.anl_dashbrd_mst	adm
+		JOIN	anl.anl_rpt_mst		arm ON adm.ID = arm.DASHBRD_ID AND arm.FLAG = 1
+		WHERE	adm.FLAG	= 1
+		AND		adm.ID		= #{dashboardId}
+	</select>
+</mapper>

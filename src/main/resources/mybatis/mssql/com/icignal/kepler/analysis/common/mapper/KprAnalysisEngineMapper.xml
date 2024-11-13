@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:04:13 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.kepler.analysis.common.mapper.KprAnalysisEngineMapper">
+
+
+	<!-- 분석 데이터베이스 정보 -->
+	<select id="selectAnalysisDetail" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisEngineReqDto" 
+												resultType="com.icignal.kepler.analysis.common.dto.response.KprAnalysisEngineResDto">
+		/* KprAnalysisEngineMapper.selectAnalysisDetail */
+		select arm.id			as analysisId
+			 , arm.col_group_yn	as fieldGroupFlag
+			 , adi.con_ip		as databaseIp
+			 , adi.con_port		as databasePort
+			 , adi.con_url		as databaseUrl
+			 , adi.con_id		as databaseConnectId
+			 , adi.con_pw		as databaseConnectPw
+			 , adi.con_db_type	as databaseTypeCode
+			 , dcd.attrib01		as databaseClass
+			 , lcm.id			as logicalComponentId
+			 , SUBSTRING(lcm.lgc_sql, instr(lcm.lgc_sql, 'from ')) as logicalComponentFromSql
+			 , arm.col_tot_type_cd	as colTotalTypeCode
+			 , ccd.mark_name		as colTotalTypeCodeName
+			 , arm.row_tot_type_cd	as rowTotalTypeCode
+			 , rcd.mark_name		as rowTotalTypeCodeName
+			 , adi.aws_secret_nm as secretNm
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		  from anl.anl_rpt_mst		arm
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		  from anl.anl_rpt_mst_inst	arm
+		</if>
+		  join anl.anl_lgc_comp_mst	lcm on arm.lgc_comp_id = lcm.id and lcm.flag = 1
+		  join anl.anl_db_inform	adi on lcm.db_inform_id = adi.id and adi.flag = 1
+		  left join com.comm_code	dcd on adi.con_db_type = dcd.code_name and dcd.group_code = 'ANL_DB_TYPE_CD' and dcd.flag = 1 and dcd.lang = #{lang}
+		  left join com.comm_code	ccd on arm.col_tot_type_cd = ccd.code_name and ccd.group_code = 'ANL_TOT_TYPE_CD' and ccd.flag = 1 and ccd.lang = #{lang}
+		  left join com.comm_code	rcd on arm.row_tot_type_cd = rcd.code_name and rcd.group_code = 'ANL_TOT_TYPE_CD' and rcd.flag = 1 and rcd.lang = #{lang}
+		 where arm.flag	= 1
+		   and arm.id	= #{analysisId}
+	</select>
+	
+	<!-- 분석 컬럼 리스트 -->
+	<select id="selectAnalysisColumnList" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisEngineReqDto" 
+														resultType="com.icignal.kepler.analysis.common.dto.response.KprAnalysisEngineResDto">
+		/* KprAnalysisEngineMapper.selectAnalysisColumnList */
+		select arc.id						as columnId
+			 , arc.atrib_group_col_id		as atribGroupColumnId
+			 , arc.seq						as seq
+			 , arc.col_type_cd				as columnTypeCode
+			 , arc.col_use_type_cd			as columnUseTypeCode
+			 , arc.comb_col_type_cd			as combColumnTypeCode
+			 , arc.group_func_type_cd		as groupFuncTypeCode
+			 , arc.rpt_col_alias			as columnAlias
+			 , arc.rpt_col_dp_nm			as columnDisplayName
+			 , arc.calc_fld_type_cd			as calcFieldTypeCode
+			 , arc.oprt_cd					as operationTypeCode
+			 , arc.right_group_func_type_cd	as rightGroupFuncTypeCode
+			 , arc.right_atrib_group_col_id	as rightAtribGroupColumnId
+			 , case when lgc.cal_col_yn = '1' then lgc.cal_dtl
+			 		else lgc.tbl_alias_col_nm
+			   end							as tableColumnAlias
+			 , case when rgc.cal_col_yn = '1' then rgc.cal_dtl
+			 		else rgc.tbl_alias_col_nm
+			   end							as rightTableColumnAlias
+			 , arc.order_atrib_group_col_id	as orderAtribGroupColumnId
+			 , arc.order_dtl				as orderDetail
+			 , ogc.tbl_alias_col_nm			as orderTableAliasColName
+			 , ocd.attrib01					as orderType
+			 , acm.col_type_cd				as originColumnTypeCode
+			 , case when lgc.cal_col_yn = '1' then lgc.cal_dtl
+			 		else lgc.tbl_alias_col_nm
+			   end							as originTableColumnAlias
+			 , arc.rpt_col_dp_nm			as originColumnDisplayName
+			 , acm.col_nm					as columnName
+			 , SUBSTRING(lgc.tbl_alias_col_nm, 1, instr(lgc.tbl_alias_col_nm, '.') - 1)	as tableAlias
+			 , CONCAT(atm.schma_nm, '.', atm.tbl_nm)	as schmaTableName
+			 , ocm.col_nm					as orderColumnName
+			 , arc.negtiv_yn				as negativeFlag
+			 , arc.decimal_plcs				as decimalPlaces
+			 , arc.sub_tot_yn				as subTotalFlag
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		  from anl.anl_rpt_mst				arm
+		  join anl.anl_rpt_column			arc on arm.id = arc.rpt_id and arc.flag = 1
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		  from anl.anl_rpt_mst_inst			arm
+		  join anl.anl_rpt_column_inst		arc on arm.id = arc.rpt_id and arc.flag = 1
+		</if>
+		  join anl.anl_atrib_group_column	lgc on arc.atrib_group_col_id = lgc.id and lgc.flag = 1
+		  join anl.anl_column_mst			acm on case when LEN(lgc.dim_col_id) &gt; 0 then lgc.dim_col_id else lgc.col_id end = acm.id and acm.flag = 1
+		  join anl.anl_table_mst			atm on acm.tbl_id = atm.id and atm.flag = 1
+	 left join anl.anl_atrib_group_column	rgc on arc.right_atrib_group_col_id = rgc.id and rgc.flag = 1
+	 left join anl.anl_atrib_group_column	ogc on arc.order_atrib_group_col_id = ogc.id and ogc.flag = 1
+	 left join anl.anl_column_mst			ocm on case when LEN(ogc.dim_col_id) &gt; 0 then ogc.dim_col_id else ogc.col_id end = ocm.id and ocm.flag = 1
+	 left join com.comm_code				ocd on arc.order_type_cd = ocd.code_name and ocd.group_code = 'ANL_ORDER_TYPE_CD' and ocd.flag = 1 and ocd.lang = #{lang}
+		 where arm.flag	= 1
+		   and arm.id	= #{analysisId}
+	  order by arc.seq asc
+	</select>
+	
+	<!-- 분석 필터 리스트 -->
+	<select id="selectAnalysisFilterList" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisEngineReqDto" 
+													resultType="com.icignal.kepler.analysis.common.dto.response.KprAnalysisEngineResDto">
+	/* KprAnalysisEngineMapper.selectAnalysisFilterList */
+		SELECT	arf.ID						AS filterId
+				, arf.SEQ					AS seq
+				, arf.ANDOR					AS andOrFlag
+				, arf.LEFT_BRKT_YN			AS leftBrktFlag
+				, arf.ATRIB_GROUP_COL_ID	AS atribGroupColumnId
+				, arf.RIGHT_BRKT_YN			AS rightBrktFlag
+				, arf.GROUP_FUNC_TYPE_CD	AS groupFuncTypeCode
+				, arf.OPRT_CD				AS operationTypeCode
+				, arf.FILTER_VAL			AS filterValue
+				, arf.RPT_FIL_COL_ALIAS		AS columnAlias
+				, case when agc.cal_col_yn = '1' then agc.cal_dtl
+					   else agc.TBL_ALIAS_COL_NM
+				  end						AS tableColumnAlias
+				, acm.col_nm                 as columnName
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			FROM	anl.anl_rpt_mst			arm
+			JOIN	anl.anl_rpt_filter		arf ON arm.ID = arf.RPT_ID AND arf.FLAG = 1
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			FROM	anl.anl_rpt_mst_inst	arm
+			JOIN	anl.anl_rpt_filter_inst	arf ON arm.ID = arf.RPT_ID AND arf.FLAG = 1
+		</if>
+		JOIN		anl.anl_atrib_group_column	agc ON arf.ATRIB_GROUP_COL_ID = agc.ID AND agc.FLAG = 1
+		join		anl.anl_column_mst			acm on case when LEN(agc.dim_col_id) &gt; 0 then agc.dim_col_id else agc.col_id end = acm.id and acm.flag = 1
+		WHERE	arm.FLAG	= 1
+		AND		arm.ID		= #{analysisId}
+		ORDER BY arf.SEQ ASC
+	</select>
+	
+	<!-- 분석 프롬프트 리스트 -->
+	<!-- 기본적으로 날짜형태로 등록된 프롬프트를 가져와서 처리한다. -->
+	<select id="selectAnalysisPromptList" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisEngineReqDto" 
+														resultType="com.icignal.kepler.analysis.common.dto.response.KprAnalysisEngineResDto">
+	/* KprAnalysisEngineMapper.selectAnalysisPromptList */
+		SELECT	arp.ID						AS promptId
+				, arp.SEQ					AS seq
+				, arp.PROMPT_TYPE_CD		AS promptTypeCode
+				, arp.PROMPT_VAL			AS promptValue
+				, arp.ATRIB_GROUP_COL_ID	AS atribGroupColumnId
+				, arp.RPT_PRPT_COL_ALIAS	AS columnAlias
+				, agc.TBL_ALIAS_COL_NM		AS tableColumnAlias
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			FROM	anl.anl_rpt_mst			arm
+			JOIN	anl.anl_rpt_prompt		arp ON arm.ID = arp.RPT_ID AND arp.FLAG = 1
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			FROM	anl.anl_rpt_mst_inst	arm
+			JOIN	anl.anl_rpt_prompt_inst	arp ON arm.ID = arp.RPT_ID AND arp.FLAG = 1
+		</if>
+		JOIN	anl.anl_atrib_group_column	agc ON arp.ATRIB_GROUP_COL_ID = agc.ID AND agc.FLAG = 1
+		WHERE	arm.FLAG	= 1
+		AND		arm.ID		= #{analysisId}
+		ORDER BY arp.SEQ ASC
+	</select>
+	
+	<!-- 분석 차트 상세 정보 -->
+	<select id="selectAnalysisChartInformation" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisEngineReqDto" 
+																resultType="java.util.HashMap">
+	/* KprAnalysisEngineMapper.selectAnalysisChartInformation */
+		select arm.chart_type_cd	as "chartTypeCode"
+			 , ccd.attrib02			as "chartTypeAttrib02"
+			 , arm.chart_dp_type	as "chartDisplayTypeCode"
+			 , arm.chart_hori_nm	as "chartHrizontalName"
+			 , arm.legend_pos_cd	as "chartLegendPositionTypeCode"
+			 , arm.chart_verti_1_nm	as "chartLeftVerticalName"
+			 , arm.chart_label_cd_1	as "chartLeftLabelTypeCode"
+			 , lcd.attrib01			as "chartLeftLabelPrefix"
+			 , lcd.attrib02			as "chartLeftLabelValue"
+			 , lcd.attrib03			as "chartLeftLabelSuffix"
+			 , arm.chart_verti_2_nm	as "chartRightVerticalName"
+			 , arm.chart_label_cd_2	as "chartRightLabelTypeCode"
+			 , rcd.attrib01			as "chartRightLabelPrefix"
+			 , rcd.attrib02			as "chartRightLabelValue"
+			 , rcd.attrib03			as "chartRightLabelSuffix"
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			FROM	anl.anl_rpt_mst			arm
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			FROM	anl.anl_rpt_mst_inst	arm
+		</if>
+		JOIN	com.comm_code				lcd ON arm.CHART_LABEL_CD_1 = lcd.CODE_NAME AND lcd.GROUP_CODE = 'ANL_CHART_DISPLAY_LABEL_CD' AND lcd.FLAG = 1 AND lcd.LANG = #{lang}
+		JOIN	com.comm_code				rcd ON arm.CHART_LABEL_CD_2 = rcd.CODE_NAME AND rcd.GROUP_CODE = 'ANL_CHART_DISPLAY_LABEL_CD' AND rcd.FLAG = 1 AND rcd.LANG = #{lang}
+        JOIN    com.comm_code               ccd on arm.CHART_TYPE_CD    = ccd.code_name AND ccd.group_code = 'ANL_RPT_CHART_TYPE_CD'      AND ccd.FLAG = 1 AND ccd.LANG = #{lang}
+		WHERE	arm.FLAG	= 1
+		AND		arm.ID		= #{analysisId}
+	</select>
+	
+	<!-- 분석 DrillDown Group 정보 조회 -->
+	<select id="selectAnalysisDrillDownGroupList" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisEngineReqDto" 
+																resultType="com.icignal.kepler.analysis.common.dto.response.KprAnalysisEngineResDto">
+	/* KprAnalysisEngineMapper.selectAnalysisDrillDownGroupList */
+			select tmp.anl_column_id		as anlColumnId
+			 , tmp.column_id			as columnId
+			 , tmp.drilldown_group_id	as drillDownGroupId
+			 , tmp.drilldown_group_nm	as drillDownGroupName
+			 , tmp.lv_col_id			as levelColumnId
+			 , tmp.upper_col_id			as upperColumnId
+			 , tmp.lower_col_id			as lowerColumnId
+			 , tmp.rpt_col_alias		as columnAlias
+			 , tmp.tbl_alias			as tableAlias
+			 , acm.dp_nm				as columnDisplayName
+			 , acm.col_nm				as columnName
+			 , tmp.tbl_alias_col_nm		as tableColumnAlias
+			 , case when LEN(agc.tbl_alias_col_nm) &gt; 0 then agc.tbl_alias_col_nm
+			   end						as upperTableColumnAlias
+		  from (
+			select tmp1.anl_column_id		as anl_column_id
+				 , tmp1.column_id			as column_id
+				 , tmp1.drilldown_group_id	as drilldown_group_id
+				 , tmp1.drilldown_group_nm	as drilldown_group_nm
+				 , tmp1.tbl_alias_col_nm	as tbl_alias_col_nm
+				 , tmp1.rpt_col_alias		as rpt_col_alias
+				 , tmp1.tbl_alias			as tbl_alias
+				 , tmp1.atrib_group_id		as atrib_group_id
+				 , case when tmp2.num = 1 then tmp1.lv1_col_id
+						when tmp2.num = 2 then tmp1.lv2_col_id
+						when tmp2.num = 3 then tmp1.lv3_col_id
+						when tmp2.num = 4 then tmp1.lv4_col_id
+						when tmp2.num = 5 then tmp1.lv5_col_id
+				   end as lv_col_id
+				 , case when tmp2.num = 1 then ''
+						when tmp2.num = 2 then tmp1.lv1_col_id
+						when tmp2.num = 3 then tmp1.lv2_col_id
+						when tmp2.num = 4 then tmp1.lv3_col_id
+						when tmp2.num = 5 then tmp1.lv4_col_id
+				   end as upper_col_id
+				 , case when tmp2.num = 1 then tmp1.lv2_col_id
+						when tmp2.num = 2 then tmp1.lv3_col_id
+						when tmp2.num = 3 then tmp1.lv4_col_id
+						when tmp2.num = 4 then tmp1.lv5_col_id
+						when tmp2.num = 5 then ''
+				   end as lower_col_id
+				 , tmp2.num					as num
+			  from (
+				select arc.id					as anl_column_id
+					 , acm.id					as column_id
+					 , agc.tbl_alias_col_nm		as tbl_alias_col_nm
+					 , adg.id					as drilldown_group_id
+					 , adg.drilldown_group_nm	as drilldown_group_nm
+					 , arc.rpt_col_alias		as rpt_col_alias
+					 , SUBSTRING(agc.tbl_alias_col_nm, 1, instr(agc.tbl_alias_col_nm, '.') - 1)	as tbl_alias
+					 , agc.atrib_group_id		as atrib_group_id
+					 , adg.lv1_col_id			as lv1_col_id
+					 , adg.lv2_col_id			as lv2_col_id
+					 , adg.lv3_col_id			as lv3_col_id
+					 , adg.lv4_col_id			as lv4_col_id
+					 , adg.lv5_col_id			as lv5_col_id
+				<if test="analysisMasterFlag == &quot;Y&quot;">
+				  from anl.anl_rpt_mst				arm
+				  join anl.anl_rpt_column			arc on arm.id = arc.rpt_id and arc.flag = 1
+				</if>
+				<if test="analysisMasterFlag != &quot;Y&quot;">
+				  from anl.anl_rpt_mst_inst			arm
+				  join anl.anl_rpt_column_inst		arc on arm.id = arc.rpt_id and arc.flag = 1
+				</if>
+				  join anl.anl_atrib_group_column	agc on arc.atrib_group_col_id = agc.id and agc.flag = 1
+				  join anl.anl_column_mst			acm on agc.dim_col_id = acm.id and acm.flag = 1
+				  join anl.anl_table_mst			atm on acm.tbl_id = atm.id and atm.flag = 1
+				  join anl.anl_drilldown_group		adg on (acm.id = adg.lv1_col_id 
+														 or acm.id = adg.lv2_col_id
+														 or acm.id = adg.lv3_col_id
+														 or acm.id = adg.lv4_col_id
+														 or acm.id = adg.lv5_col_id) and adg.flag = 1
+				 where arm.flag	= 1
+				   and arm.id	= #{analysisId}
+			) tmp1
+			  join (
+				select 1 as num from dual
+				union				
+				select 2 as num from dual
+				union 
+				select 3 as num from dual
+				union
+				select 4 as num from dual
+				union
+				select 5 as num from dual
+			) tmp2 on 1=1
+		) tmp
+		  join anl.anl_column_mst			acm on tmp.lv_col_id = acm.id and acm.flag = 1
+	 left join anl.anl_atrib_group_column	agc on tmp.upper_col_id = agc.dim_col_id and tmp.atrib_group_id = agc.atrib_group_id
+											   and SUBSTRING(tmp.tbl_alias_col_nm, 1, instr(tmp.tbl_alias_col_nm, '.') - 1) = SUBSTRING(agc.tbl_alias_col_nm, 1, instr(agc.tbl_alias_col_nm, '.') - 1) and agc.flag = 1
+	  order by tmp.drilldown_group_id asc, tmp.num asc
+	</select>
+	
+	<select id="selectDashboardPromptDataList" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisEngineReqDto" 
+																resultType="com.icignal.kepler.analysis.common.dto.response.KprAnalysisEngineResDto">
+	/* KprAnalysisEngineMapper.selectDashboardPromptDataList */
+		select agc.id				as atribGroupColumnId
+			 , agc.tbl_alias_col_nm	as tableColumnAlias
+			 , acm.id				as columnId
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		  from anl.anl_rpt_mst				arm
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		  from anl.anl_rpt_mst_inst			arm
+		</if>
+		  join anl.anl_lgc_comp_mst			lcm on arm.lgc_comp_id = lcm.id and lcm.flag = 1
+		  join anl.anl_atrib_group			aag on lcm.id = aag.lgc_comp_id and aag.flag = 1
+		  join anl.anl_atrib_group_column	agc on aag.id = agc.atrib_group_id and agc.flag = 1
+		  join anl.anl_column_mst			acm on case when LEN(agc.dim_col_id) &gt; 0 then agc.dim_col_id else agc.col_id end = acm.id and acm.flag = 1
+		 where arm.flag	= 1
+		   and arm.id	= #{analysisId}
+		<if test="dashboardPromptDataMap != null and dashboardPromptDataMap.size() > 0">
+		   and acm.id	in (
+			 <foreach collection="dashboardPromptDataMap" item="item" separator=",">
+				#{item.columnId}
+			</foreach>
+		)
+		</if>
+	</select>
+</mapper>

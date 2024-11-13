@@ -1,0 +1,7 @@
+.e-widget.e-pinch.e-numeric input[type=text],
+.e-widget.e-pinch.e-currency input[type=text],
+.e-widget.e-pinch.e-percent input[type=text] {
+	text-align: right;
+}
+.e-numeric .e-padding, .e-percent .e-padding, .e-currency .e-padding {padding: 0 30px 0 0;}
+.e-numeric, .e-percent, .e-currency, .e-mask {height: 27px; line-height: 27px;}

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.systemmgt.mapper.SystemMgtMapper">
+
+	<select id="selectSystemMgtList" parameterType="com.icignal.systemmanagement.systemmgt.dto.request.SystemMgtListReqDto"
+														resultType="com.icignal.systemmanagement.systemmgt.dto.response.SystemMgtListResDto">
+	/* SystemMgtMapper.selectSystemMgtList */
+		SELECT sm.RID AS rid
+			, sm.SYSTEM_NM AS systemNm
+			, sm.SYSTEM_TYPE_CD AS systemTypeCd
+			, sm.HOST_NM AS host
+			, sm.PORT AS port
+			, sm.PURPOSE_CD AS purposeCd
+			, sm.STAT_CD AS statCd
+			, sm.COMPANY AS company
+			, sm.SYSTEM_DESC AS systemDesc
+			, convert(varchar, sm.CREATE_DATE, 120) AS createDate
+			, e.name AS createBy
+			, ${strColumn}
+		FROM com.SYSTEM_MGT sm WITH (NOLOCK)
+			LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON sm.CREATE_BY = cu.RID AND cu.FLAG = 1
+			LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+		WHERE sm.FLAG = 1
+			AND ${strWhere}
+			AND ${strCondWhere}
+		ORDER BY ${strOrderby}
+				${strEndPaging}
+	</select>
+	
+	<select id="selectSystemMgtDetail" parameterType="com.icignal.systemmanagement.systemmgt.dto.request.SystemMgtListReqDto"
+														resultType="com.icignal.systemmanagement.systemmgt.dto.response.SystemMgtDetailResDto">
+	/* SystemMgtMapper.selectSystemMgtDetail */
+		SELECT sm.RID AS rid
+			, sm.SYSTEM_NM AS systemNm
+			, sm.SYSTEM_TYPE_CD AS systemTypeCd
+			, sm.HOST_NM AS hostNm
+			, sm.PORT AS port
+			, sm.PURPOSE_CD AS purposeCd
+			, sm.STAT_CD AS statCd
+			, sm.COMPANY AS company
+			, sm.SYSTEM_DESC AS systemDesc
+			, sm.CREATE_DATE AS createDate
+		FROM com.SYSTEM_MGT sm
+		WHERE sm.FLAG = 1
+			AND RID = #{rid}
+	</select>
+	
+	<update id="deleteSystemMgt" parameterType="com.icignal.systemmanagement.systemmgt.dto.request.SystemMgtListReqDto">
+	/* SystemMgtMapper.selectSystemMgtList */
+		UPDATE com.SYSTEM_MGT
+		SET MODIFY_BY = #{modifyBy}
+				, MODIFY_DATE = getdate()
+				, flag = flag + 1
+		WHERE RID = #{rid}
+	</update>
+	
+	<insert id="insertSystemMgtDetail" parameterType="com.icignal.systemmanagement.systemmgt.dto.request.SystemMgtDetailReqDto">
+	/* SystemMgtMapper.insertSystemMgtDetail */
+		INSERT INTO COM.SYSTEM_MGT(
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, SYSTEM_NM
+			, SYSTEM_TYPE_CD
+			, HOST_NM
+			, PORT
+			, PURPOSE_CD
+			, STAT_CD
+			, COMPANY
+			, SYSTEM_DESC
+		) VALUES(
+			#{rid}
+			, #{modifyBy}
+			, #{modifyBy}
+			, #{systemNm}
+			, #{systemTypeCd}
+			, #{hostNm}
+			, #{port}
+			, #{purposeCd}
+			, #{statCd}
+			, #{company}
+			, #{systemDesc}
+		)
+	</insert>
+	
+	<update id="updateSystemMgtDetail" parameterType="com.icignal.systemmanagement.systemmgt.dto.request.SystemMgtDetailReqDto">
+	/* SystemMgtMapper.updateSystemMgtDetail */
+		UPDATE COM.SYSTEM_MGT
+		SET
+			MODIFY_BY = #{modifyBy}
+			, MODIFY_DATE = getdate()
+			, SYSTEM_NM = #{systemNm}
+			, SYSTEM_TYPE_CD = #{systemTypeCd}
+			, HOST_NM = #{hostNm}
+			, PORT = #{port}
+			, PURPOSE_CD = #{purposeCd}
+			, STAT_CD = #{statCd}
+			, COMPANY = #{company}
+			, SYSTEM_DESC = #{systemDesc}
+		WHERE RID = #{rid}
+	</update>
+	
+</mapper>

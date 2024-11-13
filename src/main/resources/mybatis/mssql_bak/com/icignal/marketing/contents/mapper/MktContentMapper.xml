@@ -1,0 +1,1984 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 17:28:33 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.contents.mapper.MktContentMapper">
+
+    <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectContent)
+	============================================
+	-	제목					: 콘텐츠 목록 조회
+	-	설명					: 조건 조회를 통한 콘텐츠 목록 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력
+		contentsName	    : 콘텐츠 명
+		contentsType        : 타입
+	-	출력
+		contentsName		: 콘텐츠 명
+		contentsType		: 타입
+		title			    : 제목
+		modifyBy		    : 수정자
+		modifyDate		    : 수정 일자
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectContent" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto" resultType="com.icignal.marketing.contents.dto.response.MktContentResDto">
+	/*MKTContents.selectContent*/
+	select
+        mc.id
+		, c1.code_name        as contentsTypeCode
+		, mc.CONTS_NM         as contentsName
+		, mc.CONTS_TITLE      as title
+        , mc.CONTS_SUB_TITLE  as subTitle
+		, c2.name             as modifyBy
+		, c3.mark_name        as txtMsgObject
+		, convert(varchar(10),mc.modify_date,120)                 as modifyDate
+		, (c4.file_path + c4.file_name + '.' + c4.file_type)   as filepath
+		, (c5.image_file_name + c5.image_file_type)          as fileName
+		, c4.FILE_NAME        as realfileName
+		, c5.image_folder     as imagepath
+		, c1.ATTRIB01         as path
+		, c1.MARK_NAME        as contentsChannel
+        , mc.img_link_url            as  imgLinkUrl
+        , mc.PSTNG_TYPE_CD           as  pstngTypeCd
+        , mc.CONTS_ATTEN_MTR         as  contsAttenMtr
+        , mc.INQR_NO                 as  inqrNo
+        , mc.ATTRIB01                as  attrib01
+        , mc.ATTRIB02                as  attrib02
+        , mc.ATTRIB03                as  attrib03
+        , mc.ATTRIB04                as  attrib04
+        , mc.ATTRIB05                as  attrib05
+        , mc.ATTRIB06                as  attrib06
+        , mc.ATTRIB07                as  attrib07
+        , mc.ATTRIB08                as  attrib08
+        , mc.ATTRIB09                as  attrib09
+        , mc.DP_START_DT             as  dpStartDt
+        , mc.DP_END_DT               as  dpEndDt
+        , mc.APCT_POSBL_NUM          as  apctPosblNum
+        , mc.CONTS_SEQ               as  contsSeq
+        , mc.CONTS_LOAD_SEQ          as  contsLoadSeq
+        , mc.HPAGE                   as  hpage
+        , mc.EV_NO                   as  evNo
+        , convert(varchar,mc.NEW_DP_CLO_DT, 120) as newDpCloDt
+		, ${strColumn}
+	from  mkt.MKT_CONTS_MST mc WITH (NOLOCK) 
+	left outer join  com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = mc.EXE_CHNL_TYPE_CD and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	left outer join  com.crm_user  u1 WITH (NOLOCK) on u1.rid = mc.modify_by
+	left outer join  com.employee  c2 WITH (NOLOCK) on c2.id  = u1.id_employee
+	left outer join  com.crm_user  u2 WITH (NOLOCK) on u2.rid = mc.create_by
+	left outer join  com.employee  e1 WITH (NOLOCK) on e1.id  = u2.id_employee
+	left outer join  com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name = mc.CONTS_PRPS_CD and c3.lang = #{lang} and c3.group_code = 'TXT_MSG_OBJECT_CD'
+	left outer join  com.com_file  c4 WITH (NOLOCK) on mc.id  = c4.parent_id
+	left outer join  com.image 	   c5 WITH (NOLOCK) on c5.id  = mc.img_id
+	where  ${strCondWhere} and mc.flag = '1'
+	and conts_div_cd = 'T'
+	<if test="chnlType != null and chnlType != ''">
+	and c1.code_name = #{chnlType}
+	</if>
+	and ${strSVCType}
+	and ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectChannelType)
+	============================================
+	-	제목					: 콘텐츠  채널 유형 조회
+	-	설명					: 콘텐츠  채널 유형 조회(SMS,PUSH 등등의 목록 조회하여 )
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		typeid		    	: 채널 아이디
+		typeCd				: 채널 유형
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChannelType" parameterType="com.icignal.marketing.contents.dto.request.MktContentChlReqDto" resultType="com.icignal.marketing.contents.dto.response.MktContentChlResDto">
+	/*MKTContents.selectChannelType*/
+	SELECT
+         mcc.id as typeid
+       , mcc.mark_name as typeCd
+       , attrib01 as path
+       , mcc.code_name as codeName
+	FROM com.comm_code mcc WITH (NOLOCK) 
+	where mcc.lang = #{lang}
+	  and mcc.flag = 1
+      and mcc.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+      and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectChnnl)
+	============================================
+	-	제목					: 콘텐츠  채널 유형 조회
+	-	설명					: 콘텐츠  채널 유형 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력
+		id                  : 고유 아이디
+	-	출력
+		markName		    : 채널 명
+		cost				: 단가
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChnnl" parameterType="com.icignal.marketing.contents.dto.request.MktContentChlReqDto" resultType="com.icignal.marketing.contents.dto.response.MktContentChlResDto">
+	/*MKTContents.selectChnnl*/
+		select
+			 mc.id
+		   , mc.chnl_nm as markName
+		   , mc.cost_ucost as cost
+		   , c1.code_Name as codeName
+		   , c1.attrib01 as path
+		from mkt.mkt_chnl mc WITH (NOLOCK) 
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 
+		and c1.code_name = mc.chnl_type_cd 
+		and c1.lang = #{lang} 
+		and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	 	where 1=1
+	 	  and mc.flag = 1
+	      and mc.chnl_type_cd = #{id}
+	      and ${strSVCType}
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일               : MKTContentDAO.java(selectChnnl)
+    ============================================
+    -   제목                  : 채널 조회 By codeName
+    -   설명                  : 채널 조회 By codeName
+    -   결과형태                : 단일
+    ============================================
+    -   입력
+        type                  : 채널 코드
+    -   출력
+        markName            : 채널 명
+        cost                : 단가
+        codeName            : 코드
+        path                : 폼 path
+    ============================================
+    -   작성자                 : 박지열
+    -   작성일                 : 2015.09.23
+    ***************************************/ -->
+    <select id="selectChannelByCodeName" parameterType="com.icignal.marketing.contents.dto.request.MktContentChlReqDto" resultType="com.icignal.marketing.contents.dto.response.MktContentChlResDto">
+    /*MKTContents.selectChannelByCodeName*/
+    select
+           mc.id
+           , mc.chnl_nm as markName
+           , mc.cost_ucost as cost
+           , c1.code_Name as codeName
+           , c1.attrib01 as path
+      from mkt.mkt_chnl mc WITH (NOLOCK) 
+     left outer join com.comm_code c1
+        WITH (NOLOCK) on c1.flag = 1 and c1.code_name = mc.chnl_type_cd and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+     left outer join com.comm_code c2
+         WITH (NOLOCK) on c2.flag = 1 and c2.code_name = mc.CHNL_STATUS_CD and c2.lang = #{lang} and c2.group_code = 'COMM_STATUS'
+     where 1=1
+       and mc.flag = 1
+       and c1.code_Name = #{type}
+       and ${strSVCType}
+    </select>
+
+	 <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectDeatilContent)
+	============================================
+	-	제목					: 콘텐츠 상세 목록 조회
+	-	설명					: 콘텐츠 상세 목록 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id          	    : 고유 아이디
+	-	출력
+		contentsName		: 콘텐츠 명
+		contentsType		: 타입
+		title			    : 제목
+		contents		    : 내용
+		description		    : 설명
+		textByteSize		: 텍스트 크기
+		imgSize		        : 이미지 크기
+		imgCnt		        : 등록 이미지 수
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectDetailContent" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto" resultType="com.icignal.marketing.contents.dto.response.MktContentResDto">
+	/*MKTContents.selectDetailContent*/
+	 select
+	 		  mcm.id as id
+		    , mcm.CONTS_NM as contentsName
+			, mcm.exe_chnl_type_cd as contentsType
+			, mcm.CONTS_TITLE as title
+            , mcm.CONTS_SUB_TITLE as subTitle
+			, c3.CODE_NAME as txtMsgObject
+			, mcm.CONTS_SBST as contents
+			, mcm.CONTS_DESC as description
+			, mc.CHNL_GUIDE  as chnlGuide
+			, mcm.CONTS_HTML as html
+			, mcm.CONTS_VOL as textByteSize
+			, mcm.img_size as imgSize
+			, mcm.IMG_APLY_CNT as imgCnt
+			, (c1.file_name + '.' + c1.file_type) as fileName
+			, (c1.file_path + c1.file_name + '.' + c1.file_type) as filePath
+            , (c2.IMAGE_FOLDER + c2.IMAGE_FILE_NAME + c2.IMAGE_FILE_TYPE) as imagepath
+			, c2.id as imgId
+
+            <!-- 서브이미지 -->
+            , mcm.sub_img_size as subImgSize
+            , (c7.image_folder + c7.image_file_name + c7.image_file_type) as subImagepath
+            , mcm.sub_img_id as subImgId
+
+			, (c4.IMAGE_FOLDER + c4.IMAGE_FILE_NAME + c4.IMAGE_FILE_TYPE) as barpath
+			, c4.id as barId
+			, (c5.IMAGE_FOLDER + c5.IMAGE_FILE_NAME + c5.IMAGE_FILE_TYPE) as merpath
+			, c5.id as merId
+			, mcm.conts_bottom as bottom
+            , c6.code_name as contsPushTypeCode
+            , mcm.conts_push_sub_type_cd as contsPushSubTypeCode
+            , mcm.conts_push_sub_type_val as contsPushSubTypeVal
+
+            , mcm.conts_push_param as contsPushParam
+            , mcm.conts_push_app_type_cd as contsPushAppTypeCode
+            , mcm.conts_push_send_type_cd as contsPushSendTypeCode
+
+            , mcm.PSTNG_TYPE_CD           as  pstngTypeCd
+            , mcm.CONTS_ATTEN_MTR         as  contsAttenMtr
+            , mcm.INQR_NO                 as  inqrNo
+            , mcm.ATTRIB01                as  attrib01
+            , mcm.ATTRIB02                as  attrib02
+            , mcm.ATTRIB03                as  attrib03
+            , mcm.ATTRIB04                as  attrib04
+            , mcm.ATTRIB05                as  attrib05
+            , mcm.ATTRIB06                as  attrib06
+            , mcm.ATTRIB07                as  attrib07
+            , mcm.ATTRIB08                as  attrib08
+            , mcm.ATTRIB09                as  attrib09
+            , mcm.DP_START_DT             as  dpStartDt
+            , mcm.DP_END_DT               as  dpEndDt
+            , convert(varchar,mcm.NEW_DP_CLO_DT, 120) as newDpCloDt
+            , mcm.APCT_POSBL_NUM          as  apctPosblNum
+            , mcm.CONTS_SEQ               as  contsSeq
+            , mcm.CONTS_LOAD_SEQ          as  contsLoadSeq
+            , mcm.HPAGE                   as  hpage
+            , mcm.EV_NO                   as  evNo
+	from mkt.mkt_conts_mst mcm WITH (NOLOCK) 
+	left outer join com.com_file  c1 WITH (NOLOCK) on c1.flag = 1 and  mcm.id = c1.parent_id
+	left outer join com.image     c2 WITH (NOLOCK) on c2.flag = 1 and c2.id = mcm.img_id
+	left outer join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name = mcm.CONTS_PRPS_CD and c3.lang = #{lang} and c3.group_code = 'TXT_MSG_OBJECT_CD'
+	left outer join com.image     c4 WITH (NOLOCK) on c4.flag = 1 and c4.id = mcm.bcode_img_id
+	left outer join com.image     c5 WITH (NOLOCK) on c5.flag = 1 and c5.id = mcm.MERGE_IMG_ID
+    left outer join com.comm_code c6 WITH (NOLOCK) on c6.flag = 1 and c6.code_name = mcm.conts_push_type_cd and c6.lang = #{lang} and c6.group_code = 'CONTS_PUSH_TYPE_CD'
+    left outer join com.image     c7 WITH (NOLOCK) on c7.flag = 1 and c7.id = mcm.sub_img_id
+	left outer join mkt.mkt_chnl  mc WITH (NOLOCK) on mc.flag = 1 and mc.CHNL_TYPE_CD = mcm.EXE_CHNL_TYPE_CD
+
+	where mcm.id = #{id} and mcm.flag = 1
+	and ${strSVCType}
+
+	</select>
+
+	 <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectMmsDtlList)
+	============================================
+	-	제목					: 콘텐츠 상세 목록 조회
+	-	설명					: 콘텐츠 상세 목록 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id          	    : 고유 아이디
+	-	출력
+		contentsName		: 콘텐츠 명
+		contentsType		: 타입
+		title			    : 제목
+		contents		    : 내용
+		description		    : 설명
+		textByteSize		: 텍스트 크기
+		imgSize		        : 이미지 크기
+		imgCnt		        : 등록 이미지 수
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectMmsDtlList" parameterType="com.icignal.marketing.contents.dto.request.MktMmsDtlReqDto" resultType="com.icignal.marketing.contents.dto.response.MktMmsDtlResDto">
+	/*MKTContents.selectMmsDtlList*/
+	 select
+	 		  mcm.id               as id
+		    , mcm.CONTS_NM         as contentsName
+			, mcm.exe_chnl_type_cd as contentsType
+			, mcm.CONTS_TITLE      as title
+			, c3.CODE_NAME         as txtMsgObject
+			, mcm.CONTS_SBST       as contents
+			, mcm.CONTS_DESC       as description
+			, mc.CHNL_GUIDE		   as chnlGuide
+			, mcm.CONTS_HTML       as html
+			, mcm.CONTS_VOL        as textByteSize
+			, mcm.img_size         as imgSize
+			, mcm.IMG_APLY_CNT     as imgCnt
+			, c1.file_name         as fileName
+			, (c1.file_path + c1.file_name + '.' +c1.file_type) as filePath
+			, (c2.IMAGE_FOLDER + c2.IMAGE_FILE_NAME + c2.IMAGE_FILE_TYPE) as imagepath
+			, c2.id as imgId
+			, (c4.IMAGE_FOLDER + c4.IMAGE_FILE_NAME + c4.IMAGE_FILE_TYPE) as barpath
+			, c4.id as barId
+			, (c5.IMAGE_FOLDER + c5.IMAGE_FILE_NAME + c5.IMAGE_FILE_TYPE) as merpath
+			, c5.id              as merId
+			, mcm.conts_bottom   as bottom
+            , mcm.img_link_url       as imgLinkUrl
+
+            , mcm.attrib01 as attrib01
+            , mcm.attrib02 as attrib02
+            , mcm.attrib03 as attrib03
+            , mcm.attrib04 as attrib04
+            , mcm.attrib05 as attrib05
+            , mcm.attrib06 as attrib06
+            , mcm.attrib07 as attrib07
+            , mcm.attrib08 as attrib08
+            , mcm.attrib09 as attrib09
+            , mcm.attrib10 as attrib10
+	from mkt.mkt_conts_mst mcm WITH (NOLOCK) 
+	left outer join com.com_file  c1 WITH (NOLOCK) on c1.flag = 1 and c1.parent_id = mcm.id
+	left outer join com.image     c2 WITH (NOLOCK) on c2.flag = 1 and c2.id = mcm.img_id
+	left outer join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name = mcm.CONTS_PRPS_CD and c3.lang = #{lang} and c3.group_code = 'TXT_MSG_OBJECT_CD'
+	left outer join com.image     c4 WITH (NOLOCK) on c4.flag = 1 and c4.id = mcm.bcode_img_id
+	left outer join com.image     c5 WITH (NOLOCK) on c5.flag = 1 and c5.id = mcm.MERGE_IMG_ID
+	left outer join mkt.mkt_chnl  mc WITH (NOLOCK) on mc.flag = 1 and mc.CHNL_TYPE_CD = mcm.EXE_CHNL_TYPE_CD
+
+	where mcm.id = #{id} and mcm.flag = 1
+	and ${strSVCType}
+
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getEmailDtlList)
+	============================================
+	-	제목					: 콘텐츠 상세 목록 조회
+	-	설명					: 콘텐츠 상세 목록 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id          	    : 고유 아이디
+	-	출력
+		contentsName		: 콘텐츠 명
+		contentsType		: 타입
+		title			    : 제목
+		contents		    : 내용
+		description		    : 설명
+		textByteSize		: 텍스트 크기
+		imgSize		        : 이미지 크기
+		imgCnt		        : 등록 이미지 수
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectEmailDtlList" parameterType="com.icignal.marketing.contents.dto.request.MktEmailDtlReqDto" resultType="com.icignal.marketing.contents.dto.response.MktEmailDtlResDto">
+	/*MKTContents.selectEmailDtlList*/
+	select
+	 		  mcm.id as id
+		    , mcm.CONTS_NM as contentsName
+			, mcm.exe_chnl_type_cd as contentsType
+			, mcm.CONTS_TITLE as title
+			, c4.code_name as emailType
+			, mcm.CONTS_SBST as contents
+			, mcm.CONTS_HTML as html
+			, mcm.CONTS_VOL as textByteSize
+			, (c1.file_name + '.' + c1.file_type) as fileName
+			, (c1.file_path + c1.file_name + '.' + c1.file_type) as filePath
+	from mkt.mkt_conts_mst mcm WITH (NOLOCK) 
+	left outer join com.com_file  c1 WITH (NOLOCK) on c1.flag = 1 and c1.parent_id = mcm.id
+	left outer join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name = mcm.CONTS_PRPS_CD and c3.lang = #{lang} and c3.group_code = 'TXT_MSG_OBJECT_CD'
+	left outer join com.comm_code c4 WITH (NOLOCK) on c4.flag = 1 and c4.code_name = mcm.CONTS_EMAIL_TYPE_CD and c4.lang = #{lang} and c4.group_code = 'CONTS_EMAIL_TYPE_CD'
+	where mcm.id = #{id} and mcm.flag = 1
+	and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(insertContent)
+	============================================
+	-	제목					: 콘텐츠 추가
+	-	설명					: 콘텐츠 추가
+	-	결과형태				:
+	============================================
+	-	입력
+		memId               :
+        contentsName        :
+        contentsType        :
+        contentsFlag        :
+        title               :
+        txtMsgObject        :
+        contents            :
+        html                :
+        description         :
+        textByteSize        :
+        imgSize             :
+        imgCnt              :
+	-	출력
+		id           		: 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<insert id="insertContent" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto">
+	/*MKTContents.insertContent*/
+	insert into mkt.mkt_conts_mst (
+		 id
+ 		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		, flag
+		, CONTS_NM
+		, exe_chnl_type_cd
+		, CONTS_DIV_CD
+		, CONTS_TITLE
+        , CONTS_SUB_TITLE
+		, CONTS_PRPS_CD
+		, CONTS_SBST
+		, CONTS_HTML
+		, CONTS_DESC
+		, CONTS_VOL
+		, img_size
+		, IMG_APLY_CNT
+		, IMG_ID
+		, BCODE_IMG_ID
+		, MERGE_IMG_ID
+		, conts_bottom
+		, CONTS_EMAIL_TYPE_CD
+        , CONTS_PUSH_TYPE_CD
+        , CONTS_PUSH_SUB_TYPE_CD
+        , CONTS_PUSH_SUB_TYPE_VAL
+        , CONTS_PUSH_APP_TYPE_CD
+        , CONTS_PUSH_SEND_TYPE_CD
+        , CONTS_PUSH_PARAM
+        , SNS_INFO
+        , RESERVE_POST
+        , OPEN_RANGE
+        , ATT_TYPE
+
+        , PSTNG_TYPE_CD
+        , CONTS_ATTEN_MTR
+        , INQR_NO
+        , DP_START_DT
+        , DP_END_DT
+        , NEW_DP_CLO_DT
+        , APCT_POSBL_NUM
+        , CONTS_SEQ
+        , CONTS_LOAD_SEQ
+        , HPAGE
+        , EV_NO
+        , ATTRIB01
+        , ATTRIB02
+        , ATTRIB03
+        , ATTRIB04
+        , ATTRIB05
+        , ATTRIB06
+        , ATTRIB07
+        , ATTRIB08
+        , ATTRIB09
+
+        , IMG_LINK_URL
+        , SUB_IMG_SIZE
+        , SUB_IMG_ID
+    )
+    values(
+          #{id}
+        , #{memId}
+        , #{memId}
+        , getdate()
+        , getdate()
+        , '1'
+        , #{contentsName}
+        , #{contentsType}
+        <if test="camFlag == 1">
+        ,'C'
+        </if>
+        <if test="camFlag != 1">
+        , 'T'
+        </if>
+        , #{title}
+        , #{subTitle}
+        , #{txtMsgObject}
+        , #{contents}
+        , #{html}
+        , #{description}
+        , #{textByteSize}
+        , #{imgSize}
+        , #{imgCnt}
+        , #{imgId}
+        , #{barId}
+        , #{merId}
+        , #{bottom}
+        , #{emailType}
+        , #{contsPushTypeCode}
+        , #{contsPushSubTypeCode}
+        , #{contsPushSubTypeVal}
+        , #{contsPushAppTypeCode}
+        , #{contsPushSendTypeCode}
+        , #{contsPushParam}
+        , #{snsInfo}
+        , #{reservePost}
+        , #{openRange}
+        , #{attType}
+
+        , #{pstngTypeCd}
+        , #{contsAttenMtr}
+        , #{inqrNo}
+        , CASE WHEN #{dpStartDt} = '' THEN null ELSE #{dpStartDt} END
+        , CASE WHEN #{dpEndDt} = '' THEN null ELSE #{dpEndDt} END
+        , CASE WHEN #{newDpCloDt} = '' THEN null ELSE #{newDpCloDt} END
+        , #{apctPosblNum}
+        , #{contsSeq}
+        , #{contsLoadSeq}
+        , #{hpage}
+        , #{evNo}
+        , #{attrib01}
+        , #{attrib02}
+        , #{attrib03}
+        , #{attrib04}
+        , #{attrib05}
+        , #{attrib06}
+        , #{attrib07}
+        , #{attrib08}
+        , #{attrib09}
+
+        , #{imgLinkUrl}
+        , #{subImgSize}
+        , #{subImgId}
+	)
+	<selectKey keyProperty="" resultType="java.lang.String">
+			select id from mkt.mkt_conts_mst WITH (NOLOCK) where id = #{id}
+	</selectKey>
+	</insert>
+
+
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(updateContent)
+	============================================
+	-	제목					: 콘텐츠 수정
+	-	설명					: 콘텐츠 수정
+	-	결과형태				:
+	============================================
+	-	입력
+		contentsName        : 접속 ID
+        contentsType        : 마케팅 ID
+        contentsFlag        : 콘텐츠 유형
+        title           	: 고유 아이디
+        txtMsgObject        : Text 목적 Text
+        contents            : 내용
+        html                : html 작성 양식
+        description         : 설명
+        textByteSize        : 콘텐츠 용량
+        imgSize             : 이미지 용량
+        imgCnt              : 이미지 적용 건수
+        id                  : 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="updateContent" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto">
+	/*MKTContents.updateContent*/
+	 update mkt.mkt_conts_mst SET
+		  modify_by       = #{memId}
+		, modify_date     = getdate()
+		, CONTS_NM        = #{contentsName}
+        , CONTS_TITLE     = #{title}
+        , CONTS_SUB_TITLE = #{subTitle}
+		<if test="txtMsgObject != null and txtMsgObject != ''">
+		, CONTS_PRPS_CD   = #{txtMsgObject}
+		</if>
+		, CONTS_SBST      = #{contents}
+		, CONTS_HTML      = #{html}
+		, CONTS_DESC      = #{description}
+		, CONTS_VOL       = #{textByteSize}
+		<if test="contentsType != null and contentsType != ''">
+		, exe_chnl_type_cd = #{contentsType}
+		</if>
+		, img_size        = #{imgSize}
+		, sub_img_size    = #{subImgSize}
+		, IMG_APLY_CNT    = #{imgCnt}
+		, IMG_ID          = #{imgId}
+		, SUB_IMG_ID      = #{subImgId}
+		, BCODE_IMG_ID    = #{barId}
+		, MERGE_IMG_ID    = #{merId}
+		, conts_bottom    = #{bottom}
+		, CONTS_EMAIL_TYPE_CD = #{emailType}
+
+        , CONTS_PUSH_TYPE_CD      = #{contsPushTypeCode}
+        , CONTS_PUSH_SUB_TYPE_CD  = #{contsPushSubTypeCode}
+        , CONTS_PUSH_SUB_TYPE_VAL = #{contsPushSubTypeVal}
+
+        , CONTS_PUSH_APP_TYPE_CD  = #{contsPushAppTypeCode}
+        , CONTS_PUSH_SEND_TYPE_CD = #{contsPushSendTypeCode}
+        , CONTS_PUSH_PARAM        = #{contsPushParam}
+
+        , SNS_INFO        = #{snsInfo}
+        , RESERVE_POST    = #{reservePost}
+        , OPEN_RANGE      = #{openRange}
+        , ATT_TYPE        = #{attType}
+
+        , PSTNG_TYPE_CD   = #{pstngTypeCd}
+        , CONTS_ATTEN_MTR = #{contsAttenMtr}
+        , INQR_NO         = #{inqrNo}
+        , ATTRIB01        = #{attrib01}
+        , ATTRIB02        = #{attrib02}
+        , ATTRIB03        = #{attrib03}
+        , ATTRIB04        = #{attrib04}
+        , ATTRIB05        = #{attrib05}
+        , ATTRIB06        = #{attrib06}
+        , ATTRIB07        = #{attrib07}
+        , ATTRIB08        = #{attrib08}
+        , ATTRIB09        = #{attrib09}
+        , DP_START_DT     = CASE WHEN #{dpStartDt} = '' THEN null ELSE #{dpStartDt} END
+        , DP_END_DT       = CASE WHEN #{dpEndDt} = '' THEN null ELSE #{dpEndDt} END
+        , NEW_DP_CLO_DT   = CASE WHEN #{newDpCloDt} = '' THEN null ELSE #{newDpCloDt} END
+        , APCT_POSBL_NUM  = #{apctPosblNum}
+        , CONTS_SEQ       = #{contsSeq}
+        , CONTS_LOAD_SEQ  = #{contsLoadSeq}
+        , HPAGE           = #{hpage}
+        , EV_NO           = #{evNo}
+        , IMG_LINK_URL    = #{imgLinkUrl}
+	where ${strSVCType}
+      and id = #{id}
+
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(deleteContent)
+	============================================
+	-	제목					: 콘텐츠 수정
+	-	설명					: 콘텐츠 수정
+	-	결과형태				:
+	============================================
+	-	입력
+        id                  : 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="deleteContent" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto">
+	/*MKTContents.deleteContent*/
+	 UPDATE mkt.mkt_conts_mst SET
+	      modify_by = #{memId}
+		, modify_date = getdate()
+		, flag = '0'
+	 where ${strSVCType}
+	 <if test="lisContentFlowId.size() != 0">
+	 and id in
+	  <foreach collection="lisContentFlowId" item="item" separator="," close=")" open="(">
+			#{item}
+	</foreach>
+	</if>
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(serarchCondType)
+	============================================
+	-	제목					: 개인화 속성 조회
+	-	설명					: 컨텐츠 등록을 위한 개인화 속성 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    phone1              : 지역 번호
+	    phone2              : 폰 번호 1
+	    phone3              : 폰 번호 2
+	    schemas             : 스키마 명
+	    tblName             : 테이블 명
+	    colName             : 컬럼 명
+	-	출력
+		colName		        : 컬럼 명
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="serarchCondType" parameterType="com.icignal.marketing.contents.dto.request.MktCondReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.serarchCondType*/
+	SELECT
+	       mark_name as markName
+	     , attrib01 as schName
+		 , attrib02 as tblName
+		 , attrib03 as colName
+	FROM com.comm_code WITH (NOLOCK) 
+	where flag = 1
+    and group_code = 'MKT_COND_TYPE_CD'
+    and lang = #{lang}
+    and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectPersonalType)
+	============================================
+	-	제목					: 개인화 속성 조회
+	-	설명					: 컨텐츠 등록을 위한 개인화 속성 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    phone1              : 지역 번호
+	    phone2              : 폰 번호 1
+	    phone3              : 폰 번호 2
+	    schemas             : 스키마 명
+	    tblName             : 테이블 명
+	    colName             : 컬럼 명
+	-	출력
+		colName		        : 컬럼 명
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectPersonalType" parameterType="com.icignal.marketing.contents.dto.request.MktCondReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.serarchPersonalType*/
+	select metl.DB_NM as dbNm
+		, metl.CON_IP as conIp
+		, metl.CON_PORT as conPort
+		, metl.CON_ID as conId
+		, metl.CON_PW as conPw
+		, case when c2.code_name != 'MSSQL' then (c2.ATTRIB02 + metl.con_ip + ':' + metl.con_port + '/' + metl.db_nm) else (c2.ATTRIB02 + metl.con_ip + ':' + metl.con_port + ';databaseName=' + metl.db_nm) end as conUrl
+		, c2.ATTRIB02 as conType
+		, c2.ATTRIB01 as classNm
+		, TBL_SCHEMA_NM as schName
+		, TBL_ENG_NM as tblName
+		, COL_ENG_NM as colName
+		, WHERE_SCH_HP as schPhone
+		, WHERE_SCH_EMAIL as schEmail
+		, COL_KOR_NM as markName
+        , mec.cond_calmt as condCalmt
+        , mec.where_sch_memid as schMemId
+        , metl.con_db_type as conDbType
+        , metl.AWS_SECRET_NM as secretNm
+	from COM.COM_EXTR_TBL met WITH (NOLOCK) 
+	join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and met.type = c1.code_name and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE' and c1.code_name = 'PERSONALIZATION'
+	join COM.COM_EXTR_COL mec WITH (NOLOCK) on mec.extr_tbl_id = met.id and mec.flag = 1
+	join COM.COM_EXTR_TARGET_LEVEL metl WITH (NOLOCK) on metl.id = met.target_level_id and metl.flag = 1
+	join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.code_name = CON_DB_TYPE and c2.lang = #{lang} and c2.group_code = 'CHNL_CON_DB_TYPE'
+	where ${strSVCType}
+    and met.flag = 1
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(serarchPersonalType)
+	============================================
+	-	제목					: 푸시 토큰 조회정보 조회
+	-	설명					: 컨텐츠 등록을 위한 푸시 토큰 조회 정보조회
+	-	결과형태				: 복수
+	============================================
+	-	작성자					: jh.kim
+	-	작성일					: 2018.02.15
+    ***************************************/ -->
+	<select id="selectPushTokenInfo" parameterType="com.icignal.marketing.contents.dto.request.MktCondReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.selectPushTokenInfo*/
+		select
+		      DB_NM
+			, CON_IP 		  as conIp
+			, CON_PORT 		  as conPort
+			, CON_ID 		  as conId
+			, CON_PW 		  as conPw
+			, case when c2.code_name != 'MSSQL' then (c2.ATTRIB02 + metl.con_ip + ':' + metl.con_port + '/' + metl.db_nm) else (c2.ATTRIB02 + metl.con_ip + ':' + metl.con_port + ';databaseName=' + metl.db_nm) end as conUrl
+			, c2.ATTRIB02 	  as conType
+			, c2.ATTRIB01 	  as classNm
+			, TBL_SCHEMA_NM   as schName
+			, TBL_ENG_NM 	  as tblName
+			, COL_ENG_NM 	  as colName
+			, COL_KOR_NM 	  as markName
+	        , mec.cond_calmt  as condCalmt
+	        , mec.where_sch_memid as schMemId
+	        , metl.con_db_type as conDbType
+		from COM.COM_EXTR_TBL met WITH (NOLOCK) 
+		join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and met.type = c1.code_name and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE' and c1.code_name = 'PUSH_INFO'
+		join COM.COM_EXTR_COL mec WITH (NOLOCK) on mec.extr_tbl_id = met.id and mec.flag = 1
+		join COM.COM_EXTR_TARGET_LEVEL metl WITH (NOLOCK) on metl.id = met.target_level_id and metl.flag = 1
+		join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.code_name = CON_DB_TYPE and c2.lang = #{lang} and c2.group_code = 'CHNL_CON_DB_TYPE'
+		where ${strSVCType}
+	    and met.flag = 1
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectPushInfo)
+	============================================
+	-	제목					: 푸쉬 전송을 위한 정보 조회
+	-	설명					: 푸쉬 전송을 위한 정보 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    phone1              : 지역 번호
+	    phone2              : 폰 번호 1
+	    phone3              : 폰 번호 2
+	    schemas             : 스키마 명
+	    tblName             : 테이블 명
+	    colName             : 컬럼 명
+	-	출력
+		colName		        : 컬럼 명
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectPushInfo" parameterType="com.icignal.marketing.contents.dto.request.MktCondReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.selectPushInfo*/
+	select
+		   code_name as colName,
+		   id as id
+	from com.comm_code WITH (NOLOCK) 
+	where (group_code = 'MKT_PUSH_SOUND' or group_code = 'MKT_ACCOUNT_APP_KEY' or  group_code = 'MKT_DEVICE_KEY')
+    and lang = #{lang}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getPersnalCond)
+	============================================
+	-	제목					: 개인화 속성 조회
+	-	설명					: 개인화 속성을 통한 회원 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    schName              : 스키마명
+	    tblName              : 테이블명
+	    phoneNum             : 폰 번호
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectPersnalCond" parameterType="com.icignal.marketing.contents.dto.request.MktCondReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.selectPersnalCond*/
+	select ${colName} as colName
+	from ${schName}.${tblName} WITH (NOLOCK) 
+    where (phone1 + phone2 + phone3) = #{phoneNum}
+	</select>
+
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(insertBarcode)
+	============================================
+	-	제목					: 바코드 삽입
+	-	설명					: 바코드 추가 후 DB에 Insert
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    path				: 경로
+		name				: 이름
+		fileType			: 파일 타입
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<insert id="insertBarcode" parameterType="com.icignal.marketing.contents.dto.request.MktFileUploadReqDto">
+	/*MKTContents.insertBarcode*/
+	insert into com.image (
+		  id
+		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		, flag
+		, image_folder
+		, image_file_name
+		, image_file_type
+		, image_type
+		, image_flag
+		, seq
+	)
+	values(
+  #{id}
+		 , #{memId}
+		 , #{memId}
+		 , getdate()
+		 , getdate()
+		 , '1'
+		 , #{path}
+		 , #{name}
+		 , #{fileType}
+		 , 'COUPONBARCODE'
+		 , '1'
+		 , '0'
+	)
+<!-- 	<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!-- 			select id from com.image where id = #{id} -->
+<!-- 	</selectKey> -->
+	</insert>
+
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(insertMerImage)
+	============================================
+	-	제목					: 이미지 병합
+	-	설명					: 이미지 병합 후 DB에 Insert
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    path				: 경로
+		name				: 이름
+		fileType			: 파일 타입
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<insert id="insertMerImage" parameterType="com.icignal.marketing.contents.dto.request.MktFileUploadReqDto">
+	/*MKTContents.insertMerImage*/
+	insert into com.image (
+		  id
+		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		, flag
+		, image_folder
+		, image_file_name
+		, image_file_type
+		, image_type
+		, image_flag
+		, seq
+	)
+	values(
+		   #{id}
+		 , #{memId}
+		 , #{memId}
+		 , getdate()
+		 , getdate()
+		 , '1'
+		 , #{path}
+		 , #{name}
+		 , #{fileType}
+		 , 'SENDLASTIMG'
+		 , '1'
+		 , '0'
+	)
+	<selectKey keyProperty="" resultType="java.lang.String">
+			select id from com.image WITH (NOLOCK)  where id = #{id}
+	</selectKey>
+	</insert>
+
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(insertContentFile)
+	============================================
+	-	제목					: 파일 추가
+	-	설명					: 파일 추가 후 DB에 Insert
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    filePath			: 경로
+		fileName			: 이름
+		extension			: 파일 타입
+		fileType			: 파일 타입
+		userId				: 유저 ID
+		size				: 크기
+		description			: 설명
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<insert id="insertContentFile" parameterType="com.icignal.marketing.contents.dto.request.MktFileUploadReqDto">
+	/*MKTContents.addContentFile*/
+	    insert into com.com_file (
+		  id, file_path, file_name, file_type, flag, type,
+		  create_by, modify_by, create_date, modify_date,
+		  file_size, lang, description
+		)
+        values(
+	  	    #{id}, #{filePath}, #{fileName}, #{extension}, 1, #{fileType},
+		 	#{userId}, #{userId}, getdate(), getdate(),
+		    #{size}, #{lang}, #{description}
+		)
+
+<!-- 	    <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!-- 		    select id from com.com_file where id = #{id} -->
+<!-- 		</selectKey> -->
+	</insert>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(deleteContentFile)
+	============================================
+	-	제목					: 파일 삭제
+	-	설명					: 파일 삭제
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    id					: 고유 아이디
+		memId				: 접속자 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="deleteContentFile" parameterType="com.icignal.marketing.contents.dto.request.MktFileUploadReqDto">
+	/*MKTContents.deleteContentFile*/
+	 update com.com_file SET
+		  modify_by = #{memId}
+		, modify_date = getdate()
+		, flag = '0'
+		, parent_id = ''
+	where ${strSVCType}
+    and parent_id = #{id}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(deleteContentFile)
+	============================================
+	-	제목					: 디렉토리 리스트 가져오기(싱크 퓨전용)
+	-	설명					: 디렉토리 리스트 가져오기
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    Path				: 경로
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectDirList" parameterType="com.icignal.marketing.contents.dto.request.MktFileUploadReqDto" resultType="com.icignal.marketing.contents.dto.response.MktFileUploadResDto">
+	/*MKTContents.selectDirList*/
+	    select
+	     DISTINCT substring(image_folder,41,4) as name
+      ,  '1/1/2015' as dateModified
+	  , 'Directory' as itemType
+      ,  '0' as size
+      , false as hasChild
+	  , true as isFile
+	from com.image WITH (NOLOCK) 
+	where image_folder like #{Path}
+    and flag =1
+    and SUBSTR(image_folder,41,7) != 'BARCODE'
+    and ${strSVCType}
+	and length(#{Path}) &lt;= 41
+
+	</select>
+
+
+      <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectImageId)
+	============================================
+	-	제목					: 이미지 ID 가져오기
+	-	설명					: 이미지 ID 가져오기
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    filePath			: 경로
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+    <select id="selectImageId" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto" resultType="java.lang.String">
+    /*MKTContents.selectImageId*/
+	SELECT id as id
+	FROM com.image WITH (NOLOCK) 
+	where (IMAGE_FOLDER + IMAGE_FILE_NAME + IMAGE_FILE_TYPE) = #{filePath} and flag= 1 and ${strSVCType}
+	</select>
+
+		<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectImageId)
+	============================================
+	-	제목					: 파일 타입 가져오기
+	-	설명					: 파일 타입 가져오기
+	-	결과형태				: 복수
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectFileUpType" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.selectFileUpType*/
+    SELECT c1.CODE_NAME as name
+    	  , max_vol as maxVol
+	from mkt.mkt_chnl_capa mcc WITH (NOLOCK) 
+	join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = mcc.UPLD_ETSION_CD and c1.ATTRIB01 = 'FILE' and c1.lang =  #{lang} and c1.group_code = 'CHNL_UPLOAD_TYPE'
+	join mkt.mkt_chnl  c2 WITH (NOLOCK) on c2.id = mcc.mkt_chnl_id and c2.flag = 1 
+	join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name = c2.chnl_type_cd and c3.code_name = 'EMAIL' and c3.lang =  #{lang} and c3.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	where mcc.type = 'ATTACH_USAGE'
+	and mcc.flag = 1
+    and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectImageOption)
+	============================================
+	-	제목					: 채널 이미지 사이즈 조회
+	-	설명					: 콘텐츠  채널의 이미지 사이즈 조회
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+		name		    	: 확장자 명
+		height				: 높이
+		width			    : 넓이
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectImageOption" parameterType="com.icignal.marketing.contents.dto.request.MktImgOptionReqDto" resultType="com.icignal.marketing.contents.dto.response.MktImgOptionResDto">
+	/*MKTContents.selectImageOption*/
+        /* MKTContents.selectImageOption */
+        select img_resol_h AS height
+             , img_resol_w AS width
+        from mkt.mkt_chnl t1 WITH (NOLOCK) 
+        join mkt.mkt_chnl_capa t2 WITH (NOLOCK) on t2.flag = 1 and t2.mkt_chnl_id = t1.id
+        where t1.flag = 1
+        and t1.chnl_type_cd = #{chnlId}
+        and t2.upld_etsion_cd = #{fileType}
+        and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectImageOption)
+	============================================
+	-	제목					: 채널 이미지 사이즈 조회
+	-	설명					: 콘텐츠  채널의 이미지 사이즈 조회
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	    fileType            : 파일 확장자
+	-	출력
+		name		    	: 확장자 명
+		height				: 높이
+		width			    : 넓이
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectImageOptionList" parameterType="com.icignal.marketing.contents.dto.request.MktImgOptionReqDto" resultType="com.icignal.marketing.contents.dto.response.MktImgOptionResDto">
+	/*MKTContents.selectImageOptionList*/
+	select
+		  c3.mark_Name as name
+		, img_resol_h as height
+		, img_resol_w as width
+	from mkt.mkt_chnl_capa mcc WITH (NOLOCK) 
+	join mkt.mkt_chnl c2 WITH (NOLOCK) on c2.id = #{chnlId} and c2.flag = 1
+	join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = c2.chnl_type_cd and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name = mcc.UPLD_ETSION_CD and c3.lang =  #{lang} and c3.group_code = 'CHNL_UPLOAD_TYPE'
+	where mkt_chnl_id = c2.id
+	and mcc.flag = '1'
+    and ${strSVCType}
+	<if test="fileType != null and fileType != ''">
+	    and mcc.UPLD_TYPE = #{fileType}
+	</if>
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectChnlCodeName)
+	============================================
+	-	제목					: Test 발송 시 채널 시스템 구분을 위한 값가져오기
+	-	설명					: Test 발송 시 채널 시스템 구분을 위한 값가져오기(SMS/MMS/PUSH 등의 구분)
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    id					: 고유 아이디
+	-	출력
+		markName		    : 채널 유형
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChnlCodeName" parameterType="com.icignal.marketing.contents.dto.request.MktCondReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.selectChnlCodeName*/
+	select	c1.mark_name as markName
+	from mkt.mkt_chnl mc WITH (NOLOCK) 
+	left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 
+	and c1.code_name = mc.chnl_type_cd 
+	and c1.lang =  #{lang} 
+	and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	where 1=1 
+	and mc.id = #{id}
+    and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectPersonalList)
+	============================================
+	-	제목					: 개인화 속성 리스트 가져오기
+	-	설명					: 개인화 속성 리스트 가져오기
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    id					: 고유 아이디
+	-	출력
+		markName		    : 개인화 속성
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectPersonalList" parameterType="com.icignal.marketing.contents.dto.request.MktCondReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+	/*MKTContents.selectPersonalList*/
+	select
+		  COL_KOR_NM as markName
+        , VAL_MAX_SIZE   as valMaxSize
+    from COM.COM_EXTR_COL mpm WITH (NOLOCK) 
+	join COM.COM_EXTR_TBL met WITH (NOLOCK) on met.id = mpm.extr_tbl_id and met.flag = 1
+	join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = met.type and c1.CODE_NAME = 'PERSONALIZATION' and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE'
+	where ${strSVCType}
+    and mpm.flag = 1
+	</select>
+
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectPersonalList)
+	============================================
+	-	제목					: 채널 Id 가져오기
+	-	설명					: 채널 Id 가져오기
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    id					: 고유 아이디
+	-	출력
+		markName		    : 개인화 속성
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChnlId" parameterType="com.icignal.marketing.contents.dto.request.MktChnlReqDto" resultType="com.icignal.marketing.contents.dto.response.MktChnlResDto">
+	/*MKTContents.selectChnlId*/
+	SELECT mc.id as chnlId FROM mkt.mkt_chnl mc WITH (NOLOCK) 
+	join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = mc.chnl_type_cd and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	where ${strSVCType}
+    and c1.code_name = #{chnltype}
+	</select>
+
+	 <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getTranceType)
+	============================================
+	-	제목					: 전송 타입 가져오기
+	-	설명					: 전송 타입 가져오기
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    id					: 고유 아이디
+	-	출력
+		markName		    : 개인화 속성
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+    <select id="selectTranceType" parameterType="com.icignal.marketing.contents.dto.request.MktgetTranceTypeReqDto" resultType="com.icignal.marketing.contents.dto.response.MktgetTranceTypeResDto">
+    /*MKTContents.selectTranceType*/
+		select    DB_NM as dbNm
+				, CON_IP as conIp
+				, CON_PORT as conPort
+				, CON_ID as conId
+				, CON_PW as conPw
+				, c2.ATTRIB02 as conType
+				, c2.ATTRIB01 as classNm
+				, col_eng_nm as colNm
+				, where_sch_hp as schphone
+				, where_sch_email as schemail
+				, c3.code_name as codeNm
+				, TBL_SCHEMA_NM as schName
+				, TBL_ENG_NM as tblName
+				, COL_ENG_NM as colName
+		from COM.COM_EXTR_COL mec WITH (NOLOCK) 
+		join COM.COM_EXTR_TBL met WITH (NOLOCK) on met.id = mec.extr_tbl_id 
+		join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = met.type and c1.code_name = 'SEND_ATTRIBUTE' and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE'
+		join COM.COM_EXTR_TARGET_LEVEL metl WITH (NOLOCK) on metl.id = met.target_level_id
+		join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.code_name = CON_DB_TYPE and c2.lang = #{lang} and c2.group_code = 'CHNL_CON_DB_TYPE'
+		join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name= mec.COL_ATRIB_DEF_CD_ID and c3.lang = #{lang} and c3.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+		where 1=1
+    </select>
+
+	 <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getCampaignIdByContentsId)
+	============================================
+	-	제목					: 캠페인 아이디 조회 By 콘텐츠 아이디
+	-	설명					: 캠페인 아이디 조회 By 콘텐츠 아이디
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	============================================
+	-	작성자					: 류동균
+	-	작성일					: 2016.10.20
+    ***************************************/ -->
+    <select id="selectCampaignIdByContentsId" parameterType="java.lang.String" resultType="java.lang.String">
+    /*MKTContents.selectCampaignIdByContentsId*/
+        select t3.id
+        from mkt.mkt_conts_mst t1 WITH (NOLOCK) 
+        join mkt.mkt_conts_chnl_rel t2 WITH (NOLOCK) on t2.flag = 1 and t2.contents_id = t1.id
+        join mkt.mkt_cam_mst t3 WITH (NOLOCK) on t3.flag = 1 and t3.id = t2.cam_id
+        where t1.id = #{contentsId}
+    </select>
+
+    <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getFacebookPageInfo)
+	============================================
+	-	제목					: 페이스북 페이지 정보 조회
+	-	설명					: 페이스북 페이지 정보 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.22
+    ***************************************/ -->
+    <select id="selectFacebookPageInfo" parameterType="com.icignal.marketing.contents.dto.request.MktGetFacebookPageInfoReqDto" resultType="com.icignal.marketing.contents.dto.response.MktGetFacebookPageInfoResDto">
+    	/* MKTContents.selectFacebookPageInfo */
+    	select
+    		mcasi.id 				as id
+    		, mcasi.sns_page_id 	as snsPageid
+    		, mcasi.app_id 			as appId
+    		, mcasi.app_secur_code 	as appSecurCode
+    		, mcasi.sns_page_desc 	as snsPageDesc
+    	from mkt.mkt_chnl mc WITH (NOLOCK) 
+    		join mkt.mkt_chnl_sns_adtn_info mcasi WITH (NOLOCK) on mc.id = mcasi.mkt_chnl_id
+    	where
+    		mc.chnl_type_cd = 'facebook'
+    		and mcasi.flag = '1'
+    </select>
+
+    <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectFacebookFileUpType)
+	============================================
+	-	제목					: 페이스북 파일형태 조회
+	-	설명					: 페이스북 파일형태 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.22
+    ***************************************/ -->
+    <select id="selectFacebookFileUpType" parameterType="com.icignal.marketing.contents.dto.request.MktContentReqDto" resultType="com.icignal.marketing.contents.dto.response.MktCondResDto">
+    	/* MKTContents.selectFacebookFileUpType */
+    	SELECT
+		    mcc.upld_etsion_cd AS name
+		    , max_vol AS maxVol
+		FROM mkt.mkt_chnl_capa mcc WITH (NOLOCK) 
+		   	JOIN com.comm_code c1 WITH (NOLOCK) ON c1.flag = 1
+		        AND c1.ATTRIB01 = '/marketing/content/facebookFormNew.jsp'
+		        AND c1.lang = #{lang}
+		        AND c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+		    JOIN mkt.mkt_chnl c2 WITH (NOLOCK) ON c2.id = mcc.mkt_chnl_id AND c2.flag = 1
+		    JOIN com.comm_code c3 WITH (NOLOCK) ON c3.flag = 1
+		        AND c3.code_name = c2.chnl_type_cd
+		        AND c3.code_name = 'facebook'
+		        AND c3.lang = #{lang}
+		        AND c3.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+		WHERE
+		    mcc.type = 'ATTACH_USAGE'
+    </select>
+
+    <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getFacebookPageInfoById)
+	============================================
+	-	제목					: 페이스북 페이지 정보 조회
+	-	설명					: 페이스북 페이지 정보 조회
+	-	결과형태				: 단수
+	============================================
+	-   입력					: id
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.22
+    ***************************************/ -->
+    <select id="selectFacebookPageInfoById" parameterType="com.icignal.marketing.contents.dto.request.MktGetFacebookPageInfoReqDto" resultType="com.icignal.marketing.contents.dto.response.MktGetFacebookPageInfoResDto">
+    	/* MKTContents.selectFacebookPageInfoById */
+    	select
+    		mcasi.id 				as id
+    		, mcasi.sns_page_id 	as snsPageid
+    		, mcasi.app_id 			as appId
+    		, mcasi.app_secur_code 	as appSecurCode
+    		, mcasi.sns_page_desc 	as snsPageDesc
+    		, mcasi.aces_token		as acesToken
+    		, mcasi.aces_exp_dt		as acesExpDt
+    	from mkt.mkt_chnl mc WITH (NOLOCK) 
+    		join mkt.mkt_chnl_sns_adtn_info mcasi WITH (NOLOCK) on mc.id = mcasi.mkt_chnl_id
+    	where
+    		mc.chnl_type_cd = 'facebook'
+    		and mcasi.flag = '1'
+    		and mcasi.id = #{fbId}
+    </select>
+
+    <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(updateFacebookPageInfo)
+	============================================
+	-	제목					: 페이스북 페이지 정보 수정
+	-	설명					: 페이스북 페이지 정보 수정
+	-	결과형태				:
+	============================================
+	-   입력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.22
+    ***************************************/ -->
+    <update id="updateFacebookPageInfo" parameterType="com.icignal.marketing.contents.dto.request.MktGetFacebookPageInfoReqDto">
+    	/* MKTContents.updateFacebookPageInfo */
+    	update mkt.mkt_chnl_sns_adtn_info
+    	set
+    		modify_by = #{memId}
+    		, modify_date = getdate()
+    		, aces_token = #{longLivedToken}
+    		, aces_exp_dt = #{expiresIn}
+    	where
+    		app_id = #{appId}
+    		and flag = '1'
+    </update>
+
+    <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(multiSelectImages)
+	============================================
+	-	제목					: 페이스북 다중 이미지 첨부 조회
+	-	설명					: 페이스북 다중 이미지 첨부 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력					: parentId, category
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.22
+    ***************************************/ -->
+    <select id="multiSelectImages" parameterType="java.util.HashMap" resultType="com.icignal.common.base.dto.response.MultiImage">
+    	/* MKTContents.multiSelectImages */
+		SELECT i.id as imageId
+		    , isnull((i.image_folder + i.image_file_name + i.image_file_type), '') as imgOrgUrl
+	    	, i.seq
+	    	, (i.ori_img_file_nm + i.image_file_type) as oriName
+	    	, (i.image_file_name + i.image_file_type) as imgFileName
+		FROM com.image i WITH (NOLOCK) 
+		WHERE i.parent_id = #{parentId} and i.image_type = #{category}
+	</select>
+
+	<resultMap id="selectFacebookDtlResultMap" type="com.icignal.marketing.contents.dto.response.MktFacebookDtlResDto">
+	    <result property="id" column="id"/>
+	    <result property="contentsName" column="contentsName"/>
+	    <result property="contentsType" column="contentsType"/>
+	    <result property="title" column="title"/>
+	    <result property="snsInfo" column="snsInfo"/>
+	    <result property="contents" column="contents"/>
+	    <result property="html" column="html"/>
+	    <result property="textByteSize" column="textByteSize"/>
+	    <result property="postId" column="postId"/>
+	    <result property="reservePost" column="reservePost"/>
+	    <result property="openRange" column="openRange"/>
+	    <result property="attType" column="attType"/>
+	    <result property="fileSize" column="fileSize"/>
+	    <result property="oriFileName" column="oriFileName"/>
+	    <result property="fileName" column="fileName"/>
+	    <result property="filePath" column="filePath"/>
+	    <association property="images" select="MKTContents.multiSelectImages" column="{parentId=id,category=category}"/>
+	</resultMap>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getFacebookDtlList)
+	============================================
+	-	제목					: 페이스북 콘텐츠 상세 조회
+	-	설명					: 페이스북 콘텐츠 상세 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력					: id
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.22
+    ***************************************/ -->
+	<select id="selectFacebookDtlList" parameterType="com.icignal.marketing.contents.dto.request.MktFacebookDtlReqDto" resultMap="selectFacebookDtlResultMap">
+		/* MKTContents.selectFacebookDtlList */
+		select
+		 	mcm.id as id
+			, mcm.CONTS_NM 				as contentsName
+			, mcm.exe_chnl_type_cd 		as contentsType
+			, mcm.CONTS_TITLE 			as title
+			, mcm.SNS_INFO 				as snsInfo
+			, mcm.CONTS_SBST 			as contents
+			, mcm.CONTS_HTML 			as html
+			, mcm.CONTS_VOL 			as textByteSize
+			, mcm.POST_ID				as postId
+			, mcm.RESERVE_POST			as reservePost
+			, mcm.OPEN_RANGE			as openRange
+			, mcm.ATT_TYPE				as attType
+			, c1.file_size				as fileSize
+			, (c1.ori_file_name + '.' + c1.file_type) 		 as oriFileName
+			, (c1.file_name + '.' + c1.file_type) 			 as fileName
+			, c1.file_path 				as filePath
+			, 'USERCONTS' as category
+			<!-- , concat(i.ori_img_file_nm, i.image_file_type) as oriName -->
+			<!-- , COALESCE(concat(i.image_folder, i.image_file_name, i.image_file_type), '') as imageUrl -->
+		from mkt.mkt_conts_mst mcm WITH (NOLOCK) 
+		left outer join com.com_file  c1 WITH (NOLOCK) on c1.parent_id = mcm.id
+			<!-- left outer join com.comm_code c3 on c3.flag = 1 and c3.code_name = mcm.CONTS_PRPS_CD and c3.lang = #{lang} and c3.group_code = 'TXT_MSG_OBJECT_CD'
+			left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = mcm.CONTS_EMAIL_TYPE_CD and c4.lang = #{lang} and c4.group_code = 'CONTS_EMAIL_TYPE_CD' -->
+			<!-- left outer join com.image i on mcm.id = i.parent_id  --><!-- and i.image_type = getCommCodeIdByGroupCodeCodeName('IMAGE_TYPE', 'USERCONTS', #{lang}) -->
+		where
+			mcm.id = #{id}
+			and mcm.flag = 1
+			and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(updatePostId)
+	============================================
+	-	제목					: 페이스북 포스팅 시, postId 추가
+	-	설명					: 페이스북 포스팅 시, postId 추가
+	-	결과형태				:
+	============================================
+	-   입력					: postId
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.06.07
+    ***************************************/ -->
+	<update id="updatePostId" parameterType="com.icignal.marketing.contents.dto.request.MktSetPostIdReqDto">
+		/* MKTContents.setPostId */
+		update mkt.mkt_conts_mst
+		set
+			modify_by = #{memId}
+    		, modify_date = getdate()
+			, post_id = #{postId}
+		where
+			id = #{id}
+			and flag = '1'
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getFacebookOpenRangeInfo)
+	============================================
+	-	제목					: 페이스북 공개 범위 조회
+	-	설명					: 페이스북 공개 범위 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력					:
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.06.07
+    ***************************************/ -->
+	<select id="selectFacebookOpenRangeInfo" parameterType="com.icignal.marketing.contents.dto.request.MktGetFacebookOpenRangeInfoReqDto" resultType="com.icignal.marketing.contents.dto.response.MktGetFacebookOpenRangeInfoResDto">
+		/* MKTContents.selectFacebookOpenRangeInfo */
+		select
+			cc.id				as id
+			, cc.mark_name		as markName
+			, cc.code_name		as codeName
+		from com.comm_code cc WITH (NOLOCK) 
+		where
+			cc.group_code = 'FACEBOOK_AUTH_TYPE_CD'
+			and cc.flag = '1'
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(setRspnsInfo)
+	============================================
+	-	제목					: 페이스북 반응정보 추가
+	-	설명					: 페이스북 반응정보 추가
+	-	결과형태				:
+	============================================
+	-   입력					:
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.06.07
+    ***************************************/ -->
+	<insert id="insertRspnsInfo" parameterType="com.icignal.marketing.contents.dto.request.MktSetRspnsInfoReqDto">
+		/* MKTContents.setRspnsInfo */
+		insert into mkt.mkt_send_rspns_info
+		(
+			id
+	 		, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , rspns_id -->
+			, cam_id
+			, cam_rspns_id
+			, rspns_date
+			, rspns_id_cnt
+		)
+		values
+		(
+			com.getNewID('A')
+			, #{memId}
+			, #{memId}
+			, getdate()
+			, getdate()
+			, '1'
+			<!-- , #{rspnsId} -->
+			, #{camId}
+			, #{camRspnsId}
+			, #{rspnsDate}
+			, #{rspnsIdCnt}
+		)
+	</insert>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(updateRspnsInfo)
+	============================================
+	-	제목					: 페이스북 반응정보 수정
+	-	설명					: 페이스북 반응정보 수정
+	-	결과형태				:
+	============================================
+	-   입력					:
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.06.07
+    ***************************************/ -->
+	<update id="updateRspnsInfo" parameterType="com.icignal.marketing.contents.dto.request.MktSetRspnsInfoReqDto">
+		/* MKTContents.updateRspnsInfo */
+		update mkt.mkt_send_rspns_info
+		set
+			rspns_date = #{rspnsDate}
+			, modify_by = #{memId}
+			, modify_date = getdate()
+			, rspns_id_cnt = #{rspnsIdCnt}
+		where
+			<!-- rspns_id = #{rspnsId} -->
+			cam_id = #{camId}
+			and cam_rspns_id = #{camRspnsId}
+			and flag = '1'
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(isRspnsInfoExist)
+	============================================
+	-	제목					: 페이스북 반응정보 중복 확인
+	-	설명					: 페이스북 반응정보 중복 확인
+	-	결과형태				: int
+	============================================
+	-   입력					: rspnsId
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.06.07
+    ***************************************/ -->
+	<select id="selectIsRspnsInfoExist" parameterType="com.icignal.marketing.contents.dto.request.MktSetRspnsInfoReqDto" resultType="java.lang.Integer">
+		/* MKTContents.isRspnsInfoExist */
+		select
+			count(*) as cnt
+		from mkt.mkt_send_rspns_info WITH (NOLOCK) 
+		where
+			<!-- rspns_id = #{rspnsId} -->
+			cam_id = #{camId}
+			and cam_rspns_id = #{camRspnsId}
+			and flag = '1'
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getAttachmentType)
+	============================================
+	-	제목					: 페이스북 첨부파일 종류 조회
+	-	설명					: 페이스북 첨부파일 종류 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력					:
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.07.05
+    ***************************************/ -->
+	<select id="selectAttachmentType" parameterType="com.icignal.marketing.contents.dto.request.MktGetAttachmentTypeReqDto" resultType="com.icignal.marketing.contents.dto.response.MktGetAttachmentTypeResDto">
+		/* MKTContents.selectAttachmentType */
+		select
+			cc.id				as id
+			, cc.mark_name		as markName
+			, cc.code_name		as codeName
+		from com.comm_code cc WITH (NOLOCK) 
+		where 
+			cc.group_code = 'SNS_UPLOAD_TYPE'
+			and cc.flag = '1'
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getInstagramInfo)
+	============================================
+	-	제목					: 인스타그램 계정 정보 조회
+	-	설명					: 인스타그램 계정 정보 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력					:
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.07.17
+    ***************************************/ -->
+	<select id="selectInstagramInfo" parameterType="com.icignal.marketing.contents.dto.request.MktGetInstagramInfoReqDto" resultType="com.icignal.marketing.contents.dto.response.MktGetInstagramInfoResDto">
+    	/* MKTContents.selectInstagramInfo */
+    	select
+    		mcasi.id 				as id
+    		, mcasi.sns_page_id 	as snsPageid
+    		, mcasi.app_id 			as appId
+    		, mcasi.app_secur_code 	as appSecurCode
+    		, mcasi.sns_page_desc 	as snsPageDesc
+    	from mkt.mkt_chnl mc WITH (NOLOCK) 
+    		join mkt.mkt_chnl_sns_adtn_info mcasi WITH (NOLOCK) on mc.id = mcasi.mkt_chnl_id
+    	where
+    		mc.chnl_type_cd = 'instagram'
+    		and mcasi.flag = '1'
+    </select>
+
+	<resultMap id="selectInstagramDtlResultMap" type="com.icignal.marketing.contents.dto.response.MktGetInstagramDtlResDto">
+	    <result property="id" column="id"/>
+	    <result property="contentsName" column="contentsName"/>
+	    <result property="contentsType" column="contentsType"/>
+	    <result property="title" column="title"/>
+	    <result property="snsInfo" column="snsInfo"/>
+	    <result property="contents" column="contents"/>
+	    <result property="html" column="html"/>
+	    <result property="textByteSize" column="textByteSize"/>
+	    <result property="postId" column="postId"/>
+	    <result property="attType" column="attType"/>
+	    <result property="fileSize" column="fileSize"/>
+	    <result property="oriFileName" column="oriFileName"/>
+	    <result property="fileName" column="fileName"/>
+	    <result property="filePath" column="filePath"/>
+	    <association property="images" select="MKTContents.multiSelectImages" column="{parentId=id,category=category}"/>
+	</resultMap>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getInstagramDtlList)
+	============================================
+	-	제목					: 인스타그램 콘텐츠 상세 조회
+	-	설명					: 인스타그램 콘텐츠 상세 조회
+	-	결과형태				: 복수
+	============================================
+	-   입력					: id
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.07.14
+    ***************************************/ -->
+	<select id="selectInstagramDtlList" parameterType="com.icignal.marketing.contents.dto.request.MktGetInstagramDtlReqDto" resultMap="selectInstagramDtlResultMap">
+		/* MKTContents.selectInstagramDtlList */
+		select
+		 	mcm.id as id
+			, mcm.CONTS_NM 				as contentsName
+			, mcm.exe_chnl_type_cd 		as contentsType
+			, mcm.CONTS_TITLE 			as title
+			, mcm.SNS_INFO 				as snsInfo
+			, mcm.CONTS_SBST 			as contents
+			, mcm.CONTS_HTML 			as html
+			, mcm.CONTS_VOL 			as textByteSize
+			, mcm.POST_ID				as postId
+			, mcm.ATT_TYPE				as attType
+			, c1.file_size				as fileSize
+			, (c1.ori_file_name + '.' + c1.file_type) 		 as oriFileName
+			, (c1.file_name + '.' + c1.file_type) 			 as fileName
+			, c1.file_path 				as filePath
+			, 'USERCONTS' as category
+		from mkt.mkt_conts_mst mcm WITH (NOLOCK) 
+		left outer join com.com_file  c1 WITH (NOLOCK) on c1.parent_id = mcm.id
+		where
+			mcm.id = #{id}
+			and mcm.flag = 1
+			and ${strSVCType}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getInstagramInfoById)
+	============================================
+	-	제목					: id로 인스타그램 계정 정보 조회
+	-	설명					: id로 인스타그램 계정 정보 조회
+	-	결과형태				: 단수
+	============================================
+	-   입력					:
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.07.17
+    ***************************************/ -->
+	<select id="selectInstagramInfoById" parameterType="com.icignal.marketing.contents.dto.request.MktGetInstagramInfoReqDto" resultType="com.icignal.marketing.contents.dto.response.MktGetInstagramInfoResDto">
+    	/* MKTContents.selectInstagramInfoById */
+    	select
+    		mcasi.id 				as id
+    		, mcasi.sns_page_id 	as snsPageid
+    		, mcasi.app_id 			as appId
+    		, mcasi.app_secur_code 	as appSecurCode
+    		, mcasi.sns_page_desc 	as snsPageDesc
+    		<!-- , mcasi.aces_token		as acesToken
+    		, mcasi.aces_exp_dt		as acesExpDt -->
+    	from mkt.mkt_chnl mc WITH (NOLOCK) 
+    		join mkt.mkt_chnl_sns_adtn_info mcasi WITH (NOLOCK) on mc.id = mcasi.mkt_chnl_id
+    	where
+    		mc.chnl_type_cd = 'INSTAGRAM'
+    		and mcasi.flag = '1'
+    		and mcasi.id = #{id}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : MKTContentDAO.java(getContsPrsnlFile)
+    ============================================
+    -   제목                  : 개인화정보 등록 파일 조회
+    -   설명                  :
+    -   결과형태              :
+    ============================================
+    -   입력                  : contsId
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.07
+    ***************************************/ -->
+    <select id="selectContsPrsnlFile" parameterType="com.icignal.marketing.contents.dto.request.MktPersnalFileReqDto" resultType="com.icignal.marketing.contents.dto.response.MktPersnalFileResDto">
+	/*MKTContents.selectContsPrsnlFile*/
+        select
+              t1.id as id
+            , t1.create_by as createBy
+            , t1.modify_by as modifyBy
+            , t1.create_date as createDate
+            , t1.modify_date as modifyDate
+            , t1.flag as flag
+            , t1.lang as lang
+            , t1.file_path as filePath
+            , t1.file_name as fileName
+            , t1.file_type as fileType
+            , t1.file_size as fileSize
+            , t1.ori_file_name as oriFileName
+            , t1.seq as seq
+            , t1.parent_id as parentId
+            , t1.description as description
+            , (select count(*) from mkt.mkt_conts_prsnl WITH (NOLOCK)  where flag = 1 and conts_id = #{contsId} ) as dataCnt
+        from com.com_file t1 WITH (NOLOCK) 
+        where t1.flag = 1
+          and t1.parent_id = #{contsId}
+
+    </select>
+
+    <insert id="insertPrsnl" parameterType="com.icignal.marketing.contents.dto.request.MktParsnalEditReqDto">
+	/*MKTContents.insertPrsnl*/
+        insert into mkt.mkt_conts_prsnl (
+              id
+            , create_by
+            , modify_by
+            , create_date
+            , modify_date
+            , flag
+            , conts_id
+            , target_id
+            , prsnl_cd
+            , prsnl_val )
+        values (
+              com.getNewID('A')
+            , #{createBy}
+            , #{modifyBy}
+            , getdate()
+            , getdate()
+            , 1
+            , #{contsId}
+            , #{targetId}
+            , #{prsnlCd}
+            , #{prsnlVal}
+        )
+
+    </insert>
+
+	<!-- 컨텐츠 개인화 삭제 -->
+    <update id="deletePrsnl" parameterType="com.icignal.marketing.contents.dto.request.MktParsnalEditReqDto">
+	/*MKTContents.removePrsnl*/
+        update mkt.mkt_conts_prsnl
+        set
+              modify_by = #{modifyBy}
+            , modify_date = getdate()
+            , flag = flag + 1
+        where conts_id = #{contsId}
+
+    </update>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(getDetailContentByCamId)
+	============================================
+	-	제목					: 캠페인의 채널 목록
+	-	설명					: 캠페인의 채널 목록
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    camId					: 캠페인ID
+	============================================
+	-	작성자					: jh.kim
+	-	작성일					: 2018.03.27
+    ***************************************/ -->
+    <select id="selectContentListByCamId" parameterType="com.icignal.marketing.contents.dto.request.MktContentListReqDto" resultType="com.icignal.marketing.contents.dto.response.MktContentListResDto">
+	/*MKTContents.selectContentListByCamId*/
+		select
+	          t3.id               as id
+			, t3.CONTS_NM         as contsNm
+			, t3.EXE_CHNL_TYPE_CD as exeChnlTypeCd
+			, t3.CONTS_TITLE      as contsTitle
+	        , t3.CONTS_SUB_TITLE  as contsSubTitle
+	        , t3.img_link_url     as imgLinkUrl
+	        , t3.PSTNG_TYPE_CD    as pstngTypeCd
+	        , t3.CONTS_ATTEN_MTR  as contsAttenMtr
+	        , t3.INQR_NO          as inqrNo
+	        , t3.ATTRIB01         as attrib01
+	        , t3.ATTRIB02         as attrib02
+	        , t3.ATTRIB03         as attrib03
+	        , t3.ATTRIB04         as attrib04
+	        , t3.ATTRIB05         as attrib05
+	        , t3.ATTRIB06         as attrib06
+	        , t3.ATTRIB07         as attrib07
+	        , t3.ATTRIB08         as attrib08
+	        , t3.ATTRIB09         as attrib09
+	        , t3.DP_START_DT      as dpStartDt
+	        , t3.DP_END_DT        as dpEndDt
+	        , t3.APCT_POSBL_NUM   as apctPosblNum
+	        , t3.CONTS_SEQ        as contsSeq
+	        , t3.CONTS_LOAD_SEQ   as contsLoadSeq
+	        , t3.HPAGE            as hpage
+	        , t3.EV_NO            as evNo
+	        , convert(varchar,t3.NEW_DP_CLO_DT, 120) as newDpCloDt
+	        , t3.extrl_img_url    as extrlImgUrl
+	        , t3.img_aply_cnt 	  as imgAplyCnt
+
+	        , (c2.image_file_name + c2.image_file_type) as fileName
+			, c2.image_folder     							 as imagePath
+
+		from mkt.mkt_cam_mst 	       t1 WITH (NOLOCK) 
+		join mkt.mkt_conts_chnl_rel    t2 WITH (NOLOCK) on t2.flag = 1 and t1.id = t2.CAM_ID
+		join mkt.mkt_conts_mst         t3 WITH (NOLOCK) on t3.flag = 1 and t3.id = t2.CONTENTS_ID
+	    left outer join com.image 	   c2 WITH (NOLOCK) on c2.id  = t3.img_id
+
+		where t1.flag = 1 and t1.id = #{camId}
+
+    </select>
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(editContsExtrlImgUrl)
+	============================================
+	-	제목					: 캠페인 채널의 외부 이미지 url 수정
+	-	설명					: 캠페인 채널의 외부 이미지 url 수정
+	-	결과형태				:
+	============================================
+	-   입력
+	    id						: 컨텐츠ID
+	    extrlImgUrl             : 외부이미지파일URL
+	============================================
+	-	작성자					: jh.kim
+	-	작성일					: 2018.03.27
+    ***************************************/ -->
+	<update id="updateContsExtrlImgUrl" parameterType="com.icignal.marketing.contents.dto.request.MktContentEditReqDto">
+	/*MKTContents.updateContsExtrlImgUrl*/
+		update mkt.mkt_conts_mst
+		set extrl_img_url = #{extrlImgUrl}
+		where id = #{id}
+
+	</update>
+
+
+
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectChnlGuide)
+	============================================
+	-	제목					: 채널 가이드 셋팅
+	-	설명					: 채널 가이드 셋팅
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id          	    : 고유 아이디
+	-	출력
+
+	============================================
+	-	작성자					: 금동우
+	-	작성일					: 2018.09.19
+    ***************************************/ -->
+	<select id="selectChnlGuide" parameterType="com.icignal.marketing.contents.dto.request.MktMmsDtlReqDto" resultType="com.icignal.marketing.contents.dto.response.MktMmsDtlResDto">
+		/* MKTContents.selectChnlGuide*/
+		select mc.CHNL_GUIDE as chnlGuide
+		from mkt.mkt_chnl mc WITH (NOLOCK) 
+		where mc.CHNL_TYPE_CD = #{chnltype} and mc.flag = 1
+		and ${strSVCType}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectChnlGuide)
+	============================================
+	-	제목					: 콜백번호조회
+	-	설명					: 콜백번호조회
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id          	    : 고유 아이디
+	-	출력
+
+	============================================
+	-	작성자					: 금동우
+	-	작성일					: 2018.09.19
+    ***************************************/ -->
+	<select id="selectCallBackNo" resultType="java.lang.String">
+		select mark_name
+		from   com.comm_code WITH (NOLOCK) 
+		where  group_code = 'SMS_CALL_BACK'
+	</select>
+	
+	<select id = "selectImgSize" parameterType = "com.icignal.marketing.contents.dto.request.MktContentReqDto"
+	 resultType = "com.icignal.marketing.contents.dto.response.MktContentResDto">
+	 	/* MKTContents.selectImgSize*/
+	 select IMG_SIZE as imgSize
+	 from com.image WITH (NOLOCK) 
+	 where id=#{id}
+	 </select>
+</mapper>

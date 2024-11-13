@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:52:45 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.customerSegment.mapper.CustomerSegmentMapper">
+  
+   <select id="selectCustSegMartList"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegMartReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegMartResDto">
+		/* CustomerSegmentMapper.selectCustSegMartList */
+		SELECT
+			 A.ID                                   			  	 	  		AS rid  
+			,A.CSEG_MT_NM                               		 	 	AS csegMtNm                   
+			,A.CSEG_MT_STATUS_CD                         		AS csegMtStatusCd
+			,CONVERT(VARCHAR,A.APLY_START_DD, 120) AS aplyStartDd
+ 			,CONVERT(VARCHAR,A.APLY_END_DD, 120) 	AS aplyEendDd
+			,EM.NAME                                            			AS createBy
+			,A.CREATE_DATE   											AS createDate
+			,B.LGC_COMP_NM    										AS lgcCompNm
+			,A.CSEG_COMP_TBL_INT_NM    						AS lgcCompTblIntNm
+			,A.LGC_COMP_ID 											AS lgcCompId
+		    ,${strColumn}
+		FROM
+			anl.ANL_CSEG_MART_MST A WITH (NOLOCK) 
+		LEFT OUTER JOIN  anl.ANL_LGC_COMP_MST B WITH (NOLOCK) ON B.ID = A.LGC_COMP_ID
+		LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectCustSegMartDetail"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegMartReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegMartResDto">
+		/* CustomerSegmentMapper.selectCustSegMartDetail */
+		SELECT
+			 A.LGC_COMP_ID											AS lgcCompId
+			 ,A.LGC_COMP_TBL_INT_ID							AS lgcCompTblIntId
+			 ,A.COL_NM													AS tblAliasColNm
+			,A.COL_ID														AS colId
+		 	,A.CSEG_MT_NM  											AS csegMtNm
+			,A.CSEG_MT_STATUS_CD 								AS csegMtStatusCd
+			,A.CSEG_MT_CYCL_TYPE_CD  						AS csegMtCyclTypeCd
+			,A.APLY_START_DD  										AS aplyStartDd
+			,A.APLY_END_DD  											AS aplyEendDd
+			,em.Name 														AS createBy 
+			,em.Name														AS modifyBy 
+			,CONVERT(VARCHAR,A.CREATE_DATE, 120) 	AS createDate
+			,CONVERT(VARCHAR,A.MODIFY_DATE, 120) 	AS modifyDate
+			,A.CSEG_MT_INFO_DESC 								AS csegMtInfoDesc
+			,A."SQL"  														AS sql
+			,B.lgc_comp_nm 											AS lgcCompNm
+			,A.CSEG_COMP_TBL_INT_NM     						AS lgcCompTblIntNm
+		FROM
+			anl.ANL_CSEG_MART_MST A WITH (NOLOCK) 
+			LEFT OUTER JOIN  anl.ANL_LGC_COMP_MST B WITH (NOLOCK) ON B.ID = A.LGC_COMP_ID
+			LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.CREATE_BY = US.RID
+			LEFT OUTER JOIN COM.EMPLOYEE EM WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+ 		WHERE 	A.ID = #{rid}
+			AND A.FLAG  = 1
+			AND b.FLAG = 1
+		</select>
+
+
+	<insert id="insertCustSegmentMart"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegMartReqDto">
+		/* CustomerSegmentMapper.insertCustSegmentMart */
+		INSERT INTO ANL.ANL_CSEG_MART_MST(
+			ID, 
+			CREATE_BY, 
+			CREATE_DATE, 
+			LGC_COMP_ID, 
+			LGC_COMP_TBL_INT_ID,
+			CSEG_COMP_TBL_INT_NM,
+			COL_ID,
+			COL_NM,
+			CSEG_MT_NM,
+			CSEG_MT_STATUS_CD,
+			CSEG_MT_CYCL_TYPE_CD, 
+			APLY_START_DD,
+			APLY_END_DD,
+			CSEG_MT_INFO_DESC, 
+			"SQL"		
+		) VALUES(
+			#{rid},
+			#{createBy},
+			getdate(),
+			#{lgcCompId},
+			#{lgcCompTblIntId},
+			#{lgcCompTblIntNm},
+			#{colId},
+			#{tblAliasColNm},
+			#{csegMtNm},
+			#{csegMtStatusCd},
+			#{csegMtCyclTypeCd},
+			CONVERT(VARCHAR,#{aplyStartDd}, 120),
+			CONVERT(VARCHAR,#{aplyEendDd}, 120),
+			#{csegMtInfoDesc},
+			#{sql}
+		  )
+	</insert>
+
+	<update id="updateCustSegmentMart"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegMartReqDto">
+			/* CustomerSegmentMapper.updateCustSegmentMart */
+		UPDATE
+			ANL.ANL_CSEG_MART_MST
+		SET
+			MODIFY_BY						=#{modifyBy},
+			MODIFY_DATE					=getdate(),
+			LGC_COMP_ID					=#{lgcCompId},
+			LGC_COMP_TBL_INT_ID		=#{lgcCompTblIntId},
+			CSEG_COMP_TBL_INT_NM =#{lgcCompTblIntNm},
+			COL_ID								=#{colId},
+			COL_NM							=#{tblAliasColNm},
+			CSEG_MT_NM					=#{csegMtNm},
+			CSEG_MT_STATUS_CD		=#{csegMtStatusCd},
+			CSEG_MT_CYCL_TYPE_CD	=#{csegMtCyclTypeCd},
+			APLY_START_DD					=CONVERT(VARCHAR,#{aplyStartDd}, 120),
+			APLY_END_DD					=CONVERT(VARCHAR,#{aplyEendDd}, 120),
+			CSEG_MT_INFO_DESC		=#{csegMtInfoDesc},
+			SQL=#{sql}
+		WHERE
+			 ID=#{rid}
+	</update>
+	
+	<update id="delCustSegmentMart"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegMartReqDto">
+		/* CustomerSegmentMapper.delCustSegmentMart */
+		UPDATE 
+			ANL.ANL_CSEG_MART_MST
+		SET 
+			MODIFY_DATE	= getdate()
+			, MODIFY_BY		= #{modifyBy}
+		 	, FLAG		= flag + 1
+		 WHERE 1 = 1
+		 	AND ID = #{rid}
+	</update>
+	
+	
+   <select id="selectLogicalCompList"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegMartReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegMartResDto">
+		/* CustomerSegmentMapper.selectLogicalCompList */
+	  	SELECT 
+ 			A.lgc_comp_nm 					AS lgcCompNm
+ 			,A.ID  								AS lgcCompId
+ 			,B.atrib_group_nm  			AS lgcCompTblIntNm
+ 			,B.ID 								AS lgcCompTblIntId
+ 			,c.TBL_ALIAS_COL_NM 		AS tblAliasColNm
+ 			,c.dp_Nm              				AS colNm
+ 			,c.col_id                      		AS colId
+ 			,c.seq                             	AS seq
+ 			,a.create_date                	As seqCreate
+ 			,${strColumn}
+ 		FROM
+ 		 	anl.ANL_LGC_COMP_MST A WITH (NOLOCK) 
+ 			 LEFT OUTER JOIN  anl.ANL_ATRIB_GROUP B WITH (NOLOCK) ON B.LGC_COMP_ID = A.ID
+ 			 LEFT OUTER JOIN  anl.ANL_ATRIB_GROUP_COLUMN C WITH (NOLOCK) ON C.ATRIB_GROUP_ID = B.ID
+  	   WHERE  ${strCondWhere}
+				AND ${strWhere}
+				AND A.FLAG  = 1 
+				AND C.FLAG=1
+				AND SEG_KEY_YN =0
+			ORDER BY ${strOrderby}, seq asc
+			${strEndPaging}	 
+	</select>
+	
+	
+   <select id="selectCustSegList"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegResDto">
+		/* CustomerSegmentMapper.selectCustSegList */
+		SELECT
+			A.ID  																				AS rid
+			,A.CSEG_HAD_ID  																AS csegHadId
+			,A.CSEG_NM																		AS csegNm
+			,A.CSEG_TYPE_CD																AS csegTypeCd
+			,A.CSEG_STATUS_CD															AS csegStatusCd
+			,CONVERT(VARCHAR,A.APLY_START_DD, 120)						AS  aplyStartDd
+			,CONVERT(VARCHAR,A.APLY_END_DD, 120)							AS  aplyEndDd
+			,EM.NAME                                           								AS createBy
+		    ,${strColumn}
+		FROM
+			anl.ANL_CSEG_MST A WITH (NOLOCK) 
+		LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+		
+	<select id="selectCustSegDetail"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegResDto">
+		/* CustomerSegmentMapper.selectCustSegDetail */
+		SELECT
+			 A.CSEG_NM																		AS csegNm
+			,A.CSEG_TYPE_CD																AS csegTypeCd
+			,A.CSEG_STATUS_CD															AS csegStatusCd
+			,A.CSEG_CYCL_TYPE_CD													AS csegCyclTypeCd
+			,CONVERT(VARCHAR,A.APLY_START_DD, 120)						AS  aplyStartDd
+			,CONVERT(VARCHAR,A.APLY_END_DD, 120)							AS  aplyEndDd
+			,A.CSEG_INFO_DESC															AS  csegInfoDesc
+			,em.Name 																			AS createBy 
+			,em.Name																			AS modifyBy 
+			,CONVERT(VARCHAR,A.CREATE_DATE, 120)							AS createDate
+			,CONVERT(VARCHAR,A.MODIFY_DATE, 120)							AS modifyDate
+		FROM
+			anl.ANL_CSEG_MST A WITH (NOLOCK) 
+		LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE  EM WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID	
+		WHERE 
+			A.ID = #{rid}
+			AND A.FLAG  = 1			
+		</select>
+		
+	<update id="delCustSegment"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto">
+		/* CustomerSegmentMapper.delCustSegment */
+		UPDATE 
+			ANL.ANL_CSEG_MST
+		SET 
+			MODIFY_DATE	= getdate()
+			,MODIFY_BY		= #{modifyBy}
+		 	,flag = flag + 1
+		 WHERE 1 = 1
+		 	AND ID = #{rid}
+	</update>
+	
+	
+	<insert id="insertCustSegment"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto">
+		INSERT INTO ANL.ANL_CSEG_MST
+		(
+		ID,
+	 	CREATE_BY, 
+	 	CREATE_DATE, 
+	 	CSEG_HAD_ID, 
+	 	CSEG_NM, 
+	 	CSEG_TYPE_CD, 
+	 	CSEG_STATUS_CD, 
+	 	CSEG_CYCL_TYPE_CD, 
+	 	APLY_START_DD, 
+	 	APLY_END_DD, 
+	 	CSEG_INFO_DESC
+	 	)
+		VALUES(
+		#{rid},
+		#{createBy},
+		getdate(),
+		#{csegHadId},
+		#{csegNm},
+		#{csegTypeCd},
+		#{csegStatusCd},
+		#{csegCyclTypeCd},
+		CONVERT(VARCHAR,#{aplyStartDd}, 120),
+		CONVERT(VARCHAR,#{aplyEndDd}, 120),
+		#{csegInfoDesc}
+		)
+	</insert>
+	
+		<update id="updateCustSegment"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto">
+		UPDATE 
+			ANL.ANL_CSEG_MST
+		SET
+			MODIFY_BY				=#{modifyBy},
+			MODIFY_DATE			=getdate(), 
+			CSEG_NM					=#{csegNm},
+			CSEG_TYPE_CD			=#{csegTypeCd},
+			CSEG_STATUS_CD		=#{csegStatusCd},
+			CSEG_CYCL_TYPE_CD=#{csegCyclTypeCd}, 
+			APLY_START_DD=CONVERT(VARCHAR,#{aplyStartDd}, 120),
+			APLY_END_DD=CONVERT(VARCHAR,#{aplyEndDd}, 120),
+			CSEG_INFO_DESC		=#{csegInfoDesc}
+		WHERE 
+			ID=#{rid}
+		</update>
+		
+		<select id="selectCustSegStageList"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegStageResDto">
+		/* CustomerSegmentMapper.selectCustSegStageList */
+		SELECT
+			 A.ID                                   			  	 	 									AS  rid  
+			,A.CSEG_CUST_CTG_CD                               		 						AS  csegCustCtgCd                   
+			,A.CSEG_CUST_TYPE_CD									 						AS  csegCustTypeCd            
+			,A.CSEG_STAGE_NM											 						AS  csegStageNm         
+			,EM.NAME                                            										AS createBy
+			,CONVERT(VARCHAR,A.CREATE_DATE, 120)									AS createDate
+			,A.CSEG_CUST_RULE_NM												 			AS csegCustRuleNm
+			,A.CSEG_CUST_RULE_ID															AS csegCustRuleId
+			,A.CSEG_STAGE_INDEX																AS csegStageIndex
+		   ,${strColumn}
+		FROM
+				ANL.ANL_CSEG_STAGE A WITH (NOLOCK) 
+		LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM WITH (NOLOCK) ON US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+			AND A.CSEG_MST_ID=#{csegMstId}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+		</select>
+		
+		<select id="selectTodaySeq"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto"
+		resultType="java.lang.Integer">
+		SELECT 
+			count(*) as todaySeqNum
+		FROM 
+			ANL.ANL_CSEG_MST 
+		WHERE 
+		   CONVERT(CHAR(6), create_date, 12)=#{todayDate}
+		</select>
+		
+		<select id="selectCustSegStageDetail"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegStageResDto">
+		/* CustomerSegmentMapper.selectCustSegStageList */
+		SELECT
+			 A.ID                                   			  	 	 									AS rid  
+			,A.CSEG_CUST_CTG_CD                               		 						AS csegCustCtgCd                   
+			,A.CSEG_CUST_TYPE_CD									 						AS csegCustTypeCd            
+			,A.CSEG_STAGE_NM											 						AS csegStageNm         
+			,EM.NAME                                            										AS createBy
+			,CONVERT(VARCHAR,A.CREATE_DATE, 120)									AS createDate
+			,A.CSEG_CUST_RULE_NM															AS csegCustRuleNm
+			,A.CSEG_CUST_RULE_ID															AS csegCustRuleId
+			,A.CSEG_STAGE_INDEX																AS csegStageIndex
+		  FROM
+				ANL.ANL_CSEG_STAGE  A WITH (NOLOCK) 
+		LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK) ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM WITH (NOLOCK)  ON US.ID_EMPLOYEE = EM.ID
+		WHERE A.FLAG  = 1
+			AND A.ID=#{rid}
+		</select>		
+		
+		<insert id="insertCustSegmentStage"  
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto">
+		/* CustomerSegmentMapper.insertCustSegmentStage */
+		INSERT INTO 
+			ANL.ANL_CSEG_STAGE
+		(
+		ID, 
+		CREATE_BY, 
+		CREATE_DATE, 
+		CSEG_MST_ID, 
+		CSEG_CUST_CTG_CD, 
+		CSEG_CUST_TYPE_CD, 
+		CSEG_STAGE_NM,
+		CSEG_CUST_RULE_NM,
+		CSEG_CUST_RULE_ID,
+		CSEG_STAGE_INDEX
+		)
+		VALUES(
+		#{rid},
+		#{createBy},
+		getdate(),
+		#{csegMstId},
+		#{csegCustCtgCd},
+		#{csegCustTypeCd},
+		#{csegStageNm},
+		#{csegCustRuleNm},
+		#{csegCustRuleId},
+		#{csegStageIndex}
+		)
+	</insert>
+	
+	<update id="updateCustSegmentStage"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto">
+		     /* CustomerSegmentMapper.updateCustSegmentStage */
+		UPDATE 
+			ANL.ANL_CSEG_STAGE
+		SET
+			MODIFY_BY					=#{modifyBy},
+			MODIFY_DATE				=getdate(), 
+			CSEG_CUST_CTG_CD 	=#{csegCustCtgCd},
+			CSEG_CUST_TYPE_CD	=#{csegCustTypeCd},
+			CSEG_STAGE_NM			=#{csegStageNm}, 
+			CSEG_CUST_RULE_NM 	=#{csegCustRuleNm},
+			CSEG_CUST_RULE_ID	=#{csegCustRuleId},
+			CSEG_STAGE_INDEX  	=#{csegStageIndex}
+		WHERE 
+			ID=#{rid}	
+		</update>
+		
+	<update id="delCustSegmentStage"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto">
+		/* CustomerSegmentMapper."delCustSegmentStage" */
+		UPDATE 
+			ANL.ANL_CSEG_STAGE
+		SET 
+			MODIFY_DATE	= getdate()
+			, MODIFY_BY	= #{modifyBy} 
+		 	, FLAG		= flag + 1
+		 WHERE 1 = 1
+		 	AND ID = #{rid}
+	</update>
+	
+	
+	  <insert id="insertCustSegmentRule" parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegmentRuleReqDto">
+        /* CustomerSegmentMapper.insertCustSegmentRule */	
+	  insert into anl.anl_tgt_group
+        ( id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , type
+        , lgc_comp_id
+        , seg_filter_id
+        , filter_sql
+        , filter_sql_count
+        , tgt_group_nm
+        , tgt_group_desc
+        , dp_cond
+        , compr_group_type_cd
+        , compr_group_dtl
+        , seg_id )
+        values ( 
+        #{custSegRuleId}
+        , #{createBy}
+        , #{modifyBy}
+        , getdate()
+        , getdate()
+        , 1
+        , 'CSSEG'
+        , #{logicalCompId}
+        , #{segFilterId}
+        , (select filter_sql from anl.anl_seg_filter where id = #{segFilterId})
+        , (select filter_sql_count from anl.anl_seg_filter where id = #{segFilterId})
+        , #{custRuleName}
+        , #{custRuleDesc}
+        , #{dpCond}
+        , #{comprGroupTypeCode}
+        , #{comprGroupDtl} 
+        , #{segmentId}
+        )
+    </insert>
+        
+    <select id="selectCustSegRuleList" parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegmentRuleReqDto" 
+    resultType="com.icignal.kepler.customerSegment.dto.response.CustSegmentRuleResDto">
+        /* CustomerSegmentMapper.selectCustSegRuleList */
+		 SELECT
+		    tg.id               		as custSegRuleId
+		   , e.name              	as createByName
+		   , tg.create_date      as createDate
+		   , tg.seg_filter_id    	as segFilterIdgetLogicalCompList
+		   , sm.seg_nm           as segmentName
+		   , tg.tgt_group_nm   as custSegRuleName
+		   , tg.tgt_group_desc as custSegRuleDesc
+		   , ${strColumn}
+		  FROM 
+		  	anl.anl_tgt_group tg WITH (NOLOCK) 
+		    left outer join com.crm_user u WITH (NOLOCK) on tg.create_by = u.rid
+		    left outer join com.employee e WITH (NOLOCK) on u.id_employee = e.id
+		    left outer join anl.anl_seg_mst  sm WITH (NOLOCK)  on sm.flag = 1 and  tg.seg_id=sm.id
+		  WHERE ${strCondWhere}
+		  	AND ${strWhere}
+		  	AND  tg.flag = 1
+		    AND tg.compr_group_type_cd=#{comprGroupTypeCode}
+		  ORDER BY ${strOrderby}
+		 ${strEndPaging}  
+	   </select>
+	   
+	   
+	    <select id="selectCustSegMartData"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegMartReqDto"
+		resultType="com.icignal.kepler.customerSegment.dto.response.CustSegMartResDto">
+		 /* CustomerSegmentMapper.selectCustSegMartData */
+		SELECT
+			 A.CSEG_MT_STATUS_CD 		AS csegMtStatusCd
+			,A.CSEG_MT_CYCL_TYPE_CD  AS csegMtCyclTypeCd
+			,A."SQL"  								AS sql
+		FROM
+			anl.ANL_CSEG_MART_MST A WITH (NOLOCK) 
+			LEFT OUTER JOIN  anl.ANL_LGC_COMP_MST B WITH (NOLOCK) ON B.ID = A.LGC_COMP_ID
+ 		WHERE 	
+ 			A.ID = #{rid}
+			AND A.FLAG  = 1
+			AND b.FLAG = 1
+	</select>
+	
+	  <select id="selectCustRuleBySegId" parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegmentRuleReqDto" 
+    resultType="com.icignal.kepler.customerSegment.dto.response.CustSegmentRuleResDto">
+      	 /* CustomerSegmentMapper.selectCustRuleBySegId */
+        SELECT
+		     tg.id               															  as tgtGroupId
+		    ,tg.tgt_group_desc 													  as custSegRuleDesc
+		    , e.name              														  as createByName
+		    , CONVERT(VARCHAR,tg.create_date, 120) 					  as createDate
+		    , tg.tgt_group_nm     													  as tgtGroupNm
+		    , tg.type																	  as type
+		    , tg.seg_id 															      as segmentId
+		    , ${strColumn}
+ 		 FROM 
+ 		 	  anl.anl_tgt_group tg WITH (NOLOCK) 
+		      left outer join com.crm_user  u WITH (NOLOCK) on tg.create_by = u.rid
+		      left outer join com.employee  e WITH (NOLOCK) on u.id_employee = e.id
+		 WHERE ${strCondWhere}
+		  		AND ${strWhere}
+		 		AND tg.SEG_ID=#{segmentId}
+		 		AND tg.COMPR_GROUP_TYPE_CD ='CS' 
+  				AND tg.flag=1
+    </select>
+    
+    	<update id="delCustSegmentRule"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto">
+		/* CustomerSegmentMapper.delCustSegmentRule*/
+		UPDATE 
+			anl.anl_tgt_group 
+		SET 
+			MODIFY_DATE	= getdate()
+			, MODIFY_BY	= #{modifyBy} 
+		 	, FLAG		= flag + 1
+		 WHERE 1 = 1
+		 	AND ID = #{rid}
+	</update>
+    
+     <select id="selectCustSegmentList" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentListReqDto" 
+    resultType="com.icignal.kepler.segment.dto.response.KprSegmentListResDto">
+        /* CustomerSegmentMapper.selectCustSegmentList */
+        select ${strColumn}
+             , s.ID												 			as segmentId
+             , e.NAME 														as createByName
+             , CONVERT(VARCHAR, s.CREATE_DATE, 120)  as createDate
+             , s.SEG_NM 													as segmentName
+             , s.SEG_DESC 												as segmentDesc
+             , s.LGC_COMP_ID 											as logicalCompId 
+             , l.LGC_COMP_NM 										as logicalCompName
+             , s.seg_type_cd     										as segTypeCd
+        from anl.anl_seg_mst s WITH (NOLOCK) 
+        join anl.anl_lgc_comp_mst l WITH (NOLOCK) on l.flag = 1 and s.lgc_comp_id = l.id
+        left outer join com.crm_user u WITH (NOLOCK) on s.create_by = u.rid
+        left outer join com.employee e WITH (NOLOCK) on e.flag = 1 and u.id_employee = e.id
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and s.flag = 1
+        and s.seg_type_cd='CUST_SEG_LIST'
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+    <select id="selectCustSegStageIdx"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto"
+		resultType="java.lang.Integer">
+		/* CustomerSegmentMapper.selectCustSegStageIdx */
+		SELECT
+				COUNT(*) 							AS csegStageIndex
+		FROM
+				ANL.ANL_CSEG_STAGE A
+		WHERE 
+				A.CSEG_MST_ID =#{csegMstId}
+				AND a.flag=1	
+	</select>
+    
+    <select id="selectIndexDupChk"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto"
+		resultType="java.lang.Integer">
+		/* CustomerSegmentMapper.selectIndexDupChk */
+		SELECT
+			count(*) 	as dupIndexChk
+		FROM
+			ANL.ANL_CSEG_STAGE  A
+		WHERE 
+			A.CSEG_MST_ID =#{csegMstId}
+		   	AND a.flag=1	
+		   	AND CSEG_STAGE_INDEX=#{csegStageIndex}
+	</select>
+	
+	
+	 <select id="selectIndexDupChkforUpdate"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegStageReqDto"
+		resultType="java.lang.Integer">
+		/* CustomerSegmentMapper.selectIndexDupChkforUpdate */
+		SELECT
+			count(*) as dupIndexChk
+		FROM
+			ANL.ANL_CSEG_STAGE  A
+		WHERE 
+			A.CSEG_MST_ID =#{csegMstId}
+		   	AND a.flag=1	
+		   	AND CSEG_STAGE_INDEX=#{csegStageIndex}
+		   	AND A.CSEG_STAGE_INDEX NOT IN(SELECT B.CSEG_STAGE_INDEX FROM ANL.ANL_CSEG_STAGE B WHERE B.ID =#{rid} AND B.FLAG=1)
+	</select>
+	
+	<select id="selectTypeCdDupChk"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto"
+		resultType="java.lang.Integer">
+		SELECT 
+			count(*) as dupIndexChk
+		FROM 
+		 	anl.ANL_CSEG_MST A 
+		WHERE
+		  A.FLAG =1 
+		  AND a.CSEG_TYPE_CD=#{csegTypeCd}
+	 </select>
+    
+    <select id="selectTypeCdDupChkForUpdate"
+		parameterType="com.icignal.kepler.customerSegment.dto.request.CustSegReqDto"
+		resultType="java.lang.Integer">
+		SELECT 
+			count(*) as dupIndexChk 
+		FROM 
+			anl.ANL_CSEG_MST A 
+		WHERE
+		 	A.FLAG ='1' 
+			AND A.CSEG_TYPE_CD=#{csegTypeCd}
+			AND A.CSEG_TYPE_CD NOT IN(SELECT b.CSEG_TYPE_CD FROM anl.ANL_CSEG_MST b WHERE b.id=#{rid} AND b.FLAG =1)
+	 </select>
+    
+ </mapper>

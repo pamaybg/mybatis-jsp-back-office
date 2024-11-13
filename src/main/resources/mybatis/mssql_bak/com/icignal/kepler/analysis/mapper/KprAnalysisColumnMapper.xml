@@ -1,0 +1,915 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Thurs Sep 18 15:04:13 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.analysis.mapper.KprAnalysisColumnMapper">
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(selectAnalysisColumnList)
+	============================================
+	-	제목					: 분석 컬럼/로우 리스트 조회
+	-	설명					: 분석 컬럼/로우 리스트 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisColumnList" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto" 
+													resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisColumnDetailResDto">
+		/* KprAnalysisColumnMapper.selectAnalysisColumnList */
+		SELECT arc.ID														 AS nodeId
+			 , arc.ID														 AS columnId
+			 , arc.RPT_COL_DP_NM											 AS nodeText
+			 , CASE WHEN arc.COL_TYPE_CD = 'MEASURE' THEN arc.COL_TYPE_CD END AS parNodeId
+			 , arc.COL_TYPE_CD												 AS columnTypeCode
+			 , arc.ATRIB_GROUP_COL_ID										 AS atribGroupColumnId
+			 , 1															 AS expANDedFlag
+			 , arc.COL_USE_TYPE_CD											 AS columnUseTypeCode
+			 , arc.RPT_COL_ALIAS											 AS columnAlias
+			 , arc.RPT_COL_DP_NM											 AS columnDisplayName
+			 , arc.SEQ														 AS seq
+			 , arc.GROUP_FUNC_TYPE_CD										 AS groupFuncTypeCode
+			 , arc.COMB_COL_TYPE_CD											 AS combColumnTypeCode
+			 , arc.CALC_FLD_TYPE_CD											 AS calcFieldTypeCode
+			 , arc.GROUP_FUNC_TYPE_CD										 AS groupFuncTypeCode
+			 , CASE WHEN lgc.CAL_COL_YN = '1' THEN lgc.CAL_DTL
+											  ELSE lgc.TBL_ALIAS_COL_NM
+			   END															 AS tableColumnAlias
+			 , arc.OPRT_CD													 AS operationTypeCode
+			 , arc.RIGHT_GROUP_FUNC_TYPE_CD									 AS rightGroupFuncTypeCode
+			 , CASE WHEN rgc.CAL_COL_YN = '1' THEN rgc.CAL_DTL
+											  ELSE rgc.TBL_ALIAS_COL_NM
+			   END															 AS rightTableColumnAlias
+			 , arc.RIGHT_ATRIB_GROUP_COL_ID									 AS rightAtribGroupColumnId
+			 , lgc.DP_NM													 AS columnDisplayRealName
+			 , arc.ORDER_ATRIB_GROUP_COL_ID									 AS orderAtribGroupColumnId
+			 , arc.ORDER_DTL												 AS orderDetail
+			 , arc.ORDER_TYPE_CD											 AS orderTypeCode
+			 , acm.COL_TYPE_CD												 AS originColumnTypeCode
+			 , arc.NEGTIV_YN												 AS negativeFlag
+			 , arc.DECIMAL_PLCS												 AS decimalPlaces
+			 , arc.SUB_TOT_YN												 AS subTotalFlag
+			 , arc.HIDE_YN													 AS hideYn
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			FROM	ANL.ANL_RPT_COLUMN		arc WITH (NOLOCK)
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			FROM	ANL.ANL_RPT_COLUMN_INST	arc WITH (NOLOCK)
+		</if>
+		  JOIN ANL.ANL_ATRIB_GROUP_COLUMN	lgc WITH (NOLOCK) ON arc.ATRIB_GROUP_COL_ID = lgc.ID AND lgc.FLAG = 1
+		  JOIN ANL.ANL_COLUMN_MST			acm WITH (NOLOCK) ON CASE WHEN LEN(lgc.dim_col_id) &gt; 0 THEN lgc.DIM_COL_ID ELSE lgc.COL_ID END = acm.ID AND acm.FLAG = 1
+		  LEFT JOIN ANL.ANL_ATRIB_GROUP_COLUMN	rgc WITH (NOLOCK) ON arc.RIGHT_ATRIB_GROUP_COL_ID = rgc.ID AND rgc.FLAG = 1
+		 WHERE ${strSVCType}
+		   AND arc.FLAG				= 1
+		  <!--  AND arc.accnt_id			= #{accountId} -->
+		   AND arc.RPT_ID			= #{analysisId}
+		<if test="columnUseTypeCode != null AND columnUseTypeCode != ''">
+		   AND arc.COL_USE_TYPE_CD	= #{columnUseTypeCode}
+		</if>
+		<if test="fieldGroupColumnId != null AND fieldGroupColumnId != ''">
+		   AND (
+				arc.COL_TYPE_CD		= 'MEASURE'
+			 OR (
+				arc.COL_TYPE_CD		= 'DIMENSION'
+			AND arc.COL_USE_TYPE_CD	= 'ROW'
+			)
+			 OR (
+				arc.COL_TYPE_CD		= 'DIMENSION'
+			AND arc.COL_USE_TYPE_CD	= 'COLUMN'
+			AND arc.ID				= #{fieldGroupColumnId}
+			)
+		)
+		</if>
+		<if test="columnTypeCode != null AND columnTypeCode != ''">
+			AND arc.COL_TYPE_CD		= #{columnTypeCode}
+		</if>
+		 ORDER BY arc.SEQ ASC
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(selectAnalysisColumnDetailInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 상세 조회
+	-	설명					: 분석 컬럼/로우 상세 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisColumnDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto" 
+																resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisColumnDetailResDto">
+	/* KprAnalysisColumnMapper.selectAnalysisColumnDetailInst */
+	SELECT arc.ID														 AS nodeId
+			 , arc.id														 AS columnId
+			 , arc.rpt_col_dp_nm											 AS nodeText
+			 , CASE WHEN arc.col_type_cd = 'MEASURE' THEN arc.col_type_cd END AS parNodeId
+			 , arc.col_type_cd												 AS columnTypeCode
+			 , arc.atrib_group_col_id										 AS atribGroupColumnId
+			 , 1															 AS expANDedFlag
+			 , arc.col_use_type_cd											 AS columnUseTypeCode
+			 , arc.rpt_col_alias											 AS columnAlias
+			 , arc.rpt_col_dp_nm											 AS columnDisplayName
+			 , arc.seq														 AS seq
+			 , arc.group_func_type_cd										 AS groupFuncTypeCode
+			 , arc.comb_col_type_cd											 AS combColumnTypeCode
+			 , arc.calc_fld_type_cd											 AS calcFieldTypeCode
+			 , arc.group_func_type_cd										 AS groupFuncTypeCode
+			 , lgc.tbl_alias_col_nm											 AS tableColumnAlias
+			 , arc.oprt_cd													 AS operationTypeCode
+			 , arc.right_group_func_type_cd									 AS rightGroupFuncTypeCode
+			 , rgc.tbl_alias_col_nm											 AS rightTableColumnAlias
+			 , arc.right_atrib_group_col_id									 AS rightAtribGroupColumnId
+			 , lgc.dp_nm													 AS columnDisplayRealName
+			 , arc.order_atrib_group_col_id									 AS orderAtribGroupColumnId
+			 , arc.order_dtl												 AS orderDetail
+			 , arc.order_type_cd											 AS orderTypeCode
+			 , acm.col_type_cd												 AS originColumnTypeCode
+			 , arc.negtiv_yn												 AS negativeFlag
+			 , arc.decimal_plcs												 AS decimalPlaces
+			 , arc.sub_tot_yn												 AS subTotalFlag
+			 , arc.hide_yn													 AS hideYn
+	FROM ANL.ANL_RPT_COLUMN_INST		arc WITH (NOLOCK)
+	JOIN ANL.ANL_ATRIB_GROUP_COLUMN	lgc WITH (NOLOCK) ON arc.atrib_group_col_id = lgc.id AND lgc.flag = 1
+	JOIN ANL.ANL_COLUMN_MST			acm WITH (NOLOCK) ON CASE WHEN LEN(lgc.DIM_COL_ID) &gt; 0 THEN lgc.DIM_COL_ID ELSE lgc.COL_ID END = acm.id AND acm.flag = 1
+	LEFT JOIN ANL.ANL_ATRIB_GROUP_COLUMN	rgc WITH (NOLOCK) on arc.right_atrib_group_col_id = rgc.id AND rgc.flag = 1
+	WHERE arc.ID = #{columnId}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(selectAnalysisColumnIdListInst)
+	============================================
+	-	제목					: 분석 임시 컬럼/로우 아이디 조회
+	-	설명					: 분석 임시 컬럼/로우 아이디 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisColumnIdListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto" resultType="java.lang.String">
+	/* KprAnalysisColumnMapper.selectAnalysisColumnIdListInst */
+	SELECT	ID	AS	columnId
+	FROM	ANL.ANL_RPT_COLUMN_INST WITH (NOLOCK)
+	WHERE	RPT_ID	=	#{analysisId}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(selectAnalysisColumnIdCheckMaster)
+	============================================
+	-	제목					: 분석 컬럼/로우 아이디 체크
+	-	설명					: 분석 컬럼/로우 아이디 체크
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisColumnIdCheckMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto" resultType="java.lang.Integer">
+	/* KprAnalysisColumnMapper.selectAnalysisColumnIdCheckMaster */
+	SELECT	COUNT(1)
+	FROM	ANL.ANL_RPT_COLUMN WITH (NOLOCK)
+	WHERE	FLAG	=	1
+	AND		ID		=	#{columnId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(selectAnalysisColumnDisplayNameCount)
+	============================================
+	-	제목					: 분석 컬럼/로우 디스플레이명 체크
+	-	설명					: 분석 컬럼/로우 디스플레이명 체크
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisColumnDisplayNameCount" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto" resultType="java.lang.Integer">
+	/* KprAnalysisColumnMapper.selectAnalysisColumnDisplayNameCount */
+	SELECT	COUNT(1)
+	FROM	ANL.ANL_RPT_COLUMN_INST	arc WITH (NOLOCK)
+	WHERE	arc.FLAG			=		1
+	AND		arc.RPT_ID			=		#{analysisId}
+	AND		arc.ID				!=		#{columnId}
+	<if test="likeFlag == &quot;Y&quot;">
+		AND		arc.RPT_COL_DP_NM	LIKE	 #{columnDisplayName} + '%' 
+	</if>
+	<if test="likeFlag != &quot;Y&quot;">
+		AND		arc.RPT_COL_DP_NM	=	#{columnDisplayName}
+	</if>
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(insertAnalysisColumnDetailMaster)
+	============================================
+	-	제목					: 분석 컬럼/로우 임시 -> 마스터 등록
+	-	설명					: 분석 컬럼/로우 임시 -> 마스터 등록
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisColumnDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.insertAnalysisColumnDetailMaster */
+	INSERT INTO anl.anl_rpt_column (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_ALIAS
+			,	RPT_COL_DP_NM
+			,	RPT_ID
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	)
+	SELECT	com.getNewID('A')
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_ALIAS
+			,	RPT_COL_DP_NM
+			,	#{analysisId_New}
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	FROM	anl.anl_rpt_column_inst WITH (NOLOCK)
+	WHERE	FLAG	=	1
+	AND		RPT_ID	=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(insertAnalysisColumnDetailInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 등록
+	-	설명					: 분석 컬럼/로우 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<insert id="insertAnalysisColumnDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.insertAnalysisColumnDetailInst */
+	INSERT INTO anl.anl_rpt_column_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_DP_NM
+			,	RPT_ID
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	) VALUES (
+				#{columnId}
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	#{atribGroupColumnId}
+			,	#{columnTypeCode}
+			,	0
+			,	#{columnUseTypeCode}
+			,	#{combColumnTypeCode}
+			,	#{groupFuncTypeCode}
+			,	#{columnDisplayName}
+			,	#{analysisId}
+			,	#{calcFieldTypeCode}
+			,	#{operationTypeCode}
+			,	#{rightGroupFuncTypeCode}
+			,	#{rightAtribGroupColumnId}
+			, #{orderAtribGroupColumnId}
+			, #{orderDetail}
+			, #{orderTypeCode}
+			, 'N'
+			, 0
+			, 'N'
+			, #{hideYn}
+	)
+	<selectKey keyProperty="" resultType="java.lang.Integer">
+		SELECT	1
+	</selectKey>
+	</insert>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(insertAnalysisColumnDetailMasterToInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 마스터 -> 임시 등록
+	-	설명					: 분석 컬럼/로우 마스터 -> 임시 등록
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisColumnDetailMasterToInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.insertAnalysisColumnDetailMasterToInst */
+	INSERT INTO anl.anl_rpt_column_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_ALIAS
+			,	RPT_COL_DP_NM
+			,	RPT_ID
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	)
+	SELECT	ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, GETDATE()
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, ATRIB_GROUP_COL_ID
+			, COL_TYPE_CD
+			, SEQ
+			, COL_USE_TYPE_CD
+			, COMB_COL_TYPE_CD
+			, GROUP_FUNC_TYPE_CD
+			, RPT_COL_ALIAS
+			, RPT_COL_DP_NM
+			, RPT_ID
+			, CALC_FLD_TYPE_CD
+			, OPRT_CD
+			, RIGHT_GROUP_FUNC_TYPE_CD
+			, RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	FROM	ANL.ANL_RPT_COLUMN WITH (NOLOCK)
+	WHERE	FLAG	=	1
+	AND		RPT_ID	=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(insertAnalysisColumnDetailInstToMaster)
+	============================================
+	-	제목					: 분석 컬럼/로우 임시 -> 마스터 등록
+	-	설명					: 분석 컬럼/로우 임시 -> 마스터 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisColumnDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.insertAnalysisColumnDetailInstToMaster */
+	INSERT INTO anl.anl_rpt_column (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_ALIAS
+			,	RPT_COL_DP_NM
+			,	RPT_ID
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	)
+	SELECT	ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_ALIAS
+			,	RPT_COL_DP_NM
+			,	RPT_ID
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	FROM	anl.anl_rpt_column_inst WITH (NOLOCK)
+	WHERE	FLAG	=	1
+	AND		ID		=	#{columnId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(insertAnalysisColumnDetailCopy)
+	============================================
+	-	제목					: 생성자와 다른 사용자가 분석 접근 시 복사 등록
+	-	설명					: 생성자와 다른 사용자가 분석 접근 시 복사 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisColumnDetailCopy" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.insertAnalysisColumnDetailCopy */
+	INSERT INTO anl.anl_rpt_column_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_ALIAS
+			,	RPT_COL_DP_NM
+			,	RPT_ID
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	)
+	SELECT	com.getNewID('A')
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	ATRIB_GROUP_COL_ID
+			,	COL_TYPE_CD
+			,	SEQ
+			,	COL_USE_TYPE_CD
+			,	COMB_COL_TYPE_CD
+			,	GROUP_FUNC_TYPE_CD
+			,	RPT_COL_ALIAS
+			,	RPT_COL_DP_NM
+			,	#{analysisId_New}
+			,	CALC_FLD_TYPE_CD
+			,	OPRT_CD
+			,	RIGHT_GROUP_FUNC_TYPE_CD
+			,	RIGHT_ATRIB_GROUP_COL_ID
+			, order_atrib_group_col_id
+			, order_dtl
+			, order_type_cd
+			, negtiv_yn
+			, decimal_plcs
+			, sub_tot_yn
+			, hide_yn
+	FROM	ANL.ANL_RPT_COLUMN WITH (NOLOCK)
+	WHERE	FLAG	=	1
+	AND		RPT_ID	=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(updateAnalysisColumnDetailInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 상세 수정
+	-	설명					: 분석 컬럼/로우 상세 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisColumnDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.updateAnalysisColumnDetailInst */
+	UPDATE ANL.ANL_RPT_COLUMN_INST
+	   SET MODIFY_BY				= #{empId}
+			 , MODIFY_DATE				= GETDATE()
+			 , RPT_COL_DP_NM			= #{columnDisplayName}
+			 , COL_TYPE_CD				= #{columnTypeCode}
+			 , GROUP_FUNC_TYPE_CD		= #{groupFuncTypeCode}
+			 , COMB_COL_TYPE_CD			= #{combColumnTypeCode}
+			 , CALC_FLD_TYPE_CD			= #{calcFieldTypeCode}
+			 , OPRT_CD					= #{operationTypeCode}
+			 , RIGHT_GROUP_FUNC_TYPE_CD	= #{rightGroupFuncTypeCode}
+			 , RIGHT_ATRIB_GROUP_COL_ID	= #{rightAtribGroupColumnId}
+			 , ORDER_ATRIB_GROUP_COL_ID	= #{orderAtribGroupColumnId}
+			 , ORDER_DTL				= #{orderDetail}
+			 , ORDER_TYPE_CD			= #{orderTypeCode}
+		<if test="columnUseTypeCode != null AND columnUseTypeCode != ''">
+			 , COL_USE_TYPE_CD			= #{columnUseTypeCode}
+		</if>
+			 , NEGTIV_YN				= #{negativeFlag}
+			 , DECIMAL_PLCS				= #{decimalPlaces}
+			 , SUB_TOT_YN				= #{subTotalFlag}
+			 , HIDE_YN 					= #{hideYn}
+	WHERE	ID	=	#{columnId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(updateAnalysisColumnDetailInstToMaster)
+	============================================
+	-	제목					: 분석 컬럼/로우 임시 -> 마스터 수정
+	-	설명					: 분석 컬럼/로우 임시 -> 마스터 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisColumnDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.updateAnalysisColumnDetailInstToMaster */
+	UPDATE	anl.anl_rpt_column arc
+	SET	(arc.MODIFY_BY				
+			,	arc.MODIFY_DATE				
+			,	arc.ATRIB_GROUP_COL_ID		
+			,	arc.COL_TYPE_CD				
+			,	arc.SEQ						
+			,	arc.COL_USE_TYPE_CD			
+			,	arc.COMB_COL_TYPE_CD		
+			,	arc.GROUP_FUNC_TYPE_CD		
+			,	arc.RPT_COL_ALIAS			
+			,	arc.RPT_COL_DP_NM			
+			,	arc.CALC_FLD_TYPE_CD		
+			,	arc.OPRT_CD					
+			,	arc.RIGHT_GROUP_FUNC_TYPE_CD
+			,	arc.RIGHT_ATRIB_GROUP_COL_ID
+			,   arc.order_atrib_group_col_id	
+			,   arc.order_dtl					
+			,   arc.order_type_cd				
+			,   arc.negtiv_yn					
+			,   arc.decimal_plcs				
+			,   arc.sub_tot_yn
+			, 	arc.hide_yn)	
+			=(	SELECT
+			      aci.MODIFY_BY                
+	            , aci.MODIFY_DATE              
+	            , aci.ATRIB_GROUP_COL_ID       
+	            , aci.COL_TYPE_CD              
+	            , aci.SEQ                      
+	            , aci.COL_USE_TYPE_CD          
+	            , aci.COMB_COL_TYPE_CD         
+	            , aci.GROUP_FUNC_TYPE_CD       
+	            , aci.RPT_COL_ALIAS            
+	            , aci.RPT_COL_DP_NM            
+	            , aci.CALC_FLD_TYPE_CD         
+	            , aci.OPRT_CD                  
+	            , aci.RIGHT_GROUP_FUNC_TYPE_CD 
+	            , aci.RIGHT_ATRIB_GROUP_COL_ID 
+	            , aci.order_atrib_group_col_id   
+	            , aci.order_dtl                  
+	            , aci.order_type_cd              
+	            , aci.negtiv_yn                  
+	            , aci.decimal_plcs               
+	            , aci.sub_tot_yn  
+	            , aci.hide_yn
+	            FROM anl.anl_rpt_column_inst aci WITH (NOLOCK)
+	            WHERE	arc.ID	=	aci.ID
+				AND		aci.ID	=	#{columnId}
+		)
+	WHERE arc.ID = #{columnId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(updateAnalysisColumnAllSequenceInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 순서 수정( 전체 )
+	-	설명					: 분석 컬럼/로우 순서 수정( 전체 )
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisColumnAllSequenceInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+		/* KprAnalysisColumnMapper.updateAnalysisColumnAllSequenceInst */
+		UPDATE	anl.anl_rpt_column_inst
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	GETDATE()
+			,	SEQ			=
+					CASE
+					 <foreach collection="columnList" item="item" separator=" " close=" " open=" ">
+						WHEN	ID	=	#{item.columnId}	THEN	#{item.seq}
+					</foreach>
+					END
+			, rpt_col_alias = case
+							   <foreach collection="columnList" item="item" separator=" " close=" " open=" ">
+								when id = #{item.columnId} THEN 'r' + lpad(#{item.seq}, 4, 0)
+							  </foreach>
+							  end
+		WHERE	FLAG			=	1
+		AND		RPT_ID			=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(updateAnalysisColumnSequenceInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 순서 수정( 특정 컬럼/로우 이후 )
+	-	설명					: 분석 컬럼/로우 순서 수정( 특정 컬럼/로우 이후 )
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisColumnSequenceInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+		/* KprAnalysisColumnMapper.updateAnalysisColumnSequenceInst */
+		UPDATE ANL.ANL_RPT_COLUMN_INST
+		SET		MODIFY_BY		=	#{empId}
+			,	MODIFY_DATE		=	GETDATE()
+			,	SEQ				=	SEQ - 1
+		WHERE	FLAG			=	1
+		AND		SEQ				&gt;	#{seq}
+		AND		RPT_ID			=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(updateAnalysisColumnTypeCodeChangeInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 타입 수정
+	-	설명					: 분석 컬럼/로우 타입 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisColumnTypeCodeChangeInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+		/* KprAnalysisColumnMapper.updateAnalysisColumnTypeCodeChangeInst */
+		UPDATE ANL.ANL_RPT_COLUMN_INST
+		SET		MODIFY_BY		=	#{empId}
+			,	MODIFY_DATE		=	GETDATE()
+			,	COL_USE_TYPE_CD	=	#{changeColumnUseTypeCode}
+		WHERE	FLAG			=	1
+		AND		COL_USE_TYPE_CD	=	#{columnUseTypeCode}
+		<if test="columnList != null AND columnList.size() > 0">
+			AND		ID		IN	 <foreach collection="columnList" item="item" separator=", " close=")" open="(">
+									#{item.columnId}
+								</foreach>
+		</if>
+		<if test="columnList == null or columnList.size() == 0">
+			AND		ID	=	#{columnId}
+		</if>
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(updateAnalysisColumnCombTypeChangeInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 컴비네이션 타입 수정
+	-	설명					: 분석 컬럼/로우 컴비네이션 타입 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisColumnCombTypeChangeInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+		/* KprAnalysisColumnMapper.updateAnalysisColumnCombTypeChangeInst */
+		UPDATE ANL.ANL_RPT_COLUMN_INST
+		SET		MODIFY_BY			=	#{empId}
+			,	MODIFY_DATE			=	GETDATE()
+			,	COMB_COL_TYPE_CD	=	#{combColumnTypeCode}
+		WHERE	FLAG	=	1
+		AND		RPT_ID	=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(deleteAnalysisColumnDetailMaster)
+	============================================
+	-	제목					: 분석 컬럼/로우 마스터 삭제
+	-	설명					: 분석 컬럼/로우 마스터 삭제
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="deleteAnalysisColumnDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+		/* KprAnalysisColumnMapper.deleteAnalysisColumnDetailMaster */
+		UPDATE ANL.ANL_RPT_COLUMN
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	GETDATE()
+			,	FLAG		=	flag + 1
+		WHERE	RPT_ID	=	#{analysisId}
+		<if test="columnIdList != null AND columnIdList.size() > 0">
+			AND		ID	NOT IN	 <foreach collection="columnIdList" item="item" separator="," close=")" open="(">
+									#{item}
+								</foreach>
+		</if>
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(deleteAnalysisColumnListInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 전체 삭제
+	-	설명					: 분석 컬럼/로우 전체 삭제
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<delete id="deleteAnalysisColumnListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.deleteAnalysisColumnListInst */
+	DELETE
+	FROM	ANL.ANL_RPT_COLUMN_INST
+	WHERE	RPT_ID	=	#{analysisId}
+	</delete>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisColumnMapper.java(deleteAnalysisColumnDetailInst)
+	============================================
+	-	제목					: 분석 컬럼/로우 임시 삭제
+	-	설명					: 분석 컬럼/로우 임시 삭제
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<delete id="deleteAnalysisColumnDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto">
+	/* KprAnalysisColumnMapper.deleteAnalysisColumnDetailInst */
+	DELETE
+	FROM	ANL.ANL_RPT_COLUMN_INST
+	WHERE	ID	=	#{columnId}
+	</delete>
+	
+	
+	<!-- 2017. 10. 25. 이기오
+	-	 NHIS 프로젝트 추가 -->
+	<select id="selectAnalysisSameTableColumnList" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisColumnDetailReqDto" 
+																	resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisColumnDetailResDto">
+		/* KprAnalysisColumnMapper.selectAnalysisSameTableColumnList */
+		SELECT 
+				t.id AS orderAtribGroupColumnId
+			 	, t.dp_nm + '(' + t.tbl_alias_col_nm + ')' AS orderDisplayName
+		  FROM (
+			SELECT 
+				   coalesce(agc2.id, agc1.id)					 AS id
+				 , coalesce(agc2.dp_nm, agc1.dp_nm)						 AS dp_nm
+				 , coalesce(agc2.tbl_alias_col_nm, agc1.tbl_alias_col_nm) AS tbl_alias_col_nm
+				 , CASE WHEN LEN(agc2.id) &gt; 0 
+				 	THEN agc2.seq
+				 	ELSE agc1.seq
+				   	END AS seq
+			<if test='analysisMasterFlag == "Y"'>
+			  FROM ANL.ANL_RPT_COLUMN			arc WITH (NOLOCK)
+			</if>
+			<if test='analysisMasterFlag != "Y"'>
+			  FROM ANL.ANL_RPT_COLUMN_INST		arc WITH (NOLOCK)
+			</if>
+			  JOIN ANL.ANL_ATRIB_GROUP_COLUMN	agc1 WITH (NOLOCK) ON arc.ATRIB_GROUP_COL_ID = agc1.ID AND agc1.FLAG = 1
+			  JOIN ANL.ANL_COLUMN_MST			acm1 WITH (NOLOCK) ON CASE WHEN LEN(agc1.DIM_COL_ID) &gt; 0 THEN agc1.DIM_COL_ID ELSE agc1.COL_ID END = acm1.ID AND acm1.FLAG = 1
+		 LEFT JOIN ANL.ANL_COLUMN_MST			acm2 WITH (NOLOCK) ON acm1.TBL_ID = acm2.TBL_ID AND acm2.FLAG = 1
+		 LEFT JOIN ANL.ANL_ATRIB_GROUP_COLUMN	agc2 WITH (NOLOCK) ON acm2.ID = agc2.DIM_COL_ID AND agc1.COL_ID = agc2.COL_ID AND agc1.ATRIB_GROUP_ID = agc2.ATRIB_GROUP_ID AND agc2.flag = 1
+			 WHERE arc.FLAG		= 1
+			   AND arc.ID		= #{columnId}
+			   AND arc.RPT_ID	= #{analysisId}
+		) t
+		 GROUP BY t.id, t.dp_nm, t.tbl_alias_col_nm, t.seq
+		 ORDER BY t.seq
+	</select>
+</mapper>

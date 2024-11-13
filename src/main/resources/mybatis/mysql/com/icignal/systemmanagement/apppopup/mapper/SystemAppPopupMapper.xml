@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.apppopup.mapper.SystemAppPopupMapper">
+
+	<select id="selectAppPopList" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopListReqDto"
+								  resultType="com.icignal.systemmanagement.apppopup.dto.response.SystemAppPopListResDto">
+		/* SystemAppPopupMapper.selectAppPopList */
+		select 	t1.*
+				,${strColumn}
+		from(
+			select	lap.rid 	as rid
+				,lap.app_popup_master_name as appPopTitle
+				,e.name as appPopWriter
+				,lap.create_date as createDate
+				,lap.start_date as startDate
+				,lap.end_date as endDate
+				,cc.mark_name as appPopType
+				,case when cc.code_name = 'NOTICE' 
+				then case when sysdate > lap.end_date then '완료'  when sysdate > lap.start_date then '노출' when lap.start_date > sysdate then '예약'  end 
+				else case when sysdate > lap.end_date then '완료' when sysdate > lap.start_date then '노출' when lap.start_date > sysdate then '예약'  end
+				end as 	appPopStatus
+		from loy.loy_app_popup_master lap
+		join loy.loy_app_popup lapp
+		on lapp.popup_master_rid = lap.rid
+		left join com.crm_user us  
+		on lap.create_by = us.rid
+		left outer join com.employee e
+		on   	e.id = us.id_employee
+		join com.comm_code cc
+		on cc.code_name = lap.app_popup_cd and cc.group_code = 'APP_POPUP_TYPE' and cc.lang = #{lang}
+		left outer join loy.loy_notice lnn
+		on lnn.rid = lapp.popup_object
+		left outer join loy.loy_notice_master ln
+		on lnn.notice_master_rid = ln.rid
+		where lap.flag  = 1
+		<!-- and lap.accnt_id = #{accountId}	 -->
+		and ${strSVCType}
+		) t1
+		where   ${strCondWhere} 
+		and 	${strWhere}
+		group by t1.rid, t1.appPopTitle, t1.appPopWriter, t1.createDate, t1.startDate, t1.endDate, t1.appPopType, t1.appPopStatus
+		order by ${strOrderby}
+		${strEndPaging}	
+	</select>
+	
+	<update id="updateAppPopMaster" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopMasterInsertReqDto">
+		/* SystemAppPopupMapper.updateAppPopMaster */
+		update loy.loy_app_popup_master
+		set app_popup_master_name = #{appPopMasterTitle}
+			,app_popup_cd = #{appPopType}
+			,start_date = to_date(#{openDate}, 'YYYYMMDDHH24MISS')
+			,end_date = to_date(#{endDate}, 'YYYYMMDDHH24MISS')
+			,modify_date = sysdate
+			,modify_by = #{modifyBy}
+		where ${strSVCType}
+		and rid = #{appPopId}
+	</update>
+	
+	<insert id="insertAppPopMaster" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopMasterInsertReqDto">
+		/* SystemAppPopupMapper.insertAppPopMaster */
+		<selectKey keyProperty="appPopId" resultType="java.lang.String" order="BEFORE">
+        	select com.getNewID('A') from dual
+    	</selectKey>
+		insert into loy.loy_app_popup_master
+			(
+				rid
+				,app_popup_master_name
+				,app_popup_cd
+				,start_date
+				,end_date
+				<!-- ,accnt_id
+				,app_service_type
+				,country -->
+				,lang
+				,flag
+				,create_date
+				,create_by
+				,modify_date
+				,modify_by
+			)
+		values(
+				#{appPopId}
+				,#{appPopMasterTitle}
+				,#{appPopType}
+				,to_date(#{openDate}, 'YYYYMMDDHH24MISS')
+				,to_date(#{endDate}, 'YYYYMMDDHH24MISS')
+				<!-- ,#{accountId}
+				,#{appServiceId}
+				,#{country} -->
+				,#{lang}
+				,1
+				,sysdate
+				,#{createBy}
+				,sysdate
+				,#{modifyBy}
+				)
+	</insert>
+	
+	<select id="selectAppPopMaster" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopMasterDetailReqDto" resultType="com.icignal.systemmanagement.apppopup.dto.response.SystemAppPopMasterDetailResDto">
+		/* SystemAppPopupMapper.selectAppPopMaster */
+		select lapm.app_popup_cd as appPopStatus
+				,lapm.app_popup_master_name as appPopMasterName
+				,to_char(lapm.start_date ,'yyyy-mm-dd') as openDate
+				,to_char(lapm.start_date, 'HH24:MI') as openTime
+				,to_char(lapm.end_date ,'yyyy-mm-dd') as endDate
+				,to_char(lapm.end_date, 'HH24:MI') as endTime
+		from loy.loy_app_popup_master lapm
+		where ${strSVCType} 
+		and rid = #{appPopId}
+	</select>
+	
+	<update id="updateAppPopSub" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopSubInsertReqDto">
+		/* SystemAppPopupMapper.updateAppPopSub */
+		update loy.loy_app_popup
+		set	app_popup_title = #{appPopName}
+			,app_popup_desc = #{appPopContent}
+			,popup_object = #{popupObject}
+		where rid = #{appPopSubId}
+		and popup_lang = #{appPopLang}
+	</update>
+	
+	<insert id="insertAppPopSub" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopSubInsertReqDto">
+		/* SystemAppPopupMapper.insertAppPopSub */
+		<selectKey keyProperty="appPopSubId" resultType="java.lang.String" order="BEFORE">
+        	select com.getNewID('A') from dual
+    	</selectKey>
+		insert into loy.loy_app_popup
+			(
+				rid
+				,app_popup_title
+				,app_popup_desc
+				,popup_object
+				<!-- ,accnt_id
+				,app_service_type
+				,country -->
+				,lang
+				,flag
+				,create_date
+				,create_by
+				,modify_date
+				,modify_by
+				,popup_lang
+				,popup_master_rid
+			)
+		values(
+			#{appPopSubId}
+			,#{appPopName}
+			,#{appPopContent} 
+			,#{popupObject}
+			<!-- ,#{accountId}
+			,#{appServiceId}
+			,#{country} -->
+			,#{lang}
+			,1
+			,sysdate
+			,#{createBy}
+			,sysdate
+			,#{modifyBy}
+			,#{appPopLang}
+			,#{appPopId}
+		)
+	</insert>
+
+	<select id="selectAppPopSubId" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopSubDetailReqDto" resultType="java.lang.String">
+		/* SystemAppPopupMapper.selectAppPopSubId */
+		select lap.rid
+		from loy.loy_app_popup lap
+		where lap.popup_master_rid = #{appPopId}
+		and popup_lang = #{appPopLang}
+		and ${strSVCType}
+	</select>
+	
+	
+	<resultMap id="appPopDetailResultMap" type="com.icignal.systemmanagement.apppopup.dto.response.SystemAppPopSubDetailResDto">
+		<result property="appPopName" column="appPopName" />
+		<result property="appPopContent" column="appPopContent" />
+		<result property="popupObject" column="popupObject" />
+		<result property="appPopSubId" column="appPopSubId" />
+		<collection property="images" javaType="java.util.ArrayList" column="{parentId=appPopSubId, category=appPopType, imageLang=imageLang}" select="CommonMapper.multiSelectImages" />
+	</resultMap>
+	
+	<select id="selectAppPopSubDetail" parameterType="com.icignal.systemmanagement.apppopup.dto.request.SystemAppPopSubDetailReqDto" resultMap="appPopDetailResultMap">
+		/* SystemAppPopupMapper.selectAppPopSubDetail */
+		select 
+			lap.app_popup_title as appPopName
+			, lap.app_popup_desc as appPopContent
+			, lap.popup_object as popupObject
+			, #{appPopId} as appPopSubId
+			, 'APP_POPUP' as appPopType
+			, 'EVENT_MAIN_BANNER' as eventType
+			, 'com' as schemas
+			, #{appPopLang} as imageLang
+		from loy.loy_app_popup lap
+		where 
+			lap.rid = #{appPopId}
+			and lap.popup_lang = #{appPopLang}
+			and ${strSVCType}
+			AND rownum = 1
+	</select>
+	
+</mapper>

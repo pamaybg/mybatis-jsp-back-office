@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.terms.memberterm.mapper.LoyMemberTermMapper">
+
+<select id="selectMbrTermsHistList" parameterType="com.icignal.loyalty.terms.memberterm.dto.request.LoyMbrTermsHistListReqDto" resultType="com.icignal.loyalty.terms.memberterm.dto.response.LoyMbrTermsHistListResDto">
+		/* LoyMemberTermMapper.selectMbrTermsHistList */
+		SELECT T1.RID AS rid
+		 	 , T1.AGRE_CD AS agreCd
+		 	 , C1.MARK_NAME AS agreNm
+		 	 , T1.AGRE_YN AS agreYn
+		 	 , T2.RID AS ridTerms
+		 	 , T2.TERMS_NM AS termsNm
+		 	 , T2.VER AS termsVer
+		 	 , T1.CREATE_DATE AS createDate
+		 	 , ${strColumn}
+		  FROM LOGS.LOY_MBR_TERMS_HIST T1
+		  LEFT OUTER JOIN LOY.LOY_TERMS T2 ON T2.FLAG = 1 AND T2.RID = T1.RID_TERMS
+		  LEFT OUTER JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = #{lang} AND C1.GROUP_CODE = 'LOY_CUST_AGRE_TYPE_CD' AND C1.CODE_NAME = T1.AGRE_CD
+		 WHERE T1.RID_MBR = #{ridMbr}
+			AND ${strSVCType}
+			AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+</mapper>
+	
+	

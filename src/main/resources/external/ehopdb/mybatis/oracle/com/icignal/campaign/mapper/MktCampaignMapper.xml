@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:29 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.campaign.mapper.MktCampaignEshopMapper">
+
+    <select id="selectOfferDataIsNull" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignReqDto" resultType="java.lang.Integer">
+        /* MktCampaignEshopMapper.selectOfferDataIsNull */
+        select count(*) as dataYnCount
+        from dual
+        where exists(select *
+                     from ${offerTableName}
+                     where 1=1
+                       and CRM_CAM_RID = #{id})
+    </select>
+
+    <select id="selectOfferDataCheck" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignReqDto" resultType="java.lang.Integer">
+        /* MktCampaignEshopMapper.selectOfferDataCheck */
+        select count(*) as applyYnCount
+        from dual
+        where exists(select *
+                     from ${offerTableName}
+                     where 1=1
+                       and APPLY_YN = 'Y'
+                       and CRM_CAM_RID = #{id})
+    </select>
+
+    <select id="selectSendOfferCount" parameterType="com.icignal.marketing.campaign.dto.request.MktCampaignReqDto" resultType="java.lang.Integer">
+        /* MktCampaignEshopMapper.selectSendOfferCount */
+        select nvl(count(*),0) as tgtCnt
+        from ${offerTableName}
+        where 1=1
+          and CRM_CAM_RID = #{id}
+    </select>
+
+</mapper>

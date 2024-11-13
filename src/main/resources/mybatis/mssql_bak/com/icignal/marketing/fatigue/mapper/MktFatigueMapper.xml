@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 17:28:33 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.fatigue.mapper.MktFatigueMapper">
+
+
+  <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (getFatigueList)
+    ============================================
+    -   제목                  : 피로도 목록 조회		
+    -   설명                  : 피로도 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:	id,account_id (회사명)
+    -	출력				:	chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명),periodDivName(기간구분),MAX_RSTRTN_TMSCNT(최대발송횟수)
+    						,startDate(시작일자),endDate(마지막일자),fatigue_desc(설명)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/ -->
+     <select id="getFatigueList" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueReqDto" 
+     resultType="com.icignal.marketing.fatigue.dto.response.MktFatigueResDto">
+		select ${strColumn},
+			mfm.chnl_type_cd as chnlTypeCd, 
+			c1.mark_name as chnlTypeCdName, 
+			mfm.fati_restriction_day as periodDivName, 
+			mfm.MAX_RSTRTN_TMSCNT as maxRstrtnTmscnt,
+			mfm.NON_REACT_DAY as non_react_day,
+			mfm.NON_REACT_CNT as non_react_cnt,
+			convert(varchar(10),mfm.START_DD,120) as startDate, 
+			convert(varchar(10),mfm.END_DD,120) as endDate,
+			mfm.fatigue_desc as fatigueDesc,
+			mfm.create_date as createDate , 
+			mfm.id as id
+		from mkt.mkt_fatigue_mst mfm WITH (NOLOCK) 
+			left outer join com.comm_code c1 WITH (NOLOCK) on mfm.chnl_type_cd = c1.code_name and c1.flag = 1 and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+			left outer join com.comm_code c2 WITH (NOLOCK) on mfm.period_div = c2.code_name and c2.flag = 1 and c2.lang = #{lang} and c2.group_code = 'MKT_STAND_TYPE_CD'
+		where ${strSVCType}
+			and ${strWhere}  
+			and ${strCondWhere}
+			<!-- and mfm.accnt_id = #{accountId} -->
+			and mfm.flag = 1
+		order by ${strOrderby}
+			${strEndPaging}
+    </select> 
+
+
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (getFatigueDetail)
+    ============================================
+    -   제목                  : 피로도 목록 세부사항		
+    -   설명                  : 피로도 ID에 따른 세부사항
+    -   결과형태              : 단일
+    ============================================
+    -   입력				:	id(피로도 아이디),account_id (회사명)
+    -	출력				:	chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명),periodDivName(기간구분),MAX_RSTRTN_TMSCNT(최대발송횟수)
+    						,startDate(시작일자),endDate(마지막일자),fatigue_desc(설명),createBy(작성자),crerateDate(작성일자),modifyBy(변경자)
+    						modifyDate(변경일자)
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/-->
+     <select id="getFatigueDetail" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueDetailReqDto" 
+     resultType="com.icignal.marketing.fatigue.dto.response.MktFatigueDetailResDto">
+     /* MKTFatigue.getFatigueDetail */
+		select mfm.chnl_type_cd as chnlTypeCd,
+			mfm.period_div as periodDiv, 
+			mfm.MAX_RSTRTN_TMSCNT as maxRstrtnTmscnt,convert(varchar(10),mfm.START_DD,120) as startDate, 
+			convert(varchar(10),mfm.END_DD,120) as endDate, mfm.fatigue_desc as fatigueDesc,e1.name as createBy,
+			convert(varchar(10),mfm.create_date,120) as createDate, 
+			e2.name as modifyBy, convert(varchar(10),mfm.modify_date,120) as modifyDate,
+			mfm.fati_restriction_day as maxDayCnt,
+			mfm.NON_REACT_DAY as non_react_day,
+			mfm.NON_REACT_CNT as non_react_cnt
+		from mkt.mkt_fatigue_mst mfm WITH (NOLOCK) 
+		left outer join com.crm_user u1 WITH (NOLOCK) on mfm.create_by = u1.rid
+		left outer join com.employee e1 WITH (NOLOCK) on u1.id_employee = e1.id
+		left outer join com.crm_user u2 WITH (NOLOCK) on mfm.modify_by = u2.rid
+		left outer join com.employee e2 WITH (NOLOCK) on u2.id_employee = e2.id
+		where ${strSVCType}
+			and mfm.id = #{id}
+			<!-- and mfm.accnt_id = #{accountId} -->
+			and mfm.flag = 1	
+    </select> 
+
+
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (insertFatigue)
+    ============================================
+    -   제목                  : 피로도 추가		
+    -   설명                  : 피로도 추가
+    -   결과형태              : 단일
+    ============================================
+    -   입력				:	
+    id(피로도 아이디),account_id (회사명),chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명),chnlTypeCd(채널유형코드),chnlTypeCdName(채널유형명)
+    ,periodDivName(기간구분),MAX_RSTRTN_TMSCNT(최대발송횟수),startDate(시작일자),endDate(마지막일자),fatigue_desc(설명),createBy(작성자),createDate(작성일자)
+    -	출력				:	0,1
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/-->   
+	<insert id="insertFatigue" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueSetReqDto">
+	insert into mkt.mkt_fatigue_mst 
+	(
+		id,
+		chnl_type_cd,
+		period_div,
+		max_rstrtn_tmscnt,
+		start_dd,
+		end_dd,
+		fatigue_desc,
+		<!-- accnt_id, -->
+		create_date,
+		create_by,
+		modify_date,
+		modify_by,
+		flag,
+		<!-- country,
+		app_service_type, -->
+		fati_restriction_day,
+		NON_REACT_DAY,
+		NON_REACT_CNT
+	) 
+	values
+	(
+		#{id},
+		#{chnlTypeCd},
+		#{periodDiv},
+		#{maxRstrtnTmscnt},
+		convert(date,#{startDate}),
+		convert(date,#{endDate}),
+		#{fatigueDesc},
+		<!-- #{accountId}, -->
+		getdate(),
+		#{createBy},
+		getdate(),
+		#{createBy},
+		1,
+		<!-- #{country},
+		#{appServiceId}, -->
+		#{maxDayCnt},
+		#{non_react_day},
+		#{non_react_cnt}
+	)
+	</insert>
+	
+	
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (deleteFatigue)
+    ============================================
+    -   제목                  : 피로도 삭제		
+    -   설명                  : 피로도 삭제
+    -   결과형태              : 단일
+    ============================================
+    -   입력				: id , accountId, modifyBy(변경자) 	
+  		
+    -	출력				:	0,1
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/-->  	
+	<update id="deleteFatigue" parameterType="com.icignal.marketing.fatigue.dto.request.MktDeleteFatigueReqDto">
+		update mkt.mkt_fatigue_mst
+		set
+			flag = flag + 1,
+			modify_by = #{modifyBy},
+			modify_date = getdate()	
+		where
+			id = #{id}
+			<!-- and accnt_id = #{accountId} -->
+			and ${strSVCType}
+	</update>
+	
+   <!-- /**************************************
+    -   관련 파일             : MKTFatigueDAO.java (updateFatigue)
+    ============================================
+    -   제목                  : 피로도 수정		
+    -   설명                  : 피로도 수정
+    -   결과형태              : 단일
+    ============================================
+    -   입력				: chnlTypeCd(채널유형코드) ,periodDiv(기간구분),maxRstrtnTmscnt(최대제한횟수) accountId, modifyBy(변경자)
+    					  startDate(시작일자),endDate(종료일자),fatigue_desc(설명),modifyBy(변경자),modify_date(수정일자),id(피로도아이디) 	
+    -	출력				:	0,1
+    ============================================
+    -   작성자                : 안형욱
+    -   작성일                : 2015.11.30
+    ***************************************/--> 
+	<update id="updateFatigue" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueModifyReqDto">
+	/* MKTFatigue.updateFatigue */
+		update mkt.mkt_fatigue_mst
+		set
+			chnl_type_cd = #{chnlTypeCd},
+			period_div = #{periodDiv},
+			max_rstrtn_tmscnt =#{maxRstrtnTmscnt},
+			NON_REACT_DAY = #{non_react_day},
+			NON_REACT_CNT = #{non_react_cnt},
+			start_dd = TO_DATE(#{startDate},120),
+			end_dd = TO_DATE(#{endDate},120),
+			fatigue_desc = #{fatigueDesc},
+			modify_by = #{modifyBy},
+			modify_date = getdate(),
+			fati_restriction_day = #{maxDayCnt}
+		where
+			id = #{id}
+			<!-- and accnt_id = #{accountId} -->
+			and ${strSVCType}
+	</update>
+	
+	<select id="selectFatigueCheck" parameterType="com.icignal.marketing.fatigue.dto.request.MktFatigueSetReqDto" resultType="java.lang.Integer">
+	select count(1) 
+    from mkt.mkt_fatigue_mst mfm WITH (NOLOCK) 
+	join com.comm_code cc WITH (NOLOCK) on cc.flag = 1 and cc.code_name = mfm.chnl_type_cd and cc.lang = #{lang} and cc.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	where ${strSVCType} 
+    and cc.id = #{chnlTypeCd} 
+    and mfm.flag = 1
+	<!-- and accnt_id = #{accountId} -->
+	<if test="id != null and id != ''">
+	and mfm.id != #{id}
+	</if>
+	
+	</select>
+
+</mapper>

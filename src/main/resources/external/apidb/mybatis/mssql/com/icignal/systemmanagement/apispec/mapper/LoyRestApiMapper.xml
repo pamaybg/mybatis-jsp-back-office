@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.apispec.mapper.LoyRestApiMapper">
+
+    <select id="execPkgLoyApiSurveySpGetSurvInfo" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoySurveyInfoApiVo" statementType="CALLABLE">
+        /* LoySurveyMapper.execPkgLoyApiSurveySpGetSurvInfo */
+        EXEC LOY.PKG_LOY_API_SURV_SP_GET_SURV_INFO
+        #{apiNo}
+        , #{trNo}
+        , #{chnlNo}
+        , #{pgmNo}
+        , #{usrTypeCd}
+        , #{mbrNo}
+        , #{ridSurv}
+        , #{rst, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{rstCd, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{rstMsg, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{survNm, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{startMsg, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{endMsg, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{startDt, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{endDt, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{startImg, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{endImg, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+    </select>
+
+    <select id="survSectList" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoySurveyInfoApiVo"
+            resultType="com.icignal.loyalty.survey.dto.response.LoySurveySectionListResDto">
+        /* LoySurveyMapper.survSectList */
+        SELECT Z.RID           AS ridSurvSect,
+               Z.SECT_NO       AS sectNo,
+               Z.SECT_CONTENTS AS sectCtnt,
+               Z.NEXT_SECT_NO  AS nextSectNo,
+               CASE
+                   WHEN Z.LAST_YN = 'Y' THEN 'Y'
+                   WHEN Z.NEXT_SECT_NO IS NULL THEN 'Y'
+                   ELSE 'N'
+                   END    		   AS lastYn
+        FROM (
+                 SELECT SS.RID           AS RID,
+                        SS.SECT_NO       AS SECT_NO,
+                        SS.SECT_CONTENTS AS SECT_CONTENTS,
+                        SS.LAST_YN       AS LAST_YN,
+                        (
+                            SELECT T.SECT_NO
+                            FROM LOY.LOY_SURV_SECT AS T WITH(NOLOCK)
+                 WHERE T.FLAG = 1
+                   AND T.RID_SURV_MST = SS.RID_SURV_MST
+                   AND T.SECT_NO = (SS.SECT_NO + 1)
+             )  AS NEXT_SECT_NO
+            FROM LOY.LOY_SURV_SECT AS SS WITH(NOLOCK)
+        WHERE SS.FLAG = 1
+          AND SS.RID_SURV_MST = #{ridSurv}
+            ) AS Z
+        ORDER BY sectNo ASC
+    </select>
+
+    <select id="survItemList" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoySurveyInfoApiVo"
+            resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemListResDto">
+        /* LoySurveyMapper.survItemList */
+        SELECT SS.RID           AS ridSurvSect,
+               SI.RID           AS ridSurvItem,
+               SI.ITEM_NO       AS itemNo,
+               SI.ITEM_TITLE    AS itemTitle,
+               SI.FIELD_TYPE_CD AS fieldTypeCd,
+               SI.IMAGE_DESC    AS imageDesc,
+               CASE
+                   WHEN I.ID IS NOT NULL THEN (COM.NVL(I.IMAGE_FOLDER, '') + '/' + COM.NVL(I.IMAGE_FILE_NAME, '') + COM.NVL(I.IMAGE_FILE_TYPE, ''))
+                   END          AS imagePath,
+               SI.OPT_YN        AS isOpt
+        FROM LOY.LOY_SURV_SECT AS SS WITH(NOLOCK)
+	JOIN LOY.LOY_SURV_ITEM AS SI WITH(NOLOCK) ON SS.RID = SI.RID_SURV_SECT AND SI.FLAG = 1
+            LEFT JOIN COM.IMAGE AS I WITH(NOLOCK) ON SI.RID = I.PARENT_ID AND I.FLAG = 1
+        WHERE SS.FLAG = 1
+          AND SS.RID_SURV_MST = #{ridSurv}
+        ORDER BY SS.SECT_NO, SI.ITEM_NO
+    </select>
+
+    <select id="survItemAttrList"
+            parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoySurveyInfoApiVo"
+            resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemAttrListResDto">
+        /* LoySurveyMapper.survItemAttrList */
+        SELECT SI.RID               AS ridSurvItem
+             , SA.RID               AS ridSurvItemAttr
+             , SA.ATTR_NO           AS itemAttrNo
+             , SA.ATTR_VAL          AS itemValue
+             , SA.TGT_SECT_NO       AS tgtSectNo
+             , SA.RID_TEXT_CTR_ITEM AS ridTextItem
+             , Z.RID_CONTROL_SOURCE AS ridControlSource
+        FROM LOY.LOY_SURV_SECT SS WITH (NOLOCK)
+		  JOIN LOY.LOY_SURV_ITEM SI WITH (NOLOCK) ON SS.RID = SI.RID_SURV_SECT AND SI.FLAG = 1
+            LEFT JOIN LOY.LOY_SURV_ATTR SA WITH (NOLOCK) ON SI.RID = SA.RID_SURV_ITEM AND SA.FLAG = 1
+            LEFT JOIN (
+            SELECT SI.RID               AS RID_CONTROL_SOURCE
+            , SA.RID_TEXT_CTR_ITEM
+            FROM LOY.LOY_SURV_SECT SS WITH(NOLOCK)
+            JOIN LOY.LOY_SURV_ITEM SI WITH (NOLOCK) ON SS.RID = SI.RID_SURV_SECT AND SI.FLAG = 1
+            LEFT JOIN LOY.LOY_SURV_ATTR SA WITH (NOLOCK) ON SI.RID = SA.RID_SURV_ITEM AND SA.FLAG = 1
+            WHERE SS.FLAG = 1
+            AND SS.RID_SURV_MST = #{ridSurv}
+            ) Z ON SI.RID = Z.RID_TEXT_CTR_ITEM
+        WHERE SS.FLAG = 1
+          AND SS.RID_SURV_MST = #{ridSurv}
+        ORDER BY SS.SECT_NO, SI.ITEM_NO, SA.ATTR_NO
+    </select>
+
+    <select id="execPkgLoyApiSurvSpEnterSurvRst" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoySurveyEnterApiVo" statementType="CALLABLE">
+        /* LoySurveyMapper.execPkgLoyApiSurvSpEnterSurvRst */
+        BEGIN
+        DECLARE @SURV_RST_LIST  LOY.T_SURV_RST;
+
+        INSERT INTO @SURV_RST_LIST
+        <foreach collection="survRstList" item="item" separator="UNION ALL" close=";">
+            SELECT	#{item.ridSurvSect} AS RID_SURV_SECT
+            , #{item.ridSurvItem} AS RID_SURV_ITEM
+            , #{item.ridSurvItemAttr} AS RID_SURV_ITEM_ATTR
+            , #{item.ansValue} AS ANS_VALUE
+        </foreach>
+
+        EXEC LOY.PKG_LOY_API_SURV_SP_ENTER_SURV_RST
+        #{apiNo}
+        , #{trNo}
+        , #{chnlNo}
+        , #{pgmNo}
+        , #{usrTypeCd}
+        , #{mbrNo}
+        , #{ridSurv}
+        , @SURV_RST_LIST
+        , #{rst, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{rstCd, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{rstMsg, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{ofrFlag, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{survNo, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        END
+    </select>
+
+    <select id="execPkgLoyApiSurvSpEnterYnSurvRst" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoySurveyEnterYnApiVo" statementType="CALLABLE">
+        /* LoySurveyMapper.execPkgLoyApiSurvSpEnterYnSurvRst */
+        EXEC LOY.PKG_LOY_API_SURV_SP_ENTER_YN_SURV_RST
+        #{apiNo}
+        , #{trNo}
+        , #{chnlNo}
+        , #{pgmNo}
+        , #{usrTypeCd}
+        , #{mbrNo}
+        , #{ridSurv}
+        , #{rst, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{rstCd, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{rstMsg, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+        , #{usrEnterYn, javaType=java.lang.String, jdbcType=VARCHAR,mode=OUT}
+
+    </select>
+
+
+    <update id="execPkgLoyMbrSpMbrSecsn" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoyMbrDeleteVo"
+            statementType="CALLABLE">
+        /* LoyMbrMapper.execPkgLoyMbrSpMbrSecsn */
+        DECLARE @P_DATE  VARCHAR(14);
+
+        SELECT @P_DATE =  COM.TO_CHAR(GETDATE(),'YYYYMMDDHH24MISS');
+
+        EXEC LOY.PKG_LOY_MBR_SP_MBR_SECSN
+        'Y',
+        #{trNo},
+        '3342004AD086435EBFFC563E5F878877',
+        #{pgmNo},
+        #{chnlNo},
+        #{usrId},
+        @P_DATE,
+        #{reasonCd},
+        #{reason},
+        '01',
+        #{rst,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+        #{rstCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+        #{rstMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+    </update>
+
+    <delete id="deleteOdsTbMemberIntgr" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoyMbrDeleteVo">
+        /* LoyMbrMapper.deleteOdsTbMemberIntgr */
+        DELETE FROM ODS.TB_MEMBER_INTGR WHERE USR_ID = #{usrId}
+    </delete>
+
+    <update id="execProcLoyApiMbrPushHist" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoyMbrPushHistVo" statementType="CALLABLE">
+        /* LoyMbrMapper.execProcLoyApiMbrPushHist */
+        EXEC LOY.PROC_LOY_API_MBR_PUSH_HIST
+        #{apiNo},
+        #{trNo},
+        #{chnlNo},
+        #{pgmNo},
+        #{usrId},
+        #{rst,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+        #{rstCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+        #{rstMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+    </update>
+
+    <select id="selectMbrPushHist" parameterType="com.icignal.systemmanagement.apispec.dto.vo.LoyMbrPushHistVo"
+            resultType="com.icignal.systemmanagement.apispec.dto.vo.LoyHistArrayVo">
+        /* LoyMbrMapper.selectMbrPushHist */
+        SELECT MSG_SUBJECT AS subject
+             , MSG_SBST AS message
+             , ATTRIB03 AS linkUrl
+             , ATTRIB02 AS imgUrl
+             , BAT_SEND_PROC_TIME AS sentDt
+        FROM MKT.MKT_PUSH_SEND_LOG
+        WHERE BAT_SEND_STATUS = 'S'
+          AND RECV_MEM_ID = #{usrId}
+          AND CREATE_DATE <![CDATA[>=]]> CAST(FLOOR(CAST(DATEADD(DAY,-30, GETDATE()) as FLOAT)) as DATETIME)
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LoggingHelper.java (addApiSystemErrAlt)
+    ============================================
+    -   제목                  : 오늘 추가한 알림 개수 조회
+    -   설명                  : 오늘 추가한 알림 개수 조회
+    -   결과형태              : 단일
+    ============================================
+    -   작성자                : bg.yoon
+    -   작성일                : 2022.03.10
+    ***************************************/ -->
+    <select id="selectCurrentTodayLogCount" parameterType="com.icignal.common.logging.dto.request.ApiSystemErrorAlertLogReqDto"
+            resultType="java.lang.String">
+        /* LoyRestApiMapper.selectCurrentTodayLogCount */
+        SELECT COUNT(*)  FROM loy.LOY_DK_SYSTEM_ERR_ALT
+        WHERE 1=1
+          AND api_no = #{apiNo}
+          AND (convert(varchar(8), create_Date , 112) = convert(varchar(8), getdate(), 112));
+    </select>
+    <!-- /**************************************
+    -   관련 파일             : LoggingHelper.java (addApiSystemErrAlt)
+    ============================================
+    -   제목                  : 하루에 추가 가능한 알림 개수 조회 (운영정책)
+    -   설명                  : 하루에 추가 가능한 알림 개수 조회 (운영정책)
+    -   결과형태              : 단일
+    ============================================
+    -   작성자                : bg.yoon
+    -   작성일                : 2022.03.10
+    ***************************************/ -->
+    <select id="selectOprPlcyDtlSysErrAltVal" parameterType="com.icignal.common.logging.dto.request.ApiSystemErrorAlertLogReqDto"
+            resultType="java.lang.String">
+        /* LoyRestApiMapper.selectOprPlcyDtlSysErrAltVal */
+        SELECT lopd.DATA_VAL
+        FROM loy.LOY_OPR_PLCY lop
+                 LEFT OUTER JOIN loy.LOY_OPR_PLCY_DTL lopd ON lopd.RID_OPR = lop.RID
+        WHERE 1=1
+          AND lop.PLCY_CD = 'B52'
+          AND lop.FLAG = 1
+          AND lopd.DATA_TYPE = 'TEXT'
+          AND lopd.FLAG = 1
+          AND lopd.PAR_RID IS NULL
+    </select>
+    <!-- /**************************************
+    -   관련 파일             : LoggingHelper.java (addApiSystemErrAlt)
+    ============================================
+    -   제목                  : 에러 알림을 수신받을 이메일 조회 (운영정책)
+    -   설명                  : 에러 알림을 수신받을 이메일 조회 (운영정책)
+    -   결과형태              :  단일
+    ============================================
+    -   작성자                : bg.yoon
+    -   작성일                : 2022.03.10
+    ***************************************/ -->
+    <select id="selectOprPlcyDtlSysErrAltEmail" parameterType="com.icignal.common.logging.dto.request.ApiSystemErrorAlertLogReqDto"
+            resultType="java.lang.String">
+        /* LoyRestApiMapper.selectOprPlcyDtlSysErrAltEmail  */
+        SELECT DATA_VAL FROM loy.LOY_OPR_PLCY_DTL
+        WHERE PAR_RID = (
+            SELECT lopd.RID
+            FROM loy.LOY_OPR_PLCY lop
+                     LEFT OUTER JOIN loy.LOY_OPR_PLCY_DTL lopd ON lopd.RID_OPR = lop.RID
+            WHERE 1=1
+              AND lop.PLCY_CD = 'B52'
+              AND lop.FLAG = 1
+              AND lop.USE_YN = 'Y'
+              AND lopd.USE_YN = 'Y'
+              AND lopd.FLAG = 1
+              AND lopd.DATA_TYPE = 'CODE'
+        )
+          AND FLAG = 1
+          AND DATA_TYPE = 'TEXT'
+
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LoggingHelper.java (addApiSystemErrAlt)
+    ============================================
+    -   제목                  : API 시스템 에러 알림 추가
+    -   설명                  : API 시스템 에러 알림 추가
+    -   결과형태              :
+    ============================================
+    -   입력
+    RID                     :  아이디
+    CREATE_BY               :  생성자
+    MODIFY_BY               :  수정자
+    CREATE_DATE             :  생성일시
+    MODIFY_DATE             :  수정일시
+    FLAG                    :  삭제여부
+    TO_EMAIL                :  수신자 이메일
+    SUBJECT                 :  이메일 제목
+    CONTENT                 :  이메일 내용
+    RID_PGM                 :  프로그램 아이디
+    SEND_STAT_CD            :  이메일 발송상태
+    API_NO                  :  API 아이디
+    ============================================
+    -   작성자                : bg.yoon
+    -   작성일                : 2022.03.10
+    ***************************************/ -->
+    <insert id="insertApiSysErrAlt" parameterType="com.icignal.common.logging.dto.request.ApiSystemErrorAlertLogReqDto">
+        /* LoyRestApiMapper.insertApiSysErrAlt */
+        INSERT INTO loy.LOY_DK_SYSTEM_ERR_ALT (
+                                               RID
+                                              ,CREATE_BY
+                                              ,MODIFY_BY
+                                              ,CREATE_DATE
+                                              ,MODIFY_DATE
+                                              ,FLAG
+                                              ,TO_EMAIL
+                                              ,SUBJECT
+                                              ,CONTENT
+                                              ,RID_PGM
+                                              ,SEND_STAT_CD
+                                              ,API_NO
+        )
+        values (
+                   com.getNewID('A')
+               , (SELECT B.RID FROM COM.EMPLOYEE A INNER JOIN COM.CRM_USER B ON A.ID = B.ID_EMPLOYEE WHERE B.USER_ID= 'BatchAdmin')
+               , (SELECT B.RID FROM COM.EMPLOYEE A INNER JOIN COM.CRM_USER B ON A.ID = B.ID_EMPLOYEE WHERE B.USER_ID= 'BatchAdmin')
+               , GETDATE()
+               , GETDATE()
+               , 1
+               , #{toEmail}
+               , (SELECT CONTENTS FROM loy.LOY_OPR_PLCY WHERE PLCY_CD = 'B52' AND FLAG = 1)
+               , #{content}
+               , (SELECT RID FROM loy.LOY_PGM WHERE FLAG = 1 AND PGM_NO = 'P000001')
+               , #{sendStatCd}
+               , #{apiNo}
+               )
+    </insert>
+
+    <insert id="insertApiLogPorcMsgLog" parameterType="com.icignal.common.logging.dto.request.ApiLogReqDto">
+        /* LoyRestApiMapper.insertApiLogPorcMsgLog */
+        EXEC LOGS.PKG_API_LOG_PROC_MSG_LOG
+        #{apiNo}
+        , #{msgType}
+        , #{trNo}
+        , #{trDt}
+        , ''
+        , #{chnlNo}
+        , #{dvcNo}
+        , #{rst}
+        , #{rstCd}
+        , #{rstMsg}
+        , #{msg}
+
+    </insert>
+
+</mapper>

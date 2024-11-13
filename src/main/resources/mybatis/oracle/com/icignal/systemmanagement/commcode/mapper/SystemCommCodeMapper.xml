@@ -1,0 +1,786 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.commcode.mapper.SystemCommCodeMapper">
+
+   <!-- /**************************************
+    -   관련 파일       :SystemCommCodeMapper.java(getCommCodeList)
+    ============================================
+    -   제목          : 공통코드 목록 조회
+    -   설명          : 1. CommonMapper에서 공통코드 목록을 조회
+                          2. 코드이름의 PROPERTY 값이 enableNA값이 같거나 'NA' 가 아니라면 공통코드 목록을 조회한다.
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+        groupCode       : 그룹 코드
+    -   출력
+        codeId          : 코드 Id
+        codeName        : 코드 이름
+        markName        : 표시 이름
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="getCommCodeList" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO"
+    										 resultType="com.icignal.systemmanagement.commcode.dto.response.MKTCommonCodeResponseDTO">
+    	/* SystemCommCodeMapper.getCommCodeList */
+		select
+	            id as codeId,
+	            code_name as codeName,
+	            mark_name as markName,
+	            par_code_id as parCodeId,
+	            ATTRIB01 as attrib01,
+	            ATTRIB02 as attrib02,
+	            ATTRIB03 as attrib03,
+	            ATTRIB04 as attrib04,
+	            ATTRIB05 as attrib05,
+	            TYPE as type,
+	            seq as seq
+	        FROM
+	            com.comm_code
+	        WHERE ${strSVCType}
+	          and flag = 1
+	          <if test='groupCode != null and groupCode != ""'>AND
+	            group_code = #{groupCode}
+	          </if>
+	          <if test='parCodeId != null and parCodeId != ""'>AND
+	            par_code_id = #{parCodeId}
+	          </if>
+
+	          <if test="overSeq != null">AND<!-- knlee 추가 -->
+	            seq <![CDATA[>]]> #{overSeq}
+	          </if>
+	          <if test="attrib01 != null">AND<!-- knlee 추가 -->
+	            attrib01  = #{attrib01}
+	          </if>
+	          <if test="codeName != null">AND<!-- swlim 추가 -->
+	            code_name  = #{codeName}
+	          </if>
+	          <if test='parCode != null and parCode != ""'> <!-- 노형래 추가 -->
+	            AND PAR_CODE_ID = (SELECT ID FROM com.comm_code WHERE GROUP_CODE = #{groupCode} AND CODE_NAME = #{parCode})
+	          </if>
+	          
+	          <if test="codeIdList != null">
+	           	AND CODE_NAME IN
+	           	<foreach collection="codeIdList" item="item" open="(" close=")" separator=","> 
+    		 		#{item}
+				</foreach>
+	          </if>
+	          
+	          <if test='!enableNA'>and
+
+	                code_name != 'NA'
+
+	          </if>
+          		order by seq
+    </select>
+    
+    <select id="getParIdNullCodeList" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO"
+    										 resultType="com.icignal.systemmanagement.commcode.dto.response.MKTCommonCodeResponseDTO">
+    	/* SystemCommCodeMapper.getParIdNullCodeList */
+		select
+	            id as codeId,
+	            code_name as codeName,
+	            mark_name as markName,
+	            par_code_id as parCodeId,
+	            ATTRIB01 as attrib01,
+	            ATTRIB02 as attrib02,
+	            ATTRIB03 as attrib03,
+	            ATTRIB04 as attrib04,
+	            ATTRIB05 as attrib05,
+	            TYPE as type,
+	            seq as seq
+	        FROM
+	            com.comm_code
+	        WHERE ${strSVCType}
+	          and flag = 1
+	         AND group_code = #{groupCode}
+           	 AND par_code_id IS NULL
+
+          		order by seq
+    </select>
+    
+        <select id="getCommCodeGridList" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO" 
+        												resultType="com.icignal.systemmanagement.commcode.dto.response.MKTCommonCodeResponseDTO" fetchSize="10000">
+    	/* SystemCommCodeMapper.getCommCodeGridList */
+		select
+	            id as codeId,
+	            code_name as codeName,
+	            mark_name as markName,
+	            par_code_id as parCodeId,
+	            ATTRIB01 as attrib01,
+	            ATTRIB02 as attrib02,
+	            ATTRIB03 as attrib03,
+	            ATTRIB04 as attrib04,
+	            ATTRIB05 as attrib05,
+	            TYPE as type,
+	            seq as seq,
+	            ${strColumn}
+	        FROM
+	            com.comm_code
+	        WHERE ${strSVCType}
+	          and flag = 1
+	          <if test='groupCode != null and groupCode != ""'>AND
+	            group_code = #{groupCode}
+	          </if>
+	          <if test='parCodeId != null and parCodeId != ""'>AND
+	            par_code_id = #{parCodeId}
+	          </if>
+
+	          <if test="overSeq != null">AND<!-- knlee 추가 -->
+	            seq <![CDATA[>]]> #{overSeq}
+	          </if>
+
+	          <if test="attrib01 != null">AND<!-- knlee 추가 -->
+	            attrib01  = #{attrib01}
+	          </if>
+	          <if test="codeName != null">AND<!-- swlim 추가 -->
+	            code_name  = #{codeName}
+	          </if>
+	          
+
+
+	          <if test='!enableNA'>and
+
+
+	                code_name != 'NA'
+
+	          </if>
+
+          		order by seq
+			   ${strEndPaging}
+    </select>
+
+    
+      <!-- /**************************************
+    -   관련 파일       :SystemCommCodeMapper.java(getCommCondList)
+    ============================================
+    -   제목         			 : 공통코드 목록 조회
+    -   설명          			 : 1. 공통코드 목록 조회
+    -   결과형태       		 : 복수
+    ============================================
+    -   입력
+        screenId	     : 화면 아이디
+    -   출력
+        condName         : 조건 명
+        condType         : 조건 유형
+        grpCode          : 조건 그룹 코드
+    ============================================
+    -   작성자         : 장용
+    -   작성일         : 2015.10.13
+    ***************************************/ -->
+
+    <select id="selectCommCondList" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCondListRequestDTO" 
+    											resultType="com.icignal.systemmanagement.commcode.dto.response.MKTCommonCondListResponseDTO">
+	/* SystemCommCodeMapper.selectCommCondList */
+    select mcs.id as condId
+    	, mcs.SRCH_COND_DP_VAL as condName
+		, mcs.SRCH_COND_VAL_INPUT_GUIDE as condType
+	    , mcs.DDL_TYPE_COMPOSI_VAL as grpCode
+	    , mcs.DDL_VAL_TYPE_CD	as ddlCode
+	    , mcs.DEFLT_DP_YN as defCon
+        , stl.tbl_eng_nm as baseTable
+        , stl.tbl_schma_nm as baseSchema
+        , stl2.tbl_eng_nm as tgtTable
+        , stl2.tbl_schma_nm as tgtSchema
+        , scl.col_eng_nm as tgtCol
+        , scl2.col_eng_nm as joinSrcClm
+        , scl3.col_eng_nm as joinTgtClm
+        , mcs.base_tbl_alias as baseTblAlias
+        , mcs.compr_tgt_tbl_alias as comprTgtTblAlias
+        , mcs.DDL_VW_CN_COL		  as ddlVwCnCol
+        , mcs.DDL_VW_MN_COL		  as ddlVWMnCol
+        , scl2.TBL_SCHMA		  as tblSchma
+        <!-- , scl4.TBL_SCHMA		  as tblSchma -->
+	from COM.COM_SRCH mcs
+       left outer join COM.COM_SRCH_TBL_LIST stl
+       on stl.id = mcs.BASE_TBL_NM
+        left outer join COM.COM_SRCH_TBL_LIST stl2
+       on stl2.id = mcs.COMPR_TGT_TBL_NM
+       left outer join COM.COM_SRCH_col_list scl
+       on scl.id = mcs.COMPR_TGT_COL_NM
+       left outer join COM.COM_SRCH_col_list scl2
+       on scl2.id = mcs.JOIN_SRC_COL
+       left outer join COM.COM_SRCH_col_list scl3
+       on scl3.id = mcs.COMPR_TGT_COL_NM
+       left outer join COM.COM_SRCH_col_list scl4
+       on scl4.id = mcs.DDL_TYPE_COMPOSI_VAL
+	where ${strSVCType}
+	and mcs.lang = #{lang}
+	and mcs.page_id = #{screenId}
+	and mcs.flag = 1 
+	and mcs.lang = #{lang}
+    order by mcs.DEFLT_DP_YN DESC,mcs.CREATE_DATE asc
+    </select>
+    
+    <!-- 여기부터 CommCodeEx -->
+    
+    	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 그룹코드에 대한 리스트 조회
+	-   설명				: 그룹코드를 언어별로 조회하여 그리드로 표현한다.
+	-   결과형태			: 복수(그리드)
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<select id="selectCommCodeExGroupList" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExGridReqDto" 
+															resultType="com.icignal.systemmanagement.commcode.dto.response.SystemCommCodeExGridResDto">
+		/*SystemCommCodeMapper.selectCommCodeExGroupList */
+		/*-DISTINCT 때문에 전체 조회수 쿼리 중복값  count
+		 ,ATTRIB01 값에 의한 DISTINCT의 이유가 사라짐 -김민준 수정- */
+        select   a.*
+        	   , ${strColumn}
+        from(
+        SELECT
+            DISTINCT GROUP_CODE     as groupCode
+			, GROUP_NAME			as groupName
+		    , LANG					as lang
+			--, ATTRIB01				as attrib01
+			, ATTRIB02				as attrib02
+			, ATTRIB03				as attrib03
+			, ATTRIB04				as attrib04
+            , ATTRIB05      		as attrib05
+            , TYPE      		as type
+		FROM com.comm_code
+        WHERE
+            1 = 1
+            AND ${strWhere}
+            AND FLAG = 1
+            <if test="groupCode != null and groupCode.length!=0">
+            AND (INSTR(GROUP_CODE, COALESCE(#{groupCode}, '')) > 0)
+            </if>
+            <if test="groupName != null and groupName.length!=0">
+            AND (INSTR(GROUP_NAME, COALESCE(#{groupName}, '')) > 0)
+            </if>
+            <if test="selectLang != null and selectLang.length!=0 and selectLang != 'NA'">
+            AND (INSTR(LANG        , REPLACE(COALESCE(#{selectLang}, ''), 'NA', '')) > 0)
+            </if>
+            <if test="codeName != null and codeName.length!=0">
+            AND (INSTR(CODE_NAME    , COALESCE(#{codeName}, '')) > 0)
+            </if>
+            <if test="markName != null and markName.length!=0">
+            AND (INSTR(MARK_NAME    , COALESCE(#{markName}, '')) > 0)
+            </if>
+            <if test="type != null and type.length!=0">
+            AND (INSTR(TYPE    , COALESCE(#{type}, '')) > 0)
+            </if>
+		ORDER BY ${strOrderby}
+			) a
+			${strEndPaging}
+	</select>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 코드네임에 대한 리스트 조회
+	-   설명				: 그룹코드를 지정하여 해당 그룹코드에 엮인 코드네임의 리스트를 조회한다.
+	-   결과형태			: 복수(그리드)
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<!-- [2020.12.10 / jb.kim] select절에서 '상위코드 표시명'용 데이터를 추가로 얻기 위해 B.MARK_NAME 조회를 추가함 -->
+	<select id="selectCommCodeExSubList" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExGridReqDto" 
+															resultType="com.icignal.systemmanagement.commcode.dto.response.SystemCommCodeExGridResDto">
+		/*SystemCommCodeMapper.selectCommCodeExSubList */
+		SELECT
+		  	A.ID				as id
+			, A.CREATE_BY		as createBy
+			, A.MODIFY_BY		as modifyBy
+			, A.CREATE_DATE		as createDate
+			, A.MODIFY_DATE		as modifyDate
+			, A.SEQ				as seq
+			, A.GROUP_CODE		as groupCode
+			, A.GROUP_NAME		as groupName
+			, A.CODE_NAME		as codeName
+			, A.MARK_NAME		as markName
+			, A.MARK_CODE		as markCode
+			, A.PAR_CODE_ID		as parCodeId
+			, B.CODE_NAME		as parCodeNm
+			, B.MARK_NAME		as parMarkNm
+			, A.LANG			as lang
+			, A.ATTRIB01		as attrib01
+			, A.ATTRIB02		as attrib02
+			, A.ATTRIB03		as attrib03
+			, A.ATTRIB04		as attrib04
+            , A.ATTRIB05        as attrib05
+            , A.TYPE        as type
+            , ${strColumn}
+		FROM com.comm_code				A
+            LEFT OUTER JOIN com.comm_code    B
+            ON    A.PAR_CODE_ID    = B.ID
+            AND    A.LANG            = B.LANG
+            AND B.FLAG            = 1
+        WHERE
+            1 = 1
+            AND ${strWhere}
+            AND A.FLAG = 1
+            AND A.GROUP_CODE = #{groupCode}
+            <if test="selectLang.length!=0 and selectLang != 'NA'">
+            AND (INSTR(A.LANG, REPLACE(COALESCE(#{selectLang}, ''), 'NA', '')) > 0)
+            </if>
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+
+
+    <!-- /**************************************
+    -   관련 파일         :SystemCommCodeMapper.java
+    ============================================
+    -   제목              : 코드네임에 대한 리스트 조회
+    -   설명              : 그룹코드, 코드네임, 언어등을 지정하여 해당 조건 엮인 코드네임의 리스트를 조회한다.
+    -   결과형태          : 복수
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : kj.kang
+    -   작성일                : 2016.08.30
+    ***************************************/ -->
+    <select id="selectCommCodeExSubListNotGrid" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExGridReqDto" 
+    																resultType="com.icignal.systemmanagement.commcode.dto.response.SystemCommCodeExGridResDto">
+        /*SystemCommCodeMapper.selectCommCodeExSubList */
+        SELECT
+              A.ID              as id
+        FROM com.comm_code A
+        WHERE 1 = 1
+        <if test="id != null and id != ''">
+          AND ID = #{id}
+        </if>
+        <if test="groupCode != null and groupCode != ''">
+          AND GROUP_CODE = #{groupCode}
+        </if>
+        <if test="codeName != null and codeName != ''">
+          AND CODE_NAME = #{codeName}
+        </if>
+        <if test="selectLang != null and selectLang != ''">
+          AND LANG = #{selectLang}
+        </if>
+        AND A.FLAG = 1
+    </select>
+
+	<select id="selectCommCodeExParCodeList" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExGridReqDto" 
+																resultType="com.icignal.systemmanagement.commcode.dto.response.SystemCommCodeExGridResDto">
+		/*SystemCommCodeMapper.selectCommCodeExParCodeList */
+		SELECT
+			ID				as id
+			, GROUP_CODE		as groupCode
+			, GROUP_NAME		as groupName
+			, CODE_NAME			as codeName
+			, MARK_NAME			as markName
+			, LANG				as lang
+            , ${strColumn}
+		FROM com.comm_code
+		WHERE
+			1 = 1
+			AND ${strWhere}
+			AND FLAG = 1
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 그룹코드 중복여부 검사
+	-   설명				: 그룹코드를 생성하기 이전, 사용자가 입력하려는 그룹코드 값이 중복인지 아닌지 확인 ( 그룹코드&언어별)
+	-   결과형태			: 단일(정수)
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<select id="selectCommCodeExGroupCheck" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto" resultType="java.lang.Integer">
+		/*SystemCommCodeMapper.selectCommCodeExGroupCheck */
+		SELECT COUNT(*)
+		FROM com.comm_code
+		WHERE 1 = 1
+		AND GROUP_CODE	= #{groupCode}
+		AND LANG 		= #{selectLang}
+		AND FLAG        = 1
+	</select>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 새로운 코드를 인서트
+	-   설명				: 조건에 이상이 없을 경우, 사용자가 입력한 값을 기준으로 입력한다. (그룹코드, 코드네임)
+	-   결과형태			: 단일
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+    <insert id="insertCommCodeExNewCode" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto" useGeneratedKeys="false">
+		/*SystemCommCodeMapper.insertCommCodeExNewCode */
+		INSERT INTO com.comm_code (
+			  ID
+		    , CREATE_BY
+		    , MODIFY_BY
+		    , CREATE_DATE
+		    , MODIFY_DATE
+		    , FLAG
+		    , LANG
+		    , GROUP_NAME
+		    , GROUP_CODE
+		    , MARK_NAME
+		    , CODE_NAME
+		    , SEQ
+		    , MARK_CODE
+		    , PAR_CODE_ID
+		    , ATTRIB01
+		    , ATTRIB02
+		    , ATTRIB03
+		    , ATTRIB04
+		    , ATTRIB05
+		    , TYPE
+		) VALUES (
+			  #{id}
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, #{selectLang}
+		    , #{groupName}
+		    , #{groupCode}
+		    , #{markName}
+		    , #{codeName}
+		    , #{seq}
+		    , #{markCode}
+		    , #{parCodeId}
+			, #{attrib01}
+			, #{attrib02}
+			, #{attrib03}
+			, #{attrib04}
+			, #{attrib05}
+			, #{type}
+		)
+	</insert>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 그룹코드 삭제
+	-   설명				: 그룹코드를 논리삭제 하는 쿼리문. 해당 쿼리문 실행 시, 그룹코드에 포함되어있는 모든 언어가 함께 논리삭제된다.
+	-   결과형태			: 복수
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<update id="updateCommCodeExGroupCodeDel" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto">
+		/*SystemCommCodeMapper.updateCommCodeExGroupCodeDel */
+		UPDATE com.comm_code
+		SET MODIFY_BY		= #{modifyBy}
+			, MODIFY_DATE	= sysdate
+		    , FLAG			= flag + 1
+		WHERE 1 = 1
+		AND GROUP_CODE = #{groupCode}
+	</update>
+
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 입력한 코드네임이 소속 그룹코드 내, 존재하는 지 확인
+	-   설명				: 입력한 코드네임이 소속 그룹코드 내, 존재하는 지 확인
+	-   결과형태			: 단일(정수)
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<select id="selectCommCodeExCodeNameCheck" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto" resultType="java.lang.Integer">
+		/*SystemCommCodeMapper.selectCommCodeExCodeNameCheck */
+		SELECT COUNT(*)
+		FROM com.comm_code
+		WHERE 1 = 1
+		AND FLAG = 1
+		AND GROUP_CODE	= #{groupCode}
+		AND CODE_NAME	= #{codeName}
+	</select>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 입력한 코드네임이 소속 그룹코드 내, 같은 언어로 존재하는지 확인
+	-   설명				: 입력한 코드네임이 소속 그룹코드 내, 같은 언어로 존재하는지 확인
+	-   결과형태			: 단일(정수)
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<select id="selectCommCodeExCodeNameCheckWithLang" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto" resultType="java.lang.Integer">
+		/*SystemCommCodeMapper.selectCommCodeExCodeNameCheckWithLang */
+		SELECT COUNT(*)
+		FROM com.comm_code
+		WHERE 1 = 1
+		AND FLAG = 1
+		AND GROUP_CODE	= #{groupCode}
+		AND CODE_NAME	= #{codeName}
+		AND LANG		= #{selectLang}
+	</select>
+
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 사용자가 입력한 코드네임으로 코드 언어팩을 확장
+	-   설명				: 사용자가 입력한 코드네임이 소속된 그룹코드에 존재하나, 같은 언어가 없을 경우. 해당 코드네임의 ID를 계승하여 새로운 언어로 입력한다.
+	-   결과형태			: 단일(정수)
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+    <insert id="insertCommCodeExCodeExtend" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto" useGeneratedKeys="false">
+		/*SystemCommCodeMapper.insertCommCodeExCodeExtend */
+		INSERT INTO com.comm_code (
+		      ID
+		    , CREATE_BY
+		    , MODIFY_BY
+		    , CREATE_DATE
+		    , MODIFY_DATE
+		    , FLAG
+		    , LANG
+		    , GROUP_NAME
+		    , GROUP_CODE
+		    , MARK_NAME
+		    , CODE_NAME
+		    , SEQ
+		    , MARK_CODE
+		    , PAR_CODE_ID
+		    , ATTRIB01
+		    , ATTRIB02
+		    , ATTRIB03
+		    , ATTRIB04
+		    , ATTRIB05
+		    , TYPE
+		)
+		SELECT T.ID
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, #{selectLang}
+			, #{groupName}
+			, T.GROUP_CODE
+			, #{markName}
+			, T.CODE_NAME
+			, T.SEQ
+			, T.MARK_CODE
+			, #{parCodeId}
+			, #{attrib01}
+			, #{attrib02}
+			, #{attrib03}
+			, #{attrib04}
+			, #{attrib05}
+			, #{type}
+		FROM (
+			SELECT DISTINCT ID
+				, GROUP_CODE
+				, CODE_NAME
+				, SEQ
+				, MARK_CODE
+			FROM com.comm_code
+			WHERE 1 = 1
+			AND FLAG = 1
+			AND GROUP_CODE	= #{groupCode}
+			AND CODE_NAME	= #{codeName}
+			offset 0 ROWS  FETCH NEXT 1 ROWS ONLY
+		) T
+
+		<selectKey keyProperty="" resultType="java.lang.String">
+			SELECT 1
+			FROM DUAL
+		</selectKey>
+	</insert>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 코드네임 삭제
+	-   설명				: 코드네임을 논리삭제 하는 쿼리문. 해당 쿼리문 실행 시, 코드네임에 포함되어있는 모든 언어가 함께 논리삭제된다.
+	-   결과형태			: 복수
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<update id="updateCommCodeExCodeNameDel" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto">
+		/*SystemCommCodeMapper.updateCommCodeExCodeNameDel */
+		UPDATE com.comm_code
+		SET MODIFY_BY		= #{modifyBy}
+			, MODIFY_DATE	= sysdate
+		    , FLAG			= flag + 1
+		WHERE 1 = 1
+		AND GROUP_CODE	= #{groupCode}
+		AND CODE_NAME	= #{codeName}
+		AND LANG		= #{selectLang}
+	</update>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 코드값 수정 (ID + LANG = UNIQUE INDEX)
+	-   설명				: 지정한 코드의 내용을 업데이트
+	-   결과형태			: 단일
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<update id="updateCommCodeExCodeProperty" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto">
+		/*SystemCommCodeMapper.updateCommCodeExCodeProperty */
+		UPDATE com.comm_code
+		SET MODIFY_BY		= #{modifyBy}
+			, MODIFY_DATE	= sysdate
+		    , SEQ			= #{seq}
+		    , FLAG			= #{flag}
+		    , MARK_NAME		= #{markName}
+		    , PAR_CODE_ID	= #{parCodeId}
+		    , ATTRIB01		= #{attrib01}
+		    , ATTRIB02		= #{attrib02}
+		    , ATTRIB03		= #{attrib03}
+		    , ATTRIB04		= #{attrib04}
+		    , ATTRIB05		= #{attrib05}
+		    , TYPE		= #{type}
+		WHERE 1 = 1
+		AND ID		= #{id}
+		AND LANG	= #{selectLang}
+	</update>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 코드값 수정 (ID + LANG = UNIQUE INDEX)
+	-   설명				: 지정한 코드의 ATTRIB 내용을 업데이트
+	-   결과형태			: 단일
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자              : jh.kim
+	-   작성일              : 2019.02.26
+	***************************************/ -->
+	<update id="updateCommCodeExCodeAttribProperty" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto">
+		/*SystemCommCodeMapper.updateCommCodeExCodeAttribProperty */
+		UPDATE com.comm_code
+		SET   MODIFY_BY		= #{modifyBy}
+			, MODIFY_DATE	= sysdate
+		    , ATTRIB01		= #{attrib01}
+		    , ATTRIB02		= #{attrib02}
+		    , ATTRIB03		= #{attrib03}
+		    , ATTRIB04		= #{attrib04}
+		    , ATTRIB05		= #{attrib05}
+		    , TYPE		= #{type}
+		WHERE 1 = 1
+		AND GROUP_CODE = #{groupCode}
+		AND CODE_NAME  = #{codeName}
+		AND LANG	   = #{lang}
+	</update>
+
+	<!-- /**************************************
+	-   관련 파일			:SystemCommCodeMapper.java
+	============================================
+	-   제목				: 지정한 그룹코드의 명칭을 수정한다.
+	-   설명				: 지정한 그룹코드의 명칭을 수정한다. 이 때, 언어를 지정하여 GROUP_CODE + LANG 값에 해당되는 다수의 건의 그룹명을 변경한다.
+	-   결과형태			: 복수
+	============================================
+	-   입력				:
+	-	출력				:
+	============================================
+	-   작성자                : kj.kang
+	-   작성일                : 2016.08.30
+	***************************************/ -->
+	<update id="updateCommCodeExGroupName" parameterType="com.icignal.systemmanagement.commcode.dto.request.SystemCommCodeExReqDto">
+		/*SystemCommCodeMapper.updateCommCodeExGroupName */
+		UPDATE com.comm_code
+		SET MODIFY_BY		= #{modifyBy}
+			, MODIFY_DATE	= sysdate
+		    , GROUP_NAME	= #{groupName}
+		WHERE 1 = 1
+		AND GROUP_CODE	= #{groupCode}
+		AND LANG		= #{selectLang}
+	</update>
+
+	<select id="selectCommCodeExCountryCode" parameterType="com.icignal.common.base.dto.request.MKTBaseReqDto" 
+																resultType="com.icignal.systemmanagement.commcode.dto.response.SystemCommCodeExCountryItemResDto">
+		/*SystemCommCodeMapper.selectCommCodeExCountryCode */
+        SELECT
+            DISTINCT COUNTRY    as codeName
+            , COUNTRY            as markName
+            , SEQ
+		FROM com.comm_code
+        WHERE
+            1 = 1
+            AND FLAG         = 1
+            AND GROUP_CODE    = 'LANG_TYPE'
+		ORDER BY SEQ ASC
+	</select>
+    
+    <!-- 공통코드 상세 조회 -->
+    <select id="selectCommCodeDetail" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO" resultType="com.icignal.systemmanagement.commcode.dto.response.MKTCommonCodeResponseDTO">
+    	SELECT	ID			AS	codeId
+    		,	CODE_NAME	AS	codeName
+    		,	MARK_NAME	AS	markName
+    		,	ATTRIB01	AS	attrib01
+    		,	ATTRIB02	AS	attrib02
+    		,	ATTRIB03	AS	attrib03
+    		,	ATTRIB04	AS	attrib04
+    		,	ATTRIB05	AS	attrib05
+    		,	TYPE			AS	type
+    	FROM	com.comm_code
+    	WHERE	${strSVCType}
+    	AND		FLAG		=	1
+    	AND		GROUP_CODE	=	#{groupCode}
+    	<if test="codeName != null and codeName != ''">AND
+    		CODE_NAME	=	#{codeName}
+    	</if>
+    	<if test="attrib01 != null and attrib01 != ''">AND
+    		ATTRIB01	=	#{attrib01}
+    	</if>
+    	<if test="attrib02 != null and attrib02 != ''">AND
+    		ATTRIB02	=	#{attrib02}
+    	</if>
+    	<if test="attrib03 != null and attrib03 != ''">AND
+    		ATTRIB03	=	#{attrib03}
+    	</if>
+    	<if test="attrib04 != null and attrib04 != ''">AND
+    		ATTRIB04	=	#{attrib04}
+    	</if>
+    	<if test="attrib05 != null and attrib05 != ''">AND
+    		ATTRIB05	=	#{attrib05}
+    	</if>
+    </select>
+
+</mapper>

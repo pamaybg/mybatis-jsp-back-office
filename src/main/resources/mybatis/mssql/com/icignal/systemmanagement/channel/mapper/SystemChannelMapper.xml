@@ -1,0 +1,1070 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.channel.mapper.SystemChannelMapper">
+
+ <!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(getChannel)
+	============================================
+	-	제목					: 채널 목록 조회
+	-	설명					: 조건 조회를 통한 채널 목록 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력
+	
+		chnlName			: 채널 명
+		chnlTypeCd          : 채널 타입
+		commStatus          : 상태
+		applyStrDate        : 적용 시작 일자
+		applyEndDate        : 적용 종료 일자
+	-	출력
+		chnlName			: 채널 명
+		chnlTypeCd			: 채널 타입
+		accountId			: 어카운트 아이디
+		applyStrDate		: 적용 시작 일자
+		applyEndDate		: 적용 종료 일자
+		conId               : 접속 ID
+		conIp               : 접속 IP
+		conPort             : 접속 포트
+		conUrl              : 접속 URL
+		description         : 설명
+		modifyBy            : 수정자
+		modifyDate          : 수정 일자
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChannel" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelReqDto" 
+	resultType="com.icignal.systemmanagement.channel.dto.response.SystemChannelResDto">
+    	/* SystemChannelMapper.selectChannel */
+    	select ${strColumn} 
+    	    , mc.id
+    		, mc.CHNL_NM as chnlName
+    		, mc.chnl_type_cd as chnlTypeCd
+    		, mc.CHNL_STATUS_CD as commStatusCd
+    		, c4.name  as ptraccntId
+    		, com.TO_CHAR(mc.APLY_START_DD,'YYYY-MM-DD') as applyStrDate
+    		, com.TO_CHAR(mc.APLY_END_DD,'YYYY-MM-DD') as applyEndDate
+    		, mc.con_id as conId
+    		, mc.con_ip as conIp
+    		, mc.con_port as conPort
+    		, mc.con_url as conUrl
+    		, mc.CHNL_DESC as description
+    		, mc.CHNL_GUIDE as chnlGuide
+    		, c3.name as modifyBy 
+    		, com.TO_CHAR(mc.modify_date,'YYYY-MM-DD') as modifyDate
+            , mc.aws_secret_nm as secretNm
+            , mc.sendable_start_time as sendableStartTime
+            , mc.sendable_end_time   as sendableEndTime
+    	from mkt.mkt_chnl mc with(nolock)
+        left outer join	 com.crm_user u with(nolock)  on u.rid = mc.modify_by
+        left outer join  com.employee c3 with(nolock) on c3.id = u.id_employee
+        left outer join  com.account c4 with(nolock) on c4.id = mc.ptnr_accnt_id
+    	where ${strCondWhere} 
+        and mc.flag = '1'
+<!--        <if test='@com.icignal.common.util.StringUtil@isNotEmpty(workflowFlag) and workflowFlag = "Y"'>-->
+--         and CHNL_TYPE_CD !='KAKAONOTI'
+<!--        </if>-->
+    	and ${strWhere}
+    	order by ${strOrderby}
+    	${strEndPaging}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectDetailChannel)
+	============================================
+	-	제목					: 채널 상세 조회
+	-	설명					: 선택 채널 상세 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id			        : 고유 아이디
+	-	출력
+		id			        : 고유 아이디
+		createBy			: 만든자
+		modifyBy			: 수정자
+		createDate   		: 생성 일시
+		modifyDate		    : 수정 일시
+		chnlName            : 채널 명
+		chnlTypeCd          : 타입
+		applyStrDate        : 적용 시작 일자
+		applyEndDate        : 적용 종료 일자
+		description         : 설명
+		conId               : 접속 ID
+		con_pw              : 접속 비밀번호
+		conPort             : 접속 포트
+		conUrl              : 접속 URL
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+    <select id="selectDetailChannel" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelDetailReqDto" 
+    resultType="com.icignal.systemmanagement.channel.dto.response.SystemChannelDetailResDto">
+        /* SystemChannelMapper.selectDetailChannel */
+        select   mc.id
+    			, c2.name as createBy
+    			, c3.name as modifyBy 
+    			, com.TO_CHAR(mc.create_date,'YYYY-MM-DD') as createDate
+    			, com.TO_CHAR(mc.modify_date,'YYYY-MM-DD') as modifyDate
+    			, mc.CHNL_NM as chnlName
+    			, mc.chnl_type_cd as chnlType
+    			<!-- , c1.code_name as chnlTypeCd -->
+    			<!-- , mc.CHNL_STATUS_CD as commStatusCd -->
+    			, mc.CHNL_STATUS_CD as commStatus
+    			<!-- , c4.code_name as commStatus -->
+    			, c5.name  as ptraccntId
+    			, c5.id as ptraccntNm
+    			, mc.aply_start_dd as applyStrDate
+    			, mc.aply_end_dd as applyEndDate
+    			, mc.con_id  as conId
+    			, mc.con_pw as conPw
+    			, mc.con_ip  as conIp
+    			, mc.con_port as conPort
+    			, mc.con_url as conUrl
+    			, mc.CHNL_DESC as description
+    			, mc.CHNL_GUIDE as chnlGuide
+    			, mc.cost_ucost as ucost
+    			, mc.con_db_type as dbtype
+    			<!-- , c6.code_name as dbtype -->
+                , mc.sendable_start_time as sendableStartTime
+                , mc.sendable_end_time   as sendableEndTime
+                , mc.aws_secret_nm as secretNm
+                , mc.service_nm as serviceNm
+                
+        from mkt.mkt_chnl mc with(nolock)
+<!--         left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = mc.chnl_type_cd and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+ -->        left outer join com.crm_user  u1 with(nolock) on u1.rid = mc.create_by
+    	left outer join com.employee  c2 with(nolock) on c2.id = u1.id_employee
+    	left outer join com.crm_user  u2 with(nolock) on u2.rid = mc.modify_by
+    	left outer join com.employee  c3 with(nolock) on c3.id = u2.id_employee
+<!--         left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = mc.CHNL_STATUS_CD and c4.lang = #{lang} and c4.group_code = 'COMM_STATUS'
+ -->    	left outer join com.account   c5 with(nolock) on c5.id = mc.ptnr_accnt_id
+<!--     	left outer join com.comm_code c6 on c6.flag = 1 and c6.code_name = mc.con_db_type and c6.lang = #{lang} and c6.group_code = 'CHNL_CON_DB_TYPE'
+ -->        where mc.id = #{id} and mc.flag = '1'
+        and ${strWhere}
+        ${strSVCType} 
+    </select>
+    
+    <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(deleteChannel)
+	============================================
+	-	제목					: 채널 파일 옵션 삭제
+	-	설명					: 채널 파일 옵션 삭제
+	-	결과형태				: 
+	============================================
+	-	입력
+        listChannelFlowId   : 선택한 채널 파일 옵션 ID
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="deleteImgOption" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemImgOptionDeleteReqDto">
+	/* SystemChannelMapper.deleteImgOption */
+	 UPDATE mkt.mkt_chnl_capa SET
+	      modify_by = #{memId}
+		, modify_date = GETDATE()
+		, flag = flag + 1
+	 where ${strSVCType} 
+	 <if test="listChannelFlowId.size() != 0">
+	 and id in
+		  <foreach collection="listChannelFlowId" item="item" separator="," close=")" open="(">
+				#{item}
+		  </foreach>
+	</if>
+	</update>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(updateResponseChannel)
+	============================================
+	-	제목					: 채널 수정
+	-	설명					: 채널 수정
+	============================================
+	-	입력
+		 memId              : 접속 ID
+    	 chnlName           : 채널명
+		 chnlTypeCd         : 타입
+		 commStatus         : 상태
+		 accountId          : 어카운트 ID
+		 applyStrDate       : 적용 시작 날자
+		 applyEndDate       : 적용 종료 날자
+		 conId	            : 접속 ID
+		 conPw              : 접속 PW
+		 conIp              : 접속 IP
+		 conPort            : 접속 포트
+		 conUrl             : 접속 URL
+		 description        : 설명
+		 ucost				: 금액
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="updateResponseChannel" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelReqDto">
+	 /* SystemChannelMapper.updateResponseChannel */
+			 update mkt.mkt_chnl SET
+			  modify_by      = #{memId}    
+			, modify_date    = GETDATE() 
+			, CHNL_NM        = #{chnlName} 
+			, chnl_type_cd   = #{chnlTypeCd} 
+			, CHNL_STATUS_CD = #{commStatus}   
+			, ptnr_accnt_id  = #{ptraccntId}   
+			, APLY_START_DD  = #{applyStrDate}
+			, APLY_END_DD    = #{applyEndDate}
+			, con_id         = #{conId} 
+			, con_pw         = #{conPw}
+			, con_ip         = #{conIp} 
+			, con_port       = #{conPort} 
+			, con_url        = #{conUrl}
+			, CHNL_DESC      = #{description}
+			, cost_ucost     = #{ucost}
+		    , con_db_type    = #{dbtype}
+            , sendable_start_time = #{sendableStartTime}
+            , sendable_end_time   = #{sendableEndTime}
+            , CHNL_GUIDE = #{chnlGuide}
+            , aws_secret_nm = #{secretNm}
+            , service_nm = #{serviceNm}
+            
+	where ${strSVCType} and id = #{id}
+	</update>
+	
+	 <!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectContent)
+	============================================
+	-	제목					: 콘텐츠 조회
+	-	설명					: 동일 콘텐츠 유형으로 추가되어 있는 콘텐츠가 잇는지 확인.
+	-	결과형태				: 복수
+	============================================
+	-	입력
+		contentsType        : 타입
+	-	출력
+		id		     		: 콘텐츠 명
+		count				: 카운트
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChannelCheck" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelReqDto" 
+	resultType="com.icignal.systemmanagement.channel.dto.response.SystemChannelResDto">
+	/* SystemChannelMapper.selectChannelCheck */
+    	SELECT id as id
+    	FROM mkt.mkt_chnl with(nolock)
+        where CHNL_TYPE_CD = #{chnlTypeCd}
+    	and ${strSVCType} 
+        <!-- and accnt_id = #{accountId} -->
+	</select>
+	
+		 <!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(insertChannel)
+	============================================
+	-	제목					: 채널 추가   
+	-	설명					: 채널 추가 
+	-	결과형태				: 
+	============================================
+	-	입력
+		 memId              : 접속 ID
+    	 chnlName           : 채널 명
+		 chnlTypeCd         : 타입
+		 commStatus         : 상태
+		 accountId          : 어카운트 ID
+		 applyStrDate       : 적용 시작 일자
+		 applyEndDate       : 적용 종료 일자
+		 conId              : 접속 ID
+		 conPw              : 접속 PW
+		 conIp              : 접속 IP
+		 conPort            : 접속 포트
+		 conUrl             : 접속 URL
+		 description        : 설명
+	-	출력
+		 id			        : 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<insert id="insertChannel" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelInsertReqDto" useGeneratedKeys="false">
+	/* SystemChannelMapper.insertChannel */
+	 insert into mkt.mkt_chnl(
+			  id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			, CHNL_NM
+			, chnl_type_cd
+			, CHNL_STATUS_CD
+			<!-- , ACCNT_ID -->
+			, ptnr_accnt_id
+			, APLY_START_DD
+			, APLY_END_DD
+			, con_id 
+			, con_pw
+			, con_ip 
+			, con_port
+			, con_url
+			, CHNL_DESC
+			, COST_UCOST
+		    , con_db_type
+            , sendable_start_time
+            , sendable_end_time
+            , CHNL_GUIDE
+            , aws_secret_nm
+            , service_nm
+			)
+	values(
+			 #{id}
+			, #{memId}     
+			, #{memId}   
+			, GETDATE()    
+			, GETDATE()   
+			, '1'   
+			<!-- , #{country}  -->    
+			<!-- , #{appServiceId}   -->     
+			, #{chnlName}    
+			, #{chnlTypeCd}     
+			, #{commStatus}      
+			<!-- , #{accountId}  -->    
+			, #{ptraccntId}
+			, #{applyStrDate}     
+			, #{applyEndDate}     
+			, #{conId}     
+			, #{conPw}     
+			, #{conIp}     
+			, #{conPort}     
+			, #{conUrl}    
+			, #{description} 
+			, #{ucost}    
+			, #{dbtype}   
+            , #{sendableStartTime}
+            , #{sendableEndTime}
+            , #{chnlGuide}
+            , #{secretNm}
+            , #{serviceNm}
+	)
+	
+<!-- 	<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!-- 			select id from mkt.mkt_chnl where id = #{id} -->
+<!-- 	</selectKey> -->
+	
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(deleteSnsAdtnInfo)
+	============================================
+	-	제목					: 소셜부가정보 삭제
+	-	설명					: 소셜부가정보 삭제
+	-	결과형태				: 
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.02
+    ***************************************/ -->
+	<update id="deleteSnsAdtnInfo" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemDeleteSnsAdtnInfoReqDto">
+		/* SystemChannelMapper.deleteSnsAdtnInfo */
+		update mkt.mkt_chnl_sns_adtn_info
+		set
+		    modify_by = #{memId}
+			, modify_date = GETDATE()
+			, flag = flag + 1
+		where 
+		 	${strSVCType} 
+		 	<if test="listChannelFlowId.size() != 0">
+		 	and id in
+			 <foreach collection="listChannelFlowId" item="item" separator="," close=")" open="(">
+				#{item}
+			</foreach>
+			</if>
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(deleteChannel)
+	============================================
+	-	제목					: 채널 용량 삭제
+	-	설명					: 채널 용략 삭제
+	-	결과형태				: 
+	============================================
+	-	입력
+        listChannelFlowId   : 선택한 채널 파일 옵션 ID
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="deleteCapa" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelcapaDeleteReqDto">
+	/* SystemChannelMapper.deleteCapa */
+	 UPDATE mkt.mkt_chnl_capa SET
+	      modify_by = #{memId}
+		, modify_date = GETDATE()
+		, flag = flag + 1
+	 where ${strSVCType} 
+	 <if test="listChannelFlowId.size() != 0">
+	 and id in
+		  <foreach collection="listChannelFlowId" item="item" separator="," close=")" open="(">
+				#{item}
+		  </foreach>
+	</if>
+	</update>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectChannelOrg)
+	============================================
+	-	제목					: 캠페인 실행 업체 조회      
+	-	설명					: 캠페인 실행 업체 조회      
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		accStatus			: 수정자
+		accName			    : 수정 일자
+		accNumber			: 순번
+		id                  : 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChannelOrg" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelReqDto" 
+	resultType="com.icignal.systemmanagement.channel.dto.response.SystemAccountResDto">
+	/* SystemChannelMapper.selectChannelOrg */
+	select ${strColumn},
+		   ac.id as id, 
+		   c1.MARK_NAME as accStatus,
+		   ac.name as accName,
+		   ac.account_number as accNumber
+	from com.account ac with(nolock)
+	join com.comm_code c1 with(nolock) on c1.flag = 1 and c1.code_name = ac.account_status and c1.lang = #{lang} and c1.group_code = 'ACCOUNT_STATUS'
+	where ac.mem_type = 'PTN' 
+    and ${strSVCType} 
+    and ${strWhere} 
+	order by ${strOrderby}  
+	${strEndPaging} 
+	</select> 
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(getSnsAdtnInfoList)
+	============================================
+	-	제목					: 소셜부가정보 리스트 출력
+	-	설명					: 소셜부가정보 리스트 출력
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.04.28
+    ***************************************/ --> 
+	<select id="getSnsAdtnInfoList" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemSnsAdtnInfoReqDto" 
+	resultType="com.icignal.systemmanagement.channel.dto.response.SystemSnsAdtnInfoResDto">
+		/* SystemChannelMapper.getSnsAdtnInfoList */
+		select ${strColumn}
+			, mcsai.id 					as id			/* id */
+			, mcsai.sns_page_id 		as snsPageId	/* 페이지 ID */
+			, mcsai.app_id 				as appId		/* 앱 ID */
+			, mcsai.app_secur_code 		as appSecurCode /* 앱 Secret code*/
+			, mcsai.sns_page_desc 		as snsPageDesc  /* 페이지 설명 */
+			, mcsai.aces_exp_dt			as acesExpDt	/* 토큰만료일 */  
+		from 
+			mkt.mkt_chnl_sns_adtn_info mcsai with(nolock)
+		where 
+			${strSVCType} 
+			and ${strWhere} 
+			and mcsai.MKT_CHNL_ID = #{mktChlId}
+			and mcsai.flag = '1'
+	    Order by ${strOrderby}
+	    	${strEndPaging}
+	</select>
+			
+	   <!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectChannelStore)
+	============================================
+	-	제목					: 채널 별 용량 조회  
+	-	설명					: 선택 채널 별 용량 조회  
+	-	결과형태				: 복수
+	============================================
+	-	입력
+		mktChlId			: 마케팅 채널 ID
+	-	출력
+		modifyBy			: 수정자
+		modifyDate			: 수정 일자
+		seq			        : 순번
+		periodType   		: 기간 구분 코드
+		maxVol		        : 최대 용량
+		reserveVol          : 예약 용량
+		description         : 설명
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectChannelStore" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelcapaReqDto" 
+	resultType="com.icignal.systemmanagement.channel.dto.response.SystemChannelcapaResDto">
+	/* SystemChannelMapper.selectChannelStore */
+	select ${strColumn} 
+	    , mc.id
+		, c2.name as modifyBy 
+		, com.TO_CHAR(mc.modify_date,'YYYY-MM-DD') as modifyDate
+		, mc.seq as seq
+		, c1.mark_name as periodType
+		, mc.max_vol as maxVol
+		, mc.RSRV_VOL as reserveVol
+		, mc.CHNL_DTL_DESC as description
+		
+	from mkt.mkt_chnl_capa mc with(nolock)
+    join com.comm_code c1 with(nolock) on c1.flag = 1 and c1.code_name = mc.PERIOD_TYPE_CD and c1.lang = #{lang} and c1.group_code = 'MKT_STAND_TYPE_CD'
+    left outer join com.crm_user u1 with(nolock) on u1.rid = mc.modify_by
+    left outer join com.employee c2 with(nolock) on c2.id = u1.id_employee
+	where ${strSVCType} 
+	and ${strWhere} 
+	and mc.MKT_CHNL_ID = #{mktChlId}
+	and mc.flag = 1
+    Order by ${strOrderby}
+    ${strEndPaging}
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일       : CommonDAO.java(getDateInfo)
+    ============================================
+    -   제목            : 현재 시간 조회
+    -   설명            : 현재 날짜 및 시간을 조회한다
+    -   결과형태      : 단일
+    ============================================
+    -   출력
+        com.getMaxDate()  : 현재 날자 및 시간
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="getDateInfo" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO" resultType="java.lang.String">
+    /* SystemChannelMapper.getDateInfo */
+    SELECT com.TO_CHAR(COM.getMaxDate(), 'YYYY-MM-DD')
+    </select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectImgOption)
+	============================================
+	-	제목					: 채널 이미지 정의 조회    
+	-	설명					: 채널 이미지 정의 조회     
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		seq					: 순서
+		maxVol			    : 최대 용량
+		imgResolH           : 높이
+		imgResolW			: 넓이
+		upldEtsionCd		: 업로드 유형 코드
+		upldType		    : 업로드 파일 유형
+		createBy			: 등록자
+		mDate				: 등록 일자
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectImgOption" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemImgOptionListReqDto" resultType="com.icignal.systemmanagement.channel.dto.response.SystemImgOptionListResDto"> 
+	/* SystemChannelMapper.selectImgOption */
+	select ${strColumn}
+		, mcc.id     	    
+		, mcc.seq as seq     	
+		, mcc.max_vol as maxVol     
+		, mcc.img_resol_h as imgResolH    
+		, mcc.img_resol_w as imgResolW   
+		, c1.mark_name as upldEtsionCd 
+		, mcc.upld_type as upldType   
+		, mcc.type as type   
+		, c2.name as modifyBy  
+		, com.TO_CHAR(mcc.modify_date,'YYYY-MM-DD') as mDate
+	from mkt.mkt_chnl_capa mcc with(nolock)
+	join com.comm_code c1 on c1.flag = 1 and c1.code_name = mcc.upld_etsion_cd and c1.lang = #{lang} and c1.group_code = 'CHNL_UPLOAD_TYPE'
+	left outer join com.crm_user u1 with(nolock) on u1.rid = mcc.create_by
+	left outer join com.employee c2 with(nolock) on c2.id = u1.id_employee
+	where mcc.mkt_chnl_id = #{mktChlId}
+	and mcc.type = 'ATTACH_USAGE' 
+    and mcc.flag = 1 
+    and ${strSVCType} 
+    and ${strWhere} 
+	Order by ${strOrderby}  
+	${strEndPaging} 
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(updateImgOption)
+	============================================
+	-	제목					: 채널 수정
+	-	설명					: 채널 수정
+	============================================
+	-	입력
+		memId               : 타입
+    	mktChnlId           : 마케팅 아이디
+    	maxVol				: 총 용량
+    	imgResolH			: 높이
+    	imgResolW			: 넓이
+    	upldEtsionCd		: 파일 유형
+    	upldType			: 파일 확장자
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="updateImgOption" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemImgOptionlUpdateReqDto">
+	/* SystemChannelMapper.updateImgOption */
+	update mkt.mkt_chnl_capa SET
+		  modify_date = GETDATE()
+		, modify_by = #{memId}
+		, MAX_VOL = #{maxVol}
+		, IMG_RESOL_H = #{imgResolH}
+		, IMG_RESOL_W = #{imgResolW}
+		, UPLD_ETSION_CD = #{upldEtsionCd}	
+		, UPLD_TYPE = #{upldType}
+	where id = #{id} and ${strSVCType}
+	</update>
+	
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectContypeId)
+	============================================
+	-	제목					: 콘텐츠 유형 조회
+	-	설명					: 채널과 채널 관계 유형을 통한 채널 콘텐츠 유형 주회
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+		chnlId		    	: 채널 유형 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectContypeId" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelReqDto" resultType="com.icignal.systemmanagement.channel.dto.response.SystemImgOptionResDto">
+	/* SystemChannelMapper.selectContypeId */
+	select c1.id as mktChnlId
+	from mkt.mkt_chnl mc with(nolock)
+	join com.comm_code c1 with(nolock) on c1.flag = 1 and c1.code_name = mc.chnl_type_cd  and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	where mc.id = #{id} 
+    <!-- and mc.accnt_id = #{accountId}  -->
+    and ${strSVCType}
+    </select>
+    
+    	<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectSeq)
+	============================================
+	-	제목					: 채널 용량의 추가 순서
+	-	설명					: 채널 용량의 추가 순서
+	============================================
+	-	입력
+		type                : 타입
+    	mktChlId            : 마케팅 아이디
+    -   출력
+        seq					: 번호
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectSeq" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelcapaReqDto" 
+	resultType="java.lang.String">
+	/* SystemChannelMapper.selectSeq */
+	    select com.nvl(max(seq)+1, 1) 
+        from mkt.mkt_chnl_capa with(nolock)
+	    where MKT_CHNL_ID = #{mktChlId} 
+        and type = #{type} 
+	    and flag = 1
+	</select>
+	
+	
+	 <!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(insertImgOption)
+	============================================
+	-	제목					: 이미지 옵션 인서트 
+	-	설명					: 이미지 옵션 인서트
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		seq					: 순서
+		mktChnlId			: 채널 아이디
+		maxVol				: 최대 용량
+		imgResolH			: 높이
+		imgResolW			: 넓이
+		upldEtsionCd		: 타입
+		upldType			: 타입
+	-	출력
+		 id			        : 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<insert id="insertImgOption" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemImgOptionlInsertReqDto"> 
+	/* SystemChannelMapper.insertImgOption */
+	insert into mkt.mkt_chnl_capa(
+		  id
+		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		, flag
+		<!-- , country -->
+		<!-- , app_service_type -->
+		, seq
+		, MKT_CHNL_ID
+		, MAX_VOL
+		, IMG_RESOL_H
+		, IMG_RESOL_W
+		, UPLD_ETSION_CD		
+		, UPLD_TYPE
+		, TYPE
+	)
+	values(
+		 #{id}
+		, #{memId}    
+		, #{memId}     
+		, GETDATE()   
+		, GETDATE()    
+		, '1'   
+		<!-- , #{country} -->    
+		<!-- , #{appServiceId} -->
+		, #{seq}
+		, #{mktChnlId}
+		, #{maxVol}
+		, #{imgResolH}
+		, #{imgResolW}
+		, #{upldEtsionCd}
+		, #{upldType}
+		, 'ATTACH_USAGE' 
+	)
+<!-- 	<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!-- 			select id from mkt.mkt_chnl_capa where id = #{id} -->
+<!-- 	</selectKey> -->
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectImageOption)
+	============================================
+	-	제목					: 채널 이미지 사이즈 조회
+	-	설명					: 콘텐츠  채널의 이미지 사이즈 조회
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	    fileType            : 파일 확장자
+	-	출력
+		name		    	: 확장자 명
+		height				: 높이
+		width			    : 넓이
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectImageOptionList" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemImgOptionReqDto" 
+	resultType="com.icignal.systemmanagement.channel.dto.response.SystemImgOptionResDto">
+	/*SystemChannelMapper.selectImageOptionList*/
+	select
+		  c3.mark_Name as name
+		, img_resol_h as height
+		, img_resol_w as width
+	from mkt.mkt_chnl_capa mcc with(nolock)
+	join mkt.mkt_chnl c2 with(nolock) on c2.id = #{chnlId}
+	<if test="accntId != null and accntId != ''">
+	and c2.accnt_id = #{accntId}
+	</if>
+	and c2.flag = 1
+	join com.comm_code c1 with(nolock) on c1.flag = 1 and c1.code_name = c2.chnl_type_cd and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+	join com.comm_code c3 with(nolock) on c3.flag = 1 and c3.code_name = mcc.UPLD_ETSION_CD and c3.lang =  #{lang} and c3.group_code = 'CHNL_UPLOAD_TYPE'
+	where mkt_chnl_id = c2.id
+	and mcc.flag = '1'
+    and ${strSVCType}
+	<if test="fileType != null and fileType != ''">
+	    and mcc.UPLD_TYPE = #{fileType}
+	</if>
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectImgDetailOption)
+	============================================
+	-	제목					: 채널 이미지 정의 조회    
+	-	설명					: 채널 이미지 정의 조회     
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    id                  : 고유 아이디
+	-	출력
+		seq					: 순서
+		maxVol			    : 최대 용량
+		imgResolH           : 높이
+		imgResolW			: 넓이
+		upldEtsionCd		: 업로드 유형 코드
+		upldType		    : 업로드 파일 유형
+		createBy			: 등록자
+		mDate				: 등록 일자
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectImgDetailOption" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemImgOptionReqDto" resultType="com.icignal.systemmanagement.channel.dto.response.SystemImgOptionResDto"> 
+	/* SystemChannelMapper.selectImgDetailOption  */
+	select 
+		  mcc.id as id  	    
+		, mcc.seq as seq    	
+		, mcc.max_vol as maxVol  
+		, mcc.img_resol_h as imgResolH 
+		, mcc.img_resol_w as imgResolW
+		, c1.code_name as upldEtsionCd
+		, mcc.upld_type as upldType  
+		, mcc.create_by as createBy
+		, mcc.modify_date as mDate
+	from mkt.mkt_chnl_capa mcc with(nolock)
+	join com.comm_code c1 with(nolock) on c1.flag = 1 and c1.code_name = mcc.upld_etsion_cd and c1.lang = #{lang} and c1.group_code = 'CHNL_UPLOAD_TYPE'
+	where mcc.mkt_chnl_id = #{mktChnlId}
+	and mcc.type = 'ATTACH_USAGE'
+	and mcc.id = #{id} and ${strSVCType}
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectDetailCapa)
+	============================================
+	-	제목					: 캠페인 실행 업체 조회      
+	-	설명					: 캠페인 실행 업체 조회      
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		accStatus			: 수정자
+		accName			    : 수정 일자
+		accNumber			: 순번
+		id                  : 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ --> 
+	<select id="selectDetailCapa" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelcapaReqDto" resultType="com.icignal.systemmanagement.channel.dto.response.SystemChannelcapaResDto">
+	/* SystemChannelMapper.selectDetailCapa */
+	select 
+		  mcc.id as id
+		, MKT_CHNL_ID as mktChlId
+		, mcc.seq as seq
+		, mcc.PERIOD_TYPE_CD as periodType
+		, mcc.max_vol as maxVol
+		, mcc.RSRV_VOL as reserveVol
+		, mcc.CHNL_DTL_DESC as description
+	from mkt.mkt_chnl_capa mcc with(nolock)
+	where mcc.id = #{id}
+	${strWhere}
+	and ${strSVCType}
+	</select> 
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(selectContypeId)
+	============================================
+	-	제목					: 콘텐츠 유형 조회
+	-	설명					: 기간 구분 중복 조회
+	-	결과형태				: 단일
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+		chnlId		    	: 채널 유형 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->  
+	<select id="selectperiodType" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelcapaReqDto" resultType="java.lang.String">
+	/* SystemChannelMapper.selectperiodType */
+	select * 
+    from mkt.mkt_chnl_capa mc with(nolock)
+	where mkt_chnl_id = #{mktChlId} 
+    and mc.flag = 1 
+    and mc.period_type_cd = #{periodType} 
+	and ${strSVCType}
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(updateCapaChannel)
+	============================================
+	-	제목					: 채널 용량 수정
+	-	설명					: 채널 용량 수정
+	============================================
+	-	입력
+		 memId              : 접속 ID
+    	 periodType         : 기간 구분
+		 maxVol         	: 최대 용량
+		 reserveVol         : 예약 용량
+		 description        : 설명
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="updateCapaChannel" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelcapaReqDto">
+	/* SystemChannelMapper.updateCapaChannel */
+	update mkt.mkt_chnl_capa set
+			  modify_by = #{memId}       
+			, modify_date = GETDATE()      
+			, PERIOD_TYPE_CD = #{periodType}    
+			, max_vol = #{maxVol}   
+			, RSRV_VOL = #{reserveVol}   
+			, CHNL_DTL_DESC = #{description}   
+	where ${strSVCType} and id = #{id}
+	</update>
+	
+		 <!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(insertChannelStore)
+	============================================
+	-	제목					: 채널 용량 추가 
+	-	설명					: 채널 용량 추가
+	-	결과형태				: 
+	============================================
+	-	입력
+		 memId              : 접속 ID
+    	 mktChlId           : 마케팅 채널 ID
+		 seq                : 순번
+		 periodType         : 기간 구분 코드
+		 maxVol             : 최대 용량
+		 reserveVol         : 예약 용량
+		 description        : 설명
+	-	출력
+		 id			        : 고유 아이디
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<insert id="insertChannelStore" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemChannelcapaReqDto">    
+	/* SystemChannelMapper.insertChannelStore */
+	insert into mkt.mkt_chnl_capa(
+			  id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			, MKT_CHNL_ID
+			, seq
+			, PERIOD_TYPE_CD
+			, max_vol
+			, RSRV_VOL
+			, CHNL_DTL_DESC
+			, TYPE
+			)
+	values(
+			  #{id}
+			, #{memId}    
+			, #{memId}     
+			, GETDATE()   
+			, GETDATE()    
+			, '1'   
+			<!-- , #{country}     -->
+			<!-- , #{appServiceId} -->
+			, #{mktChlId}    
+			, #{seq}
+			, #{periodType}    
+			, #{maxVol}   
+			, #{reserveVol}   
+			, #{description}   
+			, 'SYS_USAGE' 
+	)
+<!-- 	<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!-- 			select id from mkt.mkt_chnl_capa where id = #{id} -->
+<!-- 	</selectKey> -->
+	</insert>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(insertSnsAdtnInfo)
+	============================================
+	-	제목					: 소셜부가정보 추가
+	-	설명					: 소셜부가정보 추가
+	-	결과형태				: 
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.02
+    ***************************************/ --> 
+	<insert id="insertSnsAdtnInfo" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemInsertSnsAdtnInfoReqDto">
+		/* SystemChannelMapper.insertSnsAdtnInfo */
+		insert into mkt.mkt_chnl_sns_adtn_info
+		(
+			id
+			, sns_page_id
+			, app_id
+			, app_secur_code
+			, sns_page_desc
+			, mkt_chnl_id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			<!-- , country -->
+			, flag
+			<!-- , app_service_type -->
+		)
+		values
+		(
+			com.getNewID('A')
+			, #{snsPageId}
+			, #{appId}
+			, #{appSecurCode}
+			, #{snsPageDesc}
+			, #{mktChnlId}
+			, #{memId}
+			, #{memId}
+			, GETDATE()
+			, GETDATE()
+			<!-- , #{country} -->
+			, 1
+			<!-- , #{appServiceId} -->
+		)	
+	</insert>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(getDetailSnsAdtnInfo)
+	============================================
+	-	제목					: 소셜부가정보 상세
+	-	설명					: 소셜부가정보 상세
+	-	결과형태				: 
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.02
+    ***************************************/ --> 
+	<select id="getDetailSnsAdtnInfo" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemSnsAdtnInfoReqDto" 
+	resultType="com.icignal.systemmanagement.channel.dto.response.SystemGetDetailSnsAdtnInfoResDto">
+		/* SystemChannelMapper.getDetailSnsAdtnInfo */
+		select
+			mcsai.sns_page_id 		as snsPageId	/* 페이지 ID */
+			, mcsai.app_id 				as appId		/* 앱 ID */
+			, mcsai.app_secur_code 		as appSecurCode /* 앱 Secret code*/
+			, mcsai.sns_page_desc 		as snsPageDesc  /* 페이지 설명 */  
+		from 
+			mkt.mkt_chnl_sns_adtn_info mcsai with(nolock)
+		where 
+			mcsai.id = #{id}
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTChannelDAO.java(updateSnsAdtnInfo)
+	============================================
+	-	제목					: 소셜부가정보 수정
+	-	설명					: 소셜부가정보 수정
+	-	결과형태				: 
+	============================================
+	-   입력
+	    chnlId				: 채널 아이디
+	-	출력
+	============================================
+	-	작성자					: jun.lee
+	-	작성일					: 2017.05.02
+    ***************************************/ -->
+	<update id="updateSnsAdtnInfo" parameterType="com.icignal.systemmanagement.channel.dto.request.SystemInsertSnsAdtnInfoReqDto">
+		/* SystemChannelMapper.updateSnsAdtnInfo */
+		update mkt.mkt_chnl_sns_adtn_info
+		set
+			app_id = #{appId}
+			, app_secur_code = #{appSecurCode}
+			, sns_page_desc = #{snsPageDesc}
+			, modify_by = #{memId}
+			, modify_date = GETDATE()
+		where
+			id = #{id}
+	</update>
+	
+	
+</mapper>

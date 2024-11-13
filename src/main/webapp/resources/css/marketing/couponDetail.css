@@ -1,0 +1,113 @@
+.mobile_content_area .phoneImg {
+	float: left;
+    position: relative;
+    padding-left: 22px;
+    padding-right: 0;
+}    
+
+.img_wrap {
+    position: relative;
+    min-height: 51px;
+    margin: 3px 0;
+}
+
+.coupon_wrap .bacode_area {
+    position: relative;
+}
+
+.phoneWrap {
+    padding: 5px;
+    width: 100%;
+    position: relative;
+    font-size: 11pt;
+    color: #777;
+    text-align: center;
+}
+
+.phoneImg .phoneWrap {
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: absolute;
+    top: 76px;
+    left: 41px;
+    width: 266px;
+    height: 461px;
+    background: #fff;
+    border: 1px solid #74b9d9;
+    z-index: 998;
+}
+
+.phoneWrap > div, .phoneWrap input[type="text"], .phoneWrap textarea {
+    width: 100%;
+    line-height: 19.61 pt;
+}
+
+.select_smImg {
+    position: absolute;
+    left: 93px;
+    top: 30px;
+    z-index: -1;
+}
+
+.coupon_wrap .bacode_area .bg_img {
+    width: 100%;
+    height: 51px;
+}
+
+.coupon_wrap .bacode_area .barcode {
+    position: absolute;
+    right: 85px;
+    top: 4px;
+    width: 120px;
+    z-index: 1;
+}
+
+.coupon_wrap .bacode_area #couponImage {
+	width: 74px;
+}
+
+.coupon_wrap .bacode_area .use_copuon {
+    position: absolute;
+    top: 30px;
+    font-size: 9px;
+    right: 0;
+    z-index: 3;
+    color: #fff;
+    text-align: center;
+    width: 47px;
+}
+
+.coupon_wrap .bacode_area .btn_coupon {
+    position: absolute;
+    right: 1px;
+    top: 1px;
+    height: 200%;
+    z-index: 2;
+    padding: 0;
+    cursor: default;
+}
+
+.phoneWrap input[type="text"], .phoneWrap textarea {
+    border: 1px solid #ccc;
+}
+
+.coupon_wrap .bacode_area .btn_coupon img {
+    width: 49px;
+}
+
+#uploadFormPop{float:none; position:absolute; top: 0; right: 2px; width: 30px; height: 27px; cursor:pointer;}
+.page_btn_area.inner_tit{border: 1px solid #c6c6c6;}
+.mobile_well{margin-bottom:20px; border:1px solid #c6c6c6; border-top:0 none;}
+.input-group .form-control#useDateAfterIssue {width: 55px;}
+#eventMessage {width:100%; height:150px;}
+#preEventMessage {margin-top: 3px;}
+
+
+/* Popup */
+.header_filter{background:transparent;}
+.header_filter label {
+margin-bottom: 0;
+height: 27px;
+line-height: 27px;
+color: #777777;
+}

@@ -1,0 +1,1452 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:52:45 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.segment.mapper.KprSegmentMapper">
+
+    <!-- /**************************************
+   -   관련 파일             : KPRSegmentDAO.java (getSegmentAllCountSql)
+   ============================== ==============
+   -   제목                  : 세그먼트 전체 건수 SQL 조회
+   -   설명                  : 세그먼트 전체 건수 SQL 조회
+   -   결과형태              :
+   ============================================
+   -   입력				:
+   -	출력				:
+   ============================================
+   -   작성자                : 류동균
+   -   작성일                : 2016.06.21
+   ***************************************/ -->
+    <select id="selectSegmentAllCountSql" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentCountReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentCountResDto">
+        /* KprSegmentMapper.selectSegmentAllCountSql */
+        select ('select distinct ' || t3.tbl_alias_col_nm || '\n' || SUBSTRING(t1.lgc_sql, instr(lgc_sql, 'from')))               as filterSql
+             , ('select count(distinct ', t3.tbl_alias_col_nm, ') as sqlCount \n', SUBSTRING(t1.lgc_sql, instr(lgc_sql, 'from'))) as filterSqlCount
+        from anl.anl_lgc_comp_mst t1
+                 join anl.anl_atrib_group t2 on t2.flag = 1 and t1.id = t2.lgc_comp_id
+                 join anl.anl_atrib_group_column t3 on t3.flag = 1 and t2.id = t3.atrib_group_id and t3.seg_key_yn = '1'
+        where t1.id = #{logicalCompId} offset 0 rows
+        fetch next 1 rows ONLY
+    </select>
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getSegmentList)
+    ============================================
+    -   제목                  : 세그먼트 목록 조회
+    -   설명                  : 세그먼트 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:   accountId
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectSegmentList" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentListReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentListResDto">
+        /* KPRSegmentMapper.selectSegmentList */
+        select ${strColumn}
+        , s.ID as segmentId
+        , e.NAME as createByName
+        <!--
+        , s.CREATE_DATE as createDate
+         -->
+        , com.TO_CHAR(s.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') as createDate
+        , s.SEG_NM as segmentName
+        , s.SEG_DESC as segmentDesc
+        , l.LGC_DESC as lgcDesc
+        , s.LGC_COMP_ID as logicalCompId
+        , l.LGC_COMP_NM as logicalCompName
+        from anl.anl_seg_mst s
+        join anl.anl_lgc_comp_mst l on l.flag = 1 and s.lgc_comp_id = l.id
+        left outer join com.crm_user u on s.create_by = u.rid
+        left outer join com.employee e on e.flag = 1 and u.id_employee = e.id
+        left outer join com.crm_division d1 WITH (NOLOCK) on d1.rid = e.rid_division
+        join com.comm_code c on c.flag = 1 and c.lang = #{lang} and c.code_name = s.seg_type_cd and c.code_name = 'SEG' and c.group_code = 'ANL_SEG_TYPE_CD'
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and s.flag = 1
+        <if test='authType != "A" '>
+            and d1.X_BRAND_CD = #{brandCd}
+            <if test='authType != "B" '>
+                and e.ID = #{empId}
+            </if>
+        </if>
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getLogicalComponentList)
+    ============================== ==============
+    -   제목                  : 컴포넌트 목록 조회
+    -   설명                  : 컴포넌트 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:   accountId
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectLogicalComponentList" parameterType="com.icignal.kepler.segment.dto.request.KprLogicalComponentListReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprLogicalComponentListResDto">
+        /* KPRSegmentMapper.selectLogicalComponentList */
+        select ${strColumn}
+             , l.ID                                     as logicalCompId
+             , e.NAME                                   as createByName
+             , com.TO_CHAR(l.CREATE_DATE, 'YYYY-MM-DD') as createDate
+             , l.LGC_COMP_NM                            as logicalCompName
+             , l.LGC_DESC                               as logicalCompDesc
+             , l.logicalCompUseFlag                     as logicalCompUseFlag
+        from (select t.*
+                   , (case when t.CMPLT_YN = '1' and g.cnt = 1 then 'Y' else 'N' end) as logicalCompUseFlag
+              from anl.anl_lgc_comp_mst t
+                       left outer join (select t2.lgc_comp_id, count(*) as cnt
+                                        from anl.anl_atrib_group t2
+                                                 join anl.anl_atrib_group_column t3 on t3.flag = 1 and t3.atrib_group_id = t2.id and t3.seg_key_yn = '1'
+                                        where t2.flag = 1
+                                        group by t2.lgc_comp_id) g on g.lgc_comp_id = t.id
+              where t.flag = 1) l
+                 left outer join com.crm_user u on l.create_by = u.rid
+                 left outer join com.employee e on e.flag = 1 and u.id_employee = e.id
+        where ${strSVCType}
+          and l.logicalCompUseFlag = 'Y'
+          and ${strWhere}
+          and l.flag = 1
+        order by ${strOrderby} ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (addSegment)
+    ============================== ==============
+    -   제목                  : 세그먼트 등록
+    -   설명                  : 세그먼트 등록
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <insert id="insertSegment" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentReqDto">
+        /* KPRSegmentMapper.insertSegment */
+        insert into anl.anl_seg_mst (
+        id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , seg_nm
+        , seg_desc
+        , lgc_comp_id
+        , seg_type_cd
+        ) values (
+        #{segmentId}
+        , #{createBy}
+        , #{modifyBy}
+        , GETDATE()
+        , GETDATE()
+        , 1
+        , #{segmentName}
+        , #{segmentDesc}
+        , #{logicalCompId}
+        , #{segmentTypeCode}
+        )
+
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from anl.anl_seg_mst where id = #{segmentId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey>
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getAttributeGroupList)
+    ============================== ==============
+    -   제목                  : 어트리뷰트 그룹 목록 조회
+    -   설명                  : 어트리뷰트 그룹 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectAttributeGroupList" parameterType="com.icignal.kepler.segment.dto.request.KprAttributeGroupListReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprAttributeGroupListResDto">
+        /* KPRSegmentMapper.selectAttributeGroupList */
+        select g.id             as atribGroupId
+             , g.atrib_group_nm as atribGroupName
+        from anl.anl_atrib_group g
+        where ${strSVCType}
+          and g.lgc_comp_id = #{logicalCompId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getAtribGroupColumnInfo)
+    ============================== ==============
+    -   제목                  : 어트리뷰트 그룹 컬럼 목록 조회
+    -   설명                  : 어트리뷰트 그룹 컬럼 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectAtribGroupColumnInfo" parameterType="com.icignal.kepler.segment.dto.request.KprAttributeGroupColumnInfoReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprAttributeGroupColumnInfoResDto">
+        /* KPRSegmentMapper.selectAtribGroupColumnInfo */
+        select ac.id as atribGroupColId
+        <!-- ,  ('select distinct '
+                 || case when cal_col_yn = '1' then ac.cal_dtl else ac.tbl_alias_col_nm end
+                 || ' as COL_VALUE'
+                 || chr(13) || chr(10) || replace(SUBSTRING(l.lgc_sql, instr(l.lgc_sql, 'FROM')), ';', '')
+                 || chr(13) || chr(10) || 'order by '
+                 || case when cal_col_yn = '1' then ac.cal_dtl else ac.tbl_alias_col_nm end) as valueSql-->
+        , ac.VAL_SQL as selValueSql
+        <if test="simpleCheck != '' and simpleCheck != null">
+            , ('select distinct T.COL_VALUE FROM ( select distinct ' + case when (LOWER(cm.DATA_TYPE_CD) = 'bigint' or LOWER(cm.DATA_TYPE_CD) = 'decimal'  or LOWER(cm.DATA_TYPE_CD) = 'int' or LOWER(cm.DATA_TYPE_CD) = 'number' or LOWER(cm.DATA_TYPE_CD) = 'numeric') then 'REPLACE('+ cm.COL_NM +', '+CHAR(39)+'.00'+CHAR(39)+','+CHAR(39)+CHAR(39)+')' else cm.COL_NM end + ' as COL_VALUE ,UserId_Code as segKey from ' + tm.SCHMA_NM + '.' + tm.TBL_NM + ') T join FactMember T2 ' +
+               'on T.segKey = T2.UserId_Code and T2.MainShopCode = '+''''+#{mainShop}+''''+' and (IsAcceptToReciveSMS = ' + '''Y''' + ') where COL_VALUE is not null'
+            <if test='searchYn == "Y"'>
+                + ' and T.COL_VALUE like' + ' N''%' +#{searchText} + '%'' '
+            </if>
+                ) AS valueSql
+        </if>
+        <if test="simpleCheck == '' or simpleCheck == null">
+            , ('select distinct ' + case when (LOWER(cm.DATA_TYPE_CD) = 'bigint' or LOWER(cm.DATA_TYPE_CD) = 'decimal'  or LOWER(cm.DATA_TYPE_CD) = 'int' or LOWER(cm.DATA_TYPE_CD) = 'number' or LOWER(cm.DATA_TYPE_CD) = 'numeric') then 'REPLACE('+ cm.COL_NM +', '+CHAR(39)+'.00'+CHAR(39)+','+CHAR(39)+CHAR(39)+')' else cm.COL_NM end + ' as COL_VALUE from ' + tm.SCHMA_NM + '.' + tm.TBL_NM
+            <if test='searchYn == "Y"'>
+                + ' where '+ cm.COL_NM +' like' + ' N''%' +#{searchText} + '%'' '
+            </if>
+                ) AS valueSql
+        </if>
+        , l.id as logicalCompId
+        from anl.anl_atrib_group_column ac
+        join anl.anl_column_mst cm on cm.flag = 1 and cm.id = (case when com.nvl(LEN(ac.dim_col_id), 0) &gt; 1 then ac.dim_col_id else ac.col_id end)
+        join anl.anl_atrib_group ag on ag.flag = 1 and ag.id = ac.atrib_group_id
+        join anl.anl_lgc_comp_mst l on l.flag = 1 and l.id = ag.lgc_comp_id
+        join anl.anl_table_mst tm on tm.flag = 1 and tm.id = cm.tbl_id
+        where ac.flag = 1
+        and ac.id = #{atribGroupColId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java 
+    ============================== ==============
+    -   제목                  : 로지컬 컴포넌트 DB 정보 조회
+    -   설명                  : 로지컬 컴포넌트 DB 정보 조회
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectLogicalComponentDBInfo" parameterType="com.icignal.kepler.segment.dto.request.KprLogicalComponentDBInfoReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprLogicalComponentDBInfoResDto">
+        /* KPRSegmentMapper.selectLogicalComponentDBInfo */
+        select di.id            as dbId
+             , di.con_ip        as conIp
+             , di.con_port      as conPort
+             , di.con_id        as conId
+             , di.con_pw        as conPassword
+             , di.con_url       as conUrl
+             , c.code_name      as conDbType
+             , c.attrib01       as conDbClass
+             , di.AWS_SECRET_NM as secretNm
+        from anl.anl_db_inform di
+                 join anl.anl_subject_db_rel sdr on sdr.flag = 1 and di.id = sdr.db_id
+                 join anl.anl_table_mst tm on tm.flag = 1 and sdr.id = subject_db_rel_id
+                 join anl.anl_lgc_comp_table_rel lct on lct.flag = 1 and tm.id = lct.tbl_id
+                 join com.comm_code c on c.flag = 1 and c.lang = #{lang} and c.code_name = di.con_db_type and c.group_code = 'ANL_DB_TYPE_CD'
+        where lct.lgc_comp_id = #{logicalCompId}
+          and di.flag = 1
+        order by di.id
+        OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getSegmentDetail) 
+    ============================== ==============
+    -   제목                  : 세그먼트 상세 조회
+    -   설명                  : 세그먼트 상세 조회
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectSegmentDetail" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentDetailReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentDetailResDto">
+        /* KPRSegmentMapper.selectSegment */
+        select s.id          as segmentId
+             , s.lgc_comp_id as logicalCompId
+             , l.lgc_comp_nm as logicalCompName
+             , s.seg_nm      as segmentName
+             , s.seg_desc    as segmentDesc
+        from anl.anl_seg_mst s
+                 join anl.anl_lgc_comp_mst l on l.flag = 1 and s.lgc_comp_id = l.id
+        where s.flag = 1
+          and s.id = #{segmentId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getSegmentFilterList) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 목록 조회
+    -   설명                  : 세그먼트 필터 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectSegmentFilterList" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentDetailReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentFilterListResDto">
+        /* KPRSegmentMapper.selectSegmentFilterList */
+        select f.id                                                                                               as segFilterId
+             , f.seg_id                                                                                           as segmentId
+             , atrib_group_col_id                                                                                 as atribGroupColId
+             , case when c.code_name = 'DEFAULT' or c.code_name = 'GROUP_FUNC' then ac.dp_nm else c.mark_name end as displayName
+             , c.code_name                                                                                        as filterTypeCode
+             , c.mark_name                                                                                        as filterTypeName
+             , c3.code_name                                                                                       as groupFuncTypeCode
+             , c3.mark_name                                                                                       as groupFuncTypeName
+             , c2.code_name                                                                                       as operatCode
+             , c2.mark_name                                                                                       as operatCodeName
+             , f.filter_val                                                                                       as filterValue
+             , f.group_func_dtl                                                                                   as groupFuncDtl
+             , f.comb_filter_a_id                                                                                 as combFilterAId
+             , f.comb_filter_b_id                                                                                 as combFilterBId
+             , f.cnt                                                                                              as filterCount
+             , f.filter_sql_count                                                                                 as filterSqlCount
+             , f.off_set_x                                                                                        as offSetX
+             , f.off_set_y                                                                                        as offSetY
+             , case
+                   when len(ac.dim_col_id) <![CDATA[>]]> 0 then 'D'
+                   when len(f.comb_filter_a_id) <![CDATA[>]]> 1 then 'C'
+                   when len(f.group_func_type_cd) <![CDATA[>]]> 1 then 'F'
+                   when c.code_name = 'ALL' then 'A'
+                   when c4.code_name = 'DIMENSION' then 'D'
+                   when c4.code_name = 'MEASURE' then 'M'
+                   else 'D'
+            end                                                                                                   as atribGroupColType
+             , s.lgc_comp_id                                                                                      as logicalCompId
+        from anl.anl_seg_filter f
+                 left outer join anl.anl_atrib_group_column ac on ac.flag = 1 and f.atrib_group_col_id = ac.id
+                 left outer join com.comm_code c on c.flag = 1 and f.filter_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_SEG_FILTER_TYPE_CD'
+                 left outer join com.comm_code c2 on c2.flag = 1 and f.oprt_cd = c2.code_name and c2.lang = #{lang} and c2.group_code = 'MKT_TARGET_SERC_OPRT_TYPE'
+                 left outer join com.comm_code c3 on c3.flag = 1 and f.group_func_type_cd = c3.code_name and c3.lang = #{lang} and c3.group_code = 'ANL_GROUP_FUNC_TYPE'
+                 left outer join anl.anl_column_mst cm on cm.flag = 1 and cm.id = ac.col_id
+                 left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = cm.col_type_cd and c4.lang = #{lang} and c4.group_code = 'ANL_COL_TYPE_CD'
+                 join anl.anl_seg_mst s on s.flag = 1 and f.seg_id = s.id
+        where ${strSVCType}
+          and f.flag = 1
+          and f.seg_id = #{segmentId}
+        order by f.off_set_y, f.off_set_x
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getSegmentFilterRelList) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 목록 조회
+    -   설명                  : 세그먼트 필터 관계 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.06.21
+    ***************************************/ -->
+    <select id="selectSegmentFilterRelList" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentDetailReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentFilterRelListResDto">
+        /* KPRSegmentMapper.selectSegmentFilterRelList */
+        select fr.id              as segFilterRelId
+             , fr.child_filter_id as childFilterId
+             , fr.seg_filter_id   as segFilterId
+        from anl.anl_seg_filter_rel fr
+        where ${strSVCType}
+          and fr.flag = 1
+          and fr.seg_id = #{segmentId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getSegmentFilterCountById) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 건수 By Id 
+    -   설명                  : 세그먼트 필터 건수 By Id
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectSegmentFilterCountById" parameterType="java.lang.String" resultType="java.lang.Integer">
+        /* KPRSegmentMapper.selectSegmentFilterCountById */
+        select count(*)
+        from anl.anl_seg_filter
+        where id = #{segFilterId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (addSegmentFilter) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 등록
+    -   설명                  : 세그먼트 필터 등록
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <insert id="insertSegmentFilter" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.insertSegmentFilter */
+        insert into anl.anl_seg_filter
+        ( id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , filter_type_cd
+        , atrib_group_col_id
+        , group_func_type_cd
+        , oprt_cd
+        , filter_val
+        , group_func_dtl
+        , comb_filter_a_id
+        , comb_filter_b_id
+        , cnt
+        , filter_sql_count
+        , off_set_x
+        , off_set_y
+        , seg_id )
+        values
+        ( #{segFilterId}
+        , #{createBy}
+        , #{modifyBy}
+        , GETDATE()
+        , GETDATE()
+        , 1
+        , #{filterTypeCode}
+        , #{atribGroupColId}
+        , #{groupFuncTypeCode}
+        , #{operatCode}
+        , #{filterValue,jdbcType=NVARCHAR}
+        , (case when (#{filterTypeCode} = 'GROUP_FUNC') then (select case when cal_col_yn = 1 then cal_dtl else tbl_alias_col_nm end from anl.anl_atrib_group_column where id =
+        #{atribGroupColId}) else null end)
+        , #{combFilterAId,jdbcType=VARCHAR}
+        , #{combFilterBId,jdbcType=VARCHAR}
+        , #{count,jdbcType=INTEGER}
+        , #{filterSqlCount,jdbcType=NVARCHAR}
+        , #{offSetX,jdbcType=VARCHAR}
+        , #{offSetY,jdbcType=VARCHAR}
+        , #{segmentId,jdbcType=VARCHAR} )
+
+        <!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+        <!--             select id from anl.anl_seg_filter where id = #{segFilterId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+        <!--         </selectKey> -->
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (editSegmentFilter) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 수정
+    -   설명                  : 세그먼트 필터 수정
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="updateSegmentFilter" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.updateSegmentFilter */
+        update anl.anl_seg_filter
+        set
+        modify_by = #{modifyBy}
+        , modify_date = GETDATE()
+        , filter_type_cd = #{filterTypeCode}
+        , atrib_group_col_id = #{atribGroupColId}
+        , group_func_type_cd = #{groupFuncTypeCode}
+        , oprt_cd = #{operatCode}
+        , filter_val = #{filterValue}
+        , group_func_dtl = (case when (#{filterTypeCode} = 'GROUP_FUNC') then (select case when cal_col_yn = 1 then cal_dtl else tbl_alias_col_nm end from anl.anl_atrib_group_column
+        where id = #{atribGroupColId}) else null end)
+        , comb_filter_a_id = #{combFilterAId}
+        , comb_filter_b_id = #{combFilterBId}
+        <!-- , cnt = #{count}
+        , filter_sql_count = #{filterSqlCount} -->
+        , off_set_x = #{offSetX}
+        , off_set_y = #{offSetY}
+        where id = #{segFilterId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (editSegmentFilter) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 좌표 수정
+    -   설명                  : 세그먼트 필터 좌표 수정
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="updateSegmentFilterOffSet" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.updateSegmentFilterOffSet */
+        update anl.anl_seg_filter
+        set modify_by   = #{modifyBy}
+          , modify_date = GETDATE()
+          , off_set_x   = #{offSetX}
+          , off_set_y   = #{offSetY}
+        where id = #{segFilterId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (editSegmentFilterSqlAndCount) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 Sql/Count 수정
+    -   설명                  : 세그먼트 필터 Sql/Count 수정
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="updateSegmentFilterSqlAndCount" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.updateSegmentFilter */
+        update anl.anl_seg_filter
+        set modify_by        = #{modifyBy}
+          , modify_date      = GETDATE()
+          , cnt              = #{count}
+          , filter_sql_count = #{filterSqlCount}
+          , filter_sql       = #{filterSql}
+        where id = #{segFilterId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (removeSegmentFilter) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 삭제
+    -   설명                  : 세그먼트 필터 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="deleteSegmentFilter" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.deleteSegmentFilter */
+        update anl.anl_seg_filter
+        set
+            flag = flag + 1 , MODIFY_BY = #{modifyBy}
+            , MODIFY_DATE = GETDATE()
+            where id = #{segFilterId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (removeSegmentFilterBySegmentId) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 삭제 By SegmentId
+    -   설명                  : 세그먼트 필터 삭제 By SegmentId
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="deleteSegmentFilterBySegmentId" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.deleteSegmentFilterBySegmentId */
+        update anl.anl_seg_filter
+        set
+            flag = flag + 1
+          , MODIFY_BY = #{modifyBy}
+            , MODIFY_DATE = GETDATE()
+            where seg_id = #{segmentId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (selectSegmentFilterRelCountById) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 건수 By Id 
+    -   설명                  : 세그먼트 필터 관계 건수 By Id
+    -   결과형태              : 
+    ============================================
+    -   입력				:   
+    -	출력				:	
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectSegmentFilterRelCountById" parameterType="java.lang.String" resultType="java.lang.Integer">
+        /* KPRSegmentMapper.selectSegmentFilterRelCountById */
+        select count(*)
+        from anl.insertSegmentFilterRel
+        where id = #{segFilterRelId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (addSegmentFilterRel) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 등록
+    -   설명                  : 세그먼트 필터 관계 등록
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <insert id="insertSegmentFilterRel" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterRelReqDto">
+        /* KPRSegmentMapper.insertSegmentFilterRel */
+        insert into anl.anl_seg_filter_rel (
+        id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , child_filter_id
+        , seg_filter_id
+        , seg_id )
+        values (
+        #{segFilterRelId}
+        , #{createBy}
+        , #{modifyBy}
+        , GETDATE()
+        , GETDATE()
+        , 1
+        , #{childFilterId}
+        , #{segFilterId}
+        , #{segmentId}
+        )
+
+        <!-- myBatis  컨버젼시 불필요한 소스 판단되어 주석 처리함 2018.05.10 김민준  -->
+        <!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+        <!--             select id from anl.anl_seg_filter_rel where id = #{segFilterRelId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+        <!--         </selectKey> -->
+
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (editSegmentFilterRel) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 수정
+    -   설명                  : 세그먼트 필터 관계 수정
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="updateSegmentFilterRel" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterRelReqDto">
+        /* KPRSegmentMapper.updateSegmentFilterRel */
+        update anl.anl_seg_filter_rel
+        set
+            modify_by = #{modifyBy} , modify_date = GETDATE()
+        , child_filter_id = #{childFilterId}
+            , seg_filter_id = #{segFilterId}
+            , seg_id = #{segmentId}
+            where id = #{segFilterRelId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (removeSegmentFilterRel) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 삭제
+    -   설명                  : 세그먼트 필터 관계 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="deleteSegmentFilterRel" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterRelReqDto">
+        /* KPRSegmentMapper.deleteSegmentFilterRel */
+        update anl.anl_seg_filter_rel
+        set
+            flag = flag + 1 , MODIFY_BY = #{modifyBy}
+            , MODIFY_DATE = GETDATE()
+            where id = #{segFilterRelId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (removeSegmentFilterRelBySegmentId) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 삭제 By SegmentId
+    -   설명                  : 세그먼트 필터 관계 삭제 By SegmentId
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="deleteSegmentFilterRelBySegmentId" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterRelReqDto">
+        /* KPRSegmentMapper.deleteSegmentFilterRelBySegmentId */
+        update anl.anl_seg_filter_rel
+        set
+            flag = flag + 1 , MODIFY_BY = #{modifyBy}
+            , MODIFY_DATE = GETDATE()
+            where seg_id = #{segmentId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (editSegment) 
+    ============================== ==============
+    -   제목                  : 세그먼트 수정
+    -   설명                  : 세그먼트 수정
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="updateSegment" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentReqDto">
+        /* KPRSegmentMapper.updateSegment */
+        update anl.anl_seg_mst
+        set modify_by   = #{modifyBy}
+          , modify_date = GETDATE()
+          , seg_nm      = #{segmentName}
+          , seg_desc    = #{segmentDesc}
+        where id = #{segmentId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (editSegment) 
+    ============================== ==============
+    -   제목                  : 세그먼트 로지컬컴포넌트 id 수정
+    -   설명                  : 세그먼트 로지컬컴포넌트 id 수정
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="updateSegmentLogicalComponentId" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentReqDto">
+        /* KPRSegmentMapper.updateSegment */
+        update anl.anl_seg_mst
+        set modify_by   = #{modifyBy}
+          , modify_date = GETDATE()
+          , lgc_comp_id = #{logicalCompId}
+        where id = #{segmentId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (resetAllSegmentFilterCount) 
+    ============================== ==============
+    -   제목                  : 로지컬 컴포넌트 컬럼 목록
+    -   설명                  : 로지컬 컴포넌트 컬럼 목록
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectLogicalComponentColumnList" parameterType="com.icignal.kepler.segment.dto.request.KprLogicalComponentColumnListReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprLogicalComponentColumnListResDto">
+        /* KPRSegmentMapper.selectLogicalComponentColumnList */
+        select t5.tbl_alias || '.' || t4.col_nm) as columnName
+        	 , (case when LEN(t3.dim_col_id) &gt; 0 then t4.dp_nm else t3.dp_nm end) as displayName
+        from anl.anl_lgc_comp_mst t1
+            join anl.anl_atrib_group t2
+        on t2.flag = 1 and t2.lgc_comp_id = t1.id
+            join anl.anl_atrib_group_column t3 on t3.flag = 1 and t3.atrib_group_id = t2.id
+            join anl.anl_column_mst t4 on t4.flag = 1 and t4.id = (case when LEN(t3.dim_col_id) &gt; 0 then t3.dim_col_id else t3.col_id end)
+            join anl.anl_lgc_comp_table_rel t5 on t5.flag = 1 and t5.tbl_id = t4.tbl_id and t5.lgc_comp_id = t1.id
+        where t1.id = #{logicalCompId}
+        order by t3.seq, t3.seq;
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (resetAllSegmentFilterCount) 
+    ============================== ==============
+    -   제목                  : 전체건수 세그먼트 필터 조회
+    -   설명                  : 전체건수 세그먼트 필터 조회
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectAllCountSegmentFilter" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentFilterReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentFilterResDto">
+        /* KPRSegmentMapper.selectAllCountSegmentFilter */
+        select f.id                                                             as segFilterId
+             , atrib_group_col_id                                               as atribGroupColId
+             , case when c.code_name = 'ALL' then c.mark_name else ac.dp_nm end as displayName
+             , c.code_name                                                      as filterTypeCode
+             , c.mark_name                                                      as filterTypeName
+             , c3.code_name                                                     as groupFuncTypeCode
+             , c3.mark_name                                                     as groupFuncTypeName
+             , c2.code_name                                                     as operatCode
+             , c2.mark_name                                                     as operatCodeName
+             , f.filter_val                                                     as filterValue
+             , f.group_func_dtl                                                 as groupFuncDtl
+             , f.comb_filter_a_id                                               as combFilterAId
+             , f.comb_filter_b_id                                               as combFilterBId
+             , f.cnt                                                            as filterCount
+             , f.filter_sql_count                                               as filterSqlCount
+             , f.off_set_x                                                      as offSetX
+             , f.off_set_y                                                      as offSetY
+             , case
+                   when LEN(ac.dim_col_id) &gt; 0 then 'D'
+                   when LEN(f.comb_filter_a_id) &gt; 1 then 'C'
+                   when LEN(f.group_func_type_cd) &gt; 1 then 'F'
+                   when c.code_name = 'ALL' then 'A'
+                   else 'M' end                                                 as atribGroupColType
+             , s.lgc_comp_id                                                    as logicalCompId
+             , l.lgc_sql                                                        as lgcSql
+             , m.data_type_cd                                                   as dataTypeCd
+        from anl.anl_seg_filter f
+                 left outer join anl.anl_atrib_group_column ac on ac.flag = 1 and f.atrib_group_col_id = ac.id
+                 left outer join com.comm_code c on c.flag = 1 and f.filter_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_SEG_FILTER_TYPE_CD'
+                 left outer join com.comm_code c2 on c2.flag = 1 and f.oprt_cd = c2.code_name and c2.lang = #{lang} and c2.group_code = 'MKT_TARGET_SERC_OPRT_TYPE'
+                 left outer join com.comm_code c3 on c3.flag = 1 and f.group_func_type_cd = c3.code_name and c3.lang = #{lang} and c3.group_code = 'ANL_GROUP_FUNC_TYPE'
+                 join anl.anl_seg_mst s on s.flag = 1 and f.seg_id = s.id
+                 left outer join anl.anl_lgc_comp_mst l on l.flag = 1 and l.id = s.lgc_comp_id
+                 left outer join anl.anl_column_mst m on m.id = ac.col_id
+        where f.flag = 1
+          and f.filter_type_cd = 'ALL'
+          and f.seg_id = #{segmentId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getAllCountSegmentFilter) 
+    ============================== ==============
+    -   제목                  : 하위 세그먼트 필터 조회
+    -   설명                  : 하위 세그먼트 필터 조회
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectChildSegmentFilterList" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentFilterReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentFilterResDto">
+        /* KPRSegmentMapper.selectChildSegmentFilterList */
+        select f.id                                                                                                                   as segFilterId
+             , atrib_group_col_id                                                                                                     as atribGroupColId
+             , case when c.code_name = 'ALL' then c.mark_name else ac.dp_nm end                                                       as displayName
+             , c.code_name                                                                                                            as filterTypeCode
+             , c.mark_name                                                                                                            as filterTypeName
+             , c3.code_name                                                                                                           as groupFuncTypeCode
+             , c3.mark_name                                                                                                           as groupFuncTypeName
+             , c2.code_name                                                                                                           as operatCode
+             , c2.mark_name                                                                                                           as operatCodeName
+             , f.filter_val                                                                                                           as filterValue
+             , f.group_func_dtl                                                                                                       as groupFuncDtl
+             , f.comb_filter_a_id                                                                                                     as combFilterAId
+             , f.comb_filter_b_id                                                                                                     as combFilterBId
+             , f.cnt                                                                                                                  as filterCount
+             , f.filter_sql_count                                                                                                     as filterSqlCount
+             , f.off_set_x                                                                                                            as offSetX
+             , f.off_set_y                                                                                                            as offSetY
+             , case
+                   when LEN(ac.dim_col_id) &gt; 0 then 'D'
+                   when LEN(f.comb_filter_a_id) &gt; 1 then 'C'
+                   when LEN(f.group_func_type_cd) &gt; 1 then 'F'
+                   when c.code_name = 'ALL' then 'A'
+                   else 'M' end                                                                                                       as atribGroupColType
+             , s.lgc_comp_id                                                                                                          as logicalCompId
+             , ac.tbl_alias_col_nm                                                                                                    as tblAliasColNm
+             , case d.con_db_type when 'MYSQL' then c4.attrib01 when 'ORACLE' then c4.attrib02 when 'POSTGRESQL' then c4.attrib03 when 'MSSQL' then c4.attrib04 end as custDtDef
+             , r.seg_filter_id                                                                                                        as parSegFilterId
+             , m.data_type_cd                                                                                                         as dataTypeCd
+             , d.con_db_type                                                                                                          AS conDbType
+        from anl.anl_seg_filter f
+                 left outer join anl.anl_atrib_group_column ac on ac.flag = 1 and f.atrib_group_col_id = ac.id
+                 left outer join com.comm_code c on c.flag = 1 and f.filter_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_SEG_FILTER_TYPE_CD'
+                 left outer join com.comm_code c2 on c2.flag = 1 and f.oprt_cd = c2.code_name and c2.lang = #{lang} and c2.group_code = 'MKT_TARGET_SERC_OPRT_TYPE'
+                 left outer join com.comm_code c3 on c3.flag = 1 and f.group_func_type_cd = c3.code_name and c3.lang = #{lang} and c3.group_code = 'ANL_GROUP_FUNC_TYPE'
+                 left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = replace(f.filter_val, '''', '') and c4.lang = #{lang} and c4.group_code = 'MKT_DT_DEFAULT'
+                 join anl.anl_seg_mst s on s.flag = 1 and f.seg_id = s.id
+                 left outer join anl.anl_lgc_comp_mst l on l.flag = 1 and l.id = s.lgc_comp_id
+                 left outer join anl.anl_db_inform d on d.flag = 1 and d.id = l.db_inform_id
+                 left outer join anl.anl_seg_filter_rel r on r.flag = 1 and r.child_filter_id = f.id and f.filter_type_cd not in ('UNION', 'INTERSECTION', 'A_DIFF_SET', 'B_DIFF_SET')
+                 left outer join anl.anl_column_mst m on m.id = ac.col_id
+        where f.flag = 1
+          and f.id in (select child_filter_id from anl.anl_seg_filter_rel where flag = 1 and seg_filter_id = #{segFilterId})
+          and f.seg_id = #{segmentId}
+        order by f.create_date
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getSegmentFilter) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 조회
+    -   설명                  : 세그먼트 필터 조회
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectSegmentFilter" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentFilterReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentFilterResDto">
+        /* KPRSegmentMapper.selectSegmentFilter */
+        select f.id                                                                                                                   as segFilterId
+             , f.seg_id                                                                                                               as segmentId
+             , atrib_group_col_id                                                                                                     as atribGroupColId
+             , case when c.code_name = 'ALL' then c.mark_name else ac.dp_nm end                                                       as displayName
+             , c.code_name                                                                                                            as filterTypeCode
+             , c.mark_name                                                                                                            as filterTypeName
+             , c3.code_name                                                                                                           as groupFuncTypeCode
+             , c3.mark_name                                                                                                           as groupFuncTypeName
+             , c2.code_name                                                                                                           as operatCode
+             , c2.mark_name                                                                                                           as operatCodeName
+             , f.filter_val                                                                                                           as filterValue
+             , f.group_func_dtl                                                                                                       as groupFuncDtl
+             , f.comb_filter_a_id                                                                                                     as combFilterAId
+             , f.comb_filter_b_id                                                                                                     as combFilterBId
+             , f.cnt                                                                                                                  as filterCount
+             , f.filter_sql_count                                                                                                     as filterSqlCount
+             , f.off_set_x                                                                                                            as offSetX
+             , f.off_set_y                                                                                                            as offSetY
+             , case
+                   when LEN(ac.dim_col_id) &gt; 0 then 'D'
+                   when LEN(f.comb_filter_a_id) &gt; 1 then 'C'
+                   when LEN(f.group_func_type_cd) &gt; 1 then 'F'
+                   when c.code_name = 'ALL' then 'A'
+                   else 'M' end                                                                                                       as atribGroupColType
+             , s.lgc_comp_id                                                                                                          as logicalCompId
+             , case d.con_db_type when 'MYSQL' then c4.attrib01 when 'ORACLE' then c4.attrib02 when 'POSTGRESQL' then c4.attrib03 when 'MSSQL' then c4.attrib04 end as custDtDef
+        from anl.anl_seg_filter f
+                 left outer join anl.anl_atrib_group_column ac on ac.flag = 1 and f.atrib_group_col_id = ac.id
+                 left outer join com.comm_code c on c.flag = 1 and f.filter_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_SEG_FILTER_TYPE_CD'
+                 left outer join com.comm_code c2 on c2.flag = 1 and f.oprt_cd = c2.code_name and c2.lang = #{lang} and c2.group_code = 'MKT_TARGET_SERC_OPRT_TYPE'
+                 left outer join com.comm_code c3 on c3.flag = 1 and f.group_func_type_cd = c3.code_name and c3.lang = #{lang} and c3.group_code = 'ANL_GROUP_FUNC_TYPE'
+                 left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = replace(f.filter_val, '''', '') and c4.lang = #{lang} and c4.group_code = 'MKT_DT_DEFAULT'
+                 join anl.anl_seg_mst s on s.flag = 1 and f.seg_id = s.id
+                 left outer join anl.anl_lgc_comp_mst l on l.flag = 1 and l.id = s.lgc_comp_id
+                 left outer join anl.anl_db_inform d on d.flag = 1 and d.id = l.db_inform_id
+        where f.flag = 1
+          and f.id = #{segFilterId}
+    </select>
+
+    <!-- 로지컬컴포넌트 key, sql 조회 -->
+    <select id="selectLogicalComponentSegKeyAndSql" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentFilterReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprLogicalComponentSegKeyAndSqlResDto">
+        /* KPRSegmentMapper.selectLogicalComponentSegKeyAndSql */
+        select t2.LGC_SQL          as lgcSql
+             , t4.TBL_ALIAS_COL_NM as keyColumn
+        from anl.anl_seg_mst t1
+                 join anl.anl_lgc_comp_mst t2 on t2.FLAG = 1 and t2.ID = t1.LGC_COMP_ID
+                 join anl.anl_atrib_group t3 on t3.FLAG = 1 and t3.LGC_COMP_ID = t2.ID
+                 join anl.anl_atrib_group_column t4 on t4.FLAG = 1 and t4.ATRIB_GROUP_ID = t3.ID and t4.SEG_KEY_YN = 1
+        where t1.ID = #{segmentId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getParentSegmentFilterIdList) 
+    ============================== ==============
+    -   제목                  : 상위 세그먼트 필터 목록 조회
+    -   설명                  : 상위 세그먼트 필터 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectParentSegmentFilterIdList" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentFilterReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentFilterResDto">
+        /* KPRSegmentMapper.selectChildSegmentFilterList */
+        select fr.id              as segFilterRelId
+             , f.id               as segFilterId
+             , fr.child_filter_id as childFilterId
+             , f.comb_filter_a_id as combFilterAId
+             , f.comb_filter_b_id as combFilterBId
+             , f.seg_id           as segmentId
+        from anl.anl_seg_filter_rel fr
+                 join anl.anl_seg_filter f on f.flag = 1 and f.id = fr.seg_filter_id
+        where fr.flag = 1
+          and fr.child_filter_id = #{segFilterId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (addCopySegment) 
+    ============================== ==============
+    -   제목                  : 세그먼트 복제
+    -   설명                  : 세그먼트 복제
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <insert id="insertCopySegment" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentReqDto">
+        /* KPRSegmentMapper.insertCopySegment */
+        insert into anl.anl_seg_mst (
+        id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , seg_nm
+        , seg_desc
+        , lgc_comp_id
+        , seg_type_cd
+        )
+        select #{segmentId}
+        , #{createBy}
+        , #{modifyBy}
+        , GETDATE()
+        , GETDATE()
+        , flag
+        , seg_nm
+        , seg_desc
+        , lgc_comp_id
+        , #{segmentTypeCode}
+        from anl.anl_seg_mst
+        where id = #{oriSegmentId}
+
+        <!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+        <!--             select id from anl.anl_seg_mst where id = #{segmentId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+        <!--         </selectKey> -->
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (addCopySegmentFilter) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 복제
+    -   설명                  : 세그먼트 필터 복제
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <insert id="insertCopySegmentFilter" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.insertCopySegmentFilter */
+        insert into anl.anl_seg_filter
+        ( id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , filter_type_cd
+        , atrib_group_col_id
+        , group_func_type_cd
+        , oprt_cd
+        , filter_val
+        , group_func_dtl
+        , comb_filter_a_id
+        , comb_filter_b_id
+        , cnt
+        , filter_sql_count
+        , filter_sql
+        , off_set_x
+        , off_set_y
+        , seg_id )
+        select #{segFilterId}
+        , #{createBy}
+        , #{modifyBy}
+        , GETDATE()
+        , GETDATE()
+        , flag
+        , filter_type_cd
+        , atrib_group_col_id
+        , group_func_type_cd
+        , oprt_cd
+        , filter_val
+        , group_func_dtl
+        , #{combFilterAId}
+        , #{combFilterBId}
+        , cnt
+        , filter_sql_count
+        , filter_sql
+        , off_set_x
+        , off_set_y
+        , #{segmentId}
+        from anl.anl_seg_filter
+        where id = #{oriSegFilterId}
+
+        <!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+        <!--             select id from anl.anl_seg_filter where id = #{segFilterId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+        <!--         </selectKey> -->
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (addCopySegmentFilterRel) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 복제
+    -   설명                  : 세그먼트 필터 관계 복제
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <insert id="insertCopySegmentFilterRel" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.insertCopySegmentFilterRel */
+        insert into anl.anl_seg_filter_rel (
+        id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , child_filter_id
+        , seg_filter_id
+        , seg_id )
+        select #{segFilterRelId}
+        , #{createBy}
+        , #{modifyBy}
+        , GETDATE()
+        , GETDATE()
+        , flag
+        , #{childFilterId}
+        , #{segFilterId}
+        , #{segmentId}
+        from anl.anl_seg_filter_rel
+        where id = #{oriSegFilterRelId}
+
+        <!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+        <!--             select id from anl.anl_seg_filter_rel where id = #{segFilterRelId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+        <!--         </selectKey> -->
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (removeSegment) 
+    ============================== ==============
+    -   제목                  : 세그먼트 삭제
+    -   설명                  : 세그먼트 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="deleteSegmentBySegmentId" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentReqDto">
+        /* KPRSegmentMapper.deleteSegmentBySegmentId */
+        update anl.anl_seg_mst
+        set flag        = flag + 1
+          , MODIFY_BY   = #{modifyBy}
+          , MODIFY_DATE = GETDATE()
+        where id = #{segmentId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (removeSegmentFilterRelByChildFilterId) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 관계 삭제
+    -   설명                  : 세그먼트 필터 관계 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <update id="deleteSegmentFilterRelByChildFilterId" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterRelReqDto">
+        /* KPRSegmentMapper.deleteSegmentFilterRelByChildFilterId */
+        update anl.anl_seg_filter_rel
+        set flag        = flag + 1
+          , MODIFY_BY   = #{modifyBy}
+          , MODIFY_DATE = GETDATE()
+        where child_filter_id = #{childFilterId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRSegmentDAO.java (getSegmentFilterColumnDataType) 
+    ============================== ==============
+    -   제목                  : 세그먼트 필터 컬럼 데이터 유형 조회
+    -   설명                  : 세그먼트 필터 컬럼 데이터 유형 조회
+    -   결과형태              : 
+    ============================================
+    -   입력              :   
+    -   출력              :   
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.07.13
+    ***************************************/ -->
+    <select id="selectSegmentFilterColumnDataType" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto" resultType="java.lang.String">
+        /* KPRSegmentMapper.selectSegmentFilterColumnDataType */
+        select t3.attrib02
+        from anl.anl_atrib_group_column t1
+                 join anl.anl_column_mst t2 on t2.flag = 1 and t2.id = (case when LEN(t1.dim_col_id) &gt; 0 then t1.dim_col_id else col_id end)
+                 join com.comm_code t3 on t3.flag = 1 and t3.code_name = t2.data_type_cd and t3.lang = #{lang} and t3.group_code = 'DB_DATA_TYPE_CD'
+        where t1.id = #{atribGroupColId}
+    </select>
+
+    <select id="selectTest" resultType="java.lang.String">
+        select '1' as col
+    </select>
+
+    <update id="deleteSegmentChildNodes" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentReqDto">
+        /* KPRSegmentMapper.deleteSegmentChildNodes */
+        update anl.ANL_TGT_GROUP
+        set flag        = flag + 1
+          , MODIFY_BY   = #{modifyBy}
+          , MODIFY_DATE = GETDATE()
+        where SEG_ID = #{segmentId}
+    </update>
+
+    <select id="selectSegmentLcTableRelListBySegId" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentLcTblRelListReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentLcTblRelListResDto">
+        SELECT 'R'                       as id
+             , T4.JOIN_TYPE_CD           as joinTypeCd
+             , C1.MARK_NAME              as joinTypeNm
+             , T4.JOIN_OPRT_CD           as joinOprtCd
+             , C2.MARK_NAME              as joinOprtNm
+             , T5.TBL_ALIAS              as leftTblAlias
+             , T5.SCHMA_TBL_NM           as leftSchmaTblNm
+             , T4.LEFT_TBL_ALIAS_COL_NM  as leftTblAliasColNm
+             , T3.TBL_ALIAS              as rightTblAlias
+             , T3.SCHMA_TBL_NM           as rightSchmaTblNm
+             , T4.RIGHT_TBL_ALIAS_COL_NM as rightTblAliasColNm
+             , T5.ID                     as leftLgcCompTblRelId
+        FROM ANL.ANL_SEG_FILTER T1
+                 JOIN ANL.ANL_ATRIB_GROUP_COLUMN T2 ON T2.FLAG = 1 AND T2.ID = T1.ATRIB_GROUP_COL_ID
+                 JOIN ANL.ANL_LGC_COMP_TABLE_REL T3 ON T3.FLAG = 1 AND T3.ID = T2.LGC_COMP_TBL_REL_ID
+                 LEFT OUTER JOIN ANL.ANL_LGC_JOIN_COLUMN T4 ON T4.FLAG = 1 AND T4.RIGHT_LGC_COMP_TBL_REL_ID = T3.ID
+                 LEFT OUTER JOIN ANL.ANL_LGC_COMP_TABLE_REL T5 ON T5.FLAG = 1 AND T5.ID = T4.LEFT_LGC_COMP_TBL_REL_ID
+                 LEFT OUTER JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = 'ko' AND C1.GROUP_CODE = 'ANL_JOIN_TYPE_CD' AND C1.CODE_NAME = T4.JOIN_TYPE_CD
+                 LEFT OUTER JOIN COM.COMM_CODE C2 ON C2.FLAG = 1 AND C2.LANG = 'ko' AND C2.GROUP_CODE = 'ANL_JOIN_OPRT_TYPE_CD' AND C2.CODE_NAME = T4.JOIN_OPRT_CD
+        WHERE T1.FLAG = 1
+          AND T1.SEG_ID = #{segmentId}
+        GROUP BY 'R', T4.JOIN_TYPE_CD, T4.JOIN_OPRT_CD, T5.TBL_ALIAS, T5.SCHMA_TBL_NM, T4.LEFT_TBL_ALIAS_COL_NM, T3.TBL_ALIAS, T3.SCHMA_TBL_NM, T4.RIGHT_TBL_ALIAS_COL_NM, T5.ID,
+                 C1.MARK_NAME, C2.MARK_NAME
+    </select>
+
+    <select id="selectSegmentLcTableRelListByTblRelId" parameterType="com.icignal.kepler.segment.dto.request.KprSegmentLcTblRelListReqDto"
+            resultType="com.icignal.kepler.segment.dto.response.KprSegmentLcTblRelListResDto">
+        SELECT T2.JOIN_TYPE_CD           as joinTypeCd
+             , C1.MARK_NAME              as joinTypeNm
+             , T2.JOIN_OPRT_CD           as joinOprtCd
+             , C2.MARK_NAME              as joinOprtNm
+             , T3.TBL_ALIAS              as leftTblAlias
+             , T3.SCHMA_TBL_NM           as leftSchmaTblNm
+             , T2.LEFT_TBL_ALIAS_COL_NM  as leftTblAliasColNm
+             , T1.TBL_ALIAS              as rightTblAlias
+             , T1.SCHMA_TBL_NM           as rightSchmaTblNm
+             , T2.RIGHT_TBL_ALIAS_COL_NM as rightTblAliasColNm
+             , T3.ID                     as leftLgcCompTblRelId
+        FROM ANL.ANL_LGC_COMP_TABLE_REL T1
+                 JOIN ANL.ANL_LGC_JOIN_COLUMN T2 ON T2.FLAG = 1 AND T2.RIGHT_LGC_COMP_TBL_REL_ID = T1.ID
+                 JOIN ANL.ANL_LGC_COMP_TABLE_REL T3 ON T3.FLAG = 1 AND T3.ID = T2.LEFT_LGC_COMP_TBL_REL_ID
+                 JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = 'ko' AND C1.GROUP_CODE = 'ANL_JOIN_TYPE_CD' AND C1.CODE_NAME = T2.JOIN_TYPE_CD
+                 JOIN COM.COMM_CODE C2 ON C2.FLAG = 1 AND C2.LANG = 'ko' AND C2.GROUP_CODE = 'ANL_JOIN_OPRT_TYPE_CD' AND C2.CODE_NAME = T2.JOIN_OPRT_CD
+        WHERE T1.FLAG = 1
+          AND T1.ID = #{leftLgcCompTblRelId}
+        GROUP BY T2.JOIN_TYPE_CD, T2.JOIN_OPRT_CD, T3.TBL_ALIAS, T3.SCHMA_TBL_NM, T2.LEFT_TBL_ALIAS_COL_NM, T1.TBL_ALIAS, T1.SCHMA_TBL_NM, T2.RIGHT_TBL_ALIAS_COL_NM, T3.ID,
+                 C1.MARK_NAME, C2.MARK_NAME
+    </select>
+    <!-- /**************************************
+   -   관련 파일             : KPRSegmentDAO.java (addCopySegment)
+   ============================== ==============
+   -   제목                  : 세그먼트 복제
+   -   설명                  : 세그먼트 복제
+   -   결과형태              :
+   ============================================
+   -   입력              :
+   -   출력              :
+   ============================================
+   -   작성자                : 이경영
+   -   작성일                : 2021.08.17
+   ***************************************/ -->
+    <insert id="insertCopyDifferentSegment" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentReqDto">
+        /* KPRSegmentMapper.insertCopyDifferentSegment */
+        insert into anl.anl_seg_mst ( id
+                                    , create_by
+                                    , modify_by
+                                    , create_date
+                                    , modify_date
+                                    , flag
+                                    , seg_nm
+                                    , seg_desc
+                                    , lgc_comp_id
+                                    , seg_type_cd)
+        select #{segmentId}
+             , #{createBy}
+             , #{modifyBy}
+             , GETDATE()
+             , GETDATE()
+             , flag
+             , #{segmentName}
+             , #{segmentDesc}
+             , lgc_comp_id
+             , SEG_TYPE_CD
+        from anl.anl_seg_mst
+        where id = #{oriSegmentId}
+    </insert>
+    <!-- /**************************************
+-   관련 파일             : KPRSegmentDAO.java (insertCopyDifferentFilter)
+============================== ==============
+-   제목                  : 세그먼트 filter 복제
+-   설명                  : 세그먼트 filter 복제
+-   결과형태              :
+============================================
+-   입력              :
+-   출력              :
+============================================
+-   작성자                : 이경영
+-   작성일                : 2021.08.17
+***************************************/ -->
+    <insert id="insertCopyDifferentFilter" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterReqDto">
+        /* KPRSegmentMapper.insertCopyDifferentFilter */
+        insert into anl.ANL_SEG_FILTER (ID,
+                                        CREATE_BY,
+                                        MODIFY_BY,
+                                        CREATE_DATE,
+                                        MODIFY_DATE,
+                                        FLAG,
+                                        TYPE,
+                                        STORE_ID,
+                                        FILTER_TYPE_CD,
+                                        ATRIB_GROUP_COL_ID,
+                                        GROUP_FUNC_TYPE_CD,
+                                        OPRT_CD,
+                                        FILTER_VAL,
+                                        GROUP_FUNC_DTL,
+                                        COMB_FILTER_A_ID,
+                                        COMB_FILTER_B_ID,
+                                        CNT,
+                                        OFF_SET_X,
+                                        OFF_SET_Y,
+                                        SEG_ID,
+                                        FILTER_SQL_COUNT,
+                                        FILTER_SQL)
+        select #{segFilterId},
+               #{createBy},
+               #{modifyBy},
+               GETDATE(),
+               GETDATE(),
+               FLAG,
+               TYPE,
+               STORE_ID,
+               FILTER_TYPE_CD,
+               ATRIB_GROUP_COL_ID,
+               GROUP_FUNC_TYPE_CD,
+               OPRT_CD,
+               FILTER_VAL,
+               GROUP_FUNC_DTL,
+               #{combFilterAId},
+               #{combFilterBId},
+               CNT,
+               OFF_SET_X,
+               OFF_SET_Y,
+               #{segmentId},
+               FILTER_SQL_COUNT,
+               FILTER_SQL
+        from anl.ANL_SEG_FILTER
+        where id = #{oriSegFilterId}
+
+    </insert>
+    <!-- /**************************************
+-   관련 파일             : KPRSegmentDAO.java (insertCopyDifferentFilterRel)
+============================== ==============
+-   제목                  : 세그먼트 filterRel 복제
+-   설명                  : 세그먼트 filterRel 복제
+-   결과형태              :
+============================================
+-   입력              :
+-   출력              :
+============================================
+-   작성자                : 이경영
+-   작성일                : 2021.08.17
+***************************************/ -->
+    <insert id="insertCopyDifferentFilterRel" parameterType="com.icignal.kepler.segment.dto.request.KprSetSegmentFilterRelReqDto">
+        /* KPRSegmentMapper.insertCopyDifferentFilterRel */
+        insert into anl.ANL_SEG_FILTER_REL(ID,
+                                           CREATE_BY,
+                                           MODIFY_BY,
+                                           CREATE_DATE,
+                                           MODIFY_DATE,
+                                           FLAG,
+                                           TYPE,
+                                           STORE_ID,
+                                           CHILD_FILTER_ID,
+                                           SEG_FILTER_ID,
+                                           SEG_ID)
+        select #{segFilterRelId},
+               #{createBy},
+               #{modifyBy},
+               GETDATE(),
+               GETDATE(),
+               FLAG,
+               TYPE,
+               STORE_ID,
+               #{childFilterId},
+               #{segFilterId},
+               #{segmentId}
+        from anl.ANL_SEG_FILTER_REL
+        where ID = #{oriSegFilterRelId}
+
+    </insert>
+    <!-- /**************************************
+-   관련 파일             : KPRSegmentDAO.java (segmentDifferentFilterRelTarget)
+============================== ==============
+-   제목                  : 세그먼트 filterRel 복제
+-   설명                  : 세그먼트 filterRel 복제
+-   결과형태              :
+============================================
+-   입력              :
+-   출력              :
+============================================
+-   작성자                : 이경영
+-   작성일                : 2021.08.17
+***************************************/ -->
+    <select id="segmentDifferentFilterRelTarget" parameterType="String" resultType="com.icignal.kepler.segment.dto.response.kprSegmentFilterLinkResDto">
+        select fr.id              as oriSegFilterRelId
+             , fr.SEG_FILTER_ID   as oriSegFilterId
+             , fr.child_filter_id as oriChildFilterId
+             , fr.SEG_ID          as oriSegmentId
+        from anl.anl_seg_filter_rel fr
+        where fr.flag = 1
+          and fr.SEG_ID = #{segId}
+    </select>
+</mapper>

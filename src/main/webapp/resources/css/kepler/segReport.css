@@ -1,0 +1,82 @@
+
+span.c {
+ 	color:#000000;
+}
+table.type02 {
+    border-spacing: 0;
+    text-align: center;
+    line-height: 1.5;
+    border-top: 1px solid #fff;
+    border-left: 1px solid #fff;
+ 	margin : 20px 10px;
+    overflow: scroll;
+    table-layout: fixed:word-break:break-all;
+ 	
+}
+table.type02 th {
+    width: 150px;
+    padding: 10px;
+    font-weight: normal;
+    vertical-align: center;
+    text-align: center;
+    border: 3px solid #fff;
+    background: #787878;
+    font-family: NotoSans;
+    font-size:13px;
+    color:#fff
+    
+}
+table.type02 tfoot td {
+    width: 150px;
+    padding: 10px;
+    font-weight: normal;
+    vertical-align: center;
+    text-align: center;
+    border: 3px solid #fff;
+    background: #EAEAEA;
+    font-family: NotoSans;
+    font-size:13px;
+    
+}
+table.type02 td {
+    width: 300px;
+    padding: 10px;
+    vertical-align: center;
+    border-right: 1px solid #fff;
+    border-bottom: 0.5px solid #EAEAEA;
+    font-size:13px;
+    font-family: NotoSans;
+    font-weight: lighter;
+}
+div.left {
+    width: 50%;
+    float: left;
+    box-sizing: border-box;
+    position:static;
+}
+div.right {
+    width: 50%;
+    float: right;
+    box-sizing: border-box;
+    position:static;
+}
+div.bottom {
+    width: 100%;
+    box-sizing: border-box;
+    position:static;
+}
+.head1{
+	background: #9B9B9B!important;
+	color:#fff;
+}
+.g{
+	background:#EAEAEA;
+	border-bottom:1px solid #fff;
+}
+.dg{
+	background: #787878!important;
+	color:#fff
+}
+.fr{
+	white-space: nowrap;
+}

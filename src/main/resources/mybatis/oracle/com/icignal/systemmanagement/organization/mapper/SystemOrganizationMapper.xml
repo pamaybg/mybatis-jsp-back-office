@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 18:26:12 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.organization.mapper.SystemOrganizationMapper">
+  
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(getOrganizationList)
+    ============================================
+    -   제목                  : 조직관리 목록 조회		
+    -   설명                  : 조직관리 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:	rid
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.02.20
+    ***************************************/ -->
+    <select id="getOrganizationList" parameterType="com.icignal.systemmanagement.organization.dto.request.SystemOrganizationListReqDto" 
+    											resultType="com.icignal.systemmanagement.organization.dto.response.SystemOrganizationListResDto">
+    	/* SystemOrganizationMapper.getOrganizationList */
+		select 
+			cd1.rid                                     as rid,       /* rid */
+			cd1.div_type_cd							as divTypeCd, /* 조직유형 */
+			<!-- cc1.mark_name                               as divTypeCd, /* 조직유형 */  -->
+			cd1.div_no                                  as divNo,     /* 조직코드 */ 
+			cd1.div_nm                                  as divNm,     /* 조직명 */ 
+			cd1.div_lvl                                 as divLvl,    /* 조직레벨 */
+			cd2.div_nm                                  as ridParDiv, /* 상위조직 */ 
+			cd1.div_status								 as divStatus, /* 조직상태 */
+			<!-- cc2.mark_name                               as divStatus, /* 조직상태 */  -->
+            TO_CHAR(cd1.modify_date, 'YYYY-MM-DD HH24:MI:SS') as modifyDate,/* 변경일시 */
+            e.name                                      as modifyBy   /* 변경자 */
+            , ${strColumn}
+		from com.crm_division cd1
+			<!-- left outer join com.comm_code cc1 on cd1.div_type_cd = cc1.code_name and cc1.group_code = 'COM_DIVISION_TYPE_CD' and cc1.flag = '1' and cc1.lang = #{lang} -->
+		    left outer join com.crm_division cd2 on cd1.rid_par_div = cd2.rid  and cd2.flag = '1'
+			<!-- left outer join com.comm_code cc2 on cd1.div_status = cc2.code_name and cc2.group_code = 'ACCOUNT_STATUS' and cc2.code_name != 'NA' and cc2.flag = '1' and cc2.lang = #{lang} -->
+			left outer join com.crm_user cu on cu.rid = cd1.create_by and cu.flag = '1'
+			left outer join com.employee e on cu.id_employee = e.id		
+		where ${strWhere}  
+			and ${strCondWhere}
+		order by ${strOrderby}
+			${strEndPaging}
+    </select> 
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(selectOrganizationNodeList)
+    ============================================
+    -   제목                  : 조직관리 노드 리스트(treeview)	
+    -   설명                  : 조직관리 노드 리스트(treeview)
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:	
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.03.08
+    ***************************************/ -->
+    <select id="selectOrganizationNodeList" parameterType="com.icignal.systemmanagement.organization.dto.request.SystemOrganziationNodeListReqDto" 
+    														resultType="com.icignal.systemmanagement.organization.dto.response.SystemOrganizationNodeListResDto">
+    	/* SystemOrganizationMapper.selectOrganizationNodeList */
+		<!-- 루트 폴더 -->
+		SELECT	cd1.rid	AS	nodeId
+			,	cd1.div_nm	AS	nodeText
+			,	cd1.rid_par_div		AS	parNodeId
+			,	'F'			AS	nodeType
+			,	0			AS	modifyFlag
+			,	1			AS	expandedFlag
+			,	CASE
+					WHEN	 CODE_NAME	=	'MY_FOLDER'	THEN	'1'
+					ELSE	'0'
+				END			AS	myFolderFlag
+		FROM	com.crm_division cd1
+				left outer join com.comm_code cc1 on cd1.div_type_cd = cc1.code_name and cc1.group_code = 'COM_DIVISION_TYPE_CD' and cc1.flag = '1' and cc1.lang = #{lang}
+		WHERE	1=1
+		AND		cc1.FLAG		=	'1'
+		AND		cc1.GROUP_CODE	=	'COM_DIVISION_TYPE_CD'
+		AND		cc1.LANG		=	#{lang}
+
+		UNION	ALL
+
+		<!-- 실제 폴더 -->
+		SELECT	ft.NODEID		AS	nodeId
+			,	ft.NODETEXT		AS	nodeText
+			,	ft.PARNODEID	AS	parNodeId
+			,	ft.NODETYPE		AS	nodeType
+			,	ft.MODIFYFLAG	AS	modifyFlag
+			,	ft.EXPANDEDFLAG	AS	expandedFlag
+			,	ft.MYFOLDERFLAG	AS	myFolderFlag
+		FROM	(
+			SELECT	ID				AS	nodeId
+				,	FOLDR_NM		AS	nodeText
+				,	PAR_FOLDR_ID	AS	parNodeId
+				,	'F'				AS	nodeType
+				,	1				AS	modifyFlag
+				,	0				AS	expandedFlag
+				,	MY_FOLDR_YN		AS	myFolderFlag
+			FROM	anl.anl_save_info
+			WHERE	${strSVCType}
+			AND		FLAG		=	1
+			AND		(
+					(
+						MY_FOLDR_YN	=	'1'
+					AND	CREATE_BY	=	#{empId}
+				)
+				OR	MY_FOLDR_YN		=	'0'
+			)
+			ORDER BY CREATE_DATE ASC
+		)	ft
+
+		<if test="reportFlag == &quot;Y&quot;">
+			<!-- 분석 리스트 -->
+			UNION	ALL
+
+			SELECT	rt.NODEID		AS	nodeId
+				,	rt.NODETEXT		AS	nodeText
+				,	rt.PARNODEID	AS	parNodeId
+				,	rt.NODETYPE		AS	nodeType
+				,	rt.MODIFYFLAG	AS	modifyFlag
+				,	rt.EXPANDEDFLAG	AS	expandedFlag
+				,	rt.MYFOLDERFLAG	AS	myFolderFlag
+			FROM	(
+				SELECT	ID					AS	nodeId
+					,	RPT_NM				AS	nodeText
+					,	ANL_SAVE_INFO_ID	AS	parNodeId
+					,	'R'					AS	nodeType
+					,	0					AS	modifyFlag
+					,	0					AS	expandedFlag
+					,	0					AS	myFolderFlag
+				FROM	anl.anl_rpt_mst
+				WHERE	${strSVCType}
+				AND		FLAG		=	1
+				AND		DASHBRD_YN	=	'0'
+				ORDER BY CREATE_DATE DESC
+			)	rt
+		</if>
+    </select>
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(getOrganizationDetail)
+    ============================================
+    -   제목                  : 조직관리 상세 조회		
+    -   설명                  : 조직관리 상세 조회
+    -   결과형태              : 단수
+    ============================================
+    -   입력				:	rid
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.02.21
+    ***************************************/ -->
+    <select id="getOrganizationDetail" parameterType="com.icignal.systemmanagement.organization.dto.request.SystemOrganizationDetailReqDto" 
+    												resultType="com.icignal.systemmanagement.organization.dto.response.SystemOrganizationDetailResDto">
+		/* SystemOrganizationMapper.getOrganizationDetail */
+		select
+			cd1.rid                                     as rid,        /* rid */
+			cd1.div_type_cd                             as divTypeCd,  /* 조직유형 */ 
+			cd1.div_no                                  as divNo,      /* 조직코드 */ 
+			cd1.div_nm                                  as divNm,      /* 조직명 */ 
+			cd1.div_lvl                                 as divLvl,     /* 조직레벨 */
+			cd1.rid_par_div                             as ridParDiv,  /* 상위조직 */
+			cd2.div_nm                                  as ridParDivNm,/* 상위조직명 */ 
+			cd1.div_status                              as divStatus   /* 조직상태 */ 
+		from com.crm_division cd1
+		left outer join com.crm_division cd2 on cd1.rid_par_div = cd2.rid 
+		where 
+			cd1.rid = #{rid}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(getOrganizationInfoList)
+    ============================================
+    -   제목                  : 조직정보 리스트 조회		
+    -   설명                  : 조직정보 리스트 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:	rid
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.02.27
+    ***************************************/ -->
+    <select id="getOrganizationInfoList" parameterType="com.icignal.systemmanagement.organization.dto.request.SystemOrganizationInfoListReqDto" 
+    												resultType="com.icignal.systemmanagement.organization.dto.response.SystemOrganizationInfoListResDto">
+    	/* SystemOrganizationMapper.getOrganizationInfoList */
+    	select 
+			cd1.rid                                     as rid,       /* rid */
+			cd1.div_nm                                  as divNm,     /* 조직명 */ 
+			cd1.div_no                                  as divNo,     /* 조직코드 */ 
+			cd1.div_lvl                                 as divLvl,    /* 조직레벨 */
+			cd1.div_type_cd							as divTypeCd, /* 조직유형 */
+			<!-- cc1.mark_name                               as divTypeCd, /* 조직유형 */  -->
+			cd2.div_nm                                  as ridParDiv, /* 상위조직 */ 
+			cd1.div_status								as divStatus  /* 조직상태 */ 
+			<!-- cc2.mark_name                               as divStatus  /* 조직상태 */  -->
+            , ${strColumn}
+		from com.crm_division cd1
+			<!-- left outer join com.comm_code cc1 on cd1.div_type_cd = cc1.code_name and cc1.group_code = 'COM_DIVISION_TYPE_CD' and cc1.flag = '1' and cc1.lang = #{lang} -->
+			left outer join com.crm_division cd2 on cd1.rid_par_div = cd2.rid and cd2.flag = '1' and cd1.div_status = 'ACTIVE'
+			<!-- left outer join com.comm_code cc2 on cd1.div_status = cc2.code_name and cc2.group_code = 'ACCOUNT_STATUS' and cc2.flag = '1' and cc2.lang = #{lang} -->
+		where ${strSVCType}
+			and ${strWhere}  
+			and ${strCondWhere}
+			and cd1.div_status = 'ACTIVE'
+		order by ${strOrderby}
+			${strEndPaging}	
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(updateOrganization)
+    ============================================
+    -   제목                  : 조직관리 수정		
+    -   설명                  : 조직관리 수정
+    -   결과형태              : 단수
+    ============================================
+    -   입력				:	rid
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.02.27
+    ***************************************/ -->
+    <update id="updateOrganization" parameterType="com.icignal.systemmanagement.organization.dto.request.SystemModifyOrganizationReqDto">
+    	/* SystemOrganizationMapper.updateOrganization */
+    	update com.crm_division
+    	set
+    		modify_by = #{modifyBy}
+    		, modify_date = sysdate
+    		, div_no = #{divNo}
+    		, div_nm = #{divNm}
+    		, div_lvl = #{divLvl}
+    		, div_type_cd = #{divTypeCd}
+    		, rid_par_div = #{ridParDiv}
+    		, div_status = #{divStatus}
+    		, rid_lvl1 = #{ridLvl1}
+    		, rid_lvl2 = #{ridLvl2}
+    		, rid_lvl3 = #{ridLvl3}
+    		, rid_lvl4 = #{ridLvl4}
+    		, rid_lvl5 = #{ridLvl5}
+    		, rid_lvl6 = #{ridLvl6}
+    		, rid_lvl7 = #{ridLvl7}
+    		, rid_lvl8 = #{ridLvl8}
+    		, rid_lvl9 = #{ridLvl9}
+    		, rid_lvl10 = #{ridLvl10}
+    		, rid_lvl11 = #{ridLvl11}
+    	where
+    		rid = #{rid}
+    </update>
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(insertOrganization)
+    ============================================
+    -   제목                  : 조직관리 추가		
+    -   설명                  : 조직관리 추가
+    -   결과형태              : 단수
+    ============================================
+    -   입력				:	rid
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.02.27
+    ***************************************/ -->
+    <insert id="insertOrganization" parameterType="com.icignal.systemmanagement.organization.dto.request.SystemSetOrganizationReqDto" useGeneratedKeys="false">
+    	/* SystemOrganizationMapper.insertOrganization */
+    	insert into com.crm_division
+    	(
+    		div_seq
+    		, rid
+    		, rid_loy_pgm
+    		, rid_par_div
+    		, div_no
+    		, div_nm
+    		, div_lvl
+    		, div_type_cd
+    		, div_status
+    		, par_div_seq
+    		, flag
+    		, create_by
+    		, modify_by
+    		, create_date
+    		, modify_date
+    		, rid_lvl1
+    		, rid_lvl2
+    		, rid_lvl3
+    		, rid_lvl4
+    		, rid_lvl5
+    		, rid_lvl6
+    		, rid_lvl7
+    		, rid_lvl8
+    		, rid_lvl9
+    		, rid_lvl10
+    		, rid_lvl11
+    	)
+    	values(
+    		(select max(div_seq)+1 from com.crm_division a)
+    		, #{rid}	
+    		, #{loyProgramId}
+    		, #{ridParDiv}
+            , (select com.getDivNo(#{divNo}) from dual)
+    		, #{divNm}
+    		, #{divLvl}
+    		, #{divTypeCd}
+    		, #{divStatus}
+    		, (select div_seq+1 from com.crm_division b where rid = #{ridParDiv})
+    		, '1'
+    		, #{createBy}
+    		, #{modifyBy}
+    		, sysdate
+    		, sysdate
+    		, #{ridLvl1}
+    		, #{ridLvl2}
+    		, #{ridLvl3}
+    		, #{ridLvl4}
+    		, #{ridLvl5}
+    		, #{ridLvl6}
+    		, #{ridLvl7}
+    		, #{ridLvl8}
+    		, #{ridLvl9}
+    		, #{ridLvl10}
+    		, #{ridLvl11}
+    	)
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(getRidLvlByRidParDiv)
+    ============================================
+    -   제목                  : 조직레벨 조회		
+    -   설명                  : 조직레벨 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:	ridParDiv
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.02.27
+    ***************************************/ -->
+    <select id="getRidLvlByRidParDiv" parameterType="java.lang.String" resultType="com.icignal.systemmanagement.organization.dto.response.SystemOrganizationLvlResDto">
+    	/* SystemOrganizationMapper.getRidLvlByRidParDiv */
+    	select
+    		rid_lvl1                   as ridLvl1 
+    		, rid_lvl2                 as ridLvl2
+    		, rid_lvl3                 as ridLvl3
+    		, rid_lvl4                 as ridLvl4
+    		, rid_lvl5                 as ridLvl5
+    		, rid_lvl6                 as ridLvl6
+    		, rid_lvl7                 as ridLvl7
+    		, rid_lvl8                 as ridLvl8
+    		, rid_lvl9                 as ridLvl9
+    		, rid_lvl10                as ridLvl10
+    		, rid_lvl11                as ridLvl11
+		from com.crm_division
+		where
+			rid = #{ridParDiv}    	
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemOrganizationMapper.java(getDivLvlByRidParDiv)
+    ============================================
+    -   제목                  : 조직레벨 구하기		
+    -   설명                  : 조직레벨 구하기
+    -   결과형태              : 단수
+    ============================================
+    -   입력				:	ridParDiv
+    -	출력				:	
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017.03.02
+    ***************************************/ -->
+    <select id="getDivLvlByRidParDiv" parameterType="java.lang.String" resultType="java.lang.String">
+    	/* SystemOrganizationMapper.getDivLvlByRidParDiv */
+    	select
+    		div_lvl+1
+    	from com.crm_division
+    	where
+    		rid = #{ridParDiv}
+    </select>
+</mapper>

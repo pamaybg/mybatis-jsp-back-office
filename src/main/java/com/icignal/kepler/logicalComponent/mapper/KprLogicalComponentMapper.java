@@ -1,0 +1,189 @@
+package com.icignal.kepler.logicalComponent.mapper;
+
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.ibatis.annotations.Mapper;
+
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupColumnReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupLeftAccordionListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupTreeNodeListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDeleteIdListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDetailReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentGroupColumnReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinAccordionListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinAccordionTreeNodeListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinColumnMasterListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinColumnReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinDbServiceComboListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinTableRelReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentListReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto;
+import com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentSegRptUsedListReqDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupColumnResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupLeftAccordionListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupTreeNodeListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDbServiceResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailJoinColumnBaseResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailJoinColumnResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailJoinTableRelResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentGroupColumnResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinAccordionListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinAccordionTreeNodeListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinColumnMasterListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinColumnMasterPopupListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinColumnResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinDbServiceComboListResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentTableRelResDto;
+import com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentsResDto;
+
+/*
+ * 1. 클래스명	: KPRLogicalComponentMapper
+ * 2. 파일명	: KPRLogicalComponentMapper.java
+ * 3. 패키지명	: com.icignal.kepler.logicalComponent.mapper
+ * 4. 작성자명	: 
+ * 5. 작성일자	: 2020. 3. 17.
+ */
+/**
+ * <PRE>
+ * 1. 설명
+ *
+ * </PRE>
+ */ 
+@Mapper
+public interface KprLogicalComponentMapper {
+
+
+	KprLogicalComponentDetailResDto selectLogicalComponentDetail(KprLogicalComponentDetailReqDto reqDto);
+
+	Integer selectCheckUsingOnAnalysis(KprLogicalComponentReqDto chkReqDto);
+
+	Integer selectCheckUsingOnSegment(KprLogicalComponentReqDto chkReqDto);
+	
+	List<KprLogicalComponentDetailJoinTableRelResDto> selectLogicalComponentDetailJoinTableRelNodeList(KprLogicalComponentDetailReqDto reqDto);
+
+	List<KprLogicalComponentDetailJoinColumnBaseResDto> selectLogicalComponentDetailJoinColumnBaseInfo(KprLogicalComponentDetailReqDto reqDto);
+
+	List<KprLogicalComponentDetailJoinColumnResDto> selectLogicalComponentDetailJoinColumn(KprLogicalComponentDetailReqDto reqDto);
+
+	Integer selectCheckLogicalComponentName(KprLogicalComponentReqDto reqDto);
+
+	Integer insertLogicalComponent(KprLogicalComponentReqDto reqDto);
+
+	void insertJoinTableRel(KprLogicalComponentJoinTableRelReqDto joinTblRelItem);
+
+	void insertJoinColumn(KprLogicalComponentJoinColumnReqDto joinColumnItem);
+
+	void insertLgcCompGrpColDtl(KprLogicalComponentGroupColumnReqDto joinColumnGrpDtl);
+
+	KprLogicalComponentResDto selectLogicalComponent(KprLogicalComponentReqDto reqDto);
+
+	List<KprLogicalComponentTableRelResDto> selectJoinTableRelList(KprLogicalComponentReqDto reqDto);
+
+	List<KprLogicalComponentJoinColumnResDto> selectJoinColumnList(KprLogicalComponentReqDto reqDto);
+
+	List<KprLogicalComponentAttributeGroupResDto> selectAttributeGroupList(KprLogicalComponentReqDto reqDto);
+
+	List<KprLogicalComponentAttributeGroupColumnResDto> selectAttributeGroupColumnList(KprLogicalComponentReqDto reqDto);
+
+	void insertLgcCompGrpColListSaveAs(KprLogicalComponentGroupColumnReqDto curGrpColDto);
+
+	void insertAttributeGroupByList(KprLogicalComponentAttributeGroupReqDto curReqDto);
+
+	void insertAttributeGroupColumn(KprLogicalComponentAttributeGroupColumnReqDto curReqDto);
+
+	void insertJoinTableRelByList(KprLogicalComponentReqDto reqLgcCompDto);
+
+	void insertJoinColumnByList(KprLogicalComponentReqDto reqLgcCompDto);
+
+	void updateLogicalComponent(KprLogicalComponentReqDto reqDto);
+
+	void updateJoinTableRel(KprLogicalComponentJoinTableRelReqDto joinTblRelItem);
+
+	void deleteJoinTableRel(KprLogicalComponentDeleteIdListReqDto delReqDto);
+
+	void updateJoinColumn(KprLogicalComponentJoinColumnReqDto joinColumnItem);
+
+	void deleteJoinColumn(KprLogicalComponentDeleteIdListReqDto delReqDto);
+
+	void updateLgcCompGrpColDtl(KprLogicalComponentGroupColumnReqDto joinColumnGrpDtl);
+
+	void deleteLgcCompGrpColDtl(KprLogicalComponentGroupColumnReqDto joinColumnGrpDtl);
+
+	void deleteAttributeGroupColumn(KprLogicalComponentDeleteIdListReqDto delReqDto);
+
+	void deleteAttributeGroup(KprLogicalComponentDeleteIdListReqDto delReqDto);
+
+	void insertAttributeGroup(KprLogicalComponentAttributeGroupReqDto atribGrpItem);
+
+	void updateAttributeGroup(KprLogicalComponentAttributeGroupReqDto atribGrpItem);
+
+	void updateAttributeGroupColumn(KprLogicalComponentAttributeGroupColumnReqDto atribGrpColItem);
+
+	void deleteAttributeGroupColumnOnNoneTableRel(KprLogicalComponentReqDto reqDto);
+
+	void deleteAttributeGroupDimensionColumnAll(KprLogicalComponentReqDto reqDto);
+
+	List<KprLogicalComponentAttributeGroupColumnResDto> selectAttributeGroupDimensionColumn(KprLogicalComponentReqDto reqDto);
+
+	void updateAttributeGroupColumnName(KprLogicalComponentAttributeGroupColumnReqDto atribGrpItem);
+
+	Integer selectCheckUsingOnSegmentAndReport(KprLogicalComponentReqDto reqDto);
+
+	void deleteJoinColumnAll(KprLogicalComponentReqDto reqDto);
+
+	void deleteJoinTableRelAll(KprLogicalComponentReqDto reqDto);
+
+	void deleteAttributeGroupColumnAll(KprLogicalComponentReqDto reqDto);
+
+	void deleteAttributeGroupAll(KprLogicalComponentReqDto reqDto);
+
+	void deleteLogicalComponent(KprLogicalComponentReqDto reqDto);
+
+	KprLogicalComponentDbServiceResDto selectDbServiceInfo(KprLogicalComponentReqDto reqDto);
+
+	List<KprLogicalComponentJoinAccordionListResDto> selectJoinAccordionList(KprLogicalComponentJoinAccordionListReqDto reqDto);
+
+	List<String> selectLgcCompTblList(KprLogicalComponentJoinAccordionListReqDto reqDto);
+
+	List<KprLogicalComponentJoinAccordionTreeNodeListResDto> selectJoinAccordionTreeNodeList(KprLogicalComponentJoinAccordionTreeNodeListReqDto treeReqDto);
+
+	List<KprLogicalComponentJoinDbServiceComboListResDto> selectJoinDbServiceComboList(KprLogicalComponentJoinDbServiceComboListReqDto reqDto);
+
+	List<KprLogicalComponentJoinColumnMasterListResDto> selectJoinColumnMasterList(KprLogicalComponentJoinColumnMasterListReqDto reqDto);
+
+
+	List<KprLogicalComponentAttributeGroupLeftAccordionListResDto> selectLeftAttributeGroupAccordionList(KprLogicalComponentAttributeGroupLeftAccordionListReqDto reqDto);
+
+	Integer selectLgcCompTblGrpCnt(KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListReqDto treeReqDto);
+
+	List<KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListResDto> selectLeftAttributeGroupAccordionTreeNodeList(KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListReqDto treeReqDto);
+
+	List<KprLogicalComponentAttributeGroupTreeNodeListResDto> selectAttributeGroupTreeNodeList(KprLogicalComponentAttributeGroupTreeNodeListReqDto reqDto);
+
+	List selectSegRptUsedList(KprLogicalComponentSegRptUsedListReqDto reqDto);
+
+	List<KprLogicalComponentGroupColumnResDto> selectLgcCompGrpColMstList(KprLogicalComponentGroupColumnReqDto reqDto);
+
+	void selectLogicalComponentSqlQuery(HashMap<String, String> reqMap);
+
+	List<KprLogicalComponentsResDto> selectLogicalComponentList(KprLogicalComponentListReqDto reqDto);
+
+	List<KprLogicalComponentJoinColumnMasterPopupListResDto> selectJoinColumnMasterPopupList(
+			KprLogicalComponentJoinColumnMasterListReqDto reqDto);
+
+	List<KprLogicalComponentAttributeGroupLeftAccordionListResDto> selectAttributeGroupLeftAccordionList(
+			KprLogicalComponentAttributeGroupLeftAccordionListReqDto reqDto);
+
+	List<KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListResDto> selectAttributeGroupLeftAccordionTreeNodeList(
+			KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListReqDto treeReqDto);
+
+	
+
+}

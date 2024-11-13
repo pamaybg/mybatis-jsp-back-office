@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 16:05:05 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.systemmanagement.storeReport.mapper.StoreReportMapper">
+
+	<insert id="addStoreReportLog" parameterType="com.icignal.systemmanagement.storeReport.dto.request.StoreReportHistoryReqDto">
+		/* StoreReportMapper.addStoreReportLog */
+		insert into COM.DK_SHOP_RPT_ACCESS_HIST (
+		rid
+		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		, rid_program
+		, rid_crm_user
+		)
+		values (
+		com.getNewID('A')
+		, #{createBy}
+		, #{modifyBy}
+		, GETDATE()
+		, GETDATE()
+		, (select id from com.PROGRAM where pgm_no = #{programNo})
+		, #{loginId}
+		)
+	</insert>
+
+	<select id="selectStoreReportHistoryList" parameterType="com.icignal.systemmanagement.storeReport.dto.request.StoreReportHistoryReqDto"
+			resultType="com.icignal.systemmanagement.storeReport.dto.response.StoreReportHistoryResDto">
+		/* StoreReportMapper.selectStoreReportHistoryList */
+		SELECT com.TO_CHAR(dsrah.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS createDate
+		, dsrah.RID  AS rid
+		, cu.USER_ID AS userId
+		, e.NAME AS name
+		, p.PGM_NM AS pgmNm
+		, ${strColumn}
+		FROM COM.DK_SHOP_RPT_ACCESS_HIST dsrah
+		LEFT OUTER JOIN COM.PROGRAM p ON p.ID = dsrah.RID_PROGRAM
+		LEFT OUTER JOIN COM.CRM_USER cu ON cu.RID = dsrah.RID_CRM_USER
+		LEFT OUTER JOIN COM.EMPLOYEE e ON e.ID = cu.ID_EMPLOYEE
+		WHERE ${strCondWhere}
+		AND ${strWhere}
+		AND e.FLAG = 1
+		AND p.FLAG = 1
+		AND cu.FLAG = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+
+	<select id="selectStoreReportHistoryListForExcel" parameterType="com.icignal.systemmanagement.storeReport.dto.request.StoreReportHistoryReqDto"
+			resultType="com.icignal.systemmanagement.storeReport.dto.response.StoreReportHistoryResDto">
+		/* StoreReportMapper.selectStoreReportHistoryListForExcel */
+		SELECT com.TO_CHAR(dsrah.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS createDate
+			 , dsrah.RID  AS rid
+			 , cu.USER_ID AS userId
+			 , e.NAME AS name
+			 , p.PGM_NM AS pgmNm
+			 , ${strColumn}
+		FROM COM.DK_SHOP_RPT_ACCESS_HIST dsrah
+				 LEFT OUTER JOIN COM.PROGRAM p ON p.ID = dsrah.RID_PROGRAM
+				 LEFT OUTER JOIN COM.CRM_USER cu ON cu.RID = dsrah.RID_CRM_USER
+				 LEFT OUTER JOIN COM.EMPLOYEE e ON e.ID = cu.ID_EMPLOYEE
+		WHERE ${strCondWhere}
+		  AND ${strWhere}
+		  AND e.FLAG = 1
+		  AND p.FLAG = 1
+		  AND cu.FLAG = 1
+		ORDER BY dsrah.CREATE_DATE desc
+	</select>
+</mapper>

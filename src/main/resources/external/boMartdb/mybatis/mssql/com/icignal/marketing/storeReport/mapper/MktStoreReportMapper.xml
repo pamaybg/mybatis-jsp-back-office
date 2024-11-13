@@ -1,0 +1,2110 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.marketing.storeReport.mapper.MktStoreReportMapper">
+
+    <!-- 0. shop갯수 조회 -->
+    <select id="selectShopCnt" resultType="java.lang.Integer">
+        /* MktStoreReportMapper.selectShopCnt */
+        SELECT CASE count(A1.ShopId) WHEN 0 THEN 1 ELSE count(A1.ShopId) END
+        FROM mrtmktrpt.DimShop A1 WITH(NOLOCK)
+        JOIN mrtmktrpt.DimOfflineType A2 ON A1.OfflineTypeId = A2.OfflineTypeId
+        WHERE 1=1
+        	AND A1.StatusCode = 2
+        	AND A1.BrandCode = #{brandCode}
+        	AND A2.OfflineTypeCode != '6'
+        	AND A1.ShopTypeCode != ''
+	        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	            AND A2.OFFLINETYPECODE IN
+	            <foreach collection="martType" item="item" separator="," close=")" open="(">
+	                #{item}
+	            </foreach>
+	        </if>
+	        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+	            AND A1.SHOPSTATE IN
+	            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+	                N'${item}'
+	            </foreach>
+	        </if>
+	        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A1.ShopTypeCode = #{shopTypeCode}</if>
+    </select>
+
+    <!-- 1. 회원 비교 -->
+    <select id="selectMbrCompareTotal" resultType="com.icignal.marketing.storeReport.dto.response.MktMbrCompareResDto">
+        /* MktStoreReportMapper.selectMbrCompareTotal */
+        SELECT ISNULL(ROUND(SUM(A.SalesAmount / 1000), 0), 0)            AS shopTotalSales
+             , ISNULL(SUM(A.SalesQty), 0)                                AS shopUnitSales
+             , ISNULL(ROUND(SUM(A.SalesAmount) / SUM(A.SalesQty), 0), 0) AS shopUnitSalesPrice
+        FROM (
+			SELECT SUM(A1.SalesAmount) AS SalesAmount
+			, SUM(A1.SalesQty)    AS SalesQty
+			FROM mrtmktrpt.FactSalesOrder A1 WITH (NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+			JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+			WHERE 1 = 1
+				AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10), #{startDate}, 120)
+				AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10), #{endDate}, 120)
+				AND A4.ShopCode = #{shopCode}
+			GROUP BY A3.UserId
+			HAVING SUM(A1.SalesQty) > 0
+		) A
+    </select>
+
+    <select id="selectMbrCompareTotalBrand" resultType="com.icignal.marketing.storeReport.dto.response.MktMbrCompareResDto">
+        /* MktStoreReportMapper.selectMbrCompareTotalBrand */
+        SELECT ISNULL(ROUND(SUM((A.SalesAmount / #{shopCnt}) / 1000), 0), 0) AS brandTotalSales
+        , ISNULL(ROUND(SUM(A.SalesQty) / #{shopCnt}, 0), 0) AS brandUnitSales
+        , ISNULL(ROUND(SUM(A.SalesAmount / #{shopCnt}) / SUM(A.SalesQty / #{shopCnt}), 0), 0) AS brandUnitSalesPrice
+        FROM (
+	        SELECT SUM(A1.SalesAmount) AS SalesAmount
+	        , SUM(A1.SalesQty) AS SalesQty
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        JOIN mrtmktrpt.DimBrand A4 ON A1.BrandId = A4.BrandId
+	        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId AND A5.StatusCode = 2
+	        JOIN mrtmktrpt.DimOfflineType A6 ON A5.OfflineTypeId = A6.OfflineTypeId
+	        WHERE 1=1
+	        	AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+	       		AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+	        	AND A4.BrandCode = #{brandCode}
+	        	AND A5.ShopTypeCode != ''
+		        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		            AND A6.OFFLINETYPECODE IN
+		            <foreach collection="martType" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+		            AND A5.SHOPSTATE IN
+		            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+		                N'${item}'
+		            </foreach>
+		        </if>
+		        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+	        GROUP BY A3.UserId
+	        HAVING SUM(A1.SalesQty) > 0
+        ) A
+    </select>
+
+    <select id="selectMbrCompare" resultType="com.icignal.marketing.storeReport.dto.response.MktMbrCompareResDto">
+        /* MktStoreReportMapper.selectMbrCompare */
+        WITH total AS (
+	        SELECT ISNULL(ROUND(SUM(A.SalesAmount / 1000), 0), 0) AS shopTotalSales
+	        , ISNULL(SUM(A.SalesQty), 0) AS shopUnitSales
+	        , ISNULL(ROUND(SUM(A.SalesAmount) / SUM(A.SalesQty), 0), 0) AS shopUnitSalesPrice
+	        FROM (
+		        SELECT SUM(A1.SalesAmount) AS SalesAmount
+		        , SUM(A1.SalesQty) AS SalesQty
+		        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+		        JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+		        WHERE 1=1
+			        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+			        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			        AND A4.ShopCode = #{shopCode}
+		        GROUP BY A3.UserId
+		        HAVING SUM(A1.SalesQty) > 0
+	        ) A
+        ), mbr AS (
+	        SELECT ISNULL(SUM(A.SalesAmount), 0) AS mbrTotalSales
+	        , ISNULL(COUNT(A.UserId), 0) AS shopCustomerCnt
+	        , ISNULL(SUM(A.SalesQty), 0) AS mbrTotalSalesQty
+	        FROM (
+		        SELECT A3.UserId AS UserId
+		        , SUM(A1.SalesAmount) AS SalesAmount
+		        , SUM(A1.SalesQty) AS SalesQty
+		        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+		        JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+		        WHERE 1=1
+		        	AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		        	AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        	AND A4.ShopCode = #{shopCode}
+		        	AND A3.UserId_Code != 'IS_NOT_DATA'
+		        GROUP BY A3.UserId
+		        HAVING SUM(A1.SalesQty) > 0
+	        ) A
+        ), nonMbr AS (
+	        SELECT ISNULL(SUM(A1.SalesAmount), 0) AS nonMbrTotalSales
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+	        WHERE 1=1
+	        	AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+	        	AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+	        	AND A4.ShopCode = #{shopCode}
+	        	AND A3.UserId_Code = 'IS_NOT_DATA'
+        <!-- HAVING SUM(A1.SalesQty) > 0 -->
+        ), nowMbr AS (
+	        SELECT COUNT(1) AS shopTotalMemCnt
+	        FROM mrtmktrpt.FactMember A1 WITH(NOLOCK)
+	        WHERE 1=1
+	        AND A1.MainShopCode = #{shopCode}
+        ), newMbr AS (
+	        SELECT COUNT(1) AS shopNewMemCnt
+	        FROM mrtmktrpt.DimMemberInfo A1 WITH(NOLOCK)
+	        WHERE 1=1
+	        AND A1.RegistrationDate <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+	        AND A1.RegistrationDate <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+	        AND A1.RegistrationShopCode = #{shopCode}
+        )
+        SELECT total.shopTotalSales AS shopTotalSales
+        , total.shopUnitSales AS shopUnitSales
+        , total.shopUnitSalesPrice AS shopUnitSalesPrice
+        , CASE WHEN total.shopTotalSales > 0
+        	THEN ROUND((mbr.mbrTotalSales * 100.0) / sum(total.shopTotalSales * 1000) over(), 0)
+        	ELSE 0
+        END AS shopMemSales
+        , nowMbr.shopTotalMemCnt AS shopTotalMemCnt
+        , newMbr.shopNewMemCnt AS shopNewMemCnt
+        , mbr.shopCustomerCnt AS shopCustomerCnt
+        , CASE WHEN mbr.shopCustomerCnt > 0
+        	THEN ROUND(mbr.mbrTotalSalesQty / mbr.shopCustomerCnt, 1)
+        	ELSE 0
+        END AS shopAverageCnt
+        , CASE WHEN mbr.shopCustomerCnt > 0
+        	THEN ROUND(mbr.mbrTotalSales / mbr.shopCustomerCnt, 0)
+        	ELSE 0
+        END AS shopAveragePrice
+        , CASE WHEN total.shopTotalSales > 0
+        	THEN ROUND((nonMbr.nonMbrTotalSales * 100.0) / sum(total.shopTotalSales * 1000) over(), 0)
+        	ELSE 0
+        END AS shopNonMemSales
+        FROM total, mbr, nonMbr, nowMbr, newMbr
+    </select>
+
+    <select id="selectMbrCompareBrand" resultType="com.icignal.marketing.storeReport.dto.response.MktMbrCompareResDto">
+        /* MktStoreReportMapper.selectMbrCompareBrand */
+        WITH total AS (
+	        SELECT ISNULL(ROUND(SUM((A.SalesAmount / #{shopCnt}) / 1000), 0), 0) AS shopTotalSales
+	        , ISNULL(ROUND(SUM(A.SalesQty) / #{shopCnt}, 0), 0) AS shopUnitSales
+	        , ISNULL(ROUND(SUM(A.SalesAmount / #{shopCnt}) / SUM(A.SalesQty / #{shopCnt}), 0), 0) AS shopUnitSalesPrice
+	        FROM (
+		        SELECT SUM(A1.SalesAmount) AS SalesAmount
+		        , SUM(A1.SalesQty) AS SalesQty
+		        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+		        JOIN mrtmktrpt.DimBrand A4 ON A1.BrandId = A4.BrandId
+		        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId AND A5.StatusCode = 2
+		        JOIN mrtmktrpt.DimOfflineType A6 ON A5.OfflineTypeId = A6.OfflineTypeId
+		        WHERE 1=1
+		        	AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		        	AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		       		AND A4.BrandCode = #{brandCode}
+		        	AND A5.ShopTypeCode != ''
+			        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+			            AND A6.OFFLINETYPECODE IN
+			            <foreach collection="martType" item="item" separator="," close=")" open="(">
+			                #{item}
+			            </foreach>
+			        </if>
+			        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+			            AND A5.SHOPSTATE IN
+			            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+			                N'${item}'
+			            </foreach>
+			        </if>
+			        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+		        GROUP BY A3.UserId
+		        HAVING SUM(A1.SalesQty) > 0
+	        ) A
+        ), mbr AS (
+	        SELECT ISNULL(ROUND(SUM(A.SalesAmount) / #{shopCnt}, 0), 0) AS mbrTotalSales
+	        , ISNULL(ROUND(COUNT(A.UserId) / #{shopCnt}, 0), 0) AS shopCustomerCnt
+	        , ISNULL(ROUND(SUM(A.SalesQty) / #{shopCnt}, 0), 0) AS mbrTotalSalesQty
+	        FROM (
+		        SELECT
+		        A3.UserId AS UserId
+		        , SUM(A1.SalesAmount) AS SalesAmount
+		        , SUM(A1.SalesQty) AS SalesQty
+		        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+		        JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId AND A4.StatusCode = 2
+		        JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId
+		        JOIN mrtmktrpt.DimOfflineType A6 ON A4.OfflineTypeId = A6.OfflineTypeId
+		        WHERE 1=1
+			        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+			        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			        AND A5.BrandCode = #{brandCode}
+			        AND A3.UserId_Code != 'IS_NOT_DATA'
+			        AND A4.ShopTypeCode != ''
+			        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+			            AND A6.OFFLINETYPECODE IN
+			            <foreach collection="martType" item="item" separator="," close=")" open="(">
+			                #{item}
+			            </foreach>
+			        </if>
+			        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+			            AND A4.SHOPSTATE IN
+			            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+			                N'${item}'
+			            </foreach>
+			        </if>
+			        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+		        GROUP BY A3.UserId
+		        HAVING SUM(A1.SalesQty) > 0
+	        ) A
+        ), nonMbr AS (
+	        SELECT ISNULL(ROUND(SUM(A1.SalesAmount) / #{shopCnt}, 0), 0) AS nonMbrTotalSales
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId AND A4.StatusCode = 2
+	        JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId
+	        JOIN mrtmktrpt.DimOfflineType A6 ON A4.OfflineTypeId = A6.OfflineTypeId
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND A5.BrandCode = #{brandCode}
+		        AND A3.UserId_Code = 'IS_NOT_DATA'
+		        AND A4.ShopTypeCode != ''
+		        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		            AND A6.OFFLINETYPECODE IN
+		            <foreach collection="martType" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+		            AND A4.SHOPSTATE IN
+		            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+		                N'${item}'
+		            </foreach>
+		        </if>
+		        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+	        <!-- HAVING SUM(A1.SalesQty) > 0 -->
+        ), nowMbr AS (
+	        SELECT ISNULL(ROUND(COUNT(1) / #{shopCnt}, 0), 0) AS shopTotalMemCnt
+	        <!-- FROM mrtcrm.FactMember A1 WITH(NOLOCK) -->
+	        FROM mrtmktrpt.FactMember A1 WITH(NOLOCK)
+	        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	            JOIN mrtmktrpt.DimShop A2 ON A1.MAINSHOPCODE = A2.SHOPCODE
+	            JOIN mrtmktrpt.DimOfflineType A3 ON A2.OfflineTypeId = A3.OfflineTypeId
+	        </if>
+	        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+	            JOIN mrtmktrpt.DimShop A4 ON A1.MAINSHOPCODE = A4.SHOPCODE
+	        </if>
+	        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">
+	            JOIN mrtmktrpt.DimShop A5 ON A1.MAINSHOPCODE = A5.SHOPCODE
+	        </if>
+	        WHERE 1=1
+		        AND A1.MainShopBrand = #{brandCode}
+		        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		            AND A3.OFFLINETYPECODE IN
+		            <foreach collection="martType" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+		            AND A4.SHOPSTATE IN
+		            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+		                N'${item}'
+		            </foreach>
+		        </if>
+		        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+        ), newMbr AS (
+	        SELECT ISNULL(ROUND(COUNT(1) / #{shopCnt}, 0), 0) AS shopNewMemCnt
+	        FROM mrtmktrpt.DimMemberInfo A1 WITH(NOLOCK)
+	        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	            JOIN mrtmktrpt.DimShop A2 ON A1.REGISTRATIONSHOPCODE = A2.SHOPCODE
+	            JOIN mrtmktrpt.DimOfflineType A3 ON A2.OfflineTypeId = A3.OfflineTypeId
+	        </if>
+	        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+	            JOIN mrtmktrpt.DimShop A4 ON A1.REGISTRATIONSHOPCODE = A4.SHOPCODE
+	        </if>
+	        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">
+	            JOIN mrtmktrpt.DimShop A5 ON A1.REGISTRATIONSHOPCODE = A5.SHOPCODE
+	        </if>
+	        WHERE 1=1
+		        AND A1.RegistrationDate <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		        AND A1.RegistrationDate <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND A1.RegistrationBrandCode = #{brandCode}
+		        <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		            AND A3.OFFLINETYPECODE IN
+		            <foreach collection="martType" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+		            AND A4.SHOPSTATE IN
+		            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+		                N'${item}'
+		            </foreach>
+		        </if>
+		        <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+        )
+        SELECT total.shopTotalSales AS brandTotalSales
+        , total.shopUnitSales AS brandUnitSales
+        , total.shopUnitSalesPrice AS brandUnitSalesPrice
+        , CASE WHEN total.shopTotalSales > 0
+        	THEN ISNULL(ROUND(((mbr.mbrTotalSales * 100.0) / sum(total.shopTotalSales * 1000) over()), 0), 0)
+        	ELSE 0
+        END AS brandMemSales
+        , nowMbr.shopTotalMemCnt AS brandTotalMemCnt
+        , newMbr.shopNewMemCnt AS brandNewMemCnt
+        , mbr.shopCustomerCnt AS brandCustomerCnt
+        , CASE WHEN mbr.shopCustomerCnt > 0
+        	THEN ISNULL(ROUND((mbr.mbrTotalSalesQty / mbr.shopCustomerCnt), 1), 0)
+        	ELSE 0
+        END AS brandAverageCnt
+        , CASE WHEN mbr.shopCustomerCnt > 0
+	        THEN ISNULL(ROUND((mbr.mbrTotalSales / mbr.shopCustomerCnt), 0), 0)
+        	ELSE 0
+        END AS brandAveragePrice
+        , CASE WHEN total.shopTotalSales > 0
+        	THEN ISNULL(ROUND(((nonMbr.nonMbrTotalSales * 100.0) / sum(total.shopTotalSales * 1000) over()), 0), 0)
+        	ELSE 0
+        END AS brandNonMemSales
+        FROM total, mbr, nonMbr, nowMbr, newMbr
+    </select>
+
+    <select id="selectGenderChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiBarChartSeriesDto">
+        /* MktStoreReportMapper.selectGenderChart */
+        SELECT
+        <if test='type == "shop"'>COUNT(A.UserId) AS data</if>
+        <if test='type == "brand"'>ISNULL(ROUND(COUNT(A.UserId) / #{shopCnt}, 0), 0) AS data</if>
+        , A.name AS name
+        , A.MembershipLevel
+        FROM (
+	        SELECT
+	        A3.UserId
+	        , A4.MembershipLevelName AS name
+	        , A4.MembershipLevel AS MembershipLevel
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_S_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_D_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_Q_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_G_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_M_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_U_Code = A4.MembershipLevelCode</if>
+	        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId
+	        <if test='type == "brand"'>
+	            JOIN mrtmktrpt.DimBrand A6 ON A1.BrandId = A6.BrandId
+	            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	                JOIN mrtmktrpt.DimOfflineType A7 ON A5.OfflineTypeId = A7.OfflineTypeId
+	            </if>
+	        </if>
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND A3.UserId_Code != 'IS_NOT_DATA'
+		        AND A4.MembershipLevelCode != 'IS_NOT_DATA'
+		        AND A5.ShopTypeCode != ''
+		        <if test='type == "shop"'>AND A5.ShopCode = #{shopCode}</if>
+		        <if test='type == "brand"'>
+		            AND A6.BrandCode = #{brandCode}
+		            AND A5.StatusCode = 2
+		            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		                AND A7.OFFLINETYPECODE IN
+		                <foreach collection="martType" item="item" separator="," close=")" open="(">
+		                    #{item}
+		                </foreach>
+		            </if>
+		            <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+		                AND A5.SHOPSTATE IN
+		                <foreach collection="regionType" item="item" separator="," close=")" open="(">
+		                    N'${item}'
+		                </foreach>
+		            </if>
+		            <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+		        </if>
+	        GROUP BY A3.UserId, A4.MembershipLevelName, A4.MembershipLevel
+	        HAVING SUM(A1.SalesQty) > 0
+        ) A
+        GROUP BY A.name, A.MembershipLevel
+        <if test='type == "brand"'>HAVING ISNULL(ROUND(COUNT(A.UserId) / #{shopCnt}, 0), 0) > 0</if>
+        ORDER BY A.MembershipLevel DESC
+    </select>
+
+    <select id="selectAgeChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiAgeChartSeriesDto">
+        /* MktStoreReportMapper.selectAgeChart */
+        SELECT name AS name
+        , name AS stackGroup
+        <if test='type == "shop"'>
+            , SUM(CASE WHEN AgeGroupCode = 'A001' THEN 1 ELSE 0 END) as age_19
+            , SUM(CASE WHEN AgeGroupCode = 'A002' THEN 1 ELSE 0 END) as age_20
+            , SUM(CASE WHEN AgeGroupCode = 'A003' THEN 1 ELSE 0 END) as age_25
+            , SUM(CASE WHEN AgeGroupCode = 'A004' THEN 1 ELSE 0 END) as age_30
+            , SUM(CASE WHEN AgeGroupCode = 'A005' THEN 1 ELSE 0 END) as age_35
+            , SUM(CASE WHEN AgeGroupCode = 'A006' THEN 1 ELSE 0 END) as age_40
+            , SUM(CASE WHEN AgeGroupCode = 'A007' THEN 1 ELSE 0 END) as age_45
+            , SUM(CASE WHEN AgeGroupCode = 'A008' THEN 1 ELSE 0 END) as age_50
+            , SUM(CASE WHEN AgeGroupCode = 'A009' THEN 1 ELSE 0 END) as age_55
+            , SUM(CASE WHEN AgeGroupCode = 'A010' THEN 1 ELSE 0 END) as age_60
+        </if>
+        <if test='type == "brand"'>
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A001' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_19
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A002' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_20
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A003' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_25
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A004' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_30
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A005' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_35
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A006' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_40
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A007' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_45
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A008' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_50
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A009' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_55
+            , ISNULL(ROUND(CONVERT(FLOAT,SUM(CASE WHEN AgeGroupCode = 'A010' THEN 1 ELSE 0 END)) / #{shopCnt}, 0), 0) as age_60
+        </if>
+        FROM (
+	        SELECT A3.UserId AS UserId
+	        , A3.GenderNameFull_KOR AS name
+	        , A5.AgeGroupCode AS AgeGroupCode
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        JOIN mrtmktrpt.DimAgeGroup A5 ON A1.CustomerAgeGroupId = A5.AgeGroupId
+	        JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+	        <if test='type == "brand"'>
+	            JOIN mrtmktrpt.DimBrand A6 ON A1.BrandId = A6.BrandId
+	            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	                JOIN mrtmktrpt.DimOfflineType A7 ON A4.OfflineTypeId = A7.OfflineTypeId
+	            </if>
+	        </if>
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND A3.UserId_Code != 'IS_NOT_DATA'
+		        AND ( A3.GenderNameShort_ENG = 'M' OR A3.GenderNameShort_ENG = 'F')
+		        AND A4.ShopTypeCode != ''
+		        <if test='type == "shop"'>AND A4.ShopCode = #{shopCode}</if>
+		        <if test='type == "brand"'>
+		            AND A6.BrandCode = #{brandCode}
+		            AND A4.StatusCode = 2
+		            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		                AND A7.OFFLINETYPECODE IN
+		                <foreach collection="martType" item="item" separator="," close=")" open="(">
+		                    #{item}
+		                </foreach>
+		            </if>
+		            <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+		                AND A4.SHOPSTATE IN
+		                <foreach collection="regionType" item="item" separator="," close=")" open="(">
+		                    N'${item}'
+		                </foreach>
+		            </if>
+		            <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+		        </if>
+	        GROUP BY A3.UserId, A3.GenderNameFull_KOR, A5.AgeGroupCode
+	        HAVING SUM(A1.SalesQty) > 0
+        ) A
+        GROUP BY name
+    </select>
+
+    <select id="selectGenderGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiMbrCompareGridDataDto">
+        /* MktStoreReportMapper.selectGenderGrid */
+        SELECT AA.colNm AS colNm
+        , SUM(AA.iTotal) AS iTotal
+        , SUM(AA.iVip) AS iVip
+        , SUM(AA.iAGrade) AS iAGrade
+        , SUM(AA.iBGrade) AS iBGrade
+        , SUM(AA.iCGrade) AS iCGrade
+        FROM (
+        SELECT GenderNameFull_KOR AS colNm
+        , 0 AS iTotal
+        , 0 AS iVip
+        , 0 AS iAGrade
+        , 0 AS iBGrade
+        , 0 AS iCGrade
+        FROM mrtmktrpt.DimMemberInfo WITH(NOLOCK)
+        WHERE ( GenderNameShort_ENG = 'M' OR GenderNameShort_ENG = 'F')
+        GROUP BY GenderNameFull_KOR
+        UNION
+        SELECT A.GenderNameFull_KOR AS colNm
+        , ISNULL(ROUND(COUNT(1) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iTotal
+        <if test='brandCode == "S"'>
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+        </if>
+        <if test='brandCode == "D"'>
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+        </if>
+        <if test='brandCode == "Q"'>
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+        </if>
+        <if test='brandCode == "G"'>
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+        </if>
+        <if test='brandCode == "M"'>
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+        </if>
+        <if test='brandCode == "U"'>
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+        </if>
+        FROM (
+	        SELECT A3.GenderNameFull_KOR AS GenderNameFull_KOR
+	        , A4.MembershipLevelCode AS MembershipLevelCode
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_S_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_D_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_Q_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_G_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_M_Code = A4.MembershipLevelCode</if>
+	        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_U_Code = A4.MembershipLevelCode</if>
+	        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId
+	        <if test='type == "brand"'>
+	            JOIN mrtmktrpt.DimBrand A6 ON A1.BrandId = A6.BrandId
+	            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	                JOIN mrtmktrpt.DimOfflineType A7 ON A5.OfflineTypeId = A7.OfflineTypeId
+	            </if>
+	        </if>
+	        WHERE 1=1
+			        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+			        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			        AND A3.UserId_Code != 'IS_NOT_DATA'
+			        AND A4.MembershipLevelCode != 'IS_NOT_DATA'
+			        AND ( A3.GenderNameShort_ENG = 'M' OR A3.GenderNameShort_ENG = 'F')
+			        AND A5.ShopTypeCode != ''
+			        <if test='type == "shop"'>AND A5.ShopCode = #{shopCode}</if>
+			        <if test='type == "brand"'>
+			            AND A6.BrandCode = #{brandCode}
+			            AND A5.StatusCode = 2
+			            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+			                AND A7.OFFLINETYPECODE IN
+			                <foreach collection="martType" item="item" separator="," close=")" open="(">
+			                    #{item}
+			                </foreach>
+			            </if>
+			            <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+			                AND A5.SHOPSTATE IN
+			                <foreach collection="regionType" item="item" separator="," close=")" open="(">
+			                    N'${item}'
+			                </foreach>
+			            </if>
+			            <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+			        </if>
+	        GROUP BY A3.UserId, A3.GenderNameFull_KOR, A4.MembershipLevelCode
+	        HAVING SUM(A1.SalesQty) > 0
+	        ) A
+        	GROUP BY A.GenderNameFull_KOR
+        ) AA
+        GROUP BY AA.colNm
+        ORDER BY AA.colNm
+    </select>
+
+    <select id="selectAgeGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiMbrCompareGridDataDto">
+        /* MktStoreReportMapper.selectAgeGrid */
+        SELECT AA.colNm AS colNm
+        , SUM(AA.iTotal) AS iTotal
+        , SUM(AA.iVip) AS iVip
+        , SUM(AA.iAGrade) AS iAGrade
+        , SUM(AA.iBGrade) AS iBGrade
+        , SUM(AA.iCGrade) AS iCGrade
+        , AA.AgeGroupSort
+        FROM (
+	        SELECT dag.AgeGroupName1 AS colNm
+	        , 0 AS iTotal
+	        , 0 AS iVip
+	        , 0 AS iAGrade
+	        , 0 AS iBGrade
+	        , 0 AS iCGrade
+	        , dag.AgeGroupSort
+	        FROM mrtmktrpt.DimAgeGroup dag WITH(NOLOCK)
+	        WHERE dag.AgeGroupCode <![CDATA[<>]]> 'IS_NOT_DATA'
+	        UNION
+	        SELECT A.AgeGroupName1 AS colNm
+	        , ISNULL(ROUND(COUNT(1) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iTotal
+	        <if test='brandCode == "S"'>
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0242001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        </if>
+	        <if test='brandCode == "D"'>
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0245001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        </if>
+	        <if test='brandCode == "Q"'>
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0243001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        </if>
+	        <if test='brandCode == "G"'>
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0246001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        </if>
+	        <if test='brandCode == "M"'>
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0247001' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        </if>
+	        <if test='brandCode == "U"'>
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244003' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244002' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	            , ISNULL(ROUND(SUM(CASE WHEN A.MembershipLevelCode = '0244004' THEN 1 ELSE 0 END) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        </if>
+	        , A.AgeGroupSort
+	        FROM (
+		        SELECT A7.AgeGroupName1 AS AgeGroupName1
+		        , A4.MembershipLevelCode AS MembershipLevelCode
+		        , A7.AgeGroupSort AS AgeGroupSort
+		        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+		        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_S_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_D_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_Q_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_G_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_M_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_U_Code = A4.MembershipLevelCode</if>
+		        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId
+		        <if test='type == "brand"'>
+		            JOIN mrtmktrpt.DimBrand A6 ON A1.BrandId = A6.BrandId
+		            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		                JOIN mrtmktrpt.DimOfflineType A8 ON A5.OfflineTypeId = A8.OfflineTypeId
+		            </if>
+		        </if>
+		        JOIN mrtmktrpt.DimAgeGroup A7 ON A1.CustomerAgeGroupId = A7.AgeGroupId
+		        WHERE 1=1
+			        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+			        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			        AND A3.UserId_Code != 'IS_NOT_DATA'
+			        AND A7.AgeGroupCode != 'IS_NOT_DATA'
+			        AND A4.MembershipLevelCode != 'IS_NOT_DATA'
+			        AND ( A3.GenderNameShort_ENG = 'M' OR A3.GenderNameShort_ENG = 'F')
+			        AND A5.ShopTypeCode != ''
+			        <if test='type == "shop"'>AND A5.ShopCode = #{shopCode}</if>
+			        <if test='type == "brand"'>
+			            AND A6.BrandCode = #{brandCode}
+			            AND A5.StatusCode = 2
+			            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+			                AND A8.OFFLINETYPECODE IN
+			                <foreach collection="martType" item="item" separator="," close=")" open="(">
+			                    #{item}
+			                </foreach>
+			            </if>
+			            <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+			                AND A5.SHOPSTATE IN
+			                <foreach collection="regionType" item="item" separator="," close=")" open="(">
+			                    N'${item}'
+			                </foreach>
+			            </if>
+			            <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+			        </if>
+		        GROUP BY A3.UserId, A7.AgeGroupName1, A4.MembershipLevelCode, A7.AgeGroupSort
+		        HAVING SUM(A1.SalesQty) > 0
+	        ) A
+	        GROUP BY A.AgeGroupName1, A.AgeGroupSort
+        ) AA
+        GROUP BY AA.colNm, AA.AgeGroupSort
+        ORDER BY AA.AgeGroupSort
+    </select>
+    <!-- 1. 회원 비교 -->
+
+    <!-- 2. 상품 비교 -->
+    <select id="selectProductShopCnt" resultType="java.lang.Integer">
+        /* MktStoreReportMapper.selectProductShopCnt */
+		SELECT CASE COUNT(DISTINCT A.ShopId) WHEN 0 THEN 1 ELSE COUNT(A.ShopId) END
+		FROM (
+			SELECT A1.ShopId AS ShopId
+			FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+				JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+				JOIN mrtmktrpt.DimProduct  A3 on A1.ProductId  = A3.ProductId 
+				JOIN mrtmktrpt.DimShop A4 on A1.ShopId  = A4.ShopId
+				JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId
+				JOIN mrtmktrpt.DimOfflineType A6 ON A4.OfflineTypeId = A6.OfflineTypeId
+				JOIN mrtmktrpt.DimMemberInfo A7 ON A1.UserId = A7.UserId
+			WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+				AND A5.BrandCode = #{brandCode}
+				AND A4.StatusCode = 2
+				AND A4.ShopTypeCode != ''
+				AND A6.OfflineTypeCode != '6'
+				<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+		            AND A6.OFFLINETYPECODE IN
+		            <foreach collection="martType" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+	        	</if>			
+		        <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+		            AND A4.SHOPSTATE IN
+		            <foreach collection="regionType" item="item" separator="," close=")" open="(">
+		                N'${item}'
+		            </foreach>
+		        </if>
+	            <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+	            <if test="gender !=null and !gender.equals('')">AND A7.gendernameshort_Eng = #{gender}</if>
+	            <if test="itemCode !=null and !itemCode.equals('')">AND A3.Itemcode = #{itemCode}</if>
+		        <if test='mbrDiv == "MBR"'>AND A7.UserId_Code != 'IS_NOT_DATA'</if>
+		        <if test='mbrDiv == "NMBR"'>AND A7.UserId_Code = 'IS_NOT_DATA'</if>		        
+			GROUP BY A1.ShopId 
+		) A       
+    </select>
+        
+    <select id="selectClassChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiBarChartSeriesDto">
+        /* MktStoreReportMapper.selectClassChart */
+        SELECT A3.ClassName AS name
+        , SUM(A1.SalesQty) AS data
+        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+        JOIN mrtmktrpt.DimProduct A3 ON A1.ProductId = A3.ProductId
+        JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+        <if test='type == "brand"'>
+        	JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId
+        	<if test="martType !=null and !martType.equals('') and martType.length lt 8">JOIN mrtmktrpt.DimOfflineType A7 ON A4.OfflineTypeId = A7.OfflineTypeId</if>
+        </if>
+        <if test='mbrDiv == "MBR" or mbrDiv == "NMBR"'>JOIN mrtmktrpt.DimMemberInfo A6 ON A1.UserId = A6.UserId</if>
+        <if test="gender !=null and !gender.equals('')">JOIN mrtmktrpt.DimMemberInfo A8 ON A1.UserId = A8.UserId</if>        
+        WHERE 1=1
+	        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+	        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+	        <if test='type == "shop"'>AND A4.ShopCode = #{shopCode}</if>
+	        <if test='type == "brand"'>
+	            AND A5.BrandCode = #{brandCode}
+	            AND A4.StatusCode = 2
+	            AND A4.ShopTypeCode != ''
+	            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	                AND A7.OFFLINETYPECODE IN
+	                <foreach collection="martType" item="item" separator="," close=")" open="(">
+	                    #{item}
+	                </foreach>
+	            </if>
+	            <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+	                AND A4.SHOPSTATE IN
+	                <foreach collection="regionType" item="item" separator="," close=")" open="(">
+	                    N'${item}'
+	                </foreach>
+	            </if>
+	            <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+	        </if>
+	        <if test='mbrDiv == "MBR"'>AND A6.UserId_Code != 'IS_NOT_DATA'</if>
+	        <if test='mbrDiv == "NMBR"'>AND A6.UserId_Code = 'IS_NOT_DATA'</if>
+			<if test="gender !=null and !gender.equals('')">AND A8.gendernameshort_Eng = #{gender}</if>
+           	<if test="itemCode !=null and !itemCode.equals('')">AND A3.Itemcode = #{itemCode}</if>	        
+        GROUP BY A3.ClassName
+        ORDER BY A3.ClassName DESC
+    </select>
+
+    <select id="selectCategoryChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiCategoryChartSeriesDto">
+    	/* MktStoreReportMapper.selectCategoryChart */
+		SELECT TOP 10 A4.CategoryCode AS name
+			<if test='type == "shop"'>
+				, SUM(A1.SalesQty) AS data
+			</if>
+			<if test='type == "brand"'>
+				, ISNULL(ROUND(SUM(A1.SalesQty) / #{shopCnt}, 0), 0) as data
+			</if>
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+		<if test='mbrDiv == "MBR" or mbrDiv == "NMBR"'>JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId</if>
+		JOIN mrtmktrpt.DimProduct A4 on A1.ProductId  = A4.ProductId 
+		JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId
+		<if test='type == "brand"'>
+			JOIN mrtmktrpt.DimBrand A6 ON A1.BrandId = A6.BrandId
+			<if test="martType !=null and !martType.equals('') and martType.length lt 8">JOIN mrtmktrpt.DimOfflineType A7 ON A5.OfflineTypeId = A7.OfflineTypeId</if>
+		</if>
+		<if test="gender !=null and !gender.equals('')">JOIN mrtmktrpt.DimMemberInfo A8 ON A1.UserId = A8.UserId</if>
+		WHERE 1=1
+			AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+			AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			<if test='type == "shop"'>AND A5.ShopCode = #{shopCode}</if>
+			<if test='type == "brand"'>
+				AND A6.BrandCode = #{brandCode}
+				AND A5.StatusCode = 2
+				AND A5.ShopTypeCode != ''
+				<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+					AND A7.OFFLINETYPECODE IN
+					<foreach collection="martType" item="item" separator="," close=")" open="(">
+						#{item}
+					</foreach>
+				</if>
+				<if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+					AND A5.SHOPSTATE IN
+					<foreach collection="regionType" item="item" separator="," close=")" open="(">
+						N'${item}'
+					</foreach>
+				</if>
+				<if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A5.ShopTypeCode = #{shopTypeCode}</if>
+			</if>		
+			<if test='mbrDiv == "MBR"'>AND A3.UserId_Code != 'IS_NOT_DATA'</if>
+			<if test='mbrDiv == "NMBR"'>AND A3.UserId_Code = 'IS_NOT_DATA'</if>
+			<if test="gender !=null and !gender.equals('')">AND A8.gendernameshort_Eng = #{gender}</if>
+			<if test="itemCode !=null and !itemCode.equals('')">AND A4.Itemcode = #{itemCode}</if>			
+		GROUP BY A4.CategoryCode
+		<if test='type == "brand"'>HAVING ISNULL(ROUND(SUM(A1.SalesQty) / #{shopCnt}, 0), 0) > 0</if>
+		ORDER BY SUM(A1.SalesQty) DESC
+    </select>
+
+    <select id="selectTopItemGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiProductCompareGridDataDto">
+    	/* MktStoreReportMapper.selectTopItemGrid */
+		SELECT
+		<if test='type == "shop"'> TOP 5 </if>
+		<if test='type == "brand"'> TOP 10 </if> 
+			A3.ItemCode AS productName
+		<if test='type == "shop"'>
+			<!-- , FORMAT(sum(A1.SalesQty), '#,##0') AS cnt -->
+			, CONCAT(FORMAT(ROUND(SUM(A1.SalesAmount) / 1000, 0), '#,##0'), ' (', FORMAT(SUM(A1.SalesQty), '#,##0'), ')') AS cnt
+		</if>
+		<if test='type == "brand"'>
+			<!-- , FORMAT(ISNULL(ROUND(SUM(A1.SalesQty) / #{shopCnt}, 1), 0), '#,##0.##') AS cnt -->
+			, CONCAT(FORMAT(ISNULL(ROUND((SUM(A1.SalesAmount) / #{shopCnt}) /1000, 0), 0), '#,##0.##'), ' (', FORMAT(ISNULL(ROUND(SUM(A1.SalesQty) / #{shopCnt}, 0), 0), '#,##0.##'), ')') AS cnt
+		</if>
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimProduct  A3 on A1.ProductId  = A3.ProductId 
+			JOIN mrtmktrpt.DimShop A4 on A1.ShopId  = A4.ShopId 
+			<if test='type == "brand"'>JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId</if>			
+			<if test='mbrDiv == "MBR" or mbrDiv == "NMBR"'>JOIN mrtmktrpt.DimMemberInfo A6 ON A1.UserId = A6.UserId</if>
+			<if test="martType !=null and !martType.equals('') and martType.length lt 8">JOIN mrtmktrpt.DimOfflineType A7 ON A4.OfflineTypeId = A7.OfflineTypeId</if>
+			<if test="gender !=null and !gender.equals('')">JOIN mrtmktrpt.DimMemberInfo A8 ON A1.UserId = A8.UserId</if>			
+		WHERE 1=1
+			AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+			AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			<if test='type == "shop"'>AND A4.ShopCode = #{shopCode}</if>
+			<if test='type == "brand"'>
+				AND A5.BrandCode = #{brandCode}
+				AND A4.StatusCode = 2
+				AND A4.ShopTypeCode != ''
+				<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+					AND A7.OFFLINETYPECODE IN
+					<foreach collection="martType" item="item" separator="," close=")" open="(">
+						#{item}
+					</foreach>
+				</if>
+				<if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+					AND A4.SHOPSTATE IN
+					<foreach collection="regionType" item="item" separator="," close=")" open="(">
+						N'${item}'
+					</foreach>
+				</if>
+				<if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>	
+			</if>		
+			<if test='mbrDiv == "MBR"'>AND A6.UserId_Code != 'IS_NOT_DATA'</if>
+			<if test='mbrDiv == "NMBR"'>AND A6.UserId_Code = 'IS_NOT_DATA'</if>
+			<if test="gender !=null and !gender.equals('')">AND A8.gendernameshort_Eng = #{gender}</if>
+			<if test="itemCode !=null and !itemCode.equals('')">AND A3.Itemcode = #{itemCode}</if>
+		GROUP BY A3.ItemCode
+		ORDER BY SUM(A1.SalesQty) DESC
+    </select>
+
+    <select id="selectLowItemGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiProductCompareGridDataDto">
+        /* MktStoreReportMapper.selectLowItemGrid */
+        SELECT
+        <if test='type == "shop"'>TOP 5</if>
+        <if test='type == "brand"'>TOP 10</if>
+        A3.ItemCode AS productName
+        <if test='type == "shop"'>
+            , FORMAT(sum(A1.SalesQty), '#,##0') AS cnt
+        </if>
+        <if test='type == "brand"'>
+            , FORMAT(ISNULL(ROUND(SUM(A1.SalesQty) / #{shopCnt}, 0), 0), '#,##0.##') AS cnt
+        </if>
+        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+        JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+        JOIN mrtmktrpt.DimProduct A3 on A1.ProductId = A3.ProductId
+        JOIN mrtmktrpt.DimShop A4 on A1.ShopId = A4.ShopId
+        <if test='type == "brand"'>
+        	JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId
+			<if test="martType !=null and !martType.equals('') and martType.length lt 8">JOIN mrtmktrpt.DimOfflineType A7 ON A4.OfflineTypeId = A7.OfflineTypeId</if>        	
+        </if>
+        <if test='mbrDiv == "MBR" or mbrDiv == "NMBR"'>JOIN mrtmktrpt.DimMemberInfo A6 ON A1.UserId = A6.UserId</if>
+        <if test="gender !=null and !gender.equals('')">JOIN mrtmktrpt.DimMemberInfo A7 ON A1.UserId = A7.UserId</if>        
+        WHERE 1=1
+	        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+	        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+	        <if test='type == "shop"'>AND A4.ShopCode = #{shopCode}</if>
+	        <if test='type == "brand"'>
+	            AND A5.BrandCode = #{brandCode}
+	            AND A4.StatusCode = 2
+	            AND A4.ShopTypeCode != ''
+	            <if test="martType !=null and !martType.equals('') and martType.length lt 8">
+	                AND A7.OFFLINETYPECODE IN
+	                <foreach collection="martType" item="item" separator="," close=")" open="(">
+	                    #{item}
+	                </foreach>
+	            </if>
+	            <if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+	                AND A4.SHOPSTATE IN
+	                <foreach collection="regionType" item="item" separator="," close=")" open="(">
+	                    N'${item}'
+	                </foreach>
+	            </if>
+	            <if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+	        </if>
+	        <if test='mbrDiv == "MBR"'>AND A6.UserId_Code != 'IS_NOT_DATA'</if>
+	        <if test='mbrDiv == "NMBR"'>AND A6.UserId_Code = 'IS_NOT_DATA'</if>
+			<if test="gender !=null and !gender.equals('')">AND A7.gendernameshort_Eng = #{gender}</if>
+	        <if test="itemCode !=null and !itemCode.equals('')">AND A3.Itemcode = #{itemCode}</if>	        
+        GROUP BY A3.ItemCode
+        <if test='type == "shop"'>HAVING SUM(A1.SalesQty) > 0</if>
+        <if test='type == "brand"'>HAVING ROUND(SUM(A1.SalesQty) / #{shopCnt}, 0) > 0</if>
+        ORDER BY SUM(A1.SalesQty)
+    </select>
+
+    <select id="selectTopProductGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiProductCompareGridDataDto">
+    	/* MktStoreReportMapper.selectTopProductGrid */
+		SELECT TOP 5 
+			A3.ProductCode AS productName
+			<if test='type == "shop"'>
+				<!-- , FORMAT(sum(A1.SalesQty), '#,##0') AS cnt -->
+				, CONCAT(FORMAT(ROUND(SUM(A1.SalesAmount) / 1000, 0), '#,##0'), ' (', FORMAT(SUM(A1.SalesQty), '#,##0'), ')') AS cnt
+			</if>
+			<if test='type == "brand"'>
+				<!-- , FORMAT(ISNULL(ROUND(SUM(A1.SalesQty) / #{shopCnt}, 1), 0), '#,##0.##') AS cnt -->
+				, CONCAT(FORMAT(ISNULL(ROUND((SUM(A1.SalesAmount) / #{shopCnt}) /1000, 0), 0), '#,##0.##'), ' (', FORMAT(ISNULL(ROUND(SUM(A1.SalesQty) / #{shopCnt}, 0), 0), '#,##0.##'), ')') AS cnt
+			</if>			
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimProduct A3 on A1.ProductId  = A3.ProductId 
+			JOIN mrtmktrpt.DimShop A4 on A1.ShopId  = A4.ShopId
+			<if test='type == "brand"'>
+				JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId
+				<if test="martType !=null and !martType.equals('') and martType.length lt 8">JOIN mrtmktrpt.DimOfflineType A7 ON A4.OfflineTypeId = A7.OfflineTypeId</if>
+			</if>			
+			<if test='mbrDiv == "MBR" or mbrDiv == "NMBR"'>JOIN mrtmktrpt.DimMemberInfo A6 ON A1.UserId = A6.UserId</if>
+			<if test="gender !=null and !gender.equals('')">JOIN mrtmktrpt.DimMemberInfo A8 ON A1.UserId = A8.UserId</if>
+		WHERE 1=1
+			AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+			AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			<if test='type == "shop"'>AND A4.ShopCode = #{shopCode}</if>
+			<if test='type == "brand"'>
+				AND A5.BrandCode = #{brandCode}
+				AND A4.StatusCode = 2
+				AND A4.ShopTypeCode != ''
+				<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+					AND A7.OFFLINETYPECODE IN
+					<foreach collection="martType" item="item" separator="," close=")" open="(">
+						#{item}
+					</foreach>
+				</if>
+				<if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+					AND A4.SHOPSTATE IN
+					<foreach collection="regionType" item="item" separator="," close=")" open="(">
+						N'${item}'
+					</foreach>
+				</if>
+				<if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+			</if>		
+			<if test='mbrDiv == "MBR"'>AND A6.UserId_Code != 'IS_NOT_DATA'</if>
+			<if test='mbrDiv == "NMBR"'>AND A6.UserId_Code = 'IS_NOT_DATA'</if>
+	        <if test='productClass == "1" or productClass == "2" or productClass == "3"'>AND A3.ClassCode = #{productClass}</if>
+			<if test="gender !=null and !gender.equals('')">AND A8.gendernameshort_Eng = #{gender}</if>
+			<if test="itemCode !=null and !itemCode.equals('')">AND A3.Itemcode = #{itemCode}</if>
+		GROUP BY A3.ProductCode
+		ORDER BY SUM(A1.SalesQty) DESC
+    </select>      
+    
+	<select id="selectSalesRatioItemGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiProductCompareSalesRatioGridDataDto">
+    	/* MktStoreReportMapper.selectSalesRatioItemGrid */
+		WITH shopItem AS (
+			SELECT A.ItemCode AS productName
+			, ROUND(A.cnt * 100.0 / SUM(A.cnt) OVER(), 1) AS cnt
+			FROM (
+				SELECT A3.ItemCode AS ItemCode
+				, SUM(A1.SalesQty) AS cnt
+				FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+					JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+					JOIN mrtmktrpt.DimProduct  A3 on A1.ProductId  = A3.ProductId 
+					JOIN mrtmktrpt.DimShop A4 on A1.ShopId  = A4.ShopId
+					<if test='mbrDiv == "MBR" or mbrDiv == "NMBR"'>JOIN mrtmktrpt.DimMemberInfo A6 ON A1.UserId = A6.UserId</if>
+					<if test="gender !=null and !gender.equals('')">JOIN mrtmktrpt.DimMemberInfo A8 ON A1.UserId = A8.UserId</if>
+				WHERE 1=1
+					AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+					AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+					AND A4.ShopCode = #{shopCode}
+					<if test='mbrDiv == "MBR"'>AND A6.UserId_Code != 'IS_NOT_DATA'</if>
+					<if test='mbrDiv == "NMBR"'>AND A6.UserId_Code = 'IS_NOT_DATA'</if>				
+					<if test="gender !=null and !gender.equals('')">AND A8.gendernameshort_Eng = #{gender}</if>
+					<if test="itemCode !=null and !itemCode.equals('')">AND A3.Itemcode = #{itemCode}</if>	
+				GROUP BY A3.ItemCode
+				HAVING SUM(A1.SalesQty) > 0
+			) A
+			GROUP BY A.ItemCode, A.cnt
+		), brandItem AS (
+			SELECT A.ItemCode AS productName
+			, ROUND(A.cnt * 100.0 / SUM(A.cnt) OVER(), 1) AS cnt
+			FROM (
+				SELECT A3.ItemCode AS ItemCode
+				, SUM(A1.SalesQty) AS cnt
+				FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+					JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+					JOIN mrtmktrpt.DimProduct  A3 on A1.ProductId  = A3.ProductId 
+					JOIN mrtmktrpt.DimShop A4 on A1.ShopId  = A4.ShopId
+					JOIN mrtmktrpt.DimBrand A5 ON A1.BrandId = A5.BrandId
+					<if test="martType !=null and !martType.equals('') and martType.length lt 8">JOIN mrtmktrpt.DimOfflineType A7 ON A4.OfflineTypeId = A7.OfflineTypeId</if>				
+					<if test='mbrDiv == "MBR" or mbrDiv == "NMBR"'>JOIN mrtmktrpt.DimMemberInfo A6 ON A1.UserId = A6.UserId</if>
+					<if test="gender !=null and !gender.equals('')">JOIN mrtmktrpt.DimMemberInfo A8 ON A1.UserId = A8.UserId</if>
+				WHERE 1=1
+					AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+					AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+					AND A5.BrandCode = #{brandCode}
+					AND A4.StatusCode = 2
+					AND A4.ShopTypeCode != ''
+					<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+						AND A7.OFFLINETYPECODE IN
+						<foreach collection="martType" item="item" separator="," close=")" open="(">
+							#{item}
+						</foreach>
+					</if>
+					<if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+						AND A4.SHOPSTATE IN
+						<foreach collection="regionType" item="item" separator="," close=")" open="(">
+							N'${item}'
+						</foreach>
+					</if>
+					<if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+					<if test='mbrDiv == "MBR"'>AND A6.UserId_Code != 'IS_NOT_DATA'</if>
+					<if test='mbrDiv == "NMBR"'>AND A6.UserId_Code = 'IS_NOT_DATA'</if>
+				GROUP BY A3.ItemCode
+				HAVING SUM(A1.SalesQty) > 0
+			) A
+			GROUP BY A.ItemCode, A.cnt		
+		)
+		SELECT TOP 5 shopItem.productName AS productName
+		, shopItem.cnt AS sCnt
+		, brandItem.cnt AS bCnt
+		, ROUND((shopItem.cnt - brandItem.cnt), 1) AS iCnt
+		FROM shopItem, brandItem
+		WHERE shopItem.productName = brandItem.productName
+			AND shopItem.cnt > 0
+			AND brandItem.cnt > 0		
+		ORDER BY ROUND((shopItem.cnt - brandItem.cnt), 1)
+    	<if test='type == "top"'> DESC </if>
+    </select>
+    <!-- 2. 상품 비교 -->
+
+    <!-- 3. 재구매&이탈 분석 -->
+    <select id="selectRepeatBreakaway" resultType="com.icignal.marketing.storeReport.dto.response.MktRepeatBreakawayResDto">
+        /* MktStoreReportMapper.selectRepeatBreakaway */
+        SELECT COUNT(CASE WHEN customer.day_cnt > 1 THEN 1 END) AS repeatCnt
+        , CASE WHEN COUNT(CASE WHEN customer.day_cnt > 1 THEN 1 END) > 0
+        	THEN ROUND(COUNT(CASE WHEN customer.day_cnt > 1 THEN 1 END) / CONVERT(FLOAT, COUNT(customer.day_cnt)) * 100, 1)
+        	ELSE 0
+        END AS repeatRate
+        , ISNULL(SUM(CASE WHEN customerChurn.Userid IS NULL THEN 1 END), 0) AS customerChurnCnt
+        FROM (
+	        SELECT A1.Userid
+	        , COUNT(DISTINCT A2.Date) AS day_cnt
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 on A1.UserId = A3.UserId
+	        JOIN mrtmktrpt.DimShop A4 on A1.ShopId = A4.ShopId
+	        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_S_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_D_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_Q_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_G_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_M_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_U_Code = A5.MembershipLevelCode</if>        
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate}))-- 1년전
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10), #{endDate}, 120)
+		        AND A4.ShopCode = #{shopCode}
+		        AND A3.UserId_Code != 'IS_NOT_DATA'
+		        AND A5.MembershipLevelCode != 'IS_NOT_DATA'
+	        GROUP BY A1.Userid
+	        HAVING SUM(A1.SalesQty) > 0
+        ) customer
+		LEFT OUTER JOIN (
+	        SELECT DISTINCT B1.Userid
+	        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+	        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+	        WHERE 1=1
+		        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -3, CONVERT(DATE, #{endDate}))-- 3개월
+		        AND B2.Date <![CDATA[<=]]>  CONVERT(VARCHAR(10),#{endDate},120)
+		        AND B4.ShopCode = #{shopCode}
+		        AND B3.UserId_Code != 'IS_NOT_DATA'		
+		) customerChurn ON customer.Userid = customerChurn.Userid        
+    </select>
+    
+    <select id="selectRepeatBreakawayBrand" resultType="com.icignal.marketing.storeReport.dto.response.MktRepeatBreakawayResDto">
+        /* MktStoreReportMapper.selectRepeatBreakawayBrand */
+        SELECT ROUND(COUNT(CASE WHEN customer.day_cnt > 1 THEN 1 END) / #{shopCnt}, 0) AS repeatCnt
+        , CASE WHEN COUNT(CASE WHEN customer.day_cnt > 1 THEN 1 END) > 0
+        	THEN ROUND(COUNT(CASE WHEN customer.day_cnt > 1 THEN 1 END) / CONVERT(FLOAT, COUNT(customer.day_cnt)) * 100, 1)
+        	ELSE 0
+        END AS repeatRate
+        , ISNULL(ROUND(SUM(CASE WHEN customerChurn.Userid IS NULL THEN 1 END) / #{shopCnt}, 0), 0) AS customerChurnCnt
+        FROM (
+	        SELECT A1.Userid
+	        , COUNT(DISTINCT A2.Date) AS day_cnt
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 on A1.UserId = A3.UserId
+	        JOIN mrtmktrpt.DimShop A4 on A1.ShopId = A4.ShopId
+	        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_S_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_D_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_Q_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_G_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_M_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_U_Code = A5.MembershipLevelCode</if>  
+			JOIN mrtmktrpt.DimBrand A6 ON A1.BrandId = A6.BrandId
+			<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+				JOIN mrtmktrpt.DimOfflineType A7 ON A4.OfflineTypeId = A7.OfflineTypeId
+			</if>			     
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate}))-- 1년전
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10), #{endDate}, 120)
+		        AND A3.UserId_Code != 'IS_NOT_DATA'
+		        AND A5.MembershipLevelCode != 'IS_NOT_DATA'
+				AND A6.BrandCode = #{brandCode}
+				AND A4.StatusCode = 2
+				<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+					AND A7.OFFLINETYPECODE IN
+					<foreach collection="martType" item="item" separator="," close=")" open="(">
+						#{item}
+					</foreach>
+				</if>
+				<if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+					AND A4.SHOPSTATE IN
+					<foreach collection="regionType" item="item" separator="," close=")" open="(">
+						N'${item}'
+					</foreach>
+				</if>
+				<if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND A4.ShopTypeCode = #{shopTypeCode}</if>
+	        GROUP BY A1.Userid
+	        HAVING SUM(A1.SalesQty) > 0
+        ) customer
+		LEFT OUTER JOIN (
+	        SELECT DISTINCT B1.Userid
+	        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+	        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+	        JOIN mrtmktrpt.DimBrand B6 ON B1.BrandId = B6.BrandId
+			<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+				JOIN mrtmktrpt.DimOfflineType B7 ON B4.OfflineTypeId = B7.OfflineTypeId
+			</if>	        
+	        WHERE 1=1
+		        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -3, CONVERT(DATE, #{endDate}))-- 3개월
+		        AND B2.Date <![CDATA[<=]]>  CONVERT(VARCHAR(10),#{endDate},120)
+		        AND B3.UserId_Code != 'IS_NOT_DATA'
+				AND B6.BrandCode = #{brandCode}
+				AND B4.StatusCode = 2
+				<if test="martType !=null and !martType.equals('') and martType.length lt 8">
+					AND B7.OFFLINETYPECODE IN
+					<foreach collection="martType" item="item" separator="," close=")" open="(">
+						#{item}
+					</foreach>
+				</if>
+				<if test="regionType !=null and !regionType.equals('') and regionType.length lt 16">
+					AND B4.SHOPSTATE IN
+					<foreach collection="regionType" item="item" separator="," close=")" open="(">
+						N'${item}'
+					</foreach>
+				</if>
+				<if test="shopTypeCode !=null and !shopTypeCode.equals('')">AND B4.ShopTypeCode = #{shopTypeCode}</if>		        	
+		) customerChurn ON customer.Userid = customerChurn.Userid        
+    </select>    
+
+    <select id="selectRepeatBreakawayGradeChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiBarChartSeriesDto">
+        /* MktStoreReportMapper.selectRepeatBreakawayGradeChart */
+        SELECT <!-- count(A1.Userid) * 100.0 / sum(count(1)) over() AS data -->
+        count(A1.Userid) AS data
+        , A1.MembershipLevelName AS name
+        , A1.MembershipLevel
+        FROM (
+	        SELECT B1.Userid AS Userid
+	        , B5.MembershipLevelName AS MembershipLevelName
+	        , B5.MembershipLevel AS MembershipLevel
+	        , MAX(B2.Date) AS maxDate
+	        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+	        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+	        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_S_Code = B5.MembershipLevelCode</if>
+	        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_D_Code = B5.MembershipLevelCode</if>
+	        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_Q_Code = B5.MembershipLevelCode</if>
+	        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_G_Code = B5.MembershipLevelCode</if>
+	        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_M_Code = B5.MembershipLevelCode</if>
+	        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_U_Code = B5.MembershipLevelCode</if>
+	        WHERE 1=1
+		        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate}))-- 1년전
+		        AND B2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND B4.ShopCode = #{shopCode}
+		        AND B3.UserId_Code != 'IS_NOT_DATA'
+		        AND B5.MembershipLevelCode != 'IS_NOT_DATA'
+		        <!-- AND B1.SalesQty > 0 -->
+	        GROUP BY B1.Userid, B5.MembershipLevelName, B5.MembershipLevel
+	        HAVING COUNT(DISTINCT B2.Date) > 1 AND SUM(B1.SalesQty) > 0
+        ) A1
+        WHERE 1=1
+        GROUP BY A1.MembershipLevelName, A1.MembershipLevel
+        ORDER BY A1.MembershipLevel DESC
+    </select>
+
+    <select id="selectRepeatBreakawayGradeAgeChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiAgeChartSeriesDto">
+        /* MktStoreReportMapper.selectRepeatBreakawayGradeAgeChart */
+        SELECT A1.GenderNameFull_KOR AS name
+        , A1.GenderNameFull_KOR AS stackGroup
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A001' THEN 1 ELSE 0 END) as age_19
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A002' THEN 1 ELSE 0 END) as age_20
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A003' THEN 1 ELSE 0 END) as age_25
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A004' THEN 1 ELSE 0 END) as age_30
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A005' THEN 1 ELSE 0 END) as age_35
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A006' THEN 1 ELSE 0 END) as age_40
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A007' THEN 1 ELSE 0 END) as age_45
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A008' THEN 1 ELSE 0 END) as age_50
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A009' THEN 1 ELSE 0 END) as age_55
+        , SUM(CASE WHEN A1.AgeGroupCode = 'A010' THEN 1 ELSE 0 END) as age_60
+        FROM (
+	        SELECT B1.Userid AS Userid
+	        , B3.GenderNameFull_KOR AS GenderNameFull_KOR
+	        , B5.AgeGroupCode AS AgeGroupCode
+	        , B5.AgeGroupSort AS AgeGroupSort
+	        , MAX(B2.Date) AS maxDate
+	        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+	        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+	        JOIN mrtmktrpt.DimAgeGroup B5 ON B1.CustomerAgeGroupId = B5.AgeGroupId
+	        WHERE 1=1
+		        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate}))-- 1년전
+		        AND B2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND B4.ShopCode = #{shopCode}
+		        AND B3.UserId_Code != 'IS_NOT_DATA'
+		        AND B5.AgeGroupCode != 'IS_NOT_DATA'
+		        <!-- AND B1.SalesQty > 0 -->
+		        AND ( B3.GenderNameShort_ENG = 'M' OR B3.GenderNameShort_ENG = 'F')
+	        GROUP BY B1.Userid, B3.GenderNameFull_KOR, B5.AgeGroupCode, B5.AgeGroupSort
+	        HAVING COUNT(DISTINCT B2.Date) > 1 AND SUM(B1.SalesQty) > 0
+        ) A1
+        GROUP BY A1.GenderNameFull_KOR
+    </select>
+
+    <select id="selectRepeatBreakawayGenderGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiMbrCompareGridDataDto">
+        /* MktStoreReportMapper.selectRepeatBreakawayGenderGrid */
+        SELECT AA.colNm AS colNm
+        , SUM(AA.iTotal) AS iTotal
+        , SUM(AA.iVip) AS iVip
+        , SUM(AA.iAGrade) AS iAGrade
+        , SUM(AA.iBGrade) AS iBGrade
+        , SUM(AA.iCGrade) AS iCGrade
+        FROM (
+	        SELECT GenderNameFull_KOR AS colNm
+	        , 0 AS iTotal
+	        , 0 AS iVip
+	        , 0 AS iAGrade
+	        , 0 AS iBGrade
+	        , 0 AS iCGrade
+	        FROM mrtmktrpt.DimMemberInfo WITH(NOLOCK)
+	        WHERE ( GenderNameShort_ENG = 'M' OR GenderNameShort_ENG = 'F')
+	        GROUP BY GenderNameFull_KOR
+	        UNION
+	        SELECT A.colNm
+	        , ISNULL(ROUND(COUNT(A.Userid) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iTotal
+	        , ISNULL(ROUND(SUM(A.iVip) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	        , ISNULL(ROUND(SUM(A.iAGrade) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	        , ISNULL(ROUND(SUM(A.iBGrade) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	        , ISNULL(ROUND(SUM(A.iCGrade) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        FROM (
+		        SELECT B3.GenderNameFull_KOR AS colNm
+		        , B1.Userid AS Userid
+		        <if test='brandCode == "S"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0242004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0242003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0242002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0242001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "D"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0245004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0245003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0245002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0245001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "Q"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0243004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0243003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0243002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0243001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "G"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0246004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0246003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0246002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0246001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "M"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0247004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0247003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0247002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0247001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "U"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0244004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0244003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0244002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0244001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        , MAX(B2.Date) AS maxDate
+		        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+		        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+		        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_S_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_D_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_Q_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_G_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_M_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_U_Code = B5.MembershipLevelCode</if>
+		        WHERE 1=1
+			        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate}))-- 1년전
+			        AND B2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			        AND B4.ShopCode = #{shopCode}
+			        AND B3.UserId_Code != 'IS_NOT_DATA'
+			        AND B5.MembershipLevelCode != 'IS_NOT_DATA'
+			        AND ( B3.GenderNameShort_ENG = 'M' OR B3.GenderNameShort_ENG = 'F')
+			        <!-- AND B1.SalesQty > 0 -->
+		        GROUP BY B1.Userid, B3.GenderNameFull_KOR, B5.MembershipLevelCode
+		        HAVING COUNT(DISTINCT B2.Date) > 1 AND SUM(B1.SalesQty) > 0
+	        ) A
+	        GROUP BY A.colNm
+        ) AA
+        GROUP BY AA.colNm
+        ORDER BY AA.colNm
+    </select>
+
+    <select id="selectRepeatBreakawayAgeGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiMbrCompareGridDataDto">
+        /* MktStoreReportMapper.selectRepeatBreakawayAgeGrid */
+        SELECT AA.colNm AS colNm
+        , SUM(AA.iTotal) AS iTotal
+        , SUM(AA.iVip) AS iVip
+        , SUM(AA.iAGrade) AS iAGrade
+        , SUM(AA.iBGrade) AS iBGrade
+        , SUM(AA.iCGrade) AS iCGrade
+        , AA.AgeGroupSort
+        FROM (
+	        SELECT dag.AgeGroupName1 AS colNm
+	        , 0 AS iTotal
+	        , 0 AS iVip
+	        , 0 AS iAGrade
+	        , 0 AS iBGrade
+	        , 0 AS iCGrade
+	        , dag.AgeGroupSort
+	        FROM mrtmktrpt.DimAgeGroup dag WITH(NOLOCK)
+	        WHERE dag.AgeGroupCode != 'IS_NOT_DATA'
+	        UNION
+	        SELECT A.colNm
+	        , ISNULL(ROUND(COUNT(A.Userid) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iTotal
+	        , ISNULL(ROUND(SUM(A.iVip) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iVip
+	        , ISNULL(ROUND(SUM(A.iAGrade) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iAGrade
+	        , ISNULL(ROUND(SUM(A.iBGrade) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iBGrade
+	        , ISNULL(ROUND(SUM(A.iCGrade) * 100.0 / SUM(COUNT(1)) over() , 1), 0) AS iCGrade
+	        , A.AgeGroupSort
+	        FROM (
+		        SELECT B6.AgeGroupName1 AS colNm
+		        , B1.Userid AS Userid
+		        <if test='brandCode == "S"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0242004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0242003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0242002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0242001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "D"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0245004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0245003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0245002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0245001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "Q"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0243004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0243003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0243002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0243001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "G"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0246004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0246003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0246002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0246001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "M"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0247004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0247003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0247002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0247001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        <if test='brandCode == "U"'>
+		            , CASE WHEN B5.MembershipLevelCode = '0244004' THEN 1 ELSE 0 END AS iVip
+		            , CASE WHEN B5.MembershipLevelCode = '0244003' THEN 1 ELSE 0 END AS iAGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0244002' THEN 1 ELSE 0 END AS iBGrade
+		            , CASE WHEN B5.MembershipLevelCode = '0244001' THEN 1 ELSE 0 END AS iCGrade
+		        </if>
+		        , B6.AgeGroupSort AS AgeGroupSort
+		        , MAX(B2.Date) AS maxDate
+		        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+		        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+		        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_S_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_D_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_Q_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_G_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_M_Code = B5.MembershipLevelCode</if>
+		        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel B5 ON B3.MembershipLevel_U_Code = B5.MembershipLevelCode</if>
+		        JOIN mrtmktrpt.DimAgeGroup B6 ON B1.CustomerAgeGroupId = B6.AgeGroupId
+		        WHERE 1=1
+			        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate}))-- 1년전
+			        AND B2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+			        AND B4.ShopCode = #{shopCode}
+			        AND B3.UserId_Code != 'IS_NOT_DATA'
+			        AND B5.MembershipLevelCode != 'IS_NOT_DATA'
+			        AND B6.AgeGroupCode != 'IS_NOT_DATA'
+			        <!-- AND ( B3.GenderNameShort_ENG = 'M' OR B3.GenderNameShort_ENG = 'F') -->
+			        <!-- AND B1.SalesQty > 0 -->
+		        GROUP BY B6.AgeGroupName1, B6.AgeGroupSort, B1.Userid, B5.MembershipLevelCode
+		        HAVING COUNT(DISTINCT B2.Date) > 1 AND SUM(B1.SalesQty) > 0
+	        ) A
+	        GROUP BY A.colNm, A.AgeGroupSort
+        ) AA
+        GROUP BY AA.colNm, AA.AgeGroupSort
+        ORDER BY AA.AgeGroupSort
+    </select>
+
+    <select id="selectRepeatBreakawayGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiRepeatBreakawayGridDataDto">
+        /* MktStoreReportMapper.selectRepeatBreakawayGrid */
+        WITH yearAgo AS (
+	        SELECT A1.Userid
+	        , A5.MembershipLevelCode
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 on A1.UserId = A3.UserId
+	        JOIN mrtmktrpt.DimShop A4 on A1.ShopId = A4.ShopId
+	        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_S_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_D_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_Q_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_G_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_M_Code = A5.MembershipLevelCode</if>
+	        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_U_Code = A5.MembershipLevelCode</if>
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate})) --1년전
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10), #{endDate}, 120)
+		        AND A4.ShopCode = #{shopCode}
+		        AND A3.UserId_Code != 'IS_NOT_DATA'
+		        AND A5.MembershipLevelCode != 'IS_NOT_DATA'
+	        GROUP BY A1.Userid, A5.MembershipLevelCode
+	        HAVING SUM(A1.SalesQty) > 0
+        ), yearAgoCnt AS (
+			SELECT COUNT(A.Userid) AS ttl
+			FROM (        
+		        SELECT A1.Userid
+		        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo A3 on A1.UserId = A3.UserId
+		        JOIN mrtmktrpt.DimShop A4 on A1.ShopId = A4.ShopId
+		        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_S_Code = A5.MembershipLevelCode</if>
+		        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_D_Code = A5.MembershipLevelCode</if>
+		        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_Q_Code = A5.MembershipLevelCode</if>
+		        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_G_Code = A5.MembershipLevelCode</if>
+		        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_M_Code = A5.MembershipLevelCode</if>
+		        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A5 ON A3.MembershipLevel_U_Code = A5.MembershipLevelCode</if>
+		        WHERE 1=1
+			        AND A2.Date <![CDATA[>=]]> DATEADD(MONTH, -12, CONVERT(DATE, #{endDate})) --1년전
+			        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10), #{endDate}, 120)
+			        AND A4.ShopCode = #{shopCode}
+			        AND A3.UserId_Code != 'IS_NOT_DATA'
+			        AND A5.MembershipLevelCode != 'IS_NOT_DATA'
+		        GROUP BY A1.Userid
+				HAVING SUM(A1.SalesQty) > 0
+			) A
+        ), last3Month AS (
+	        SELECT B1.Userid
+	        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+	        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+	        WHERE 1=1
+		        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -3, CONVERT(DATE, #{endDate})) --3개월
+		        AND B2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND B4.ShopCode = #{shopCode}
+		        AND B3.UserId_Code != 'IS_NOT_DATA'
+	        GROUP BY B1.Userid
+        ), last6Month AS (
+	        SELECT B1.Userid
+	        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+	        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+	        WHERE 1=1
+		        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -6, CONVERT(DATE, #{endDate})) --6개월
+		        AND B2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND B4.ShopCode = #{shopCode}
+		        AND B3.UserId_Code != 'IS_NOT_DATA'
+	        GROUP BY B1.Userid
+        ), last9Month AS (
+        SELECT B1.Userid
+	        FROM mrtmktrpt.FactSalesOrder B1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate B2 on B1.DateId = B2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo B3 on B1.UserId = B3.UserId
+	        JOIN mrtmktrpt.DimShop B4 on B1.ShopId = B4.ShopId
+	        WHERE 1=1
+		        AND B2.Date <![CDATA[>=]]> DATEADD(MONTH, -9, CONVERT(DATE, #{endDate})) --9개월
+		        AND B2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND B4.ShopCode = #{shopCode}
+		        AND B3.UserId_Code != 'IS_NOT_DATA'
+	        GROUP BY B1.Userid
+        )
+        SELECT A.mbrTier AS mbrTier
+        , FORMAT(SUM(A.cntMbr1), '#,##0') AS cntMbr1
+        , CASE WHEN yearAgoCnt.ttl > 0
+        	THEN ROUND(SUM(A.cntMbr1) * 100.0 / yearAgoCnt.ttl , 1)
+        	ELSE 0
+        END AS iSalRatio1
+        , FORMAT(SUM(A.cntMbr2), '#,##0') AS cntMbr2
+        , CASE WHEN yearAgoCnt.ttl > 0
+        	THEN ROUND(SUM(A.cntMbr2) * 100.0 / yearAgoCnt.ttl , 1)
+        	ELSE 0
+        END AS iSalRatio2
+        , FORMAT(SUM(A.cntMbr3), '#,##0') AS cntMbr3
+        , CASE WHEN yearAgoCnt.ttl > 0
+        	THEN ROUND(SUM(A.cntMbr3) * 100.0 / yearAgoCnt.ttl , 1)
+        	ELSE 0
+        END AS iSalRatio3
+        FROM
+        (
+	        SELECT CASE WHEN GROUPING(B1.mbrTier) = 1 THEN N'합계' ELSE B1.mbrTier END AS mbrTier
+	        , SUM(cntMbr1) AS cntMbr1
+	        , 0 AS cntMbr2
+	        , 0 AS cntMbr3
+	        , CASE WHEN SUM(sort) > 5 THEN 5 ELSE SUM(sort) END AS sort
+	        FROM (
+		        SELECT C1.MembershipLevelName AS mbrTier
+		        , SUM(1) AS cntMbr1
+		        , C1.MembershipLevelSort AS sort
+		        FROM yearAgo
+		        LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel C1 ON yearAgo.MembershipLevelCode = C1.MembershipLevelCode
+		        LEFT OUTER JOIN last3Month ON yearAgo.Userid = last3Month.Userid WHERE last3Month.Userid IS NULL
+		        GROUP BY C1.MembershipLevelName, C1.MembershipLevelSort
+	        ) B1
+	        GROUP BY ROLLUP(B1.mbrTier)
+	        UNION
+	        SELECT CASE WHEN GROUPING(B1.mbrTier) = 1 THEN N'합계' ELSE B1.mbrTier END AS mbrTier
+	        , 0 AS cntMbr1
+	        , SUM(cntMbr2) AS cntMbr2
+	        , 0 AS cntMbr3
+	        , CASE WHEN SUM(sort) > 5 THEN 5 ELSE SUM(sort) END AS sort
+	        FROM (
+		        SELECT C1.MembershipLevelName AS mbrTier
+		        , SUM(1) AS cntMbr2
+		        , C1.MembershipLevelSort AS sort
+		        FROM yearAgo
+		        LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel C1 ON yearAgo.MembershipLevelCode = C1.MembershipLevelCode
+		       	LEFT JOIN last6Month ON yearAgo.Userid = last6Month.Userid WHERE last6Month.Userid IS NULL
+	        GROUP BY C1.MembershipLevelName, C1.MembershipLevelSort
+	        ) B1
+	        GROUP BY ROLLUP(B1.mbrTier)
+	        UNION
+	        SELECT CASE WHEN GROUPING(B1.mbrTier) = 1 THEN N'합계' ELSE B1.mbrTier END AS mbrTier
+	        , 0 AS cntMbr1
+	        , 0 AS cntMbr2
+	        , SUM(cntMbr3) AS cntMbr3
+	        , CASE WHEN SUM(sort) > 5 THEN 5 ELSE SUM(sort) END AS sort
+	        FROM (
+		        SELECT C1.MembershipLevelName AS mbrTier
+		        , SUM(1) AS cntMbr3
+		        , C1.MembershipLevelSort AS sort
+		        FROM yearAgo
+		        LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel C1 ON yearAgo.MembershipLevelCode = C1.MembershipLevelCode
+		        LEFT JOIN last9Month ON yearAgo.Userid = last9Month.Userid WHERE last9Month.Userid IS NULL
+	        GROUP BY C1.MembershipLevelName, C1.MembershipLevelSort
+	        ) B1
+	        GROUP BY ROLLUP(B1.mbrTier)
+        ) A, yearAgoCnt
+        GROUP BY A.mbrTier, yearAgoCnt.ttl, A.sort
+        ORDER BY A.sort DESC
+    </select>
+    <!-- 3. 재구매&이탈 분석 -->
+
+    <!-- 4. 최근 12개월 매출 추이 -->
+    <select id="selectSalesChange" resultType="com.icignal.marketing.storeReport.dto.response.TuiStackBarChartSeriesDto">
+        /* MktStoreReportMapper.selectSalesChange */
+        SELECT N'기준년' AS name
+        , N'기준년' AS stackGroup
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -11, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data1
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -10, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data2
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -9, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data3
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -8, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data4
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -7, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data5
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -6, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data6
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -5, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data7
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -4, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data8
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -3, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data9
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -2, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data10
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -1, CONVERT(DATE, #{endDate})), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data11
+        , ISNULL(ROUND(SUM(CASE WHEN A.amountDate = CONVERT(VARCHAR(7), CONVERT(DATE, #{endDate}), 120) THEN A.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data12
+        FROM (
+	        SELECT FORMAT(A2.Date, 'yyyy-MM') AS amountDate
+	        , SUM(A1.SalesAmount) AS SalesAmount
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        <if test="membershipLevelCode !=null and !membershipLevelCode.equals('') and membershipLevelCode.length lt 4">
+	            <if test='brandCode == "S"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_S_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "D"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_D_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "Q"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_Q_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "G"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_G_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "M"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_M_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "U"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_U_Code = A4.MembershipLevelCode</if>
+	        </if>
+	        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId
+	        <if test="ageGroupCode !=null and !ageGroupCode.equals('') and ageGroupCode.length lt 11">JOIN mrtmktrpt.DimAgeGroup A6 ON A1.CustomerAgeGroupId = A6.AgeGroupId</if>
+	        <if test="clubCode !=null and !clubCode.equals('') and clubCode.length lt 4">JOIN mrtmktrpt.FactMemberClub A7 ON A3.UserId_Code = A7.UserId_Code</if>
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),DATEADD(MONTH, +1, DATEADD(YEAR, -1, DATEADD(d, -day(#{endDate})+1, #{endDate}))),120)
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		        AND A5.ShopCode = #{shopCode}
+		        <if test='mbrDiv == "MBR"'>AND A3.UserId_Code != 'IS_NOT_DATA'</if>
+		        <if test='mbrDiv == "NMBR"'>AND A3.UserId_Code = 'IS_NOT_DATA'</if>
+		        <if test="gender !=null and !gender.equals('')">AND A3.gendernameshort_Eng = #{gender}</if>
+		        <if test="ageGroupCode !=null and !ageGroupCode.equals('') and ageGroupCode.length lt 11">
+		            AND A6.AgeGroupCode IN
+		            <foreach collection="ageGroupCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="membershipLevelCode !=null and !membershipLevelCode.equals('') and membershipLevelCode.length lt 4">
+		            AND A4.MembershipLevelCode IN
+		            <foreach collection="membershipLevelCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="proCode !=null and !proCode.equals('')">
+		            AND A3.ProCode IN
+		            <foreach collection="proCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="clubCode !=null and !clubCode.equals('')">
+		            AND A7.ClubCode IN
+		            <foreach collection="clubCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+	        GROUP BY FORMAT(A2.Date, 'yyyy-MM'), A1.Userid
+	        HAVING SUM(A1.SalesQty) > 0
+        ) A
+        UNION
+        SELECT N'1년전' AS name
+        , N'1년전' AS stackGroup
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -23, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data1
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -22, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data2
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -21, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data3
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -20, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data4
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -19, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data5
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -18, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data6
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -17, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data7
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -16, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data8
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -15, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data9
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -14, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data10
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -13, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data11
+        , ISNULL(ROUND(SUM(CASE WHEN B.amountDate = CONVERT(VARCHAR(7), DATEADD(MONTH, -12, CONVERT(DATE, #{endDate})), 120) THEN B.SalesAmount ELSE 0 END) / 1000, 0), 0) AS data12
+        FROM (
+	        SELECT FORMAT(A2.Date, 'yyyy-MM') AS amountDate
+	        , SUM(A1.SalesAmount) AS SalesAmount
+	        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+	        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+	        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+	        <if test="membershipLevelCode !=null and !membershipLevelCode.equals('') and membershipLevelCode.length lt 4">
+	            <if test='brandCode == "S"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_S_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "D"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_D_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "Q"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_Q_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "G"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_G_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "M"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_M_Code = A4.MembershipLevelCode</if>
+	            <if test='brandCode == "U"'>LEFT OUTER JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_U_Code = A4.MembershipLevelCode</if>
+	        </if>
+	        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId
+	        <if test="ageGroupCode !=null and !ageGroupCode.equals('') and ageGroupCode.length lt 11">JOIN mrtmktrpt.DimAgeGroup A6 ON A1.CustomerAgeGroupId = A6.AgeGroupId</if>
+	        <if test="clubCode !=null and !clubCode.equals('') and clubCode.length lt 4">JOIN mrtmktrpt.FactMemberClub A7 ON A3.UserId_Code = A7.UserId_Code</if>
+	        WHERE 1=1
+		        AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),DATEADD(MONTH, +1, DATEADD(YEAR, -2, DATEADD(d, -day(#{endDate})+1, #{endDate}))),120)
+		        AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),DATEADD(MONTH, +0, DATEADD(YEAR, -1, #{endDate})),120)
+		        AND A5.ShopCode = #{shopCode}
+		        <if test='mbrDiv == "MBR"'>AND A3.UserId_Code != 'IS_NOT_DATA'</if>
+		        <if test='mbrDiv == "NMBR"'>AND A3.UserId_Code = 'IS_NOT_DATA'</if>
+		        <if test="gender !=null and !gender.equals('')">AND A3.gendernameshort_Eng = #{gender}</if>
+		        <if test="ageGroupCode !=null and !ageGroupCode.equals('') and ageGroupCode.length lt 11">
+		            AND A6.AgeGroupCode IN
+		            <foreach collection="ageGroupCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="membershipLevelCode !=null and !membershipLevelCode.equals('') and membershipLevelCode.length lt 4">
+		            AND A4.MembershipLevelCode IN
+		            <foreach collection="membershipLevelCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="proCode !=null and !proCode.equals('')">
+		            AND A3.ProCode IN
+		            <foreach collection="proCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+		        <if test="clubCode !=null and !clubCode.equals('')">
+		            AND A7.ClubCode IN
+		            <foreach collection="clubCode" item="item" separator="," close=")" open="(">
+		                #{item}
+		            </foreach>
+		        </if>
+	        GROUP BY FORMAT(A2.Date, 'yyyy-MM'), A1.Userid
+	        HAVING SUM(A1.SalesQty) > 0
+        ) B
+    </select>
+    <!-- 4. 최근 12개월 매출 추이 -->
+
+    <!-- 5. 등급별 회원 & 매출 성과 -->
+    <select id="selectSalesPerformance" resultType="com.icignal.marketing.storeReport.dto.response.MktSalesPerformanceResDto">
+        /* MktStoreReportMapper.selectSalesPerformance */
+        WITH amount AS (
+	        SELECT amountMonth AS amountMonth
+	        , CASE WHEN GROUPING(mbrTear) = 1 THEN N'합계' ELSE mbrTear END AS mbrTear
+	        , COUNT(mbrTear) AS cntMbr
+	        , SUM(salAmt) AS salAmt
+	        , CASE WHEN GROUPING(mbrTear) = 1 THEN 0 ELSE max(sort) END as sort
+	        FROM (
+		        SELECT FORMAT(A2.Date,'yyyyMM') AS amountMonth
+		        , A4.MembershipLevelName AS mbrTear
+		        , ISNULL(SUM(A1.SalesAmount), 0) AS salAmt
+		        , A4.MembershipLevelSort AS sort
+		        FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		        JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+		        JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+		        <if test='brandCode == "S"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_S_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "D"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_D_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "Q"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_Q_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "G"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_G_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "M"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_M_Code = A4.MembershipLevelCode</if>
+		        <if test='brandCode == "U"'>JOIN mrtmktrpt.DimMembershipLevel A4 ON A3.MembershipLevel_U_Code = A4.MembershipLevelCode</if>
+		        JOIN mrtmktrpt.DimShop A5 ON A1.ShopId = A5.ShopId
+		        WHERE 1=1
+			        AND A5.ShopCode = #{shopCode}
+			        AND A4.MembershipLevelCode != 'IS_NOT_DATA'
+			        AND ( FORMAT(A2.Date,'yyyyMM') = FORMAT(CONVERT(DATE, #{endDate}),'yyyyMM')
+			        OR FORMAT(A2.Date,'yyyyMM') = FORMAT(DATEADD(MONTH,-1,CONVERT(DATE, #{endDate})),'yyyyMM')
+			        OR FORMAT(A2.Date,'yyyyMM') = FORMAT(DATEADD(YEAR,-1,CONVERT(DATE, #{endDate})),'yyyyMM') )
+		        GROUP BY FORMAT(A2.Date,'yyyyMM'), A4.MembershipLevelName, A4.MembershipLevelSort, A1.USERID
+		        HAVING SUM(A1.SalesQty) > 0
+	        ) A
+	        GROUP BY ROLLUP(amountMonth, mbrTear)
+	        HAVING GROUPING(amountMonth) = 0
+        )
+        SELECT A.mbrTear
+        , FORMAT(SUM(A.cntMbr), '#,##0') AS cntMbr
+        , FORMAT(SUM(A.salAmt), '#,##0') AS salAmt
+        , FORMAT(SUM(A.cntMbr1), '#,##0') AS cntMbr1
+        , FORMAT(SUM(A.salAmt1), '#,##0') AS salAmt1
+        , FORMAT(SUM(A.cntMbr0), '#,##0') AS cntMbr0
+        , FORMAT(SUM(A.salAmt0), '#,##0') AS salAmt0
+        , CASE WHEN SUM(A.cntMbr1) > 0
+        	THEN ROUND((SUM(A.cntMbr) - SUM(A.cntMbr1)) / CAST(SUM(A.cntMbr1) AS NUMERIC(6,0)) * 100, 1)
+        	ELSE 0
+        END AS iCntMbr2
+        , CASE
+        WHEN SUM(A.salAmt1) > 0
+        	THEN ROUND((SUM(A.salAmt) - SUM(A.salAmt1)) / CAST(SUM(A.salAmt1) AS NUMERIC(10,0)) * 100, 1)
+        	ELSE 0
+        END AS iSalAmt2
+        , CASE
+        WHEN SUM(A.cntMbr0) > 0
+        	THEN ROUND((SUM(A.cntMbr) - SUM(A.cntMbr0)) / CAST(SUM(A.cntMbr0) AS NUMERIC(6,0)) * 100, 0)
+        	ELSE 0
+        END AS iCntMbr3
+        , CASE
+        WHEN SUM(A.salAmt0) > 0
+        	THEN ROUND((SUM(A.salAmt) - SUM(A.salAmt0)) / CAST(SUM(A.salAmt0) AS NUMERIC(10,0)) * 100, 0)
+        	ELSE 0
+        END AS iSalAmt3
+        FROM (
+	        SELECT mbrTear
+	        , max(CASE WHEN amountMonth = FORMAT(CONVERT(DATE, #{endDate}),'yyyyMM') THEN cntMbr ELSE 0 END) AS cntMbr
+	        , sum(CASE WHEN amountMonth = FORMAT(CONVERT(DATE, #{endDate}),'yyyyMM') THEN salAmt ELSE 0 END) AS salAmt
+	        , sum(CASE WHEN amountMonth = FORMAT(DATEADD(MONTH,-1,CONVERT(DATE, #{endDate})),'yyyyMM') THEN cntMbr ELSE 0 END) AS cntMbr1
+	        , sum(CASE WHEN amountMonth = FORMAT(DATEADD(MONTH,-1,CONVERT(DATE, #{endDate})),'yyyyMM') THEN salAmt ELSE 0 END) AS salAmt1
+	        , sum(CASE WHEN amountMonth = FORMAT(DATEADD(YEAR,-1,CONVERT(DATE, #{endDate})),'yyyyMM') THEN cntMbr ELSE 0 END) AS cntMbr0
+	        , sum(CASE WHEN amountMonth = FORMAT(DATEADD(YEAR,-1,CONVERT(DATE, #{endDate})),'yyyyMM') THEN salAmt ELSE 0 END) AS salAmt0
+	        , max(sort) as sort
+	        FROM amount
+	        GROUP BY mbrTear
+        ) A
+        GROUP BY A.mbrTear, A.sort
+        ORDER BY A.sort DESC
+    </select>
+    <!-- 5. 등급별 회원 & 매출 성과 -->
+
+	<!-- 6. 구간 비교 -->
+	<select id="selectDurCmpPieChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiBarChartSeriesDto">
+		/* MktStoreReportMapper.selectDurCmpPieChart */
+		SELECT
+			SUM(A1.SalesQty) AS data
+			 , CASE
+				   WHEN A3.ClassName = ''
+					   THEN N'미분류'
+				   ELSE A3.ClassName
+			END AS name
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimProduct A3 ON A1.ProductId = A3.ProductId
+			JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		  AND A3.ProductCode != 'IS_NOT_DATA'
+		  AND A4.ShopCode = #{shopCode}
+		GROUP BY A3.ClassName
+		HAVING SUM(A1.SalesQty) > 0
+	</select>
+
+	<select id="selectDurCmpAgeChart" resultType="com.icignal.marketing.storeReport.dto.response.TuiAgeChartSeriesDto">
+		/* MktStoreReportMapper.selectDurCmpAgeChart */
+		SELECT A3.GenderNameFull_KOR                             AS name
+			 , A3.GenderNameFull_KOR                                  AS stackGroup
+			 , SUM(CASE WHEN AgeGroupCode = 'A001' THEN 1 ELSE 0 END) AS age_19
+			 , SUM(CASE WHEN AgeGroupCode = 'A002' THEN 1 ELSE 0 END) AS age_20
+			 , SUM(CASE WHEN AgeGroupCode = 'A003' THEN 1 ELSE 0 END) AS age_25
+			 , SUM(CASE WHEN AgeGroupCode = 'A004' THEN 1 ELSE 0 END) AS age_30
+			 , SUM(CASE WHEN AgeGroupCode = 'A005' THEN 1 ELSE 0 END) AS age_35
+			 , SUM(CASE WHEN AgeGroupCode = 'A006' THEN 1 ELSE 0 END) AS age_40
+			 , SUM(CASE WHEN AgeGroupCode = 'A007' THEN 1 ELSE 0 END) AS age_45
+			 , SUM(CASE WHEN AgeGroupCode = 'A008' THEN 1 ELSE 0 END) AS age_50
+			 , SUM(CASE WHEN AgeGroupCode = 'A009' THEN 1 ELSE 0 END) AS age_55
+			 , SUM(CASE WHEN AgeGroupCode = 'A010' THEN 1 ELSE 0 END) AS age_60
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+		JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimMemberInfo A3 ON A1.UserId = A3.UserId
+			JOIN mrtmktrpt.DimAgeGroup A5 ON A1.CustomerAgeGroupId = A5.AgeGroupId
+			JOIN mrtmktrpt.DimShop A4 ON A1.ShopId = A4.ShopId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		  AND A3.UserId_Code != 'IS_NOT_DATA'
+		  AND ( A3.GenderNameShort_ENG = 'M' OR A3.GenderNameShort_ENG = 'F')
+		  AND A4.ShopCode = #{shopCode}
+		GROUP BY A3.GenderNameFull_KOR
+		HAVING SUM(A1.SalesQty) > 0
+	</select>
+
+	<select id="selectDurCmpPurTotalGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiDurationCompareGridDataDto">
+		/* MktStoreReportMapper.selectDurCmpPurTotalGrid */
+		SELECT
+			N'기준기간'                                    AS colNm
+			 , FORMAT(COUNT(DISTINCT SALESORDERNO), '#,##0') AS ordCnt   --주문 수
+			 , FORMAT(ISNULL(SUM(SALESQTY),0), '#,##0')      AS purCnt   --판매수량
+			 , FORMAT(ISNULL(SUM(SALESAMOUNT),0), '#,##0')   AS sales    --매출
+			 , FORMAT(ISNULL(ROUND(SUM(SALESAMOUNT) / COUNT(DISTINCT SALESORDERNO), 0),0), '#,##0') AS avgOrdSales      --주문당 단가(매출/주문 수)
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimShop A3 ON A1.ShopId = A3.ShopId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		  AND A3.SHOPCODE = #{shopCode}
+		UNION ALL
+		SELECT
+			N'비교기간'                                    AS colNm
+			 , FORMAT(COUNT(DISTINCT SALESORDERNO), '#,##0') AS ordCnt   --주문 수
+			 , FORMAT(ISNULL(SUM(SALESQTY),0), '#,##0')      AS purCnt   --판매수량
+			 , FORMAT(ISNULL(SUM(SALESAMOUNT),0), '#,##0')   AS sales    --매출
+			 , FORMAT(ISNULL(ROUND(SUM(SALESAMOUNT) / COUNT(DISTINCT SALESORDERNO), 0),0), '#,##0') AS avgOrdSales      --주문당 단가(매출/주문 수)
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimShop A3 ON A1.ShopId = A3.ShopId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{cmpStartDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{cmpEndDate},120)
+		  AND A3.SHOPCODE = #{shopCode}
+	</select>
+
+	<select id="selectDurCmpPurMbrGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiDurationCompareGridDataDto">
+		/* MktStoreReportMapper.selectDurCmpPurMbrGrid */
+		SELECT
+			N'기준기간'                                      AS colNm
+			 , FORMAT(COUNT(DISTINCT A1.USERID), '#,##0')    AS mbrCnt   --주문 회원수
+			 , FORMAT(COUNT(DISTINCT SALESORDERNO), '#,##0') AS ordCnt   --회원 주문수
+			 , FORMAT(ISNULL(SUM(SALESQTY),0), '#,##0')      AS purCnt   --회원 판매수량
+			 , FORMAT(ISNULL(SUM(SALESAMOUNT),0), '#,##0')   AS sales    --회원 매출
+			 , FORMAT(ISNULL(ROUND(SUM(SALESAMOUNT) / COUNT(DISTINCT SALESORDERNO), 0),0), '#,##0') AS avgOrdSales      --회원 주문당 단가(회원매출/회원 주문수)
+			 , FORMAT(ISNULL(ROUND(SUM(SALESQTY) / COUNT(DISTINCT A1.USERID), 2),0), '#,##0.00')    AS avgPurCnt        --회원 객수량(회원 판매수량/주문 회원수)
+			 , FORMAT(ISNULL(ROUND(SUM(SALESAMOUNT) / COUNT(DISTINCT A1.USERID), 0),0), '#,##0')    AS avgMbrSales      --회원 객단가(회원 매출/주문 회원수)
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimShop A3 ON A1.ShopId = A3.ShopId
+			JOIN mrtmktrpt.DimMemberInfo A5 ON A1.UserId = A5.UserId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		  AND A3.SHOPCODE = #{shopCode}
+		  AND A5.USERID_CODE != 'IS_NOT_DATA'
+		UNION ALL
+		SELECT
+			N'비교기간'                                      AS colNm
+			 , FORMAT(COUNT(DISTINCT A1.USERID), '#,##0')    AS mbrCnt   --주문 회원수
+			 , FORMAT(COUNT(DISTINCT SALESORDERNO), '#,##0') AS ordCnt   --회원 주문수
+			 , FORMAT(ISNULL(SUM(SALESQTY),0), '#,##0')      AS purCnt   --회원 판매수량
+			 , FORMAT(ISNULL(SUM(SALESAMOUNT),0), '#,##0')   AS sales    --회원 매출
+			 , FORMAT(ISNULL(ROUND(SUM(SALESAMOUNT) / COUNT(DISTINCT SALESORDERNO), 0),0), '#,##0') AS avgOrdSales      --회원 주문당 단가(회원매출/회원 주문수)
+			 , FORMAT(ISNULL(ROUND(SUM(SALESQTY) / COUNT(DISTINCT A1.USERID), 2),0), '#,##0.00')    AS avgPurCnt        --회원 객수량(회원 판매수량/주문 회원수)
+			 , FORMAT(ISNULL(ROUND(SUM(SALESAMOUNT) / COUNT(DISTINCT A1.USERID), 0),0), '#,##0')    AS avgMbrSales      --회원 객단가(회원 매출/주문 회원수)
+		FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 ON A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimShop A3 ON A1.ShopId = A3.ShopId
+			JOIN mrtmktrpt.DimMemberInfo A5 ON A1.UserId = A5.UserId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{cmpStartDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{cmpEndDate},120)
+		  AND A3.SHOPCODE = #{shopCode}
+		  AND A5.USERID_CODE != 'IS_NOT_DATA'
+	</select>
+
+	<select id="selectDupCmpNewMbr" resultType="com.icignal.marketing.storeReport.dto.response.TuiDurationCompareGridDataDto">
+		/* MktStoreReportMapper.selectDupCmpNewMbr */
+		SELECT COUNT(DISTINCT A1.USERID) AS newMbrCnt
+		FROM mrtmktrpt.DimMemberInfo A1 WITH(NOLOCK)
+		WHERE 1=1
+		  AND A1.RegistrationDate <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		  AND A1.RegistrationDate <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		  AND A1.RegistrationShopCode = #{shopCode}
+		  AND A1.USERID_CODE != 'IS_NOT_DATA'
+		UNION ALL
+		SELECT COUNT(DISTINCT A1.USERID) AS newMbrCnt
+		FROM mrtmktrpt.DimMemberInfo A1 WITH(NOLOCK)
+		WHERE 1=1
+		  AND A1.RegistrationDate <![CDATA[>=]]> CONVERT(VARCHAR(10),#{cmpStartDate},120)
+		  AND A1.RegistrationDate <![CDATA[<=]]> CONVERT(VARCHAR(10),#{cmpEndDate},120)
+		  AND A1.RegistrationShopCode = #{shopCode}
+		  AND A1.USERID_CODE != 'IS_NOT_DATA'
+	</select>
+
+	<select id="selectDurCmpTopItemGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiDurationCompareGridDataDto">
+		/* MktStoreReportMapper.selectDurCmpTopItemGrid */
+		WITH std AS (
+			SELECT
+				TOP 10
+			  A3.ItemCode         AS itemCode
+			, ISNULL(SUM(A1.SalesAmount),0) AS sales
+				 , ISNULL(SUM(A1.SalesQty),0)    AS cnt
+			FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimProduct  A3 on A1.ProductId  = A3.ProductId
+			JOIN mrtmktrpt.DimShop A4 on A1.ShopId  = A4.ShopId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		  AND A4.ShopCode = #{shopCode}
+		GROUP BY A3.ItemCode
+		ORDER BY SUM(A1.SalesAmount) DESC
+			) , cmp AS (
+		SELECT
+			T3.ItemCode         AS itemCode
+				, ISNULL(SUM(T1.SalesAmount),0) AS sales
+				, ISNULL(SUM(T1.SalesQty),0)    AS cnt
+		FROM MRTMKTRPT.FACTSALESORDER T1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate T2 on T1.DateId = T2.DateId
+			JOIN mrtmktrpt.DimProduct T3 on T1.ProductId  = T3.ProductId
+			JOIN mrtmktrpt.DimShop T4 on T1.ShopId  = T4.ShopId
+		WHERE 1=1
+		  AND T2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{cmpStartDate},120)
+		  AND T2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{cmpEndDate},120)
+		  AND T4.SHOPCODE = #{shopCode}
+		GROUP BY T3.ItemCode
+			)
+		SELECT
+			std.itemCode                 AS itemCode
+			 , ISNULL(FORMAT(std.sales, '#,##0'),0) AS stdSales
+			 , ISNULL(FORMAT(std.cnt, '#,##0'),0)   AS stdPurCnt
+			 , ISNULL(FORMAT(cmp.sales, '#,##0'),0) AS cmpSales
+			 , ISNULL(FORMAT(cmp.cnt, '#,##0'),0)   AS cmpPurCnt
+			 , CASE
+				   WHEN cmp.sales != 0
+					   THEN ROUND( (std.sales - cmp.sales) / cmp.sales * 100.0, 1 )
+				   ELSE 0
+			END AS salesRate
+			 , CASE
+				   WHEN cmp.cnt != 0
+					   THEN ROUND( (std.cnt - cmp.cnt) / cmp.cnt * 100.0, 1 )
+				   ELSE 0
+			END AS purCntRate
+		FROM std
+				 LEFT JOIN cmp ON std.itemCode = cmp.itemCode
+		ORDER BY std.cnt desc
+	</select>
+
+	<select id="selectDurCmpTopProductGrid" resultType="com.icignal.marketing.storeReport.dto.response.TuiDurationCompareGridDataDto">
+		/* MktStoreReportMapper.selectDurCmpTopProductGrid */
+		WITH std AS (
+			SELECT
+				TOP 10
+			  A3.ProductCode      AS productCode
+			, ISNULL(SUM(A1.SalesAmount),0) AS sales
+				 , ISNULL(SUM(A1.SalesQty),0)    AS cnt
+			FROM mrtmktrpt.FactSalesOrder A1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate A2 on A1.DateId = A2.DateId
+			JOIN mrtmktrpt.DimProduct  A3 on A1.ProductId  = A3.ProductId
+			JOIN mrtmktrpt.DimShop A4 on A1.ShopId  = A4.ShopId
+		WHERE 1=1
+		  AND A2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{startDate},120)
+		  AND A2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{endDate},120)
+		  AND A4.ShopCode = #{shopCode}
+		GROUP BY A3.ProductCode
+		ORDER BY SUM(A1.SalesAmount) DESC
+			) , cmp AS (
+		SELECT
+			T3.ProductCode      AS productCode
+				, ISNULL(SUM(T1.SalesAmount),0) AS sales
+				, ISNULL(SUM(T1.SalesQty),0)    AS cnt
+		FROM MRTMKTRPT.FACTSALESORDER T1 WITH(NOLOCK)
+			JOIN mrtmktrpt.DimDate T2 on T1.DateId = T2.DateId
+			JOIN mrtmktrpt.DimProduct T3 on T1.ProductId  = T3.ProductId
+			JOIN mrtmktrpt.DimShop T4 on T1.ShopId  = T4.ShopId
+		WHERE 1=1
+		  AND T2.Date <![CDATA[>=]]> CONVERT(VARCHAR(10),#{cmpStartDate},120)
+		  AND T2.Date <![CDATA[<=]]> CONVERT(VARCHAR(10),#{cmpEndDate},120)
+		  AND T4.SHOPCODE = #{shopCode}
+		GROUP BY T3.ProductCode
+			)
+		SELECT
+			std.productCode               AS productCode
+			 , ISNULL(FORMAT(std.sales, '#,##0'),0) AS stdSales
+			 , ISNULL(FORMAT(std.cnt, '#,##0'),0)   AS stdPurCnt
+			 , ISNULL(FORMAT(cmp.sales, '#,##0'),0) AS cmpSales
+			 , ISNULL(FORMAT(cmp.cnt, '#,##0'),0)   AS cmpPurCnt
+			 , CASE
+				   WHEN cmp.sales != 0
+					   THEN ROUND( (std.sales - cmp.sales) / cmp.sales * 100.0, 1 )
+				   ELSE 0
+			END AS salesRate
+			 , CASE
+				   WHEN cmp.cnt != 0
+					   THEN ROUND( (std.cnt - cmp.cnt) / cmp.cnt * 100.0, 1 )
+				   ELSE 0
+			END AS purCntRate
+		FROM std
+				 LEFT JOIN cmp ON std.productCode = cmp.productCode
+		ORDER BY std.cnt desc
+	</select>
+	<!-- 6. 구간 비교 -->
+</mapper>

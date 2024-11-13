@@ -1,0 +1,1018 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:35:55 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.tiers.tiermaster.mapper.LoyTiersMapper">
+
+
+
+    
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (removeTiersCond)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+    <update id="removeTiersCondAll" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondReqDto">
+    	/* LoyTiersMapper.removeTiersCondAll */
+		UPDATE 	LOY.LOY_TIERS_COND 
+		SET 	flag = flag + 1
+				, MODIFY_DATE = getdate()
+				, MODIFY_BY = #{modifyBy}
+		WHERE 	RID_TIERS = #{ridTier}
+		AND FLAG = 1
+		AND TYPE = #{type}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (removeTiersCond)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 삭제
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+    <update id="removeTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.removeTiersCond */
+		UPDATE 	LOY.LOY_TIERS_COND 
+		SET 	flag = flag + 1
+				, MODIFY_DATE = getdate()
+				, MODIFY_BY = #{modifyBy}
+		WHERE 	RID = #{rid}
+			AND FLAG = 1
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일            : LoyTiersMapperDAO.java (saveTiersCond)
+    ============================================
+    -   제목                   : 등급 그룹 상세(탭)-승급 룰 저장
+    -   설명                   : 등급 그룹 상세(탭)-승급 룰 저장
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            :
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.02
+    ***************************************/ -->
+    <insert id="saveTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.saveTiersCond */
+    	INSERT INTO LOY.LOY_TIERS_COND (
+			RID
+			, CREATE_DATE
+			, CREATE_BY
+			, MODIFY_DATE
+			, MODIFY_BY
+			, FLAG
+			, MOD_NUM
+			, RID_TIERS
+			, SEQ
+			, LOGIC_OPER
+			, FRNT_BRKT_YN
+			, RSLT_BAS_TYPE_CD
+			, SECT_START_VAL
+			, BACK_BRKT_YN
+			, TYPE
+    	) VALUES (
+			#{saveRid}
+			, getdate()
+			, #{modifyBy}
+			, getdate()
+			, #{modifyBy}
+			, 1
+			, 0
+			, #{ridTier}
+			, #{seq}
+			, #{logicOper}
+			, #{frntBrktYn}
+			, #{rsltBasTypeCd}
+			, #{sectStartVal}
+			, #{backBrktYn}
+			, #{type}
+    	)
+    </insert>
+    
+    
+    <select id="getTiersCondDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.getTiersCondDetail */
+    	SELECT 	RID 					AS rid
+				, SEQ 					AS seq
+				, LOGIC_OPER 			AS logicOper
+				, FRNT_BRKT_YN 			AS frntBrktYn
+				, RSLT_BAS_TYPE_CD 		AS rsltBasTypeCd
+				, SECT_START_VAL 		AS sectStartVal
+				, BACK_BRKT_YN 			AS backBrktYn
+    	FROM 	LOY.LOY_TIERS_COND WITH (NOLOCK) 
+    	WHERE 	RID_TIERS = #{ridTier}
+    	AND		type = #{type}
+		AND 	flag = 1
+    </select>
+    
+    <update id="editTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondDetailReqDto">
+    	/* LoyTiersMapper.editTiersCond */
+		UPDATE 	LOY.LOY_TIERS_COND
+		SET 	SEQ = #{seq}
+				, LOGIC_OPER = #{logicOper}
+				, FRNT_BRKT_YN = #{frntBrktYn}
+				, RSLT_BAS_TYPE_CD = #{rsltBasTypeCd}
+				, SECT_START_VAL = #{sectStartVal}
+				, BACK_BRKT_YN = #{backBrktYn}
+				, MODIFY_BY = #{modifyBy}
+				, MODIFY_DATE = getdate()
+				, MOD_NUM = MOD_NUM + 1
+		WHERE 	RID = #{rid}
+			AND FLAG = 1
+    </update>
+    
+    <select id="selectTierGroupListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierCondListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewResDto" >
+    /*LoyTiersMapper.selectTierGroupListNew*/
+          SELECT 	  lp.PGM_NM				AS pgmNm
+          			, ltg.MBR_TYPE_CD		AS loyMbrTypeCd
+          			, ltg.TIERS_GRP_NM		AS tiersGrpNm
+          			, ltg.VAILD_START_DT	AS vaildStartDt
+          			, ltg.MBR_TIER_COL		AS mbrTierCol
+          			, ltg.STAT_CD			AS statCd
+					, CONCAT (e.name, ' (', e.EMP_NO , ')')	AS name
+          			, convert(varchar,ltg.create_date,120) as createDate
+          			, ltg.RID				AS rid
+					, ${strColumn}
+		FROM	LOY.LOY_TIERS_GRP ltg
+		JOIN 	LOY.LOY_PGM lp WITH (NOLOCK) ON ltg.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT JOIN com.crm_user 		cu WITH (NOLOCK) ON cu.rid = ltg.CREATE_BY AND cu.FLAG = 1
+   		LEFT JOIN com.employee 		e  WITH (NOLOCK) ON cu.ID_EMPLOYEE = e.id AND e.FLAG = 1
+		WHERE 	${strCondWhere}
+			AND ${strWhere}
+			AND ltg.FLAG = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierGroupDetailNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGroupDetailResDto" >
+    /*LoyTiersMapper.selectTierGroupDetailNew*/
+          SELECT  	  lp.PGM_NM						AS pgmNm
+          			, ltg.TIERS_GRP_NM			    AS tiersGrpNm
+          			, ltg.RID_PGM					AS pgmRid
+          			, ltg.MBR_TYPE_CD				AS loyMbrTypeCd
+          			, ltg.RID_MBR_DS				AS dataSetRid
+          			, ltg.VAILD_START_DT			AS vaildStartDt
+          			, ltg.TG_COMMENT				AS tgComment
+          			<!-- , ltg.UP_KEEP_MM				AS upKeepMm -->
+          			, ld.DS_NM						AS dsNm
+          			, ltg.STAT_CD					AS statCd
+          			, ltg.MBR_TIER_COL				AS mbrTierCol
+		FROM	LOY.LOY_TIERS_GRP ltg WITH (NOLOCK) 
+		JOIN 	LOY.LOY_PGM lp WITH (NOLOCK) ON ltg.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT OUTER JOIN    LOY.LOY_DATASET	ld WITH (NOLOCK) ON ltg.RID_MBR_DS = ld.RID AND ld.FLAG = 1
+		WHERE   ltg.FLAG = 1
+		AND     ltg.rid = #{rid}
+    </select>
+    
+    <insert id="insertTierGroup" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGroupDetailReqDto">
+    /*LoyTiersMapper.insertTierGroup*/
+    	INSERT INTO LOY.LOY_TIERS_GRP
+    	(
+      		  RID
+      		, CREATE_BY
+      		, MODIFY_BY
+      		, CREATE_DATE
+      		, MODIFY_DATE
+      		, FLAG
+      		, TIERS_GRP_NM
+      		, RID_PGM
+      		, MBR_TYPE_CD
+      		, VAILD_START_DT
+      		, RID_MBR_DS
+      		<!-- , UP_KEEP_MM -->
+      		, TG_COMMENT
+      		, STAT_CD
+      		, MBR_TIER_COL
+      	)
+      	VALUES
+      	(
+      		  #{rid}
+      		, #{createBy}
+      		, #{modifyBy}
+      		, getdate()
+      		, getdate()
+      		, '1'
+      		, #{tiersGrpNm}
+      		, #{pgmRid}
+      		, #{loyMbrTypeCd}
+      		, #{vaildStartDt}
+      		, #{dataSetRid}
+      		<!-- , #{upKeepMm} -->
+      		, #{tgComment}
+      		, 'W'
+      		, #{mbrTierCol}
+      	)
+    </insert>
+    
+    <update id="updateTierGroup" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGroupDetailReqDto">
+    /*LoyTiersMapper.updateTierGroup*/
+    	UPDATE LOY.LOY_TIERS_GRP
+    	SET   RID_PGM			= #{pgmRid}
+    		, TIERS_GRP_NM		= #{tiersGrpNm}
+      		, MBR_TYPE_CD		= #{loyMbrTypeCd}
+      		, VAILD_START_DT	= cast(cast(#{vaildStartDt} as date) as datetime)
+      		, RID_MBR_DS		= #{dataSetRid}
+      		<!-- , UP_KEEP_MM		= #{upKeepMm} -->
+      		, TG_COMMENT		= #{tgComment}
+      		, STAT_CD			= #{statCd}
+      		, MBR_TIER_COL		= #{mbrTierCol}
+      		, MODIFY_BY         = #{modifyBy}
+      		, MODIFY_DATE       = getdate()
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectDatasetList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetListResDto" >
+    /*LoyTiersMapper.selectDatasetList*/
+        SELECT 	  ld.DS_NM			AS dsNm
+        		, ld.OBJ_NM			AS objNm
+          		, ld.RID			AS rid
+          		, ${strColumn}
+		FROM	 LOY.LOY_DATASET ld WITH (NOLOCK) 
+		WHERE    ld.FLAG = 1
+		AND      ${strCondWhere}
+		AND      ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierListNewPage" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto" >
+    /*LoyTiersMapper.selectTierListNewPage*/
+        SELECT 	  lt.SEQ_NO			AS seqNo
+        		, lt.TIER_NM		AS tierNm
+        		, lt.TIER_TYPE_CD	AS tierTypeCd
+        		, lt.BASE_TIER_YN	AS baseTierYn
+        		, em.NAME			AS createBy
+        		, convert(varchar,lt.create_date,120) as createDate
+        		, lt.RID			AS rid
+        		, ${strColumn}
+		FROM	 LOY.LOY_TIERS lt WITH (NOLOCK) 
+		LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) on lt.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em WITH (NOLOCK) on us.id_employee = em.id AND em.FLAG = 1
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID_TG = #{tierGroupRid}
+		AND      ${strCondWhere}
+		AND      ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto" >
+    /*LoyTiersMapper.selectTierDetail*/
+        SELECT 	  lt.SEQ_NO			AS seqNo
+        		, lt.TIER_NM		AS tierNm
+        		, lt.TIER_TYPE_CD	AS tierTypeCd
+        		, lt.BASE_TIER_YN	AS baseTierYn
+        		, lt.UP_KEEP_MM		AS tiersUpKeepMm
+        		, lt.RID			AS rid
+		FROM	 LOY.LOY_TIERS lt WITH (NOLOCK) 
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID = #{rid}
+    </select>
+    
+    <insert id="insertTier" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.insertTier*/
+    INSERT INTO LOY.LOY_TIERS
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG 
+		, RID_TG
+		, TIER_TYPE_CD
+		, TIER_NM
+		, SEQ_NO
+		, BASE_TIER_YN
+		, UP_KEEP_MM
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{tierGroupRid}
+		, #{tierTypeCd}
+		, #{tierNm}
+		, #{seqNo}
+		, #{baseTierYn}
+		, #{tiersUpKeepMm}
+    )
+    </insert>
+    
+    <update id="updateTier" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.updateTier*/
+    UPDATE  LOY.LOY_TIERS
+    SET       RID_TG		= #{tierGroupRid}
+    		, TIER_TYPE_CD  = #{tierTypeCd}
+			, TIER_NM	    = #{tierNm}
+			, SEQ_NO	 	= #{seqNo} 
+			, BASE_TIER_YN  = #{baseTierYn}
+			, UP_KEEP_MM    = #{tiersUpKeepMm}
+	WHERE   RID = #{rid}
+    </update>
+    
+    <select id="selectTierCnt" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="java.lang.Integer" >
+    /*LoyTiersMapper.selectTierCnt*/
+        SELECT 	 count(*)
+		FROM	 LOY.LOY_TIERS lt WITH (NOLOCK) 
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID_TG = #{tierGroupRid}
+		AND      lt.SEQ_NO = #{seqNo}
+		AND      RID NOT IN  (
+				 SELECT RID FROM LOY.LOY_TIERS lt2
+				 WHERE lt2.RID = #{rid}
+				 AND seq_No = #{seqNo}
+				 )
+    </select>
+    
+    <select id="selectBaseTierCnt" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="java.lang.Integer" >
+    /*LoyTiersMapper.selectBaseTierCnt*/
+        SELECT 	 count(*)
+		FROM	 LOY.LOY_TIERS lt WITH (NOLOCK) 
+		WHERE    lt.FLAG = 1
+		AND		 lt.RID_TG = #{tierGroupRid}
+		AND      lt.BASE_TIER_YN = 'Y'
+		AND      RID NOT IN  (
+				 SELECT RID FROM LOY.LOY_TIERS lt2
+				 WHERE lt2.RID = #{rid}
+				 AND BASE_TIER_YN = 'Y'
+				 )
+    </select>
+    
+    <select id="selectTierBnftListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierBnftListResDto" >
+    /*LoyTiersMapper.selectTierBnftListNew*/
+        SELECT    ltb.TIER_BNFT_TYPE_CD			AS tierBnftTypeCd
+        		, ltb.BNFT_NM					AS bnftNm
+        		, mom.OFR_NM					AS offerNm
+        		, ltb.QTY						AS qty
+        		, ltb.TIER_BNFT_GIVE_CYCLE_CD	AS tierBnftGiveCycleCd
+        		, ltb.RID						AS rid
+        		, ltb.RID_TIER					AS tierRid
+        		, ${strColumn}
+        FROM   LOY.LOY_TIERS_BNFT ltb WITH (NOLOCK) 
+        JOIN   LOY.LOY_OFR mom WITH (NOLOCK) ON ltb.RID_OFFER = mom.RID AND mom.FLAG = 1
+        WHERE  ltb.FLAG = 1
+        AND    ltb.RID_TIER = #{tierRid}
+        AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <select id="selectTierBnftDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto" 
+    							  resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierBnftDetailResDto" >
+    /*LoyTiersMapper.selectTierBnftDetail*/
+        SELECT    ltb.TIER_BNFT_TYPE_CD			AS tierBnftTypeCd
+        		, ltb.BNFT_NM					AS bnftNm
+        		, mom.OFR_NM					AS offerNm
+        		, ltb.QTY						AS qty
+        		, ltb.TIER_BNFT_GIVE_CYCLE_CD	AS tierBnftGiveCycleCd
+        		, ltb.RID						AS rid
+        		, ltb.RID_TIER					AS tierRid
+        		, ltb.RID_OFFER					AS offerRid
+        FROM   LOY.LOY_TIERS_BNFT ltb WITH (NOLOCK) 
+        JOIN   LOY.LOY_OFR mom WITH (NOLOCK) ON ltb.RID_OFFER = mom.RID AND mom.FLAG = 1
+        WHERE  ltb.FLAG = 1
+        AND    ltb.RID = #{rid}
+    </select>
+    
+    <insert id="insertTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierBnftReqDto">
+    /*LoyTiersMapper.insertTierBnft*/
+    INSERT INTO LOY.LOY_TIERS_BNFT
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG 
+		, RID_TIER
+		, BNFT_NM
+		, TIER_BNFT_TYPE_CD
+		, TIER_BNFT_GIVE_CYCLE_CD
+		, RID_OFFER
+		, QTY
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{tierRid}
+		, #{bnftNm}
+		, #{tierBnftTypeCd}
+		, #{tierBnftGiveCycleCd}
+		, #{offerRid}
+		, #{qty}
+    )
+    </insert>
+    
+    <update id="updateTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierBnftReqDto">
+    /*LoyTiersMapper.updateTierBnft*/
+    UPDATE  LOY.LOY_TIERS_BNFT
+    SET         RID_TIER				 = #{tierRid}
+			  , BNFT_NM					 = #{bnftNm}
+			  , TIER_BNFT_TYPE_CD		 = #{tierBnftTypeCd}
+			  , TIER_BNFT_GIVE_CYCLE_CD  = #{tierBnftGiveCycleCd}
+			  , RID_OFFER				 = #{offerRid}
+			  , QTY						 = #{qty}
+	WHERE   RID = #{rid}
+    </update>
+    
+    <update id="deleteTierBnft" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.deleteTierBnft*/
+    UPDATE  LOY.LOY_TIERS_BNFT
+    SET       MODIFY_DATE = getdate()
+			, MODIFY_BY	  = #{modifyBy}
+			, FLAG        = 0
+	WHERE  RID = #{rid}
+    </update>
+    
+    <select id="selectTierGroupJobList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpJobListResDto">
+    /*LoyTiersMapper.selectTierGroupJobList*/
+	WITH TAB AS
+( SELECT t1.tierBatchJobCd   
+       , case substring(T1.bEXECMM, lv, 1) 
+           when '1' then CAST(lv AS NVARCHAR) + N'월/'
+           when '0' then ''
+           else ''                  end VAL
+       , t1.useYn
+       , t1.name
+       , t1.createDate
+       , t1.rid
+       , t1.bEXECMM
+    FROM ( SELECT ltgj.TIER_BATCH_JOB_CD                  AS tierBatchJobCd
+                , CAST(ltgj.EXEC_MM AS VARCHAR)            AS bEXECMM
+                , ltgj.USE_YN                        AS useYn
+                , e.NAME                           AS name
+                , convert(CHAR(26), ltgj.CREATE_DATE, 9)   AS createDate
+                , ltgj.rid                           AS rid
+                , TA.LV                              AS LV
+             FROM LOY.LOY_TIERS_GRP_JOB ltgj WITH (NOLOCK) 
+      LEFT JOIN com.crm_user   cu WITH (NOLOCK) ON cu.rid = ltgj.CREATE_BY AND cu.FLAG = 1
+      LEFT JOIN com.employee   e  WITH (NOLOCK) ON cu.ID_EMPLOYEE = e.id AND e.FLAG = 1
+   CROSS JOIN (SELECT 1 LV 
+         UNION ALL SELECT 2
+         UNION ALL SELECT 3
+         UNION ALL SELECT 4
+         UNION ALL SELECT 5
+         UNION ALL SELECT 6
+         UNION ALL SELECT 7
+         UNION ALL SELECT 8
+         UNION ALL SELECT 9
+         UNION ALL SELECT 10
+         UNION ALL SELECT 11
+         UNION ALL SELECT 12) AS TA
+    WHERE  ltgj.FLAG = 1
+    AND    ltgj.RID_TG = #{tierGroupRid}) t1
+)
+SELECT A.tierBatchJobCd
+    , SUBSTRING(A.EXECMM,1,LEN(A.EXECMM)-1) AS EXECMM 
+    , A.useYn
+    , A.name
+    , A.createDate
+    , A.RID
+    , A.bEXECMM
+  FROM (
+      SELECT T.tierBatchJobCd
+          , T.VAL
+          , T.useYn
+          , T.name
+          , T.createDate
+          , T.rid
+          , T.bEXECMM
+           , (SELECT ''+VAL 
+                FROM TAB
+               WHERE RID = T.RID
+                 FOR XML PATH('')) AS EXECMM
+        FROM TAB AS T
+      ) AS A
+GROUP BY A.tierBatchJobCd , A.EXECMM, A.useYn, A.name, A.createDate, A.RID , A.bEXECMM;
+    </select>
+    
+    <select id="selectTierGrpJobDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpJobMasterReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpJobDetailResDto">
+    /*LoyTiersMapper.selectTierGrpJobDetail*/
+    SELECT    ltgj.TIER_BATCH_JOB_CD	AS tierBatchJobCd
+    		, ltgj.EXEC_MM				AS execMm
+    		, ltgj.USE_YN				AS useYn
+    FROM   LOY.LOY_TIERS_GRP_JOB ltgj WITH (NOLOCK) 
+    WHERE  ltgj.FLAG = 1
+    AND    ltgj.rid = #{rid}  
+    </select>
+    
+    <insert id="insertTierGrpJob" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpJobDetailReqDto">
+    /*LoyTiersMapper.insertTierGrpJob*/
+    INSERT INTO LOY.LOY_TIERS_GRP_JOB
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, RID_TG
+		, TIER_BATCH_JOB_CD
+		, EXEC_MM
+		, USE_YN
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, #{tierGroupRid}
+		, #{tierBatchJobCd}
+		, #{execMm}
+		, #{useYn}
+    )
+    </insert>
+    
+    <update id="updateTierGrpJob" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.updateTierGrpJob*/
+    UPDATE  LOY.LOY_TIERS_GRP_JOB
+    SET       RID_TG			 = #{tierGroupRid}
+    		, TIER_BATCH_JOB_CD  = #{tierBatchJobCd}
+			, EXEC_MM	    	 = #{execMm}
+			, USE_YN	 		 = #{useYn} 
+	WHERE   RID = #{rid}
+    </update>
+    
+    <select id="selectTierGrpDsListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpDsListResDto">
+    /*LoyTiersMapper.selectTierGrpDsListNew*/
+    SELECT    ld.DS_NM									AS dsNm
+    		, ld.OBJ_NM									AS objNm
+    		, N'직전 ' + cast(ltgd.EXT_RANGE as varchar) + N'개월'			AS extRange
+    		, em.name									AS createBy
+    		, convert(varchar,ltgd.CREATE_DATE,120)							AS createDate
+    		, ltgd.RID									AS rid
+    		, ${strColumn}
+    FROM   LOY.LOY_TIERS_GRP_DS ltgd WITH (NOLOCK) 
+    JOIN   LOY.LOY_DATASET ld WITH (NOLOCK) ON ltgd.RID_DS = ld.RID AND ld.FLAG = 1
+    JOIN   LOY.LOY_TIERS_GRP_JOB ltgj WITH (NOLOCK) ON ltgd.RID_TG_JOB = ltgj.RID AND ltgj.FLAG = 1
+    LEFT OUTER JOIN   LOY.LOY_DATASET_ITEM ldt WITH (NOLOCK) ON ltgd.RID_DS_ITEM	= ldt.RID AND ldt.FLAG = 1
+    LEFT OUTER JOIN COM.CRM_USER us WITH (NOLOCK) ON us.RID = ltgd.CREATE_BY AND us.FLAG = 1
+    LEFT OUTER JOIN COM.employee em WITH (NOLOCK) ON us.ID_EMPLOYEE = em.id AND em.FLAG = 1
+    WHERE  ltgd.FLAG = 1
+    AND    ltgd.RID_TG_JOB = #{tierGrpJobRid}
+    AND    ltgj.TIER_BATCH_JOB_CD = #{tierBatchJobCd}
+    AND    ${strCondWhere}
+	AND    ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging} 
+    </select>
+    
+    <select id="selectTierGrpDsDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto"
+    								    resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpDsListResDto">
+    /*LoyTiersMapper.selectTierGrpDsDetail*/
+    SELECT    ld.DS_NM				AS dsNm
+    		, ld.OBJ_NM				AS objNm
+    		, ltgd.EXT_RANGE		AS extRange
+    		, ltgd.RID_DS			AS dsRid
+    		, ldi.FIELD_NM			AS fieldNm
+    FROM   LOY.LOY_TIERS_GRP_DS ltgd WITH (NOLOCK) 
+    JOIN   LOY.LOY_DATASET ld WITH (NOLOCK) ON ltgd.RID_DS = ld.RID AND ld.FLAG = 1
+    LEFT OUTER JOIN LOY.LOY_DATASET_ITEM ldi WITH (NOLOCK) ON ldi.RID = ltgd.RID_DS_ITEM AND ldi.FLAG = 1
+    WHERE  ltgd.FLAG = 1
+    AND    ltgd.rid = #{rid}  
+    </select>
+    
+    <insert id="insertTierGrpDs" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto">
+     /*LoyTiersMapper.insertTierGrpDs*/
+     INSERT INTO LOY.LOY_TIERS_GRP_DS
+    (
+    	  RID
+        , CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG 
+		, RID_TG_JOB
+		, RID_DS
+		, EXT_RANGE
+		, RID_DS_ITEM
+    )
+    VALUES
+    (
+    	  #{rid}
+		, #{createBy}
+		, #{modifyBy}
+		, getdate()
+		, getdate()
+		, 1
+		, #{tierGrpJobRid}
+		, #{dsRid}
+		, #{extRange}
+		, #{dsItemRid}
+    )
+    </insert>
+    
+    <update id="updateTierGrpDs" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    /*LoyTiersMapper.updateTierGrpDs*/
+    UPDATE  LOY.LOY_TIERS_GRP_DS
+    SET         RID_TG_JOB  = #{tierGrpJobRid}
+			  , RID_DS		= #{dsRid}
+			  , RID_DS_ITEM	= #{dsItemRid}
+			  , EXT_RANGE   = #{extRange}
+	WHERE   RID = #{rid}
+    </update>
+    
+    <delete id="deleteTierGrpDs" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto">
+    DELETE FROM LOY.LOY_TIERS_GRP_DS
+    WHERE rid = #{rid}
+    </delete>
+    
+    <select id="selectTierGrpDsDatasetList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyGetTierGroupListReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetListResDto" >
+    /*LoyTiersMapper.selectTierGrpDsDatasetList*/
+        SELECT 	  ld.DS_NM			AS dsNm
+        		, ld.OBJ_NM			AS objNm
+          		, ld.RID			AS rid
+          		, ${strColumn}
+		FROM	 LOY.LOY_DATASET ld WITH (NOLOCK) 
+		WHERE    ld.FLAG = 1
+		AND      NOT EXISTS (
+				 		SELECT 1 
+				 		FROM  LOY.LOY_TIERS_GRP_DS ltgd 
+				 		WHERE ltgd.RID_ds = ld.RID 
+				 		AND   ltgd.RID_TG_JOB = #{tierGrpJobRid}
+				 		)
+		AND      ${strCondWhere}
+		AND      ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierRuleListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierRuleResDto" >
+    /*LoyTiersMapper.selectTierRuleListNew*/
+			   WITH TAB AS 
+		(
+		SELECT t3.rid   
+			,  t3.tierNm
+			, t3.tierTypeCd
+			, t3.condVal
+			, t3.createBy				
+			, convert(varchar,t3.createDate,120) AS createDate
+			, t3.tiersRulesTierRid
+			, t3.tierSeqNo
+			, t3.rn
+	FROM (SELECT DISTINCT  t2.rid
+					,t2.tierNm
+					,t2.tierTypeCd
+					,t2.tiersRulesTierRid
+					,t2.createDate
+					,t2.createBy
+					,t2.tierSeqNo
+					,t2.condVal AS condVal
+					,t2.rn
+	FROM (
+	SELECT  t1.rid
+		   ,t1.tierNm
+		   ,t1.tierTypeCd
+		   <if test='tierBatchJobCd == "U"'>
+		   ,isnull(t1.logicOper + ' ','') + case t1.frntBrktYn WHEN '1' THEN '(' ELSE '' END 
+			+ t1.dsNm + '.' + t1.fieldDesc + ' >= ' + cast(format(cast(t1.condVal AS int), '##,##0') as nvarchar) 
+			+ case t1.backBrktYn WHEN '1' THEN ')' ELSE '' END AS condVal
+		   </if>
+		   <if test='tierBatchJobCd == "D"'>
+		   ,isnull(t1.logicOper + ' ','') + case t1.frntBrktYn WHEN '1' THEN '(' ELSE '' END 
+			+ t1.dsNm + '.' + t1.fieldDesc + ' &lt; ' + cast(format(cast(t1.condVal AS int), '##,##0') as nvarchar) 
+			+ case t1.backBrktYn WHEN '1' THEN ')' ELSE '' END AS condVal
+		   </if>
+		   <if test="tierBatchJobCd == null or tierBatchJobCd.equals('')">
+		   ,cast(format(cast(t1.condVal AS int),'##,##0') as nvarchar) AS condVal
+		   </if>
+		   ,t1.rn
+		   ,t1.dsNm
+		   ,t1.tiersRulesTierRid
+		   ,t1.createDate
+		   ,t1.createBy
+		   ,t1.seqNo
+		   ,t1.tierSeqNo
+	FROM (SELECT    	      lt.RID					AS rid
+					, lt.TIER_NM				AS tierNm
+        			, lt.TIER_TYPE_CD			AS tierTypeCd
+        			, ltr.COND_VAL				AS condVal
+           			, ld.DS_NM					AS dsNm
+           			, ldi.FIELD_DESC			AS fieldDesc
+           			, ltr.RID_TIER				AS tiersRulesTierRid
+           			, ltr.L_OP					AS logicOper
+           			, ltr.F_BRKT_FLG			AS frntBrktYn
+           			, ltr.B_BRKT_FLG			AS backBrktYn
+           			, ltr.CREATE_Date			AS createDate
+           			, emp.name					AS createBy
+           			, ltr.SEQ_NO				AS seqNo
+           			, lt.SEQ_NO					AS tierSeqNo
+           			, ROW_NUMBER() OVER(PARTITION BY lt.RID ORDER BY ltr.SEQ_NO ASC)   AS rn
+		FROM	 LOY.LOY_TIERS_RULE ltr WITH (NOLOCK)
+		JOIN     LOY.LOY_TIERS lt WITH (NOLOCK) ON ltr.RID_TIER = lt.RID AND lt.FLAG = 1
+		JOIN     LOY.LOY_TIERS_GRP_JOB ltgj WITH (NOLOCK) ON ltr.RID_TG_JOB = ltgj.RID AND ltgj.FLAG = 1
+		JOIN     LOY.LOY_DATASET ld WITH (NOLOCK) ON ltr.RID_DS = ld.RID AND ld.FLAG =1
+		JOIN     LOY.LOY_DATASET_ITEM ldi WITH (NOLOCK) ON ltr.RID_DS_ITEM = ldi.RID AND ldi.FLAG = 1
+		LEFT JOIN COM.CRM_USER cu WITH (NOLOCK) ON ltr.CREATE_BY = cu.RID
+        LEFT JOIN COM.EMPLOYEE emp WITH (NOLOCK) ON emp.ID = cu.ID_EMPLOYEE
+		WHERE    ltr.FLAG = 1
+		AND      ltr.RID_TG_JOB  = #{tierGrpJobRid}
+		AND      ltgj.TIER_BATCH_JOB_CD  = #{tierBatchJobCd}
+		AND      1=1
+		AND      1=1
+		) t1
+	) t2 
+) t3
+) 
+select DISTINCT A.tierTypeCd,
+	            A.tierNm,
+	            A.condVal,
+	            A.createBy,
+	            A.createDate,
+	            A.tiersRulesTierRid,
+	            A.tierSeqNo,
+	            A.rn,
+	            ${strColumn}
+from (SELECT DISTINCT t.tierTypeCd,
+			 		  t.rn,
+			 		  t.rid,
+			 		  t.tierNm,
+			 		  t.createDate,
+			 		  t.createBy,
+			 		  t.tiersRulesTierRid,
+			 		  t.tierSeqNo, 
+			 		  STUFF((select ' '+condVal  
+                FROM TAB
+               WHERE rid = T.rid
+               order by rn ASC
+                 FOR XML PATH(''),TYPE).value('.[1]','nvarchar(100)'),1,1,'') AS condVal
+FROM TAB T ) as A
+WHERE A.rn = 1
+ 	  ORDER BY ${strOrderby}
+			   ${strEndPaging}                                             
+    </select>
+    
+    <resultMap id="LoyTierCondRuleResultMap" type="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+		<result property="ridTier" column="ridTier" />
+		<result property="tierCd"  column="tierCd" />
+		<result property="tierNm"  column="tierNm" />
+		<result property="type"    column="type" />
+		<result property="tierGrpJobRid"    column="tierGrpJobRid" />
+		<collection property="tierCondDetail" javaType="java.util.ArrayList" column="{ridTier=ridTier,tierGrpJobRid=tierGrpJobRid}" select="selectTierGrpRuleDetail" />
+	</resultMap>
+    <select id="selectTierGrpRuleList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" resultMap="LoyTierCondRuleResultMap">
+    	/* LoyTiersMapper.selectTierGrpRuleList */
+    	SELECT 	  RID 			    AS ridTier
+    			, TIER_TYPE_CD 		AS tierTypeCd
+    			, TIER_NM 			AS tierNm
+    			, 'UP'				AS type
+    			, #{tierGrpJobRid}  AS tierGrpJobRid
+    	FROM 	LOY.LOY_TIERS WITH (NOLOCK) 
+    	WHERE FLAG = 1
+		AND   RID = #{ridTier}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectTierGrpRuleDetail" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierRuleResDto">
+    	/* LoyTiersMapper.selectTierGrpRuleDetail */   	   	   	     	
+    	SELECT 	  ltr.RID 					AS rid
+				, ld.DS_NM					AS dsNm
+				, ldt.FIELD_NM				AS fieldNm 
+				, FORMAT( ltr.COND_VAL,N'#,0')				AS condVal
+				, ldt.FIELD_DESC			AS fieldDesc
+				, lt.TIER_NM				AS tierNm
+				, ltr.RID_TIER				AS tierRid
+				, ltr.RID_DS				AS tierGrpDataSetRid
+				, ltr.RID_DS_ITEM			AS tierGrpDataSetItemRid
+				, ltr.L_OP					AS logicOper
+				, ltr.F_BRKT_FLG			AS frntBrktYn
+				, ltr.B_BRKT_FLG			AS backBrktYn
+    	FROM 	LOY.LOY_TIERS_RULE ltr WITH (NOLOCK) 
+    	JOIN    LOY.LOY_DATASET ld WITH (NOLOCK) ON ld.RID = ltr.RID_DS AND ld.FLAG = 1
+    	JOIN    LOY.LOY_DATASET_ITEM ldt WITH (NOLOCK) ON ltr.RID_DS_ITEM = ldt.RID AND ldt.FLAG = 1
+    	JOIN    LOY.LOY_TIERS lt WITH (NOLOCK) ON ltr.RID_TIER = lt.RID AND lt.FLAG = 1
+    	WHERE 	    ltr.flag = 1
+    	AND 	    ltr.RID_TG_JOB = #{tierGrpJobRid}
+    	AND 		ltr.RID_TIER   = #{ridTier}
+    	ORDER BY    ltr.seq_NO ASC
+	</select>
+    
+    <select id="selectDataSetListNew" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierGrpDsMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierGrpDsListResDto">
+    	/* LoyTiersMapper.selectDataSetListNew */
+    	SELECT    ld.DS_NM									AS dsNm
+    		, ld.OBJ_NM									AS objNm
+    		, N'직전 ' + cast(ltgd.EXT_RANGE AS varchar) + N'개월'			AS extRange
+    		, em.name									AS createBy
+    		, ltgd.CREATE_DATE							AS createDate
+    		, ltgd.RID									AS rid
+    		, ld.RID									AS tierDataSetRid
+    		, ${strColumn}
+	    FROM   LOY.LOY_TIERS_GRP_DS ltgd WITH (NOLOCK) 
+	    JOIN   LOY.LOY_DATASET ld WITH (NOLOCK) ON ltgd.RID_DS = ld.RID AND ld.FLAG = 1
+	    LEFT OUTER JOIN COM.CRM_USER us WITH (NOLOCK) ON us.RID = ltgd.CREATE_BY AND us.FLAG = 1
+	    LEFT OUTER JOIN COM.employee em WITH (NOLOCK) ON us.ID_EMPLOYEE = em.id AND em.FLAG = 1
+	    WHERE  ltgd.FLAG = 1 
+	    AND    ltgd.RID_TG_JOB = #{tierGrpJobRid}
+	    AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <select id="selectDataSetItemList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetItemListResDto">
+    	/* LoyTiersMapper.selectDataSetItemList */
+    	SELECT     ld.DS_NM				AS dsNm
+    			 , ldt.FIELD_NM			AS fieldNm
+    			 , ldt.FIELD_DESC		AS fieldDesc
+    			 , ldt.RID_DS			AS tierDataSetRid
+    			 , ldt.RID				AS tierDataSetItemRid
+    			 , ${strColumn}
+	    FROM   LOY.LOY_DATASET_ITEM ldt WITH (NOLOCK) 
+	    JOIN   LOY.LOY_DATASET ld WITH (NOLOCK) ON ldt.RID_DS = ld.RID AND ld.FLAG = 1
+	    WHERE  ldt.FLAG = 1
+	    AND    ldt.RID_DS = #{tierGrpDataSetRid}
+	    AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <insert id="saveTiersRule" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.saveTiersCond */
+    	INSERT INTO LOY.LOY_TIERS_RULE (
+			  RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, RID_TG_JOB
+			, RID_TIER
+			, RID_DS
+			, RID_DS_ITEM
+			, SEQ_NO
+			, COND_VAL
+			, L_OP
+			, F_BRKT_FLG
+			, B_BRKT_FLG
+    	) VALUES (
+    		  #{saveRid}
+			, #{createBy}
+			, #{modifyBy}
+			, getdate()
+			, getdate()
+			, #{tierGrpJobRid}
+			, #{tierRid}
+			, #{tierGrpDataSetRid}
+			, #{tierGrpDataSetItemRid}
+			, #{seqNo}
+			, #{condVal}
+			, #{logicOper}
+			, #{frntBrktYn}
+			, #{backBrktYn}
+    	)
+    </insert>
+    
+     <update id="editTiersRule" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.editTiersRule */
+    	UPDATE  LOY.LOY_TIERS_RULE
+    	SET     RID_TG_JOB	 =  #{tierGrpJobRid}
+			  , RID_TIER 	 =  #{tierRid}
+			  , RID_DS		 =  #{tierGrpDataSetRid}
+			  , RID_DS_ITEM  =  #{tierGrpDataSetItemRid}
+			  , SEQ_NO  	 =  #{seqNo}
+			  , COND_VAL	 =  #{condVal}
+			  , L_OP		 =  #{logicOper}
+			  , F_BRKT_FLG   =  #{frntBrktYn}
+			  , B_BRKT_FLG   =  #{backBrktYn}
+		WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteTiersCond" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTiersCond */
+    	update LOY.LOY_TIERS_RULE
+    	   set modify_date = getdate()
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+    
+    <update id="deleteTierGrpJob" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTierGrpJob */
+    	delete FROM LOY.LOY_TIERS_GRP_JOB
+    	WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectTiersDatasetItemList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto" 
+    										resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyDataSetItemListResDto">
+    	/* LoyTiersMapper.selectTiersDatasetItemList */
+    	SELECT     ldt.FIELD_NM			AS fieldNm
+    			 , ldt.FIELD_DESC		AS fieldDesc
+    			 , ldt.RID				AS rid
+    			 , ${strColumn}
+	    FROM   LOY.LOY_DATASET_ITEM ldt WITH (NOLOCK)
+	    WHERE  ldt.FLAG = 1
+	    AND    ldt.RID_DS = #{dataSetRid}
+	    AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <delete id="deleteTierRule" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTierRule */
+    	DELETE FROM LOY.LOY_TIERS_RULE
+    	WHERE  RID_TG_JOB = #{tierGrpJobRid}
+    	AND    RID_TIER   = #{tiersRulesTierRid}
+    </delete>
+    
+    <update id="deleteTiersGrp" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTiersGrp */
+    	update LOY.LOY_TIERS_GRP
+    	   set modify_date = getdate()
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+    
+    <update id="deleteTier" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierRuleMasterReqDto">
+    	/* LoyTiersMapper.deleteTier */
+    	update LOY.LOY_TIERS
+    	   set modify_date = getdate()
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+    
+    <select id="tierBatchCall" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	/* LoyTiersMapper.callTableList */
+        CALL LOY.SP_TIER_MONTHLY_KE('20200201')
+    </select>
+    
+     <select id="tierInitCall" parameterType="java.lang.String"
+		resultType="java.lang.String">
+	/* LoyTiersMapper.callTableList */
+        CALL LOY.SP_TIER_CLEAR()
+    </select>
+    
+    <select id="selectTierGroupListPop" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto"
+		resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto">
+	/* LoyTiersMapper.selectTierGroupListPop */
+        SELECT    ltg.RID				AS rid
+        		, ltg.TIERS_GRP_NM		AS tierGroupNm
+        		, ${strColumn}
+        FROM   LOY.LOY_TIERS_GRP ltg WITH (NOLOCK)
+        WHERE  ltg.FLAG = 1
+        AND    ltg.RID_PGM = #{pgmRid}
+        AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+    <select id="selectTiersListPop" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto"
+		resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto">
+	/* LoyTiersMapper.selectTiersListPop */
+        SELECT    lt.TIER_NM				AS tierNm
+        		, lt.TIER_TYPE_CD			AS tierTypeCd
+        		, lt.RID					AS rid
+        		, ${strColumn}
+        FROM   LOY.LOY_TIERS lt WITH (NOLOCK)
+        WHERE  lt.FLAG = 1
+        AND    lt.RID_TG = #{tierGroupRid}
+        AND    ${strCondWhere}
+		AND    ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} 
+    </select>
+    
+</mapper>

@@ -1,0 +1,790 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:52:45 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.auth.mapper.LoginMapper">
+
+    
+    <select id="loginConfirm" 	parameterType="com.icignal.auth.dto.request.LoginReqDto" 
+    						 				resultType="com.icignal.auth.dto.response.LoginResDto">
+    /* LoginMapper.loginConfirm */
+    SELECT u.RID AS id
+        	   , u.USER_ID AS userId
+               , e.ID AS empId
+               , e.NAME AS empName
+               , e.EMAIL AS empEmail
+               , '' AS empPermission
+               , e.EMP_NO AS empNo
+               , nvl((i1.image_folder || i1.image_file_name || i1.image_file_type), '') AS empImageUrl
+               , nvl((i2.image_folder || i2.image_file_name || i2.image_file_type), '') AS accountImageUrl
+               , d.RID AS ridDivision
+               , d.RID AS orgId
+               , d.DIV_NM AS orgName
+               , d.DIV_NO AS orgNumber
+			   , #{lang} AS lang
+               , u.RID_LOY_PGM AS loyProgramId
+               , p.PGM_NM AS loyProgramNm
+               , p.PGM_NO AS loyProgramNo
+               , f.ACCESS_IP_ADDR AS accessIpAddr
+               , nvl(u.USER_PW_CNT,0) AS userPwCnt
+               , u.PW_EXPIR_DATE AS userPwChangeExpDt
+               , u.FIRST_LOGIN_FLG AS firstLoginFlag
+               , CASE WHEN nvl(u.user_pw_cnt,0) >= 5 
+               				AND TO_CHAR(u.USER_PW_LOCK_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL ELSE u.USER_PW_LOCK_DATE 
+               				END AS userPwLockDate
+               , CASE WHEN nvl(u.user_pw_cnt,0) >= 5 
+               				AND TO_CHAR(u.USER_PW_LOCK_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL ELSE 30-ROUND((TRUNC(SYSDATE, 'MI')-TO_DATE(TO_CHAR(u.user_pw_lock_date, 'YYYYMMDD HH24:MI:SS'),'YYYYMMDD HH24:MI:SS')) * 1440) 
+               				END AS remainingTime
+    FROM COM.CRM_USER u
+    LEFT OUTER JOIN COM.EMPLOYEE e ON e.FLAG = 1 AND e.ID = u.ID_EMPLOYEE
+    LEFT OUTER JOIN COM.CRM_DIVISION d ON d.RID = e.RID_DIVISION
+<!--         left outer join com.account a on a.id = d.accnt_id -->
+<!--          left outer join com.account a1 on a.org_id = a1.id -->
+    LEFT OUTER JOIN COM.IMAGE i1 ON e.ID = i1.PARENT_ID AND i1.SEQ = 0
+    LEFT OUTER JOIN COM.IMAGE i2 ON e.ID = i2.PARENT_ID AND i2.SEQ = 0
+    LEFT OUTER JOIN LOY.LOY_PGM p ON p.FLAG = 1 AND p.RID = u.RID_LOY_PGM
+    LEFT OUTER JOIN COM.USER_ACL f ON u.RID = f.RID_CRM_USER
+    WHERE ${strSVCType}
+   	AND u.USER_STAT = 'ACTIVE'
+   	AND e.WORK_STATUS = 'HOLDOFFICE'
+   	AND u.FLAG = 1
+    <if test="id == null or id == ''">
+	AND u.USER_ID = #{email}
+	AND u.USER_PW = #{password}
+	</if>
+	<if test="id != null and id != ''">
+	AND u.RID = #{id}
+	</if>        
+    </select>
+    
+    <select id="snsNaverLoginConfirm" 	parameterType="com.icignal.auth.dto.request.LoginReqDto" 
+    						 	resultType="com.icignal.auth.dto.response.LoginResDto">
+    /* LoginMapper.snsNaverLoginConfirm */
+    SELECT u.RID AS id
+        	   , u.USER_ID AS userId
+               , e.ID AS empId
+               , e.NAME AS empName
+               , e.EMAIL AS empEmail
+               , '' AS empPermission
+               , e.EMP_NO AS empNo
+               , nvl((i1.IMAGE_FOLDER || i1.IMAGE_FILE_NAME || i1.IMAGE_FILE_TYPE), '') AS empImageUrl
+               , nvl((i2.IMAGE_FOLDER || i2.IMAGE_FILE_NAME || i2.IMAGE_FILE_TYPE), '') AS accountImageUrl
+               , d.RID AS orgId
+               , d.DIV_NM AS orgName
+               , d.DIV_NO AS orgNumber
+			   , #{lang} AS lang
+               , u.RID_LOY_PGM AS loyProgramId
+               , p.PGM_NM AS loyProgramNm
+               , p.PGM_NO AS loyProgramNo
+               , f.ACCESS_IP_ADDR AS accessIpAddr
+               , nvl(u.USER_PW_CNT,0) AS userPwCnt
+               , u.PW_EXPIR_DATE AS userPwChangeExpDt
+               , u.FIRST_LOGIN_FLG AS firstLoginFlag
+               , CASE WHEN nvl(u.USER_PW_CNT,0) >= 5 
+               				AND TO_CHAR(u.USER_PW_LOCK_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL 
+               				ELSE u.USER_PW_LOCK_DATE 
+               				END AS userPwLockDate
+               , CASE WHEN nvl(u.USER_PW_CNT,0) >= 5 
+               				AND TO_CHAR(u.USER_PW_LOCK_DATE, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL 
+               				ELSE 30-ROUND((TRUNC(SYSDATE, 'MI')-TO_DATE(TO_CHAR(u.USER_PW_LOCK_DATE, 'YYYYMMDD HH24:MI:SS'),'YYYYMMDD HH24:MI:SS')) * 1440) 
+               				END AS remainingTime
+    FROM COM.CRM_USER u 
+    LEFT OUTER JOIN COM.EMPLOYEE e ON e.FLAG = 1 AND e.ID = u.ID_EMPLOYEE
+    LEFT OUTER JOIN COM.CRM_DIVISION d ON d.RID = e.RID_DIVISION
+    LEFT OUTER JOIN COM.IMAGE i1 ON e.ID = i1.PARENT_ID AND i1.SEQ = 0
+    LEFT OUTER JOIN COM.IMAGE i2 ON e.ID = i2.PARENT_ID AND i2.SEQ = 0
+    LEFT OUTER JOIN LOY.LOY_PGM p ON p.FLAG = 1 AND p.RID = u.RID_LOY_PGM
+    LEFT OUTER JOIN COM.USER_ACL f ON u.RID = f.RID_CRM_USER
+   	WHERE ${strSVCType}
+  	AND u.USER_STAT = 'ACTIVE'
+  	AND e.WORK_STATUS = 'HOLDOFFICE'
+  	AND u.FLAG = 1
+	AND u.SNS_NAVER_KEY = #{snsId}
+    </select>
+    
+    <select id="snsKakaoLoginConfirm" 	parameterType="com.icignal.auth.dto.request.LoginReqDto" 
+    						 	resultType="com.icignal.auth.dto.response.LoginResDto">
+   	/* LoginMapper.snsKakaoLoginConfirm */
+    SELECT u.RID AS id
+        	   , u.USER_ID AS userId
+               , e.ID AS empId
+               , e.NAME AS empName
+               , e.EMAIL AS empEmail
+               , '' AS empPermission
+               , e.EMP_NO AS empNo
+               , nvl((i1.IMAGE_FOLDER || i1.IMAGE_FILE_NAME || i1.IMAGE_FILE_TYPE), '') AS empImageUrl
+               , nvl((i2.IMAGE_FOLDER || i2.IMAGE_FILE_NAME || i2.IMAGE_FILE_TYPE), '') AS accountImageUrl
+               , d.RID AS orgId
+               , d.DIV_NM AS orgName
+               , d.DIV_NO AS orgNumber
+			   , #{lang} AS lang
+               , u.RID_LOY_PGM AS loyProgramId
+               , p.PGM_NM AS loyProgramNm
+               , p.PGM_NO AS loyProgramNo
+               , f.ACCESS_IP_ADDR AS accessIpAddr
+               , nvl(u.USER_PW_CNT,0) AS userPwCnt
+               , u.PW_EXPIR_DATE AS userPwChangeExpDt
+               , u.FIRST_LOGIN_FLG AS firstLoginFlag
+               , CASE WHEN nvl(u.USER_PW_CNT,0) >= 5 
+               				AND TO_CHAR(u.user_pw_lock_date, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL 
+               				ELSE u.USER_PW_LOCK_DATE 
+               				END AS userPwLockDate
+               , CASE WHEN nvl(u.USER_PW_CNT,0) >= 5 
+               				AND TO_CHAR(u.user_pw_lock_date, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL 
+               				ELSE 30-ROUND((TRUNC(SYSDATE, 'MI')-TO_DATE(TO_CHAR(u.user_pw_lock_date, 'YYYYMMDD HH24:MI:SS'),'YYYYMMDD HH24:MI:SS')) * 1440) 
+               				END AS remainingTime
+    FROM COM.CRM_USER u
+    JOIN COM.EMPLOYEE e ON e.ID = u.ID_EMPLOYEE
+    LEFT OUTER JOIN COM.CRM_DIVISION d ON d.RID = e.RID_DIVISION
+    LEFT OUTER JOIN COM.IMAGE i1 ON e.ID = i1.PARENT_ID AND i1.SEQ = 0
+    LEFT OUTER JOIN COM.IMAGE i2 ON e.ID = i2.PARENT_ID AND i2.SEQ = 0
+    LEFT OUTER JOIN LOY.LOY_PGM p on p.FLAG = 1 AND p.RID = u.RID_LOY_PGM
+    LEFT OUTER JOIN COM.USER_ACL f ON u.RID = f.RID_CRM_USER
+    WHERE u.USER_STAT = 'ACTIVE'
+  	AND e.WORK_STATUS = 'HOLDOFFICE'
+  	AND u.FLAG = 1
+  	AND e.FLAG = 1 
+	AND u.SNS_KAKAO_KEY = #{snsId}
+    </select>
+    
+    <select id="snsGoogleLoginConfirm" 	parameterType="com.icignal.auth.dto.request.LoginReqDto" 
+    						 	resultType="com.icignal.auth.dto.response.LoginResDto">
+    /* LoginMapper.snsGoogleLoginConfirm */
+    SELECT u.RID AS id
+        	   , u.USER_ID as userId
+               , e.ID AS empId
+               , e.NAME AS empName
+               , e.EMAIL AS empEmail
+               , '' AS empPermission
+               , e.EMP_NO AS empNo
+               , nvl((i1.IMAGE_FOLDER || i1.IMAGE_FILE_NAME || i1.IMAGE_FILE_TYPE), '') AS empImageUrl
+               , nvl((i2.IMAGE_FOLDER || i2.IMAGE_FILE_NAME || i2.IMAGE_FILE_TYPE), '') AS accountImageUrl
+               , d.RID AS orgId
+               , d.DIV_NM AS orgName
+               , d.DIV_NO AS orgNumber
+			   , #{lang} AS lang
+               , u.RID_LOY_PGM AS loyProgramId
+               , p.PGM_NM AS loyProgramNm
+               , p.PGM_NO AS loyProgramNo
+               , f.ACCESS_IP_ADDR AS accessIpAddr
+               , nvl(u.USER_PW_CNT,0) AS userPwCnt
+               , u.PW_EXPIR_DATE AS userPwChangeExpDt
+               , u.FIRST_LOGIN_FLG AS firstLoginFlag
+               , CASE WHEN nvl(u.user_pw_cnt,0) >= 5 
+               				AND TO_CHAR(u.user_pw_lock_date, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL 
+               				ELSE u.USER_PW_LOCK_DATE 
+               				END AS userPwLockDate
+               , CASE WHEN nvl(u.user_pw_cnt,0) >= 5 
+               				AND TO_CHAR(u.user_pw_lock_date, 'YYYY-MM-DD HH24:MI:SS') &lt; TO_CHAR(SYSDATE - 30/(24*60),'YYYY-MM-DD HH24:MI:SS') 
+               				THEN NULL 
+               				ELSE 30-ROUND((TRUNC(SYSDATE, 'MI')-TO_DATE(TO_CHAR(u.user_pw_lock_date, 'YYYYMMDD HH24:MI:SS'),'YYYYMMDD HH24:MI:SS')) * 1440) 
+               				END AS remainingTime
+    FROM COM.CRM_USER u
+    LEFT OUTER JOIN COM.EMPLOYEE e ON e.FLAG = 1 AND e.ID = u.ID_EMPLOYEE
+    LEFT OUTER JOIN COM.CRM_DIVISION d ON d.RID = e.RID_DIVISION
+    LEFT OUTER JOIN COM.IMAGE i1 ON e.ID = i1.PARENT_ID and i1.SEQ = 0
+    LEFT OUTER JOIN COM.IMAGE i2 ON e.ID = i2.PARENT_ID and i2.SEQ = 0
+    LEFT OUTER JOIN LOY.LOY_PGM p ON p.FLAG = 1 AND p.RID = u.RID_LOY_PGM
+    LEFT OUTER JOIN COM.USER_ACL f ON u.RID = f.RID_CRM_USER
+    WHERE ${strSVCType}
+  	AND u.USER_STAT = 'ACTIVE'
+  	AND e.WORK_STATUS = 'HOLDOFFICE'
+  	AND u.FLAG = 1
+	AND u.SNS_KAKAO_KEY = #{snsId}
+    </select>
+
+  
+    <insert id="insertLoginHistory" parameterType="com.icignal.auth.dto.request.LoginReqDto" 
+    								useGeneratedKeys="false" >
+    /* LoginMapper.insertLoginHistory */
+    INSERT INTO COM.LOGIN_HISTORY(
+            ID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , AREA
+            , CHANNEL
+            , DEVICE
+            , TARGET_ID
+            , SERVER
+            , TYPE
+            , LANG
+            , IP
+            , SESSN_ID
+            <if test="loginSuccessYn != null and loginSuccessYn != ''">
+            , LOGIN_SUCCESS_YN
+            </if>
+            , LOGIN_USER_ID
+        ) values (
+            #{historyId}
+            , #{memId}
+            , #{memId}
+            , SYSDATE
+            , SYSDATE
+            , ''
+            , 'PC'
+            , 'PC'
+            , #{memId}
+            , #{server}
+            , 'ACCOUNT'
+            , #{lang}
+            , #{ip}
+            , #{sessnId}
+            <if test="loginSuccessYn != null and loginSuccessYn != ''">
+            , #{loginSuccessYn}
+            </if>
+            , #{email}
+        )
+    </insert>
+
+    <select id="selectDataAuthorityList" parameterType="com.icignal.auth.dto.request.LoginReqDto" 
+    														resultType="com.icignal.auth.dto.response.DataAuthResDto">
+    /* LoginMapper.selectDataAuthorityList */
+	SELECT ar.ID AS id
+		       , AUTH_NUM AS authNum
+		       , AUTH_GROUP_NAME AS authGroupName
+		       , ar.AUTH_DATA_GROUP_TYPE AS authDataGroupType
+		       , UNDER_GRP_BASE_DEPT_NUM AS underGrpBaseDeptNum
+	FROM COM.AUTH_USR au
+	INNER JOIN COM.AUTH_GROUP ar ON ar.FLAG = 1 AND ar.TYPE = 'DATA' AND au.AUTH_GROUP_ID = ar.ID
+	WHERE 1=1
+   	AND au.FLAG = 1
+   	AND au.MEM_ID = #{memId}
+    </select>
+
+    <update id="selectSubAccountList"  parameterType="com.icignal.common.base.dto.request.SubAccountReqDto"  statementType="CALLABLE">
+        CALL ${comSchemas}.procMktGetChildAccIds(
+            #{accId}
+            , 0
+        )
+    </update>
+
+    <!-- /**************************************
+    -    관련 파일        : MKTControlDao.java
+    ============================================
+    -    제목            : 메뉴 Front
+    -    결과형태        : 단일
+    ============================================
+    -    입력            : memId
+    -    출력            :
+    ============================================
+    -    작성자            : 안형욱
+    -    작성일            : 2015.10.20
+    ***************************************/ -->
+    <select id="getMenuFront" parameterType="com.icignal.common.base.dto.request.MenuFrontReqDto" 
+    											resultType="com.icignal.common.base.dto.response.MenuFrontResDto">
+   	/* LoginMapper.getMenuFront */
+	SELECT m.ID AS menuId
+			   , m.MENU_NAME AS menuName
+			   , m.MENU_LEVEL AS menuLevel
+               , n.PROGNUM AS progNum
+               , n.PROGNAME AS progName
+               , n.PROGTYPECD AS progTypeCd
+               , n.PROGPATH AS progPath
+               , m.PARENT_MENU_ID AS parentMenuId
+               , m.SORT_SEQ AS sortSeq
+               , ('/' || d.IMAGE_FOLDER || d.IMAGE_FILE_NAME || d.IMAGE_FILE_TYPE) AS imgURL
+               , APPLY_TYPE AS applyType
+               , m.ICONIMG AS iconImg
+          FROM ( SELECT ID
+	                			, MENU_NAME
+	                			, MENU_LEVEL
+	                			, PARENT_MENU_ID
+	                			, SORT_SEQ
+	                			, IMAGE_ID
+	                			, ICON_IMG AS iconImg
+	                 FROM COM.MENU
+	                 WHERE FLAG = 1
+	                   AND LANG = #{lang}
+               		) m
+          JOIN (
+	                SELECT a.MENU_ID
+	                	   , a1.PROGRAM_ID
+	                       , a1.PROG_NUM AS progNum
+	                       , a1.PROG_NAME AS progName
+	                       , a1.PROG_TYPE_CD AS progTypeCd
+	                       , a1.PROG_PATH AS progPath
+	                       , a1.apply_type
+                  	FROM (
+		                        SELECT b.MENU_ID
+		                          FROM COM.AUTH_USR a
+		                         INNER JOIN COM.AUTH_MENU b ON a.AUTH_GROUP_ID = b.AUTH_GROUP_ID  AND b.FLAG = true
+		                         WHERE a.MEM_ID = #{memId}
+		                           AND a.FLAG = true
+		                         GROUP BY b.MENU_ID
+                       		  )a
+                  LEFT OUTER JOIN (
+			                                   SELECT a.MENU_ID, a.PROGRAM_ID, b.PROG_NUM, b.PROG_NAME, b.PROG_TYPE_CD, b.PROG_PATH, b.apply_type
+			                                     FROM COM.MENU_PROG a
+			                                    INNER JOIN COM.PROGRAM b ON a.PROGRAM_ID = b.ID
+			                                    WHERE a.FLAG = true
+			                                      AND (b.APPLY_TYPE = #{applyType} OR b.APPLY_TYPE = 'NA')
+			                                      AND a.LANG = #{lang}
+                                  			  ) a1
+                  	ON a.MENU_ID = a1.MENU_ID
+               		) n
+          ON m.ID = n.MENU_ID
+          LEFT OUTER JOIN (
+			                           SELECT ID, IMAGE_FOLDER, IMAGE_FILE_NAME, IMAGE_FILE_TYPE, SEQ
+			                             FROM COM.IMAGE
+			                            WHERE LANG = #{lang}
+                          				) d
+    ON m.IMAGE_ID = d.ID
+    ORDER BY m.SORT_SEQ
+    </select>
+
+    <!-- /**************************************
+    -    관련 파일        : LoginDAO.java (loginConfirm())
+    ============================================
+    -    제목            : 로그인 사용자 IP접근제어 목록 조회
+    -    결과형태      : 로그인 사용자 IP접근제어 목록 조회
+    ============================================
+    -    입력            : rid
+    -    출력            :
+    ============================================
+    -    작성자            : jun.lee
+    -    작성일            : 2017.11.23
+    ***************************************/ -->
+    <select id="selectUserIpInfoList"  parameterType="com.icignal.auth.dto.request.UserIpInfoListReqDto" resultType="java.util.HashMap">
+   	/* LoginMapper.selectUserIpInfoList */
+    SELECT a.ACL_TYPE				AS aclType
+				, a.ACCESS_IP_ADDR		AS accessIpAddr
+	FROM COM.USER_ACL a
+	INNER JOIN COM.CRM_USER u ON u.FLAG = 1 AND a.RID_CRM_USER = u.rid AND a.USE_YN = 'Y'
+	WHERE u.rid = #{rid}
+		AND a.USE_YN = 'Y'
+    	AND a.FLAG = '1'
+	ORDER BY a.ACL_TYPE, a.ACCESS_IP_ADDR ASC
+    </select>
+
+    <!-- /**************************************
+    -    관련 파일        : LoginDAO.java (loginConfirm())
+    ============================================
+    -    제목            : 로그인 실패 시, com.crm_user의 USER_PW_CNT 수정
+    -    결과형태      : 로그인 실패 시, com.crm_user의 USER_PW_CNT 수정
+    ============================================
+    -    입력            : email
+    -    출력            :
+    ============================================
+    -    작성자            : jun.lee
+    -    작성일            : 2017.11.23
+    ***************************************/ -->
+    <update id="updateLoginUserPwCnt" parameterType="com.icignal.auth.dto.request.LoginReqDto">
+    /* LoginMapper.updateLoginUserPwCnt */
+    UPDATE COM.CRM_USER
+    SET
+    		MODIFY_DATE = SYSDATE
+    		, USER_PW_CNT = USER_PW_CNT + 1
+    WHERE USER_ID = #{email}
+    </update>
+    
+
+    <!-- /**************************************
+    -    관련 파일        : LoginDAO.java (loginConfirm())
+    ============================================
+    -    제목            : 로그인 실패 시, com.crm_user의 USER_PW_CNT 조회
+    -    결과형태      : 로그인 실패 시, com.crm_user의 USER_PW_CNT 조회
+    ============================================
+    -    입력            : email
+    -    출력            :
+    ============================================
+    -    작성자            : jun.lee
+    -    작성일            : 2017.11.23
+    ***************************************/ -->
+    <select id="selectUserPwCnt" parameterType="com.icignal.auth.dto.request.LoginReqDto" resultType="java.lang.Integer">
+  	/* LoginMapper.selectUserPwCnt */
+  	SELECT USER_PW_CNT  userPwCnt
+  	FROM COM.CRM_USER
+  	WHERE FLAG = 1
+    AND USER_ID = #{email}
+    </select>
+
+    <!-- /**************************************
+    -    관련 파일        : LoginDAO.java (loginConfirm())
+    ============================================
+    -    제목            : 로그인 성공 시, com.crm_user의 USER_PW_CNT 초기화
+    -    결과형태      : 로그인 성공 시, com.crm_user의 USER_PW_CNT 초기화
+    ============================================
+    -    입력            : email
+    -    출력            :
+    ============================================
+    -    작성자            : jun.lee
+    -    작성일            : 2017.11.23
+    ***************************************/ -->
+    <update id="updateUserPwCntReset" parameterType="com.icignal.auth.dto.request.LoginReqDto">
+    /* LoginMapper.updateUserPwCnt */
+    UPDATE COM.CRM_USER
+    SET
+    		MODIFY_BY = #{memId}
+    		, MODIFY_DATE = SYSDATE
+    		, USER_PW_CNT = 0
+    		, USER_PW_LOCK_DATE = null
+    WHERE USER_ID = #{email}
+    </update>
+    
+    <update id="updateLoginUserPwLockDate" parameterType="com.icignal.auth.dto.request.LoginReqDto">
+   	/* LoginMapper.updateLoginUserPwLockDate */
+   	UPDATE COM.CRM_USER
+   	SET
+   		MODIFY_DATE = SYSDATE
+   		, USER_PW_LOCK_DATE = SYSDATE
+   		, USER_STAT = 'INACTIVE'
+   	WHERE USER_ID = #{email}
+    </update>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            : sms 인증코드 insert 
+    -    결과형태      : sms 인증코드 insert
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <update id="insertCertiCode" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto">
+    /* LoginMapper.insertCertiCode */
+    UPDATE COM.CRM_USER
+    SET USER_AUTH_PW = #{rdmCode} 
+         , USER_AUTH_PW_DATE = TO_DATE(TO_CHAR(SYSDATE + 3/(24*60),'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD HH24:MI:SS')
+    WHERE USER_ID = #{email}
+    </update>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            : SMS 인증
+    -    결과형태      : SMS 인증
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id="checkTransCetiSms" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto" 
+    resultType="java.lang.Integer">
+    /* LoginMapper.checkTransCetiSms */
+    SELECT CASE 
+						WHEN COUNT(*) IS NULL THEN 0
+						ELSE COUNT(*)
+				END 
+    FROM COM.CRM_USER
+    WHERE USER_ID = #{email} 
+    AND USER_AUTH_PW = #{rdmCode}
+    </select>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            : SMS 실패횟수업데이트
+    -    결과형태      : SMS 실패횟수업데이트
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <update id="updateCertiSmsFailCnt" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto">
+    /* LoginMapper.updateCertiSmsFailCnt */
+    UPDATE COM.CRM_USER
+    SET USER_AUTH_PW_CNT = USER_AUTH_PW_CNT + 1
+    WHERE USER_ID = #{email}
+    </update>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            : 이메일 비밀번호 여부판단 
+    -    결과형태      : 이메일 비밀번호 여부판단 
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id="validEmailPwd" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto" resultType="java.lang.Integer">
+    /* LoginMapper.validEmailPwd */
+    SELECT CASE 
+					WHEN count(*) IS NULL THEN 0
+					ELSE count(*)
+				END
+    FROM COM.CRM_USER
+    WHERE USER_ID = #{email}
+    AND USER_PW = #{password}
+    </select>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            : 비밀번호 5회이상 초과인지 여부판단
+    -    결과형태      : 비밀번호 5회이상 초과인지 여부판단
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id="validUserPwdCnt" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto" resultType="java.lang.Integer">
+    /* LoginMapper.validUserPwdCnt */
+    SELECT CASE 
+					WHEN MAX(USER_PW_CNT) IS NULL THEN 0
+					ELSE MAX(USER_PW_CNT)
+				END
+    FROM COM.CRM_USER
+    WHERE USER_ID = #{email}
+    AND USER_PW = #{password}
+    </select>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            :  비밀번호 실패시 증가
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <update id="updateFailLoginUserPwCnt" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto">
+   	/* LoginMapper.updateFailLoginUserPwCnt */
+   	UPDATE com.crm_user
+   	SET
+   		MODIFY_DATE = SYSDATE
+   		, USER_PW_CNT = user_pw_cnt + 1
+   	WHERE USER_ID = #{email}
+    </update>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            :  인증패스워드 틀린횟수 추출
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id="validUserCertiPwdCnt" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto" resultType="java.lang.Integer">
+    /* LoginMapper.validUserCertiPwdCnt */
+	SELECT CASE 
+					WHEN USER_AUTH_PW_CNT IS NULL THEN 0
+					ELSE USER_AUTH_PW_CNT
+				END	
+	   FROM COM.CRM_USER
+	 WHERE USER_ID = #{email}
+    </select>
+    
+    <!-- /************************************** 
+    -    관련 파일        : 
+    ============================================
+    -    제목            :  핸드폰번호 추출
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id = "getReciveMbrPhoneNumber" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto" 
+    																resultType="com.icignal.auth.dto.response.LoginCertSmsResDto">
+    /* LoginMapper.getReciveMbrPhoneNumber */
+	SELECT SECU.FN_GETDECRYPT(#{cipherKey},em.MOBILE_NO) AS phoneNumber
+      FROM COM.CRM_USER cu JOIN COM.EMPLOYEE em ON em.FLAG = 1 AND em.ID = cu.ID_EMPLOYEE 
+     WHERE cu.FLAG = 1
+       AND cu.USER_ID = #{email}
+    </select>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            :  비밀번호 틀린횟수 초기화
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <update id="resetUserCertiPwdCnt" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto">
+    /* LoginMapper.resetUserCertiPwdCnt */
+    UPDATE COM.CRM_USER
+       SET USER_AUTH_PW_CNT = 0
+          	,USER_PW_CNT = 0
+     WHERE USER_ID = #{email}
+    </update>
+    
+    <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            :  3분 시간체크
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id="validUserCertiTime" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto" resultType="java.lang.Integer">
+    /* LoginMapper.validUserCertiTime */
+    SELECT COUNT(*)
+      FROM COM.CRM_USER
+    WHERE USER_ID = #{email}
+        AND USER_AUTH_PW_DATE <![CDATA[>=]]> SYSDATE      
+    </select>
+    
+     <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            : 로그인인증
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id = "checkTelNum" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto" resultType="java.lang.Integer">
+    /* LoginMapper.checkTelNum */
+	SELECT CASE 
+					WHEN em.MOBILE_NO IS NULL THEN 0
+					ELSE 1
+			     END
+      FROM COM.CRM_USER cu JOIN COM.EMPLOYEE em ON em.FLAG = 1 AND em.ID = cu.ID_EMPLOYEE 
+     WHERE cu.FLAG = 1
+       AND cu.USER_ID = #{email}
+    </select>
+    
+         <!-- /**************************************
+    -    관련 파일        : 
+    ============================================
+    -    제목            : SMS인증 여부
+    ============================================
+    -    입력            : 
+    -    출력            :
+    ============================================
+    -    작성자            : dw.keum 
+    -    작성일            : 2019.07.19
+    ***************************************/ -->
+    <select id="getSmsCheckYn" resultType="com.icignal.auth.dto.response.LoginResDto"> 
+    /* LoginMapper.getSmsCheckYn */
+    SELECT ATTR_VAL as smsYn
+      FROM LOY.LOY_OPER_BASE
+     WHERE FLAG = 1
+       AND TYPE_CD = 'LOGIN_AUTH'
+       AND ATTR = 'SMS' 
+    </select>
+    
+    <select id="getCallBackPhoneNumber" resultType="com.icignal.auth.dto.response.LoginCertSmsResDto">
+    /* LoginMapper.getCallBackPhoneNumber  */
+    SELECT ATTR_VAL AS callBack 
+      FROM loy.LOY_OPER_BASE lob 
+     WHERE lob.TYPE_CD = 'CALLBACK' 
+       AND lob.ATTR = 'PHONE_NUM'
+       AND lob.CTG = 'SYSTEM'
+       AND lob.flag = 1
+    </select>
+    
+    <select id="cntLoginDate" parameterType="com.icignal.auth.dto.request.LoginReqDto"
+    												resultType="java.lang.Integer">
+    /* LoginMapper.cntLoginDate */
+    SELECT COUNT(*)
+    FROM com.LOGIN_HISTORY
+    WHERE FLAG = 1
+    AND LOGIN_SUCCESS_YN = 'Y'
+    AND LOGIN_USER_ID = #{email}
+    </select>
+    
+    <select id="checkLastLoginDate" parameterType="com.icignal.auth.dto.request.LoginReqDto"
+    													resultType="java.lang.String">
+    /* LoginMapper.checkLastLoginDate */
+    SELECT A.MODIFY_DATE
+	FROM (
+				SELECT TO_CHAR(MODIFY_DATE, 'YYYYMMDD') AS MODIFY_DATE
+				FROM com.LOGIN_HISTORY
+				WHERE FLAG = 1
+				AND LOGIN_SUCCESS_YN = 'Y'
+				AND LOGIN_USER_ID = #{email}
+				ORDER BY MODIFY_DATE DESC
+			) A
+	WHERE ROWNUM = 1
+    </select>
+    
+    <update id="updateUserStat" parameterType="com.icignal.auth.dto.request.LoginReqDto">
+    /* LoginMapper.updateUserStat */
+    UPDATE COM.CRM_USER
+    SET
+     		MODIFY_BY = 'overDate'
+	     , MODIFY_DATE = SYSDATE
+	     , USER_STAT = 'INACTIVE'
+	WHERE USER_ID = #{email}
+    </update>
+    
+    <select id="crmUserState" parameterType="com.icignal.auth.dto.request.LoginReqDto"
+    										resultType="java.lang.String">
+    /* LoginMapper.crmUserState */
+    SELECT USER_STAT
+	FROM COM.CRM_USER
+	WHERE 1=1
+	and flag = 1
+	and USER_ID = #{email}
+    </select>
+    
+    <select id="selectCrmUserIp" parameterType="com.icignal.auth.dto.request.LoginCertSmsReqDto"
+    										resultType="com.icignal.auth.dto.response.AuthCrmUserDto">
+    /* LoginMapper.selectCrmUserIp */
+     SELECT t.ip
+ 		,t.ipDate
+    from (SELECT  lh.IP   AS ip
+    	  , TO_CHAR(lh.CREATE_DATE , 'YYYY-MM-DD HH24:MI:SS') AS ipDate
+	FROM COM.LOGIN_HISTORY lh
+	WHERE lh.LOGIN_USER_ID = #{userId}
+	AND   flag = 1
+	order by create_date desc ) t
+        WHERE rownum=1
+    </select>
+    
+    <select id="managerCheck" parameterType="com.icignal.auth.dto.request.LoginReqDto"
+    										resultType="java.lang.Integer">
+    /* LoginMapper.managerCheck */
+		SELECT  COUNT(*) 
+		FROM COM.CRM_USER 
+		WHERE 1=1
+		and flag = 1
+		and USER_ID = #{email}
+		and PW_EXPIR_DATE is null    										
+    </select>
+    <select id="acesStartDate" parameterType="com.icignal.auth.dto.request.LoginReqDto"
+    										resultType="java.lang.String">
+    /* LoginMapper.acesStartDate */
+	    SELECT ACES_START_DATE
+		FROM COM.CRM_USER
+		WHERE 1=1
+		and flag = 1
+		and USER_ID = #{email}
+    </select>    
+    <select id="acesEndDate" parameterType="com.icignal.auth.dto.request.LoginReqDto"
+    										resultType="java.lang.String">
+    /* LoginMapper.acesEndDate */
+	    SELECT ACES_END_DATE+1
+		FROM COM.CRM_USER
+		WHERE 1=1
+		and flag = 1
+		and USER_ID = #{email}
+    </select>
+    
+</mapper>

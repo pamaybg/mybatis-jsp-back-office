@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.survey.mapper.LoySurveyMapper">
+
+	<select id="selectSurveyList" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+								  resultType="com.icignal.loyalty.survey.dto.response.LoySurveyListResDto">
+	/* LoySurveyMapper.selectSurveyList */
+		SELECT    lp.PGM_NM			AS pgmNm
+				, lsm.SURV_NO		AS survNo
+				, lsm.SURV_NM		AS survNm
+				, concat(CONVERT(varchar(10), lsm.VALID_START_DATE, 120) , '~' , CONVERT(varchar(10), lsm.VALID_END_DATE, 120)) AS vaildDate
+				, lsm.STAT_CD		AS statCd
+				, em.name			AS name
+				, CONVERT(varchar, lsm.CREATE_DATE, 120) AS createDate
+				, (SELECT COUNT(DISTINCT lsmm.RID_MBR) FROM loy.loy_surv_mbr lsmm WHERE lsmm.RID_SURV_MST = lsm.RID AND lsmm.flag = 1) AS surveyCnt
+				, lsm.RID			AS rid
+				, ${strColumn}
+		FROM LOY.LOY_SURV_MST lsm WITH (NOLOCK)
+		LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lsm.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = lsm.CREATE_BY AND cu.FLAG = 1
+		LEFT OUTER JOIN COM.EMPLOYEE em WITH (NOLOCK) ON em.ID = cu.ID_EMPLOYEE AND em.FLAG = 1
+		WHERE lsm.FLAG = 1
+		AND   lsm.STAT_CD = 'A'
+		AND ${strCondWhere}
+	  	AND ${strWhere}
+ 		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<update id="removeSurvey" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto">
+	/* LoySurveyMapper.removeSurvey */
+		UPDATE LOY.LOY_SURV_MST 
+		 SET    MODIFY_BY = #{modifyBy}
+   	         ,  MODIFY_DATE = getDate()
+   	    	 ,  flag = flag + 1
+        WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectSurveyDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+								  					resultType="com.icignal.loyalty.survey.dto.response.LoySurveyDetailResDto">
+	/* LoySurveyMapper.selectSurveyDetail */
+		SELECT    
+				  lp.PGM_NM						AS pgmNm
+				, lsm.SURV_NM					AS survNm
+				, lsm.SURV_NO					AS survNo
+				, CONCAT(CONVERT(varchar(10), lsm.VALID_START_DATE, 120), '~', CONVERT(varchar(10), lsm.VALID_END_DATE, 120)) AS vaildDate
+				, lsm.STAT_CD					AS statCd
+				, em.name							AS name
+				, CONVERT(varchar, lsm.CREATE_DATE, 120) AS createDate
+				, lsm.RID							AS rid
+				, lp.RID								AS pgmRid
+				, lsm.VALID_START_DATE  AS validStartDate
+				, lsm.VALID_END_DATE		AS validEndDate
+				, lsm.CONTENTS					AS contents
+				, lsm.GRP_YN						AS grpYn
+				, lsm.GRP_CNT					AS grpCnt
+				, lsm.URL_WEB 					AS urlWeb
+		FROM LOY.LOY_SURV_MST lsm WITH (NOLOCK)
+		LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lsm.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = lsm.CREATE_BY AND cu.FLAG = 1
+		LEFT OUTER JOIN COM.EMPLOYEE em WITH (NOLOCK) ON em.ID = cu.ID_EMPLOYEE AND em.FLAG = 1
+		WHERE lsm.FLAG = 1
+		AND   lsm.RID = #{rid}
+	</select>
+	
+	<insert id="insertServeyDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.insertServeyDetail */
+	INSERT INTO loy.LOY_SURV_MST(
+				  RID
+				, CREATE_BY
+				, MODIFY_BY
+				, GRP_YN
+				, GRP_CNT
+				, SURV_NO
+				, SURV_NM
+				, STAT_CD
+				, VALID_START_DATE
+				, VALID_END_DATE
+				, RID_PGM
+				, CONTENTS
+				, URL_WEB
+	) VALUES(
+				  #{rid}
+				, #{empId}
+				, #{empId}
+				, #{grpYn}
+				, #{grpCnt}
+				, loy.FN_GET_SURV_NO()
+				, #{survNm}
+				, #{statCd}
+				, CONVERT(varchar, #{validStartDate}, 120)
+				, CONVERT(varchar, #{validEndDate}, 120)
+				, #{pgmRid}
+				, #{contents}
+				, #{urlWeb}
+				)
+				
+	</insert>
+	
+	<update id="updateServeyDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.updateServeyDetail */
+	UPDATE LOY.LOY_SURV_MST
+	SET 
+			  MODIFY_BY = #{empId}
+			, MODIFY_DATE = getDate()
+			, GRP_YN = #{grpYn}
+			, GRP_CNT = #{grpCnt}
+			, SURV_NM = #{survNm}
+			, STAT_CD = #{statCd}
+			, VALID_START_DATE = CONVERT(varchar, #{validStartDate}, 120)
+			, VALID_END_DATE = CONVERT(varchar, #{validEndDate}, 120)
+			, RID_PGM = #{pgmRid}
+			, CONTENTS = #{contents}
+			, URL_WEB = #{urlWeb}
+ 	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectSurvItemList" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+													resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemListResDto">
+	/* LoySurveyMapper.selectSurvItemList */
+	 SELECT lsi.RID AS rid
+ 			, lsi.GRP_NO AS grpNo
+ 			, lsi.NO AS no
+ 			, lsi.TITLE AS title
+ 			, lsi.FIELD_TYPE_CD AS fieldTypeCd
+ 			, e.name AS modifyBy
+ 			, CONVERT(varchar, lsi.MODIFY_DATE, 120)  AS modifyDate
+ 			, ${strColumn}
+ 	FROM loy.LOY_SURV_ITEM lsi WITH (NOLOCK)
+ 	JOIN loy.LOY_SURV_MST lsm WITH (NOLOCK) ON lsi.RID_SURV_MST = lsm.RID AND lsm.FLAG = 1
+ 	LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = lsi.MODIFY_BY AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON e.ID = cu.ID_EMPLOYEE AND e.FLAG = 1
+ 	WHERE lsi.FLAG = 1
+ 	AND lsi.RID_SURV_MST = #{rid}
+ 	AND ${strCondWhere}
+	AND ${strWhere}
+ 	ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectSurvItemDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+														resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemListResDto">
+	/* LoySurveyMapper.selectSurvItemDetail */
+	 SELECT  
+	 		lsi.GRP_NO AS grpNo
+ 			, lsi.NO AS no
+ 			, lsi.TITLE AS title
+ 			, lsi.FIELD_TYPE_CD AS fieldTypeCd
+ 			, lsi.CONTENTS AS itemContents
+ 	FROM loy.LOY_SURV_ITEM lsi WITH (NOLOCK)
+ 	JOIN loy.LOY_SURV_MST lsm WITH (NOLOCK) ON lsi.RID_SURV_MST = lsm.RID AND lsm.FLAG = 1
+ 	WHERE lsi.FLAG = 1
+ 	AND lsi.RID_SURV_MST = #{rid}
+ 	AND lsi.RID = #{survItemRid}
+	</select>
+	
+	<insert id="insertSurvItemDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.insertSurvItemDetail */
+	 INSERT INTO loy.LOY_SURV_ITEM(
+				 	  RID
+					, CREATE_BY
+					, MODIFY_BY
+					, NO
+					, TITLE
+					, FIELD_TYPE_CD
+					, CONTENTS
+					, RID_SURV_MST
+					, GRP_NO
+	) VALUES(
+				 	  #{rid}
+				 	, #{empId}
+				 	, #{empId}
+				 	, #{no}
+				 	, #{title}
+				 	, #{fieldTypeCd}
+				 	, #{itemContents}
+				 	, #{ridSurvMst}
+				 	, #{grpNo}
+				 	) 
+	</insert>
+	
+	<update id="updateSurvItemDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.updateSurvItemDetail */
+	UPDATE LOY.LOY_SURV_ITEM
+	SET 
+			MODIFY_BY 			= #{empId}
+			, MODIFY_DATE 		= getDate()
+			, NO 						= #{no}
+			, TITLE 					= #{title}
+			, FIELD_TYPE_CD 	= #{fieldTypeCd}
+			, CONTENTS 			= #{itemContents}
+			, RID_SURV_MST 	= #{ridSurvMst}
+			, GRP_NO 				= #{grpNo}
+	 WHERE RID = #{rid}
+	</update>
+	
+	<update id="deleteAllSurvItemAttr" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.deleteAllSurvItemAttr */
+	UPDATE LOY.LOY_SURV_ATTR
+	SET 
+			MODIFY_BY 		= #{empId}
+			, MODIFY_DATE = getDate()
+			, flag = flag + 1
+	 WHERE RID_SURV_ITEM = #{rid}
+	</update>
+	
+	<update id="deleteSurvItem" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.deleteSurvItem */
+	UPDATE LOY.LOY_SURV_ITEM
+	SET 
+			MODIFY_BY = #{empId}
+			, MODIFY_DATE = getDate()
+			, flag = flag + 1
+	 WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectSurvItemAttrList" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+															resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemAttrListResDto">
+	/* LoySurveyMapper.selectSurvItemAttrList */
+	SELECT lsa.NO AS no
+			, lsa.FIELD_TYPE_CD AS fieldTypeCd
+			, lsa.VAL AS val
+			, lsa.VAL_IMG AS valImg
+			, e.name AS modifyBy
+			, CONVERT(varchar, lsa.MODIFY_DATE, 120) AS modifyDate
+			, lsa.RID AS rid
+			, ${strColumn}
+	FROM loy.LOY_SURV_ATTR lsa WITH (NOLOCK)
+	LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = lsa.MODIFY_BY AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON e.ID = cu.ID_EMPLOYEE AND e.FLAG = 1
+	WHERE lsa.FLAG = 1
+	AND lsa.RID_SURV_ITEM = #{survItemRid}
+	AND ${strWhere}
+ 	ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectSurvItemAttrDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+															resultType="com.icignal.loyalty.survey.dto.response.LoySurveyItemAttrListResDto">
+	/* LoySurveyMapper.selectSurvItemAttrList */
+		SELECT lsa.NO AS attrNo
+			, lsa.FIELD_TYPE_CD AS attrFieldTypeCd
+			, lsa.VAL AS val
+			, lsa.VAL_IMG AS valImg
+			, e.name AS modifyBy
+			, CONVERT(varchar, lsa.MODIFY_DATE, 120) AS modifyDate
+			, lsa.RID AS rid
+	FROM loy.LOY_SURV_ATTR lsa WITH (NOLOCK)
+	LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = lsa.MODIFY_BY AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON e.ID = cu.ID_EMPLOYEE AND e.FLAG = 1
+	WHERE lsa.FLAG = 1
+	AND lsa.RID = #{rid}
+	</select>
+	
+	<insert id="insertSurvItemAttr" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.insertSurvItemAttr */
+	INSERT INTO loy.LOY_SURV_ATTR(
+				  RID
+				, CREATE_BY
+				, MODIFY_BY
+				, FIELD_TYPE_CD
+				, NO
+				, VAL
+				, VAL_IMG
+				, RID_SURV_ITEM
+	)VALUES(
+				  #{rid}
+				, #{empId}
+				, #{empId}
+				, #{fieldTypeCd}
+				, #{no}
+				, #{val}
+				, #{valImg}
+				, #{ridSurvItem}
+				)
+	</insert>
+	
+	<update id="updateSurvItemAttr" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.updateSurvItemAttr */
+	UPDATE loy.LOY_SURV_ATTR
+	SET 
+		MODIFY_BY = #{empId}
+		, MODIFY_DATE = getDate()
+		, NO = #{no}
+		, VAL = #{val}
+	WHERE RID = #{ridSurvItemAttr}
+	</update>
+	
+	<update id="deleteSurvItemAttr" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.deleteSurvItemAttr */
+	UPDATE loy.LOY_SURV_ATTR
+	SET 
+		MODIFY_BY = #{empId}
+		, MODIFY_DATE = getDate()
+		, flag = flag + 1
+	WHERE RID = #{rid}
+	</update>
+	
+<!--	<select id="selectSurvMbrList" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"-->
+<!--													resultType="com.icignal.loyalty.survey.dto.response.LoySurveyMbrListResDto">-->
+<!--	/* LoySurveyMapper.selectSurvMbrList */-->
+<!--	SELECT t1.mbrNo as mbrNo-->
+<!--			  , t1.rid as rid-->
+<!--			  , t1.hhp as hhp-->
+<!--			  , t1.custNm as custNm-->
+<!--			  , CONVERT(varchar, t1.createDate, 120) as createDate-->
+<!--			  , ${strColumn}-->
+<!--	  FROM( SELECT DISTINCT lsm.RID_MBR-->
+<!--	     		, ROW_NUMBER() OVER(PARTITION BY lm.mbr_NO ORDER BY lsm.RID) AS RNUM-->
+<!--	     		, lm.MBR_NO AS mbrNo-->
+<!--	     		, lc.HHP AS hhp-->
+<!--	     		, lc.CUST_NM AS custNm-->
+<!--	     		, lsm.CREATE_DATE AS createDate-->
+<!--	     		, lsm.rid AS rid-->
+<!--	     FROM loy.LOY_SURV_MBR lsm WITH (NOLOCK)-->
+<!--	     LEFT OUTER JOIN loy.loy_mbr lm WITH (NOLOCK) ON lm.rid =lsm.RID_MBR AND lm.FLAG = 1-->
+<!--	     LEFT OUTER JOIN loy.loy_cust lc WITH (NOLOCK) ON lc.rid =lm.RID_CUST AND lc.FLAG = 1-->
+<!--		   WHERE lsm.FLAG = 1-->
+<!--      		AND lsm.RID_SURV_MST = #{rid}-->
+<!--      		AND ${strWhere}-->
+<!--      ) t1-->
+<!--   WHERE  RNUM = '1'-->
+<!--   	ORDER BY ${strOrderby}-->
+<!--			${strEndPaging}-->
+<!--	&lt;!&ndash; SELECT DISTINCT lm.MBR_NO AS mbrNo-->
+<!--			, lc.CUST_NM AS custNm-->
+<!--			, lc.HHP AS hhp-->
+<!--			, TO_CHAR(lsm.CREATE_DATE, 'YYYY-MM-DD hh24:mi:ss') AS createDate-->
+<!--			, lsm.RID AS rid-->
+<!--			, ${strColumn}-->
+<!--	FROM loy.LOY_SURV_MBR lsm-->
+<!--	JOIN Loy.LOY_MBR lm ON lsm.RID_MBR = lm.RID AND lm.FLAG = 1-->
+<!--	JOIN loy.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG =1-->
+<!--	JOIN loy.LOY_SURV_MST lsmt ON lsmt.RID = lsm.RID_SURV_MST AND lsmt.FLAG = 1-->
+<!--	LEFT OUTER JOIN loy.LOY_SURV_ITEM lsi ON lsi.RID = lsm.RID_SURV_ITEM AND lsi.FLAG = 1-->
+<!--	LEFT OUTER JOIN loy.LOY_SURV_ATTR lsa ON lsa.RID = lsm.RID_SURV_ATTR AND lsa.FLAG = 1-->
+<!--	WHERE lsm.FLAG = 1-->
+<!--	AND lsm.RID_SURV_MST = #{rid}-->
+<!--  	AND ${strWhere}-->
+<!--	ORDER BY ${strOrderby}-->
+<!--		${strEndPaging} &ndash;&gt;-->
+<!--	</select>-->
+	
+<!--	<select id="clearMaskSurvMbrList" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"-->
+<!--															resultType="com.icignal.loyalty.survey.dto.response.LoySurveyMbrListResDto">-->
+<!--	/* LoySurveyMapper.clearMaskSurvMbrList */-->
+<!--	SELECT    lc.CUST_NM		AS unMaskCustNm-->
+<!--				, lc.HHP					AS unMaskHhp -->
+<!--	FROM	LOY.LOY_MBR lm WITH (NOLOCK)-->
+<!--	JOIN	LOY.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1-->
+<!--	JOIN loy.LOY_SURV_MBR lsm WITH (NOLOCK) ON lsm.RID_MBR = lm.RID AND lsm.FLAG = 1-->
+<!--	WHERE lm.FLAG = 1-->
+<!--	AND   lsm.RID = #{rid}-->
+<!--	</select>-->
+	
+	<select id="selectSurvOfferList" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+													resultType="com.icignal.loyalty.survey.dto.response.LoySurveyOfferListResDto">
+	/* LoySurveyMapper.selectSurvOfferList */
+	SELECT lsb.RID AS rid
+			, lsb.TITLE AS title
+			, lo.OFR_NM AS ofrNm
+			, lsb.OFR_CNT AS ofrCnt
+			, lsb.VALID_ST_DD AS validStDd
+			, e.name AS createBy
+			, CONVERT(varchar, lsb.CREATE_DATE, 120) AS createDate
+			, ${strColumn}
+	FROM LOY.LOY_SURV_BENF lsb WITH (NOLOCK)
+	JOIN LOY.LOY_OFR lo WITH (NOLOCK) ON lsb.RID_OFR = lo.RID AND lo.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = lsb.CREATE_BY AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON e.ID = cu.ID_EMPLOYEE AND e.FLAG = 1
+	WHERE lsb.FLAG = 1
+	AND lsb.RID_SURV_MST = #{rid}
+	AND ${strWhere}
+ 	ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectSurvOfferDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+													resultType="com.icignal.loyalty.survey.dto.response.LoySurveyOfferListResDto">
+	/* LoySurveyMapper.selectSurvOfferDetail */
+	SELECT lsb.TITLE AS title
+			, lo.OFR_NM AS ofrNm
+			, lo.OFR_NO AS ofrNo
+			, lo.RID AS ridOfr
+			, lsb.OFR_CNT AS ofrCnt
+			, lsb.VALID_ST_DD AS validStDd
+	FROM LOY.LOY_SURV_BENF lsb WITH (NOLOCK)
+	JOIN LOY.LOY_OFR lo WITH (NOLOCK) ON lsb.RID_OFR = lo.RID AND lo.FLAG = 1
+	WHERE lsb.FLAG = 1
+	AND lsb.RID = #{rid}
+	</select>
+	
+	<insert id="insertSurvOfferDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.insertSurvOfferDetail */
+	INSERT INTO loy.LOY_SURV_BENF(
+				  RID
+				, CREATE_BY
+				, MODIFY_BY
+				, RID_SURV_MST
+				, TITLE
+				, RID_OFR
+				, OFR_CNT
+				, VALID_ST_DD
+	)VALUES(
+				  #{rid}
+				, #{empId}
+				, #{empId}
+				, #{ridSurv}
+				, #{title}
+				, #{ridOfr}
+				, #{ofrCnt}
+				, #{validStDd}
+				)
+	</insert>
+	
+	<update id="updateSurvOfferDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.updateSurvOfferDetail */
+	UPDATE loy.LOY_SURV_BENF
+	SET 
+	   	  MODIFY_BY 	= #{empId}
+		, MODIFY_DATE = getDate()
+		, TITLE 				= #{title}
+		, RID_OFR			= #{ridOfr}
+		, OFR_CNT			= #{ofrCnt}
+		, VALID_ST_DD  = #{validStDd}
+	WHERE RID = #{ridSurvOffer}
+	</update>
+	
+	<update id="deleteSurvOfferDetail" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyDetailReqDto">
+	/* LoySurveyMapper.deleteSurvOfferDetail */
+	UPDATE loy.LOY_SURV_BENF
+	SET 
+	   	  MODIFY_BY 	= #{empId}
+		, MODIFY_DATE = getDate()
+		, flag = flag + 1
+	WHERE RID = #{rid}
+	</update>
+	
+<!--	<select id="selectSurvResult" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"-->
+<!--													resultType="com.icignal.loyalty.survey.dto.response.LoySurvRstListResDto">-->
+<!--	/* LoySurveyMapper.selectSurvResult */-->
+<!--	SELECT   lsi.title-->
+<!--			, lsi.NO AS itemNo-->
+<!--			, lsa.NO AS itemAttrNo-->
+<!--			, lsa.VAL AS itemAttrVal-->
+<!--			, lm.MBR_NO AS mbrNo-->
+<!--			, lsm.VAL AS mbrVal-->
+<!--			, lc.CUST_NM AS custNm-->
+<!--			, ${strColumn}-->
+<!--	FROM loy.LOY_SURV_MBR lsm WITH (NOLOCK)-->
+<!--	JOIN Loy.LOY_MBR lm WITH (NOLOCK) ON lsm.RID_MBR = lm.RID AND lm.FLAG = 1-->
+<!--	JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lc.RID = lm.RID_CUST AND lc.FLAG =1-->
+<!--	JOIN loy.LOY_SURV_MST lsmt WITH (NOLOCK) ON lsmt.RID = lsm.RID_SURV_MST AND lsmt.FLAG = 1-->
+<!--	LEFT OUTER JOIN loy.LOY_SURV_ITEM lsi WITH (NOLOCK) ON lsi.RID = lsm.RID_SURV_ITEM AND lsi.FLAG = 1-->
+<!--	LEFT OUTER JOIN loy.LOY_SURV_ATTR lsa WITH (NOLOCK) ON lsa.RID = lsm.RID_SURV_ATTR AND lsa.FLAG = 1-->
+<!--	WHERE lsm.FLAG = 1-->
+<!--	AND lsm.RID_SURV_MST = #{rid}-->
+<!--	</select>-->
+	
+<!--	<select id="selectSurvDtlForItemNo" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"-->
+<!--													resultType="com.icignal.loyalty.survey.dto.response.LoySurvRstListResDto">-->
+<!--	/* LoySurveyMapper.selectSurvDtlForItemNo */-->
+<!--	SELECT LSM.RID_SURV_ITEM 																	 AS ridItem-->
+<!--				, LSM.RID_SURV_ATTR																	 AS ridItemAttr-->
+<!--				, MAX(LSI.TITLE)																			 AS title-->
+<!--				, LSA.VAL 																						 AS itemAttrVal -->
+<!--				, sum(case when LSM.VAL='Y' then 1 when LSM.VAL='N' then 0 end) AS valCnt-->
+<!--				, max(lsi.FIELD_TYPE_CD) 																 AS type  -->
+<!--	FROM LOY.LOY_SURV_MBR lsm WITH (NOLOCK)-->
+<!--	  JOIN LOY.LOY_SURV_ITEM LSI WITH (NOLOCK) -->
+<!--	    ON LSM.RID_SURV_ITEM = LSI.RID AND LSI.FLAG = 1-->
+<!--	  JOIN LOY.LOY_SURV_ATTR LSA WITH (NOLOCK)-->
+<!--	    ON LSM.RID_SURV_ATTR = LSA.RID  AND LSA.FLAG = 1-->
+<!--	    AND lsi.no = #{itemNo}-->
+<!--	    AND lsm.RID_SURV_MST = #{rid}-->
+<!--	GROUP BY LSM.RID_SURV_ITEM, LSM.RID_SURV_ATTR, LSA.VAL-->
+<!--	</select>-->
+	
+	<select id="selectSurvMbrCnt" parameterType="com.icignal.loyalty.survey.dto.request.LoySurveyListReqDto"
+													resultType="java.lang.Integer">
+	/* LoySurveyMapper.selectSurvMbrCnt */
+	SELECT count(DISTINCT lsm.RID_MBR)
+    FROM loy.LOY_SURV_MBR lsm
+    WHERE lsm.RID_SURV_ITEM = #{survItemRid}
+    AND lsm.RID_SURV_MST =#{rid}
+	</select>
+	
+	<select id="checkServeyState" parameterType="java.lang.String"
+													resultType="java.lang.String">
+	/* LoySurveyMapper.checkServeyState */
+	SELECT lsm.STAT_CD
+	FROM LOY.LOY_SURV_MST lsm
+	WHERE lsm.FLAG = 1
+	AND   lsm.RID = #{rid}
+	</select>
+
+</mapper>

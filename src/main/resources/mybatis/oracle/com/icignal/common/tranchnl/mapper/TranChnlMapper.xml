@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.common.tranChnl.mapper.TranChnlMapper">
+
+	<select id="selectLoyCustAppTokenList" parameterType="String" resultType="com.icignal.common.tranChnl.dto.TranChnlPushDto">
+		/* TranChnlMapper.selectLoyCustAppTokenList */
+		SELECT DEVICE_TYPE_CD AS deviceTypeCd
+			 , TOKEN AS token
+			 , DEVICE_UUID AS deviceUuid
+			 , DEVICE_AGRE_YN AS deviceAgreYn
+			 , TO_CHAR(DEVICE_AGRE_DATE, 'YYYYMMDDHH24MISS') AS deviceAgreDate
+		FROM LOY.LOY_CUST_APP_TOKEN T1
+				 JOIN LOY.LOY_MBR T2 ON T2.RID_CUST = T1.RID_CUST
+		WHERE T1.FLAG = 1
+		  AND T1.DEVICE_AGRE_YN = 'Y'
+		  AND T2.MBR_NO = #{mbrNo}
+	</select>
+	<select id="selectComPushSeq" resultType="java.lang.String">
+		/* TranChnlMapper.selectComPushSeq */
+		SELECT COM.SEQ_PUSH_MSG_NO.nextVal FROM dual
+	</select>
+
+	
+</mapper>

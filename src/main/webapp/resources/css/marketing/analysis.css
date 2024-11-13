@@ -1,0 +1,248 @@
+@charset "utf-8";
+
+/* 레이아웃 */
+#main {
+	height: calc(100% - 51px);
+	height: -webkit-calc(100% - 51px);
+	height: -moz-calc(100% - 51px);
+}
+
+#content {
+	height: 100%;
+}
+
+.analysis_wrap {
+	height: calc(100% - 113px);
+	height: -webkit-calc(100% - 113px);
+	height: -moz-calc(100% - 113px);
+}
+
+.dashboard_wrap {
+	height: 100%;
+}
+
+.dashboard_area {
+	height: calc(100% - 41px);
+	height: -webkit-calc(100% - 41px);
+	height: -moz-calc(100% - 41px);
+}
+
+/* 툴바 */
+.analysis_tool.e-toolbar {
+	height: 35px;
+	overflow: visible;
+}
+
+.analysis_tool.e-toolbar>.e-horizontal {
+	overflow: visible;
+}
+
+.analysis_tool.e-toolbar>.e-horizontal.e-ul>li {
+	margin-top: 0;
+}
+
+.analysis_ico_tool {
+	height: 35px;
+}
+
+.analysis_ico_tool li i {
+	padding-top: 5px;
+	font-size: 18px !important;
+}
+
+.tool_box {
+	display: none;
+	position: absolute;
+	left: 0;
+	top: 35px;
+	overflow: hidden;
+	padding: 10px;
+	background: #fff;
+	border: 1px solid #aaaaaa;
+	z-index: 1;
+}
+
+.tool_box li {
+	float: left;
+	padding: 3px;
+}
+
+.tool_box li:hover {
+	background: #d2d2d4;
+}
+
+.tool_box.layout_box {
+	width: 178px;
+}
+
+.tool_box.chart_box {
+	width: 160px;
+}
+
+.tool_box.chart_box li {
+	height: 28px;
+}
+
+/* 분석 */
+.analysis_wrap:after {content ='';
+	display: block;
+	clear: both;
+}
+
+.analysis_wrap .analysis_tree {
+	width: 270px;
+	float: left;
+}
+
+.analysis_tree .ans_top {
+	padding: 10px;
+	background: #fff;
+}
+
+.analysis_tree .search_input {
+	width: 140px;
+}
+
+.analysis_tree .search_btn {
+	width:;
+	vertical-align: bottom;
+}
+
+.analysis_wrap .ans_box_wrap {
+	float: left;
+	padding: 10px 5px;
+	width: 250px;
+}
+
+.ans_box_wrap .ans_box {
+	margin-bottom: 5px;
+	height: 258px;
+	border: 1px solid #bbbcbb;
+	background: #fff;
+}
+
+.ans_box_wrap .ans_box .h_box {
+	overflow: hidden;
+	padding: 0 15px;
+	height: 30px;
+	line-height: 30px;
+	background: #f1f1f1;
+	border-bottom: 1px solid #bbbcbb;
+}
+
+.ans_box_wrap .ans_box .h_box span {
+	color: #555;
+	font-weight: bold;
+}
+
+.ans_box_wrap .ans_box .chk_box {
+	float: right;
+}
+
+.ans_box_wrap .ans_box .chk_box input[type=checkbox] {
+	vertical-align: text-bottom;
+}
+
+.ans_box_wrap .ans_box .box_con {
+	padding: 20px;
+}
+
+.analysis_wrap .diagram_area {
+	padding-top: 10px;
+	margin-left: 520px;
+}
+
+.diagram_area .e-js.e-tab .e-content {
+	border: 1px solid #bbbcbb;
+}
+
+.diagram_area .e-js.e-tab div.e-content {
+	height: 800px;
+	background: #f1f5f8;
+}
+
+/* 대시보드 */
+.dashboard_wrap {
+	margin-left: 270px;
+	padding: 5px;
+	background: #fff;
+}
+
+.dashboard_wrap .dashboard_detail {
+	padding-left: 20px;
+	padding-bottom: 5px;
+	line-height: 30px;
+	color: #333333;
+}
+
+.dashboard_wrap .dashboard_detail span {
+	font-weight: bold;
+	color: #e54e4e;
+}
+
+.dashboard_area {
+	padding: 20px 5px 20px 20px;
+	min-height: 630px;
+	background: #f1f5f8;
+	font-size: 0;
+}
+
+.dashboard_area .txt_dashboard {
+	padding-top: 21%;
+	text-align: center;
+	color: #666;
+}
+
+.dashboard_box {
+	display: inline-block;
+	margin-bottom: 15px;
+	margin-right: 15px;
+	width: 50%;
+	width: calc(50% - 15px);
+	width: -webkit-calc(50% - 15px);
+	width: -moz-calc(50% - 15px);
+	height: 350px;
+	background: #ffffff url('/resources/images/marketing/analysis/bg_dashboard.png') no-repeat center;
+	border: 1px solid #b9b9b9;
+	box-shadow: 0 0 3px #b9b9b9;
+}
+
+.dashboard_box:hover {
+	border-color: #55a9d0;
+}
+
+.dashboard_box .header_chart {
+	position: relative;
+	height: 35px;
+}
+
+.dashboard_box .header_chart .tit_chart {
+	padding-left: 20px;
+	line-height: 35px;
+	font-weight: bold;
+	color: #333333;
+}
+
+.dashboard_box .icon_area {
+	position: absolute;
+	right: 15px;
+	top: 5px;
+}
+
+.dashboard_box .icon_area .fa {
+	font-size: 17px;
+	color: #6e7886;
+}
+
+.dashboard_box .icon_area a {
+	padding-left: 5px;
+}
+
+.dashboard_box .chart_area {
+	display: none;
+	padding: 10px;
+	height: calc(100% - 35px);
+	height: -webkit-calc(100% - 35px);
+	height: -moz-calc(100% - 35px);
+	background: #fff;
+}

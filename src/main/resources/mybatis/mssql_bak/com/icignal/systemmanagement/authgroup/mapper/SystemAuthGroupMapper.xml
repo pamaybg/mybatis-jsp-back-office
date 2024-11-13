@@ -1,0 +1,395 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.authgroup.mapper.SystemAuthGroupMapper">
+
+<select id="getAuthGroupList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupListReqDto" 
+resultType="com.icignal.systemmanagement.authgroup.dto.response.AuthGroupListResDto">
+	/* SystemAuthGroupMapper.getAuthGroupList */
+		select 
+			ag.id as id
+			, ag.aut_group_nm as GroupName
+			, ag.aut_group_desc as GroupDesc
+			, cc.mark_name as GroupStatus
+			, e.name as Group_Creater
+			, ag.create_date as Group_Create_Date
+			, ${strColumn}
+		from com.auth_group ag with (nolock)
+		join com.crm_user u with (nolock) on u.rid = ag.create_by
+		join com.employee e with (nolock) on e.id = u.id_employee
+		join com.account acc with (nolock) on acc.id = ag.accnt_id and acc.flag = 1
+		join com.comm_code cc with (nolock) on cc.flag = 1 and cc.code_name =
+		ag.aut_group_status and cc.lang = #{lang} and cc.group_code =
+		'AUTH_GROUP_ACTIVATION_TYPE'
+		where 1=1
+		<!-- ag.accnt_id = #{accountId} -->
+		and ag.flag = 1
+		and ${strSVCType}
+		and ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<update id="deleteGroupEmpList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupDeleteReqDto">
+	/* SystemAuthGroupMapper.deleteGroupEmpList */
+		update com.auth_user_rel
+		set
+		modify_by = #{empId}
+		, modify_date = getdate()
+		, flag = flag + 1
+		where
+		aut_group_id in
+		 <foreach collection="groupId" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</update>
+	
+		<update id="deleteGroupAuthAllList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupDeleteReqDto">
+	/* SystemAuthGroupMapper.deleteGroupAuthAllList */
+		update com.auth_group_rel
+		set
+		modify_by = #{empId}
+		, modify_date = getdate()
+		, flag = flag + 1
+		where
+		aut_group_id in
+		 <foreach collection="groupId" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</update>
+	
+	<update id="deleteAuthGroupList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupDeleteReqDto">
+	/* SystemAuthGroupMapper.deleteAuthGroupList */
+		update com.auth_group
+		set
+		modify_by = #{empId}
+		, modify_date = getdate()
+		, flag = flag + 1
+		where
+		${strSVCType}
+		<if test="groupId.size != 0">
+		and id in
+		 <foreach collection="groupId" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+		</if>
+	</update>
+	
+		<!-- 권한그룹명 조회 -->
+	<select id="selectAuthGroupNm" parameterType="java.lang.String" resultType="java.lang.String">
+		/* SystemAuthGroupMapper.selectAuthGroupNm */
+		select 	aut_group_nm
+		from 	com.auth_group with (nolock)
+		where	id = #{value}
+	</select>
+	
+	<insert id="insertGroupDetail" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupInsertReqDto" useGeneratedKeys="false">
+	/* SystemAuthGroupMapper.insertGroupDetail */
+		insert into com.auth_group
+		(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			, lang
+			<!-- , app_service_type -->
+			<!-- , accnt_id -->
+			, aut_group_nm
+			, aut_group_desc
+			, aut_group_status
+		)
+		values
+		(
+			#{groupId}
+			, #{empId}
+			, #{empId}
+			, getdate()
+			, getdate()
+			, 1
+			<!-- , #{country} -->
+			, #{lang}
+			<!-- , #{appServiceId} -->
+			<!-- , #{accountId} -->
+			, #{groupName}
+			, #{groupDesc}
+			, #{groupType}
+		)
+	</insert>
+	
+	<update id="updateGroupDetail" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupInsertReqDto">
+	/* SystemAuthGroupMapper.updateGroupDetail */
+		update
+		com.auth_group
+		set
+		modify_by = #{empId}
+		, modify_date = getdate()
+		<!-- , accnt_id = #{accountId} -->
+		, aut_group_nm = #{groupName}
+		, aut_group_desc = #{groupDesc}
+		, aut_group_status = #{groupType}
+		where
+		id = #{groupId}
+		and ${strSVCType}
+	</update>
+	
+	<select id="getAuthEmpList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupEmployeeReqDto" 
+	resultType="com.icignal.systemmanagement.authgroup.dto.response.AuthGroupEmployeeResDto">
+	   /* SystemAuthGroupMapper.getAuthEmpList */
+		select 
+			aur.id as id
+			, u1.user_id as userId
+			, u1.rid as ridCrmUser
+			, e.email as empEmail
+			, e.name as empName
+			, e.work_status  as empTypeCd
+			<!-- , cc.mark_name as empType -->
+			, e2.name as empCreater
+			, e.create_date as empCreateDate
+			, ${strColumn}
+		from com.auth_user_rel aur with (nolock)
+			join com.crm_user u1 with (nolock) on u1.rid = aur.rid_user
+			left outer join com.employee e with (nolock) on e.id = u1.id_employee and e.flag = 1
+			left outer join com.crm_user u2 with (nolock) on u2.rid = aur.create_by
+			left outer join com.employee e2 with (nolock) on e2.id = u2.id_employee and e2.flag = 1
+		<!-- 	left outer join com.comm_code cc on cc.code_name = e.work_status and cc.lang = #{lang} and cc.group_code = 'WORK_STATUS' -->
+		where
+			aur.flag = 1
+			and u1.flag = 1
+			and aur.aut_group_id = #{authGroupId}
+			and ${strSVCType}
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+		<!-- 사용자명 조회 -->
+	<select id="selectEmpNm" parameterType="java.lang.String" resultType="java.lang.String">
+		/* SystemAuthGroupMapper.selectEmpNm */
+		select 	emp.name
+		from 	com.crm_user cu with (nolock)
+		join 	com.employee emp with (nolock) on cu.id_employee = emp.id
+		where	cu.rid = #{value}
+	</select>
+	
+	<update id="deleteEmpList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.DeleteAuthGroupDetailReqDto">
+	/* SystemAuthGroupMapper.deleteEmpList */
+		update com.auth_user_rel
+		set
+			modify_by = #{empId}
+			, modify_date = getdate()
+			, flag = flag + 1
+		where
+			${strSVCType}
+			<if test="delIdList.size!=0">
+			and id in
+			 <foreach collection="delIdList" item="item" separator="," close=")" open="(">
+				#{item}
+			</foreach>
+			</if>
+	</update>
+	
+	<select id="getAuthGroupAuthList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthAuthModalReqDto" 
+	resultType="com.icignal.systemmanagement.authgroup.dto.response.AuthAuthModalResDto">
+	/* SystemAuthGroupMapper.getAuthGroupAuthList */
+		select 
+			agr.id 					as id
+			, at.aut_nm 			as authName
+			, at.aut_desc 			as authDesc
+			, e.name 				as authCreater
+			, at.create_date 		as authCreateDate
+			, at.id as authId
+			, ${strColumn}
+		from com.auth at with (nolock)
+			join com.auth_group_rel agr with (nolock) on agr.aut_id = at.id and at.flag = 1
+			join com.auth_group ag with (nolock) on ag.id = agr.aut_group_id
+			left outer join com.crm_user u with (nolock) on u.rid = at.create_by
+			left outer join com.employee e with (nolock) on e.id = u.id_employee
+		where
+			agr.aut_group_id = #{groupId}
+			and ${strSVCType}
+			and agr.flag = 1
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<update id="deleteGroupAuthList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.DeleteAuthGroupDetailReqDto">
+	/* SystemAuthGroupMapper.deleteGroupAuthList */
+		update com.auth_group_rel
+		set
+		modify_by = #{empId}
+		, modify_date = getdate()
+		, flag = flag + 1
+		where
+		${strSVCType}
+		<if test="delIdList.size!=0">
+		and id in
+		 <foreach collection="delIdList" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+		</if>
+	</update>
+
+	<select id="getAuthGroupDetailNew" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthGroupDetailReqDto" 
+	resultType="com.icignal.systemmanagement.authgroup.dto.response.AuthGroupDetailResDto">
+	/* SystemAuthGroupMapper.getAuthGroupDetailNew */
+		select
+		ag.aut_group_nm as groupName
+		, ag.aut_group_desc as groupDesc
+		, cc.code_name as groupType
+		, e.name as groupCreater
+		, ag.create_date as groupCreateDate
+		from com.auth_group ag with (nolock)
+		join com.crm_user u with (nolock) on u.rid = ag.create_by
+		join com.employee e with (nolock) on e.id = u.id_employee
+		join com.comm_code cc with (nolock) on cc.code_name = ag.aut_group_status and cc.lang =
+		#{lang} and cc.group_code = 'AUTH_GROUP_ACTIVATION_TYPE' and cc.flag =
+		1
+		where
+		ag.id = #{groupId}
+		and ${strSVCType}
+	</select>
+	
+	<!-- 권한명 조회 -->
+	<select id="selectAuthNm" parameterType="java.lang.String" resultType="java.lang.String">
+		/* SystemAuthGroupMapper.selectAuthNm */
+		select 	aut_nm
+		from 	com.auth with (nolock)
+		where	id = #{value}
+	</select>
+	
+		<select id="getAuthAddListModal" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthAuthModalReqDto" 
+		resultType="com.icignal.systemmanagement.authgroup.dto.response.AuthAuthModalResDto">
+	/* SystemAuthGroupMapper.getAuthAddListModal */
+		select 
+		h.id as authId
+		, h.aut_nm as authName
+		, h.aut_num as authNo
+		, h.aut_desc as authDesc
+		, h.create_date as authCreateDate
+		, ${strColumn}
+		from com.auth h with (nolock)
+		join com.account acc with (nolock) on acc.id = h.accnt_id and acc.flag = 1
+		where  h.flag = 1
+		and ${strWhere}
+		and h.id not in
+			(
+			select agr.aut_id
+			from com.auth_group_rel agr with (nolock)
+			where agr.aut_group_id = #{authGroupId}
+			and agr.flag = 1
+			and agr.lang = #{lang}
+			)
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+		<select id="getEmpAddListModal" parameterType="com.icignal.systemmanagement.authgroup.dto.response.AuthGroupEmployeeModalResDto" 
+		resultType="com.icignal.systemmanagement.authgroup.dto.response.AuthGroupEmployeeModalResDto">
+	/* SystemAuthGroupMapper.getEmpAddListModal */
+		select 
+			e.id as empId
+			, e.name as empName
+			, e.email as empEmail
+			, cc.mark_name as empType
+			<!-- , e.work_status as empTypeCd -->
+			, u.user_id as userId
+			, u.rid as ridUser
+			, ${strColumn}
+		from com.crm_user u with (nolock)
+			join com.employee e with (nolock) on e.id = u.id_employee
+			left outer join com.comm_code cc with (nolock) on cc.id = e.work_status and cc.lang = #{lang}
+			left outer join com.auth_user_rel aur with (nolock) on e.id = aur.emp_id
+		where 
+			1=1 
+			and u.rid != #{empId}
+			and u.rid not in 
+			(
+				select
+					aur.rid_user
+				from com.auth_user_rel aur with (nolock)
+				where
+					aur.flag = 1
+					and aur.aut_group_id = #{authGroupId}
+					and aur.lang = #{lang}
+			)
+			and ${strSVCType}
+			and ${strWhere}
+		group by 
+			e.id
+			, e.name
+			, e.email
+			, cc.mark_name
+			, u.user_id
+			, u.rid
+			, e.create_date
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+		<update id="addEmpList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthInsertEmployeeReqDto" useGeneratedKeys="false">
+	/* SystemAuthGroupMapper.addEmpList */
+		insert into com.auth_user_rel
+		(
+			id
+			,create_by
+			,modify_by
+			,create_date
+			,modify_date
+			,flag
+			,lang
+			,aut_group_id
+			,rid_user
+			,emp_id
+		)
+		values
+		<foreach collection="userSelectList" item="item"  open="" separator="," close="">
+		(
+			com.getNewId('A')
+			,#{empId}
+			,#{empId}
+			,getdate()
+			,getdate()
+			,1
+			,#{lang}
+			,#{authGroupId}
+			,#{item}
+			,(select id_employee from com.crm_user where rid = #{item} and flag = 1)
+		)
+		</foreach>
+	</update>
+	
+		<update id="addAuthList" parameterType="com.icignal.systemmanagement.authgroup.dto.request.AuthInsertAuthReqDto">
+	/* SystemAuthGroupMapper.addAuthList */
+		
+		insert into com.auth_group_rel
+		(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, aut_group_id
+			, aut_id
+		)
+		values
+		<foreach collection="authSelectList" item="item"  open="" separator="," close="">
+		(
+			com.getNewID('A')
+			,#{empId}
+			,#{empId}
+			,getdate()
+			,getdate()
+			,1
+			,#{lang}
+			,#{authGroupId}
+			,#{item}
+		)
+		</foreach>
+	</update>
+	
+</mapper>

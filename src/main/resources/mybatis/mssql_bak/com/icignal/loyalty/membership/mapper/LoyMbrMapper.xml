@@ -1,0 +1,2230 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed Sep 16 14:06:40 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.membership.mapper.LoyMbrMapper">
+
+	<!-- 탈퇴회원 마스킹 해제 -->
+    <select id="clearMaskDrop" parameterType="com.icignal.loyalty.membership.dto.request.LoyDropMbrReqDto"
+    						   					resultType="com.icignal.loyalty.membership.dto.response.LoyDropMbrResDto">
+    /* LoyMbrMapperMapper.clearMaskDrop */
+    SELECT lcli.USER_ID AS unMaskUserId
+    FROM LOY.LOY_MBR lm WITH (NOLOCK) 
+    JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    LEFT OUTER JOIN  LOY.LOY_TIERS lt WITH (NOLOCK) ON lm.RID_TIER = lt.RID AND lt.FLAG = 1
+    LEFT OUTER JOIN LOY.LOY_CUST_LOGIN_INF lcli WITH (NOLOCK) ON lcli.RID_CUST  = lc.RID AND lcli.FLAG = 1
+    LEFT OUTER JOIN  LOY.LOY_MBR_SECSN lms WITH (NOLOCK) ON lms.RID_MBR = lm.RID AND lms.FLAG = 1
+    WHERE lm.RID = #{rid}
+    </select>
+
+
+    <select id="clearMaskMbr" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+											resultType="com.icignal.loyalty.membership.dto.response.LoyMbrResDto">
+	/* LoyMbrMapper.clearMaskMbr */
+	SELECT lc.CUST_NM 		AS unMaskCustNm
+				, lc.CUST_NO 				AS custNo
+				, lc.CUST_TYPE_CD 		AS custTypeCd
+				, lc.HHP				AS unMaskHhp
+				, lc.EMAIL			AS unMaskEmail
+				, lc.cust_nm				AS unMaskCustNm
+				, lc.HHP					AS unMaskHhp
+				, lc.EMAIL					AS unMaskEmail
+	FROM LOY.LOY_MBR lm
+	JOIN LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	WHERE lm.FLAG = 1
+	AND lm.RID = #{rid}
+	</select>
+<!--	<select id="activeDorMbr" parameterType="com.icignal.loyalty.membership.dto.request.LOYDormancyActiveReqDto" statementType="CALLABLE">-->
+<!--        /* LoyMbrMaper.activeDorMbr */-->
+<!--        { CALL LOY.PROC_MBR_ACTIVE_BY_RID_ADMIN( #{rid} ) }-->
+<!--    </select>-->
+
+ 
+	<!-- B2C 포인트 정보 조회 -->
+	<!-- 소멸 예정월은 조회하는 달 -1월료 화면에 표시 바랍니다. 예시) 2018년 11월 -->
+<!--    <select id="selectPontBalanceB2c" parameterType="com.icignal.loyalty.membership.dto.request.LOYPontBalanceB2cReqDto" statementType="CALLABLE">-->
+<!--        { call loy.PROC_POINT_BALANCE_B2C(-->
+<!--                #{rid},-->
+<!--                #{p_Rst,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},-->
+<!--                #{p_RstCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},-->
+<!--                #{p_RstMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},-->
+<!--                #{p_UsePnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},-->
+<!--                #{p_AccrualPnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},-->
+<!--                #{p_Expr1MonthPnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},-->
+<!--                #{p_PreAcrlPnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT} )-->
+<!--        }-->
+<!--    </select>-->
+
+
+    <!-- /**************************************
+    -   관련 파일             : LOYMbrDAO.java
+    ============================================
+    -   제목                  : 탈회 회원 회원  리스트 조회
+    -   설명                  : 탈회 회원 회원  리스트 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ==============s==============================
+    -   작성자                : 이성원
+    -   작성일                : 2017.10.16
+    -   수정자                : 노형래
+    -   수정일                : 2020.07.15
+    ***************************************/ -->
+    <select id="selectDropMbrList" parameterType="com.icignal.loyalty.membership.dto.request.LoyDropMbrReqDto"
+    							   					resultType="com.icignal.loyalty.membership.dto.response.LoyDropMbrResDto">
+    /* LoyMbrMaper.selectDropMbrList */
+   SELECT lm.RID AS rid
+	            , lm.MBR_NO AS mbrNo
+	            , lc.CUST_NO AS custNo
+	      		, lt.TIER_NM AS tierNm
+			    , lms.rid AS ridMbrSecsn
+			    , lms.SECSN_RESN_CD  AS secsnResnCd
+			    , lms.SECSN_RESN_ETC  AS secsnResnEtc
+			    , convert(varchar,lms.SECSN_DATE, 120) AS secsnDate
+			    , lcli.USER_ID AS userId
+			    , lcli.rid			AS loginInfoRid
+			    , ${strColumn}
+    FROM LOY.LOY_MBR lm WITH (NOLOCK) 
+    JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    LEFT OUTER JOIN  loy.loy_tiers lt WITH (NOLOCK) ON lm.RID_TIER = lt.RID AND lt.FLAG = 1
+    LEFT OUTER JOIN loy.LOY_CUST_LOGIN_INF lcli WITH (NOLOCK) ON lcli.RID_CUST  = lc.RID AND lcli.FLAG = 1
+    LEFT OUTER JOIN  loy.LOY_MBR_SECSN lms WITH (NOLOCK) ON lms.RID_MBR = lm.RID and lms.FLAG = 1
+    WHERE ${strCondWhere}
+    AND	${strWhere}
+    AND lm.FLAG = 1
+    AND lm.MBR_STAT_CD = 'C'
+    ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYMbrDAO.java
+    ============================================
+    -   제목                  : 회원 정보 변경 이력
+    -   설명                  : 회원 정보 변경 이력
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 임소원
+    -   작성일                : 2017.10.25
+    ***************************************/ -->
+    <select id="selectMbrChangeHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChangeHistListReqDto"
+    								     resultType="com.icignal.loyalty.membership.dto.response.LoyMbrChangeHistListResDto">
+    /* LoyMbrMaper.selectMbrChangeHistList */
+      select
+         a.rid
+       , case ISNULL(b.MARK_NAME,'') WHEN '' THEN a.chg_col ELSE b.MARK_NAME END as chgCol
+        ,a.CREATE_BY             as createBy
+        ,a.BCHNG_DATA			AS bchngData
+        , a.ACHNG_DATA			AS achngData
+        , convert(varchar,a.CREATE_DATE,120)			AS createDate
+        , ${strColumn}
+    FROM LOY.loy_mbr_chg_hist 	a WITH (NOLOCK) 
+    LEFT JOIN com.crm_user 		cu WITH (NOLOCK) ON cu.rid = a.CREATE_BY
+    LEFT JOIN com.employee 		e  WITH (NOLOCK) ON cu.ID_EMPLOYEE = e.id
+    LEFT JOIN com.comm_code 	b  WITH (NOLOCK) ON a.chg_col = b.CODE_NAME AND b.GROUP_CODE = 'HISTORY_MEMBER_COLUMN' AND b.lang = #{lang} <!-- AND b.country = #{country} -->
+    <!-- LEFT JOIN com.comm_code 	cc  ON a.chg_pstn = cc.CODE_NAME AND cc.GROUP_CODE = 'HISTORY_CHG_PSTN' AND cc.lang = #{lang} --> <!-- AND cc.country = #{country} -->
+      where a.flag = 1
+      and ${strWhere}
+      AND a.rid_mbr = #{rid}
+	ORDER BY ${strOrderby}
+    ${strEndPaging}
+  </select>
+
+  <!-- 로얄티 프로그램 회원의 비밀번호 조회 -->
+    <select id="selectMbrPwdDetail" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrPasswordReqDto"
+    								resultType="com.icignal.loyalty.membership.dto.response.LoyMbrPasswordResDto">
+        /* LoyMbrMaper.selectMbrPwdDetail */
+        SELECT
+            pnt_pwd as pntUsePw,
+            case when pnt_pwd is null or pnt_pwd = '' then 0
+                 else 1 end as isEmptyPntUsePw
+        FROM loy.loy_mbr WITH (NOLOCK) 
+        WHERE flag = 1
+          AND rid = #{rid}
+    </select>
+
+    <update id="mbrPwdUnLock" parameterType="java.lang.String">
+		UPDATE loy.LOY_MBR_ACCESS_INFO
+		SET PW_LOCK_CNT	= 0
+		, PW_LOCK_DT = NULL
+		WHERE RID_MBR = #{rid}
+	</update>
+
+	<select id="mbrPwdLockCheck" parameterType="java.lang.String" resultType="java.lang.Integer">
+		SELECT count(*) as cnt
+		FROM loy.LOY_MBR_ACCESS_INFO WITH (NOLOCK) 
+		WHERE rid_mbr =#{rid}
+		AND PW_LOCK_DT IS NOT null
+	</select>
+ 
+    <!-- /**************************************
+    -   관련 파일             : LOYMbrDAO.java
+    ============================================
+    -   제목                  : 직원조회서치핼프
+    -   설명                  : 직원조회서치핼프
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 이성원
+    -   작성일                : 2017.10.16
+    ***************************************/ -->
+    <select id="selectEmpSearchHelp" parameterType="com.icignal.loyalty.membership.dto.request.LoyEmpSearchHelpReqDto" resultType="com.icignal.loyalty.membership.dto.response.LoyEmpSearchHelpResDto">
+        /* LoyMbrMapper.selectEmpSearchHelp */
+    select
+        distinct e.id  as rid
+        ,e.name        as name
+        ,f.user_id     as userId
+        ,g.div_nm      as divNm
+        <!-- ,${strColumn} -->
+    from  com.auth  a WITH (NOLOCK) 
+        inner join com.auth_group_rel  b WITH (NOLOCK) on a.id = b.aut_id
+        inner join com.auth_group  c WITH (NOLOCK) on b.aut_group_id = c.id
+        inner join com.auth_user_rel  d WITH (NOLOCK) on c.id = d.aut_group_id
+    left join com.crm_user  f WITH (NOLOCK) on d.rid_user = f.rid
+        inner join com.employee  e WITH (NOLOCK) on f.id_employee = e.id
+        left outer join com.crm_division  g WITH (NOLOCK) on e.rid_division = g.rid
+        where ${strCondWhere}
+          and ${strSVCType}
+          and ${strWhere}
+          <!-- and a.flag = 1 -->
+          and a.aut_nm = #{authNm}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+
+
+
+     <!-- /**************************************
+    -   관련 파일             : LOYMbrDAO.java
+    ============================================
+    -   제목                  : 회원 상담 조회
+    -   설명                  : 회원 상담 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 이성원
+    -   작성일                : 2017.10.16
+    ***************************************/ -->
+    <select id="selectMbrVocList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrVocListReqDto" 
+    												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrVocListResDto">
+     /* LoyMbrMapper.selectMbrVocList */
+     select  a.sr_no             AS srNo
+      		,a.CNSLG_TITLE			AS cnslgTitle
+      		,a.cnslg_type_cd_l             AS cnslgTypeCdl
+      		,a.cnslg_type_cd_m           AS cnslgTypeCdm
+      		,a.cnslg_type_cd_s            AS cnslgTypeCds
+      		,a.sr_trt_status             as srTrtStatus
+      		,e.name					AS createBy
+      		,a.rcp_meth 				AS rcpMeth
+      		,convert(varchar,a.RCP_DT,120) AS rcpDt
+      		,convert(varchar,a.END_DT,120) AS endDt
+      		,e2.name					AS crmuserName
+      		,a.rid						AS rid
+      		,${strColumn}
+    from voc.voc_svc_req a WITH (NOLOCK) 
+	LEFT OUTER JOIN com.crm_user cu 		WITH (NOLOCK) ON a.CREATE_BY = cu.RID
+    LEFT OUTER JOIN com.employee e 			WITH (NOLOCK) ON cu.ID_EMPLOYEE = e.id 	AND e.flag = '1'
+    LEFT OUTER JOIN com.crm_user cu2 		WITH (NOLOCK) ON a.RID_CRMUSER = cu.RID
+    LEFT OUTER JOIN com.employee e2 		WITH (NOLOCK) ON cu2.ID_EMPLOYEE = e2.id 	AND e2.flag = '1'
+    where <!-- ${strSVCType}
+          and --> ${strWhere}
+          and a.RID_MBR IN ${strMbrIntWhere}
+          <!-- and a.flag = 1 -->
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+      -   관련 파일             : LOYMbrDAO.java
+      ============================================
+      -   제목                  : 회원 포인트 한도 수정
+      -   설명                  : 회원 포인트 한도 수정
+      -   결과형태              : 목록
+      ============================================
+      -   입력
+      ============================================
+      -   작성자                : sw.lim
+      -   작성일                : 2017.10.16
+      ***************************************/ -->
+  <update id="updateMbrPointLimit" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrPointLimitReqDto">
+    UPDATE loy.loy_mbr
+    SET LIMIT_AMT = #{achngData}
+      , LIMIT_YN = 'Y'
+      , APV_SRVR_TRM_DT = GETDATE()
+      , APV_SRVR_TRM_YN = 'Y'
+    WHERE 1=1
+    AND rid = #{ridMbr}
+  </update>
+
+  <!-- /**************************************
+      -   관련 파일             : LOYMbrDAO.java
+      ============================================
+      -   제목                  : 회원 변경이력 추가
+      -   설명                  : 회원 변경이력 추가
+      -   결과형태              : 목록
+      ============================================
+      -   입력
+      ============================================
+      -   작성자                : sw.lim
+      -   작성일                : 2017.10.16
+      ***************************************/ -->
+  <insert id="insertMbrChgHist" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChgHistReqDto">
+    INSERT into loy.loy_mbr_chg_hist
+      (RID,
+      CREATE_BY,
+      MODIFY_BY,
+      CREATE_DATE,
+      MODIFY_DATE,
+      FLAG,
+      COUNTRY,
+      CURRENCY,
+      APP_SERVICE_TYPE,
+      ACCNT_ID,
+      RID_MBR,
+      CHG_PSTN,
+      MEM_NO,
+      RMARK,
+      CHG_TBL,
+      CHG_COL,
+      BCHNG_DATA,
+      ACHNG_DATA)
+    VALUES
+    (com.getNewID('A'),
+      #{createBy},
+      #{modifyBy},
+      GETDATE(),
+      GETDATE(),
+      1,
+      #{country},
+      'KRW',
+      #{appServiceId},
+      #{accountId},
+      #{ridMbr},
+      #{chgPstn},
+      #{mbrNo},
+      NULL,
+      NULL,
+      #{chgCol},
+      #{bchngData},
+      #{achngData}
+    )
+  </insert>
+
+	<!-- 변경이력 저장 프로시저 실행 -->
+	<update id="insertMbrCngHist" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChgHistAddReqDto" statementType="CALLABLE">
+		/* LoyMbrMaper.insertMbrCngHist */
+		{
+			CALL LOY.PROC_MBR_CHG_HIST_INS(
+				  #{cipherKey}	/*암복호화키*/
+				, #{createBy}	/*최초 실행자 rid*/
+				, #{chgTbl}		/*변경 대상 테이블*/
+				, #{bchngData}  /*변경전 데이터(Before Change Data)*/
+				, #{bchngEnYn}  /*변경전 데이터 암호화 상태*/
+				, #{achngData}  /*변경된 데이터(After Change Data)*/
+				, #{achngEnYn}	/*변경된 데이터 암호화 상태*/
+				, #{chgCol}     /*변경된 컬럼*/
+				, #{rmark}     	/*비고*/
+				, #{mbrNo}      /*변경이력등록대상 회원번호*/
+				, #{chgColLov}  /*변경된 컬럼 LOV값*/
+				, #{chgPstn}    /*변경 위치*/
+				, #{rsltMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+				, #{resultFlg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT} /*필수: 실행 결과 S:성공,F:실패*/
+			)
+		}
+	</update>
+
+   <!-- 회원 전체 건수 -->
+  <select id="selectMbrAllCount" resultType="java.lang.Integer">
+    /* LoyMbrMapper.selectMbrAllCount */
+    select count(*)
+      from loy.loy_mbr lm WITH (NOLOCK) 
+     where lm.MBR_TYPE_CD = '10'
+       and lm.MBR_STAT_CD &lt;&gt; '20'
+  </select>
+
+
+  	<!-- 회원 기존 포인트사용비밀번호 조회 -->
+	<select id="selectMbrPntUsePw" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrEditPntUsePwReqDto" resultType="java.lang.String">
+		/* LoyMbrMapper.updateMbrPntUsePw */
+		select 	pnt_pwd 
+		from 	loy.loy_mbr WITH (NOLOCK) 
+		where 	rid = #{ridMbr}
+	</select>
+
+	<!-- 회원 포인트사용비밀번호 변경 -->
+	<update id="updateMbrPntUsePw" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrEditPntUsePwReqDto">
+		/* LoyMbrMapper.updateMbrPntUsePw */
+		update	loy.loy_mbr
+		set 	pnt_pwd = #{pntUsePw}
+		where 	rid = #{ridMbr}
+			and pnt_pwd != #{pntUsePw}
+	</update>
+
+
+  <select id="selectMbrPntAcrlUseYn" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrPntYnReqDto" resultType="com.icignal.loyalty.membership.dto.response.LoyMbrPntYnResDto">
+		/* LoyMbrMapper.selectMbrPntAcrlUseYn */
+		select 	pnt_acrl_yn as pntAcrlYn
+		<!-- 		, pnt_use_yn as pntUseYn -->
+		from 	loy.loy_mbr WITH (NOLOCK) 
+		where 	mbr_no = #{mbrNo}
+	</select>
+
+
+	<!-- /**************************************
+      -   관련 파일             : LOYMbrDAO.java
+      ============================================
+      -   제목                  : 포인트 이관 이력 삽입
+      -   설명                  : 포인트 이관 이력  삽입
+      -   결과형태              :
+      ============================================
+      -   입력
+      ============================================
+      - 다이소
+      -   작성자                : mj.kim
+      -   작성일                : 2019.02.11
+      ***************************************/ -->
+	<insert id="insertTransHist" parameterType="com.icignal.loyalty.membership.dto.request.LoyDropReasonReqDto" useGeneratedKeys="false" >
+		INSERT INTO LOY.LOY_MBR_PNT_MERGE_HIST
+			(RID,
+			CREATE_BY,
+			CREATE_DATE,
+			RID_MBR_SRC,  --차감 대상
+			RID_MBR_TGT,  --적립 대상
+			PNT,
+			REG_USER_ID,
+			REG_DT,
+			REASON)
+		VALUES(
+			com.getNewId('A'),
+			#{createBy},
+			GETDATE(),
+			#{srgMbr}, 			--차감대상
+			#{tgtMbr}, 			--적립대상
+			#{pnt},
+			#{accountId},
+			GETDATE(),
+			#{reasonData})
+	</insert>
+
+	<select id="transPointExec" parameterType="com.icignal.loyalty.membership.dto.request.LoyTransPointListReqDto" statementType="CALLABLE">
+        { call loy.PROC_MBR_PNT_TRANS(
+                #{pRidMbrRcv}, --받는 회원
+                #{pRidMbrGiv}, --주는 회원
+                #{pDropMbrYn}, --YN
+                #{pModifyBy},  --담당자
+                #{pReason} ,
+                #{pRslt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{pRsltCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{pRsltMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT})
+        }
+
+    </select>
+
+
+    <update id="updateMbrName" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrRenameReqDto">
+       UPDATE loy.loy_cust
+       set cust_nm = #{newName}
+          ,modify_date = GETDATE()
+       where rid = (select rid_cust from loy.loy_mbr where rid = #{rid})
+      </update>
+
+      <select id="selectMbrDivList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrDivListReqDto"
+      							    resultType="com.icignal.loyalty.membership.dto.response.LoyMbrDivListResDto">
+	/*LoyMbrMaper.selectMbrDivList*/
+	SELECT DISTINCT lmu.RID AS rid
+				, lmu.BATCH_RESULT_CD AS batchResultCd
+				, lmu.FILE_PATH AS filePath
+				, lmu.FILE_NAME AS fileName
+				, CONVERT(VARCHAR,lmu.file_upload_dt, 120) AS fileUploadDt
+				, lmu.FILE_UPLOAD_USER_RID AS fileUploadUserRid
+				, emp1.NAME AS fileUploadUserRidNm
+				, CONVERT(VARCHAR,CONVERT(DATE,lmu.PNT_APPLY_DT), 112) as pntApplyDt
+				, lmu.CONFIRM_DT AS confirmDt
+				, CASE WHEN lmu.CONFIRM_DT IS NOT NULL THEN '확정' ELSE '미확정' END AS confirmDtNm
+				, lmu.CONFIRM_USER_RID AS confirmUserRid
+				, emp2.NAME AS confirmUserRidNm
+				, lmu.UPLOAD_CNT AS uploadCnt
+				, lmu.BATCH_SUCCESS_CNT AS batchSuccessCnt
+				, lmu.BATCH_FAIL_CNT AS batchFailCnt
+				, lmu.BATCH_ERROR_DESC AS batchErrorDesc
+				, lmu.TOTAL_ACRL_AMT AS totalAcrlAmt
+				,  ${strColumn}
+	FROM LOY.LOY_MBR_UPLOAD lmu WITH (NOLOCK) 
+	JOIN COM.CRM_USER cu1 WITH (NOLOCK) on cu1.rid = lmu.file_upload_user_rid
+	JOIN COM.EMPLOYEE emp1 WITH (NOLOCK) on emp1.id = cu1.id_employee
+	LEFT OUTER JOIN COM.CRM_USER cu2 WITH (NOLOCK) on cu2.rid = lmu.confirm_user_rid
+	LEFT OUTER JOIN COM.EMPLOYEE emp2 WITH (NOLOCK) on emp2.id = cu2.id_employee
+	WHERE 	${strCondWhere}
+	AND ${strSVCType}
+	AND ${strWhere}
+	AND lmu.FLAG = 1
+	ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+
+	<select id="selectMaxPointLabel" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrPointAuthReqDto" resultType="com.icignal.loyalty.membership.dto.response.LoyMbrPointAuthResDto">
+	/* LoyMbrMaper.selectMaxPointLabel */
+	SELECT max(CASE WHEN T6.ATTR_VAL = 'Y' THEN t5.ATTR_VAL ELSE 'N' END) as maxPoint
+ 	FROM com.CRM_USER t1 WITH (NOLOCK) 
+    JOIN com.AUTH_USER_REL t2 WITH (NOLOCK) ON t2.FLAG = 1 AND t2.RID_USER = t1.RID
+    JOIN com.AUTH_GROUP t3 WITH (NOLOCK) ON t3.FLAG = 1 AND t3.ID = t2.AUT_GROUP_ID
+    JOIN loy.LOY_OPER_BASE t4 WITH (NOLOCK) ON t4.FLAG = 1 AND t4.ATTR_VAL = t3.TYPE AND t4.CTG = 'SYSTEM' AND t4.TYPE_CD = 'CS_POINT_ACRL' AND t4.ATTR = 'AUTH_GROUP_TYPE'
+	LEFT OUTER JOIN loy.LOY_OPER_BASE_DTL t5 WITH (NOLOCK) ON t5.FLAG = 1 AND t5.RID_OPER_BASE = t4.RID
+  	JOIN (SELECT ATTR_VAL FROM loy.LOY_OPER_BASE WITH (NOLOCK)  WHERE FLAG = 1 AND CTG = 'SYSTEM' AND TYPE_CD = 'CS_POINT_ACRL' AND ATTR = 'AMT_LIMIT_YN') T6 ON 1=1
+    WHERE t1.RID = #{rid}
+	</select>
+
+
+    <select id="selectMbrCampHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrCampHistReqDto"
+    								   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrCampHistResDto">
+        /* LOYMbrMapper.selectMbrCampHistList */
+        select
+               applyDate        /** 적용일자 */
+              ,camNo            /**캠페인번호 */
+              ,camNm            /**캠페인명*/
+              ,camTypeCd        /**캠페인유형코드*/
+              ,offerNm          /**오퍼명*/
+              ,promType         /**프로모션유형코드*/
+              ,promSubType      /**프로모션서브유형*/
+              ,camStartDd       /**시작일*/
+              ,camEndDd         /**종료일*/
+              ,camStatusCd      /**캠페인상태코드*/
+              ,createDate      /*생성일*/
+        from (
+              /* 거래내역내에서 캠페인 이력 조회*/
+              select
+                     convert(VARCHAR(10),b.acrl_date,120)     as applyDate
+                    ,c.disp_no                               as camNo
+                    ,c.cam_nm                                as camNm
+                    ,c.cam_type_cd                           as camTypeCd
+                    ,e.offer_nm                              as offerNm
+                    ,c.prom_type                             as promType
+                    ,c.prom_sub_type                         as promSubType
+                    ,convert(varchar(10),c.cam_start_dd,120)  as camStartDd
+                    ,convert(varchar(10),c.cam_end_dd,120)    as camEndDd
+                    ,c.cam_status_cd                         as camStatusCd
+                    ,a.create_date                           as createDate
+                     <!-- , ${strColumn} -->
+               from loy.loy_pnt_txn a WITH (NOLOCK) 
+              inner join loy.loy_pnt_acrl b WITH (NOLOCK) on  a.rid = b.rid_pnt_txn
+              inner join mkt.mkt_cam_mst c WITH (NOLOCK) on b.cam_no = c.disp_no
+              inner join mkt.mkt_cam_offer_rel d WITH (NOLOCK) on c.id = d.cam_id
+              inner join mkt.mkt_offer_mst e WITH (NOLOCK) on d.offer_id = e.id
+              where 1=1
+                and a.rid_mbr = #{ridMbr} /* 'recMbr00001' */
+                and a.txn_stat_cd  = 'A'
+
+              union all
+
+             /* 캠페인 타겟팅에서 캠페인이력 조회 */
+             select CONVERT(VARCHAR(10),a.create_date,120)    as applyDate
+                   ,c.disp_no                                as camNo
+                   ,c.cam_nm                                 as camNm
+                   ,c.cam_type_cd                            as camTypeCd
+                   ,e.offer_nm                               as offerNm
+                   ,c.prom_type                              as promType
+                   ,c.prom_sub_type                          as promSubType
+                   ,convert(varchar(10),c.cam_start_dd,120)   	 as camStartDd
+                   ,convert(varchar(10),c.cam_end_dd,120)     	 as camEndDd
+                   ,c.cam_status_cd                          as camStatusCd
+                   ,a.create_date                            as createDate
+               from mkt.mkt_tgt_dtl a WITH (NOLOCK) 
+             inner join mkt.mkt_cam_mst c WITH (NOLOCK) on a.cam_id = c.id and c.cam_status_cd = 'E'
+             left outer join mkt.mkt_cam_offer_rel d WITH (NOLOCK) on c.id = d.cam_id
+             left outer join mkt.mkt_offer_mst e WITH (NOLOCK) on d.offer_id = e.id
+             where 1=1
+               and a.mem_id =  #{ridMbr}   /* 'recMbr00001' */
+        ) t
+        where ${strWhere}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+
+	<parameterMap id="callProcMbrTierUpdMap" type="map">
+		<parameter property="ridMbr" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rid" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="desc" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rst" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstCd" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstMsg" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 	</parameterMap>
+	<update id="callProcMbrTierUpd" parameterMap="callProcMbrTierUpdMap" statementType="CALLABLE">
+	/* LOYEventPlan.callProcMbrTierUpd */
+	{
+		CALL  LOY.PKG_LOY_TIER.PROC_MBR_TIER_UPD(?, ?, ?, ?, ?, ?)
+	}
+	</update>
+
+	<select id="selectMbrListNewPage" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto" resultType="com.icignal.loyalty.membership.dto.response.LoyMbrListNewPageResDto">
+		/* LoyMbrMapper.selectMbrListNewPage */
+		SELECT 	  lp.PGM_NM								AS pgmNm
+				, lc.CUST_NO							AS custNo
+				, lmm.MBR_NO							AS mbrNo
+				, lc.CUST_NM							AS custNm
+				, lc.HHP								AS hhp
+				, lc.GEN_CD								AS genCd
+				, lmm.MBR_STAT_CD						AS mbrstatCd
+				, CONVERT(VARCHAR(10),lmm.SBSC_DATE,120)	AS sbscDate
+				, lc2.CHNL_NM							AS sbscChnlNm
+				, CONVERT(VARCHAR,lmm.CREATE_DATE,120)	AS createDate
+				, lmm.RID_PGM							AS pgmRid
+				, lmm.RID								AS rid
+				, ${strColumn}
+		FROM	LOY.LOY_MBR lmm WITH (NOLOCK) 
+		JOIN	LOY.LOY_CUST lc WITH (NOLOCK) ON lmm.RID_CUST = lc.RID AND lc.FLAG = 1
+		JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lmm.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CHNL lc2 WITH (NOLOCK) ON lmm.RID_SBSC_CHNL = lc.RID AND lc.FLAG = 1
+		WHERE ${strCondWhere}
+		AND   ${strWhere}
+		AND   lmm.FLAG = 1
+		AND   lmm.MBR_STAT_CD = 'A'
+
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="clearMaskListMbr" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto" resultType="com.icignal.loyalty.membership.dto.response.LoyMbrListNewPageResDto">
+		/* LoyMbrMapper.clearMaskListMbr */
+		SELECT    lcm.CUST_NM					AS unMaskCustNm
+				, lcm.HHP						AS unMaskHhp
+		FROM	LOY.LOY_MBR lmm WITH (NOLOCK) 
+		JOIN	LOY.LOY_CUST lcm WITH (NOLOCK) ON lmm.RID_CUST = lcm.RID AND lcm.FLAG = 1
+		<!-- JOIN    LOY.LOY_CUST_I lci ON lcm.RID = lci.RID_CUST AND lci.FLAG = 1  -->
+		LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lmm.RID_PGM = lp.RID AND lp.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lmm.RID_SBSC_CHNL = lc.RID AND lc.FLAG = 1
+		WHERE lmm.FLAG = 1
+		AND   lmm.MBR_STAT_CD = 'A'
+		AND   lmm.rid = #{rid}
+	</select>
+
+	<select id="selectMbrPointHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyMbrPtnTxnHistReqDto" resultType="com.icignal.loyalty.benefit.point.dto.response.LoyMbrPtnTxnHistListResDto">
+	/* LoyMbrMapper.selectMbrPointHistList" */
+	SELECT  lpt.TXN_UNIQ_NO		AS txnUniqNo
+			, lpt.APPR_NO			AS apprNo
+			, lpt.PNT_TXN_TYPE_1_CD	AS pntTxnType1Cd
+			, lpt.PNT_TXN_TYPE_2_CD	AS pntTxnType2Cd
+			, lc.CHNL_NM			AS chnlNm
+			, ISNULL(lpt.TXN_AMT,0)    AS txnAmt
+			, CASE WHEN lpt.pnt_txn_type_1_cd = '200' 
+						THEN CONVERT(VARCHAR, '-'+ CONVERT (VARCHAR, CAST ( ROUND(lpt.PNT_AMT,0,1) as DECIMAL(10))))  <!-- TRUNC(lpt.PNT_AMT,0) --> 
+						ELSE CAST ( ROUND(lpt.PNT_AMT,0,1) as DECIMAL(10))<!-- convert(TRUNC(lpt.PNT_AMT,0)) --> 
+						END AS pntAmt
+			, CONVERT(VARCHAR, lpt.TXN_DT,120) 	AS txnDt
+			, CONVERT(VARCHAR, lpt.APPR_DT,120)	AS apprDt
+			, lpt.RID				AS rid
+			, ${strColumn}
+	FROM LOY.LOY_PNT_TXN lpt WITH (NOLOCK) 
+	JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON lpt.RID_MBR =lm.RID AND lm.FLAg = 1
+	LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lc.RID = lpt.RID_CHNL AND lc.FLAG = 1
+	WHERE ${strCondWhere}
+	AND   lpt.FLAG = 1
+	AND   lpt.rid_mbr IN ${strMbrIntWhere}
+	AND   ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+
+	</select>
+
+    <select id="selectMbrDetailNewPage" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+    						            resultType="com.icignal.loyalty.membership.dto.response.LoyMbrDetailNewPageResDto">
+	/* LoyMbrMapper.selectMbrDetailNewPage */
+	SELECT    lm.RID							AS rid
+				, lm.MBR_NO							AS mbrNo
+				, lm.RID_PGM						AS pgmRid
+				, lp.PGM_NO							AS pgmNo
+				, lp.PGM_NM							AS pgmNm
+				, lm.MBR_STAT_CD				AS mbrStatCd
+				, lm.MBR_TYPE_CD				AS mbrTypeCd
+				, lc.CUST_TYPE_CD				AS custTypeCd
+				, lc.RCMMD_NO						AS rcmmdNo
+				, lm.SBSC_DATE					AS sbscDate
+				, lc2.CHNL_NM						AS sbscChnlNm  /*가입채널*/
+				, lc2.CHNL_NO						AS chnlNo
+				, lm.SBSC_PATH_CD				AS sbscPathCd
+				, lm.SBSC_DEVICE_CD 			AS sbscDeviceCd
+				, lc.CERT_TYPE_CD 				AS custCertTypeCd
+				, convert(DATE, lc.CERT_DATE<!-- , 'YYYY-MM-DD' -->)		AS certDate
+				, lc.RID									AS custRid
+				, lc.CUST_NM						AS cust_nm
+				, lc.HHP									AS hhp
+				, lc.EMAIL								AS email
+				, lc.BIRTHDT							AS birthdt
+				, lc.LUNAR_CD						AS lunar_cd
+				, lc.GEN_CD							AS gen_cdNm
+				, lcwi.USER_ID						AS user_id
+				, lc.ZIP									AS zip
+				, lc.ADRES								AS adres
+				, lc.BUNJI								AS bunji
+				, lc.B_CODE 							AS bCode
+				, lci.CUST_NM_ADD				AS cust_nm_add
+				, lci.ZIP_ADD	 						AS zip_add
+	    		, lci.ADRES_ADD 					AS adres_add
+	    		, lci.BUNJI_ADD 					AS bunji_add
+	    		, lci.B_CODE_ADD					AS bCodeAdd
+	    		, lci.NLTY 								AS nltyCd
+	    		, lci.NATIVE_YN 						AS native_yn
+	    		, lc.DRMNCY_CHNG_UNIT		AS drmmcyChngUnitCd
+	    		, lci.ANNVRSRY 						AS annvrsry
+	    		, lci.ANNVRSRY_TYPE_CD 		AS annvrsryTypeCd
+	    		, lci.MRRG_YN 						AS mrrg_yn
+	    		, lci.WRC_NM 						AS wrc_nm
+	    		, lci.PSTN 								AS pstnCd
+				, lt1.TIER_NM 						AS tierNm
+				, lm.TIER_DT 						AS validTierStartDt
+				, lt2.TIER_NM			 			AS liftTierNm
+				, lm.TIER_LIFTTIME_DT AS validTierLiftTimeStartDt
+				, lc3.CHNL_NM						AS lastConChnlNm 																/* 최근접속채널 */
+				, convert(DATE, <!-- CONVERT( -->lcsh1.SVC_DT<!-- ,'YY/MM/DD') --><!-- ,'YYYY-MM-DD' -->)				AS conSvrDt 		/* 최근접속일 */
+				, lc4.CHNL_NM 						AS lastPurChnlNm																	/* 최근구매채널 */
+				, convert(DATE, <!-- CONVERT( -->lcsh2.SVC_DT<!-- ,'YY/MM/DD'),'YYYY-MM-DD' -->)				AS purSvrDt 		/* 최근구매일 */
+				, lm.PNT_PWD     					as pntPwd
+	FROM LOY.LOY_MBR lm WITH (NOLOCK) 
+	JOIN LOY.LOY_CUST lc WITH (NOLOCK) ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_CUST_I lci WITH (NOLOCK) ON lci.RID_CUST = lc.RID AND lci.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_TIERS lt1 WITH (NOLOCK) ON lm.RID_TIER = lt1.RID AND lt1.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_TIERS lt2 WITH (NOLOCK) ON lm.RID_TIER_LIFTTIME = lt2.RID AND lt2.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_TIERS_GRP ltg1 WITH (NOLOCK) ON lt1.RID_TG = ltg1.RID AND ltg1.FLAG = 1 AND ltg1.MBR_TIER_COL = 'RID_TIER'
+	<!-- LEFT OUTER JOIN LOY.LOY_TIERS_MBR_HIST ltmh1 ON ltg1.RID = ltmh1.RID_TG AND ltmh1.FLAG = 1 -->
+	LEFT OUTER JOIN loy.LOY_TIERS_GRP ltg2 WITH (NOLOCK) ON lt2.RID_TG = ltg2.RID AND ltg2.FLAG = 1 AND ltg2.MBR_TIER_COL = 'RID_TIER_LIFTTIME'
+	<!-- LEFT OUTER JOIN LOY.LOY_TIERS_MBR_HIST ltmh2 ON ltg2.RID = ltmh2.RID_TG AND ltmh2.FLAG = 1 -->
+	LEFT OUTER JOIN LOY.LOY_CUST_LOGIN_INF lcwi WITH (NOLOCK) ON lcwi.RID_CUST = lc.RID AND lcwi.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_CUST_SVC_HIST lcsh1 WITH (NOLOCK) ON lc.RID = lcsh1.RID_CUST AND lcsh1.FLAG = 1 AND lcsh1.SVC_USE_CD	='WEB'
+	LEFT OUTER JOIN LOY.LOY_CUST_SVC_HIST lcsh2 WITH (NOLOCK) ON lc.RID = lcsh2.RID_CUST AND lcsh2.FLAG = 1 AND lcsh2.SVC_USE_CD	='PUR'
+	JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lp.RID = lm.RID_PGM AND lp.FLAg = 1
+	LEFT OUTER JOIN LOY.LOY_CHNL lc2 WITH (NOLOCK) ON lc2.RID = lm.RID_SBSC_CHNL AND lc2.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_CHNL lc3 WITH (NOLOCK) ON lc3.RID = lcsh1.RID_CHNL AND lc3.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_CHNL lc4 WITH (NOLOCK) ON lc4.RID = lcsh2.RID_CHNL AND lc4.FLAG = 1
+	WHERE lm.FLAG = 1
+	<if test="rid != null and rid != ''"> AND
+			lm.rid = #{rid}
+	</if>
+	<if test="mbrNo != null and mbrNo != ''"> AND
+			lm.MBR_NO = #{mbrNo}
+	</if>
+	</select>
+
+	<select id="selectChnlRelHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrChnlRelListResDto">
+	/* LoyMbrMapper.selectChnlRelHistList */
+	SELECT   lc.CHNL_NM				AS chnlNm
+		   , lcm.CHNL_REL_TYPE_CD	AS chnlRelTypeCd
+		   , lcm.CREATE_DATE		AS createDate
+		   , ${strColumn}
+	FROM    LOY.LOY_CHNL_MBR lcm WITH (NOLOCK) 
+	JOIN    LOY.LOY_CHNL lc WITH (NOLOCK) ON lcm.RID_CHNL = lc.RID AND lc.FLAG = 1
+	WHERE ${strCondWhere}
+	AND   lcm.FLAG = 1
+	AND   lcm.RID_MBR  = #{rid}
+	AND   ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+
+	<select id="selectCouponList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrCouponListResDto">
+	/* LoyMbrMapper.selectCouponList */
+	SELECT t1.disp_no        AS dispNo
+	        , t1.CAM_NM       AS camNm
+	        , t3.COUPN_NM       AS coupnNm
+	        , t3.COUPN_USE_GDNC1  AS coupnUseGdnc1
+	        , t3.USE_START_DT     AS useStartDt
+	        , t3.USE_END_DT     AS useEndDt
+	        , t4.coupn_no       AS coupnNo
+	        , t4.USE_YN       AS useYn
+	        , t4.USE_DT       AS useDt
+	        , ${strColumn}
+    FROM mkt.mkt_cam_mst t1 WITH (NOLOCK) 
+    JOIN loy.loy_coupn t3 WITH (NOLOCK) ON t3.flag = 1 AND t3.rid_mkt_cam_mst = t1.id
+    JOIN loy.loy_coupn_i t4 WITH (NOLOCK) ON t4.flag = 1 AND t4.rid_coupn = t3.rid
+    JOIN loy.loy_mbr lm WITH (NOLOCK) ON lm.flag = 1 AND lm.rid = t4.rid_mbr
+    WHERE ${strSVCType}
+    AND ${strWhere}
+    AND lm.MBR_NO  = #{mbrNo}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectAlterHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrAlterHistListResDto">
+	/* LoyMbrMapper.selectCouponList */
+	SELECT		  convert(VARCHAR , lmam.ACTION_DT, 120<!-- 'YYYY-MM-DD HH24:Mi:SS' -->)			AS actionDt
+				, lmam.MSG_TYPE				AS msgType
+				, lc.CHNL_NM				AS chnlNm
+				, lmam.MSG					AS msg
+				, lmam.SHOW_YN				AS showYn
+				, lmam.CONFIRM_DT			AS confirmDt
+				, ${strColumn}
+    FROM LOY.LOY_MBR_ALERT_MSG lmam WITH (NOLOCK) 
+    LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lc.RID = lmam.RID_CHNL AND lc.FLAG = 1
+    WHERE lmam.FLAG = 1
+    AND lmam.RID_MBR = #{rid}
+    AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectMemberCardList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.request.LoyMbrMemberCardListResDto">
+	/* LoyMbrMapper.selectMemberCardList */
+	SELECT		  lck.CARD_TYPE			AS cardTypeCd
+				, lck.CARD_KIND_NM			AS cardKndNm
+				, lmc.CARD_NO				AS cardNo
+				, lmc.STAT 					AS cardStatCd
+				, lmc.RID					AS rid
+				, ${strColumn}
+    FROM LOY.LOY_MBR_CARD lmc WITH (NOLOCK) 
+    LEFT OUTER JOIN LOY.LOY_CARD_KIND lck WITH (NOLOCK) ON lck.RID = lmc.RID_CARD_KIND AND lck.FLAG = 1
+    WHERE lmc.FLAG = 1
+    AND lmc.RID_MBR = #{rid}
+    AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectBlackHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrBlackHistListResDto">
+	/* LoyMbrMapper.selectBlackHistList */
+	 SELECT  DISTINCT   lbm.BL_NM				AS blNm
+            			,
+            			(
+            				SELECT count(*)
+            				FROM loy.LOY_BLACK_HIST lbh2
+            				WHERE lbh2.RID_MBR = lbh.RID_MBR
+            				AND lbh2.RID_BLACK_MST = lbh.RID_BLACK_MST
+            			) AS blackHistCnt
+						, lc.CHNL_NM					AS blackChnlNm
+						, ${strColumn}
+    FROM LOY.LOY_BLACK_HIST lbh WITH (NOLOCK) 
+    JOIN LOY.LOY_BL_LST_MST lbm WITH (NOLOCK) ON lbm.RID = lbh.RID_BLACK_MST AND lbm.FLAG = 1
+    LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lc.RID = lbh.RID_CHNL AND lc.FLAg = 1
+    WHERE lbh.FLAG = 1
+    AND lbh.RID_MBR = #{rid}
+    AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectRecommendHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrRecommendHistListResDto">
+	/* LoyMbrMapper.selectRecommendHistList */
+	SELECT  t1.rcmmHist
+			      , t1.rcmmdTypeCd
+			      , t1.custNm
+			      , t1.regDate
+			      , ${strColumn}
+			FROM (SELECT N'추천함' AS rcmmHist
+                		,  lmr.RCMMD_TYPE_CD AS rcmmdTypeCd
+                		,  lc2.CUST_NM		 AS custNm
+                		,  convert(VARCHAR, lmr.REG_DATE, 120<!-- 'YYYY-MM-DD HH24:Mi:SS' -->)	AS regDate
+    FROM LOY.LOY_MBR lm WITH (NOLOCK) 
+    JOIN LOY.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    JOIN LOY.LOY_MBR_RCMMD lmr WITH (NOLOCK) ON lc.RCMMD_NO = lmr.RCMMD_NO AND lmr.FLAG = 1
+    JOIN LOY.LOY_MBR lm2 WITH (NOLOCK) ON lm2.RID = lmr.RID_MBR AND lm2.FLAG = 1
+    JOIN LOY.LOY_CUST lc2 WITH (NOLOCK) ON lc2.RID = lm2.RID_CUST AND lc2.FLAG = 1
+    WHERE lmr.FLAG = 1
+    AND lm.RID = #{rid}
+    AND ${strWhere}
+    UNION ALL
+    SELECT 				  DISTINCT  N'추천 받음' AS rcmmHist
+                		, lmr.RCMMD_TYPE_CD AS rcmmdTypeCd
+                		, plcm.CUST_NM		AS custNm
+                		, convert(varchar, lmr.REG_DATE, 120 <!-- 'YYYY-MM-DD HH24:Mi:SS' -->)	AS regDate
+    FROM LOY.LOY_MBR_RCMMD lmr WITH (NOLOCK) 
+    JOIN LOY.LOY_MBR lmm WITH (NOLOCK) ON lmm.RID = lmr.RID_MBR AND lmm.FLAG = 1
+    JOIN LOY.LOY_CUST lcm WITH (NOLOCK) ON lcm.RID = lmm.RID_CUST AND lcm.FLAG = 1
+    JOIN LOY.LOY_CUST plcm WITH (NOLOCK) ON plcm.RCMMD_NO = lmr.RCMMD_NO AND plcm.FLAG = 1
+    WHERE lmr.FLAG = 1
+    AND lmr.RID_MBR = #{rid}
+    AND ${strWhere}) t1
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectMbrTierListNew" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrTiersListResDto">
+	/* LoyMbrMapper.selectMbrTierListNew */
+	SELECT     t1.tierGrpNm
+			,  t1.tierNm
+			,  t1.tierTypeCd
+			,  t1.tierCalcDate
+			,  t1.vaildStartDt
+			,  t1.validEndDt
+			,  t1.createBy
+			,  t1.createDate
+			,  t1.rid
+			,  t1.tierGrpRid
+			,  t1.tierRid
+			,  t1.upKeepMm
+			,  t1.mbrTierCol
+			,  t1.seqNo
+			, ${strColumn}
+	FROM ( SELECT  ltg.TIERS_GRP_NM							        AS tierGrpNm
+		 	 	, lt.TIER_NM										AS tierNm
+		 	 	, lt.TIER_TYPE_CD									AS tierTypeCd
+		 	 	, convert(VARCHAR(10), ltmh.TIER_CALC_DATE, 120<!-- 'YYYY-MM-DD' -->)		    AS tierCalcDate
+		 	 	, convert(VARCHAR(10), ltmh.VALID_START_DT, 120<!-- 'YYYY-MM-DD' -->)		    AS vaildStartDt
+		 	 	, convert(VARCHAR(10), ltmh.VAILD_END_DT, 120<!-- 'YYYY-MM-DD' -->)			AS validEndDt
+		 	 	, em.name											AS createBy
+		 	 	, convert(VARCHAR, ltmh.CREATE_DATE, 120 <!-- 'YYYY-MM-DD HH24:MI:SS' -->) AS createDate
+		 	 	, ltmh.RID											AS rid
+		 	 	, ltmh.RID_TG										AS tierGrpRid
+		 	 	, ltmh.RID_TIER									    AS tierRid
+		 	 	, ltg.UP_KEEP_MM									AS upKeepMm
+		 	 	, ltg.MBR_TIER_COL									AS mbrTierCol
+		 		, ROW_NUMBER() OVER(PARTITION BY ltmh.RID_TG ORDER BY ltmh.CREATE_DATE DESC) AS rnum
+		 		, lt.SEQ_NO											AS seqNo
+    FROM LOY.LOY_TIERS_MBR_HIST ltmh WITH (NOLOCK) 
+    JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON ltmh.RID_MBR = lm.RID AND lm.FLAG = 1
+    JOIN LOY.LOY_TIERS lt WITH (NOLOCK) ON ltmh.RID_TIER = lt.RID AND lt.FLAG = 1
+    JOIN LOY.LOY_TIERS_GRP ltg WITH (NOLOCK) ON ltmh.RID_TG = ltg.RID AND ltg.FLAG = 1
+    LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = ltmh.CREATE_BY AND cu.FLAG = 1
+    LEFT OUTER JOIN COM.EMPLOYEE em WITH (NOLOCK) ON cu.ID_EMPLOYEE = em.ID AND em.FLAG = 1
+    WHERE ltmh.RID_MBR = #{rid}
+    AND ${strWhere} ) t1
+    WHERE rnum=1
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectMbrEventHistListNew" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrEventHistListResDto">
+	/* LoyMbrMapper.selectMbrEventHistListNew */
+	SELECT    	lem.EVT_NM				AS evtNm
+			  , lem.EVT_TYPE_CD			AS evtTypeCd
+			  , lea.APPLCT_DT			AS applctDt
+			  , (CASE WHEN lew.RID_MBR IS NOT NULL THEN 'Y' ELSE 'N' END) AS winYn
+			  , lew.BNF_NO				AS bnfNo
+			  , ${strColumn}
+	FROM LOY.LOY_EVT_MST lem WITH (NOLOCK) 
+	JOIN LOY.LOY_EVT_APPLCT lea WITH (NOLOCK) ON lem.RID = lea.RID_EVT AND lea.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_EVT_WINNER lew WITH (NOLOCK) ON lew.RID_EVT = lem.RID AND lew.RID_MBR = lea.RID_MBR AND lea.RID = lew.RID_EVT_APPLCT AND lew.FLAG = 1
+    WHERE lea.RID_MBR = #{rid}
+    AND   lem.FLAG = 1
+    AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectCustItemConfVal" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto"
+															resultType="com.icignal.loyalty.loyprogram.dto.response.LoyCustItemConfListResDto">
+	/* LoyMbrMapper.selectCustItemConfVal */
+	SELECT lcic.FIELD_NM AS fieldNm
+			, lcic.FIELD_DESC AS fieldDesc
+			, lcic.REQUIRED_YN AS requiredYn
+	FROM loy.LOY_CUST_ITEM_CONF lcic WITH (NOLOCK) 
+	JOIN loy.LOY_PGM lp WITH (NOLOCK) ON lcic.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE lcic.FLAG = 1
+	AND lcic.CUST_TYPE_CD = 'I'
+	<if test="repYn == &quot;Y&quot;">
+	<!-- AND lp.REP_YN = #{repYn} -->
+	AND lp.PGM_NO = #{pgmNo}
+	</if>
+	<if test="repYn == &quot;N&quot;">
+	AND lp.RID = (SELECT RID_REP_PGM FROM LOY.LOY_PGM WITH (NOLOCK)  WHERE PGM_NO = #{pgmNo} AND FLAG = 1)
+	</if>
+	<!-- AND lp.PGM_NO = #{pgmNo} -->
+	</select>
+	
+	<select id="checkPgmRepYn" parameterType="com.icignal.loyalty.loyprogram.dto.request.LoyCustItemConfReqDto"
+												resultType="java.lang.String">
+	/*LoyMbrMapper.checkPgmRepYn */
+	SELECT REP_YN
+    FROM loy.LOY_PGM WITH (NOLOCK) 
+    WHERE PGM_NO = #{pgmNo}
+    AND FLAG = 1
+	</select>
+
+	<select id="selectMbrTxnHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.loyalty.membership.dto.response.LoyMbrTxnHistListResDto">
+	/* LoyMbrMapper.selectMbrTxnHistList */
+	SELECT convert(VARCHAR, lph.SELL_DATE, 120)					AS sellDate
+			, lph.SELL_TYPE_CD				AS sellTypeCd
+			, lc.RID 									AS chnlRid
+			, lc.CHNL_NM  						AS chnlNm
+			, lph.SELL_AMT 						AS sellAmt
+			, lph.RCPT_NO 						AS rcptNo
+			, convert(VARCHAR, lph.CREATE_DATE, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)  AS createDate
+			, lph.RID 								AS purHeadRid
+			, ${strColumn}
+	FROM   LOY.LOY_PUR_HEAD lph WITH (NOLOCK) 
+	JOIN   LOY.LOY_MBR lm WITH (NOLOCK) ON lph.RID_MBR = lm.RID AND lm.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CHNL lc WITH (NOLOCK) ON lc.RID = lph.RID_CHNL AND lc.FLAG = 1
+	WHERE  lph.FLAG = 1
+	AND    lph.RID_MBR IN ${strMbrIntWhere}
+	<if test="startDt != null and endDt != null">
+	AND lph.SELL_DATE BETWEEN CONVERT(DATETIME,#{startDt}) AND CONVERT(DATETIME, #{endDt}) + CONVERT(DATETIME, 0.99999)
+	</if>
+	AND ${strCondWhere}
+	AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<!-- 대한항공 특화 데모용 -->
+	<select id="selectMbrOnBoardHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.loyalty.membership.dto.response.LoyMbrOnBoardTxnHistListResDto">
+	/* LoyMbrMapper.selectMbrOnBoardHistList */
+	SELECT 	  convert(VARCHAR(10), lob.B_DATE, 23)	AS bDate
+			, lob.AIR_TYPE							AS airType
+			, lob.ORIGIN							AS origin
+			, lob.DESTI								AS desti
+			, lob.FLIGHT							AS flight
+			, lob.CLASS								AS seatclass
+			, lob.MILE								AS mile
+			, lob.B_CNT								AS bCnt
+			, lob.TICKET							AS ticket
+			, lob.RID								AS rid
+			, ${strColumn}
+	FROM   DEMO.LOY_ON_BOARD lob WITH (NOLOCK) 
+	JOIN   LOY.LOY_MBR lm WITH (NOLOCK) ON lm.RID = lob.RID_MBR AND lm.FLAG = 1
+	WHERE  lob.FLAG = 1
+	AND    lob.RID_MBR = #{rid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+
+	<select id="selectCouponHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.loyalty.membership.dto.response.LoyMbrCouponListResDto">
+	/* LoyMbrMapper.selectCouponHistList */
+	SELECT
+		 lo.OFR_NM 			as ofrNm ,
+	 	 lo.OFR_TYPE   		as ofrType,
+	 	 lo.OFR_SUB_TYPE 	as ofrSubType,
+	 	 lcm.CPN_NO			as cpnNo,
+	 	 convert(VARCHAR, lcm.CPN_ISSUE_DT, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)  as cpnIssueDt,
+	 	 convert(VARCHAR, lcm.CPN_LST_USED_DT, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)  as cpnlstUesdDt,
+	 	 lcm.CPN_STATE_CD		as cpnStateCd,
+	 	 convert(VARCHAR, lcm.create_date, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)  as createDate,
+	 	 lcm.rid			as rid,
+	 	 lcm.ACRL_CNCL_NO											AS acrlCnclNo		-- 적립 취소 번호
+		 ,lcm.USE_CNCL_NO											AS useCnclNo		-- 사용 취소 번호
+		 ,lcm.RCPT_NO												AS rcptNo			-- 영수증 번호
+		 ,lcm.CPN_AVL_CNT											AS cpnAvlCnt
+		 ,lcm.RID_USED_CHNL											AS ridUsedChnl
+		 ,lcm.RID_ISS_CHNL											AS ridIssChnl
+		 ,(select chnl_no from loy.loy_chnl where rid = lcm.RID_USED_CHNL) as usedChnlNo
+		 ,(select chnl_no from loy.loy_chnl where rid = lcm.RID_ISS_CHNL) as issChnlNo
+	     ,${strColumn}
+	   FROM
+		loy.LOY_CPN_MBR lcm WITH (NOLOCK) 
+		INNER JOIN loy.loy_cpn lc WITH (NOLOCK) ON lcm.RID_CPN_M= lc.RID
+		INNER JOIN loy.loy_ofr lo WITH (NOLOCK) ON lc.RID_OFR = lo.RID
+		INNER JOIN loy.loy_mbr m WITH (NOLOCK) ON lcm.RID_MBR = m.RID
+	WHERE
+		 lcm.RID_MBR IN ${strMbrIntWhere}
+	AND ${strCondWhere}
+	AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+    <select id="selectMbrAgreList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.loyalty.membership.dto.response.LoyMbrAgreListResDto">
+	/* LoyMbrMapper.selectMbrAgreList */
+	   SELECT  t1.agreTypeCd
+		      , t1.ver
+		      , t1.regDate
+		      , t1.custRid
+		      , t1.rid
+		      , t1.termRid
+		      , t1.termVerRid
+		      , t1.totalCount
+		FROM ( SELECT    lca.AGRE_TYPE_CD				AS agreTypeCd
+				, ltv.VER						AS ver
+				, convert(varchar, lca.REG_DATE, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)					AS regDate
+				, lca.RID_CUST				    AS custRid
+				, lca.RID						AS rid
+				, lt.RID						AS termRid
+				, lca.RID_TERMS_VER				AS termVerRid
+				, ${strColumn}
+		FROM   LOY.LOY_CUST_AGRE lca WITH (NOLOCK) 
+		JOIN LOY.LOY_TERMS_VER ltv WITH (NOLOCK) ON lca.RID_TERMS_VER = ltv.RID AND ltv.FLAG = 1
+		JOIN LOY.LOY_TERMS lt WITH (NOLOCK) ON lt.RID = ltv.RID_TERMS AND lt.FLAG = 1
+		JOIN LOY.LOY_TERMS_PGM ltp WITH (NOLOCK) ON ltp.RID_TERMS_VER = ltv.RID AND ltp.FLAG = 1
+		WHERE   lca.FLAG = 1
+		AND     lca.RID_CUST = #{ridCust}
+		AND     ltp.RID_PGM	= #{ridPgm}
+		AND     lca.AGRE_YN = 'Y'
+		AND     ${strCondWhere}
+		AND     ${strWhere}
+		UNION ALL
+		SELECT    lca.AGRE_TYPE_CD				AS agreTypeCd
+				, null							AS ver
+				, convert(varchar, lca.REG_DATE, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->)					AS regDate
+				, lca.RID_CUST				    AS custRid
+				, lca.RID						AS rid
+				, lt.RID						AS termRid
+				, lca.RID_TERMS_VER				AS termVerRid
+				, ${strColumn}
+		FROM   LOY.LOY_CUST_AGRE lca WITH (NOLOCK) 
+		JOIN   LOY.LOY_TERMS_RCV_CHNL ltrc WITH (NOLOCK) ON lca.AGRE_TYPE_CD = ltrc.MKT_RCV_CHNL_CD AND ltrc.FLAG = 1
+		JOIN   LOY.LOY_TERMS lt WITH (NOLOCK) ON ltrc.RID_TERMS = lt.RID AND lt.flag = 1
+		LEFT OUTER JOIN   LOY.LOY_TERMS_VER ltv WITH (NOLOCK) ON ltv.RID_TERMS = lt.RID  AND ltv.FLAG = 1
+		LEFT OUTER JOIN   LOY.LOY_TERMS_PGM ltp WITH (NOLOCK) ON ltp.RID_TERMS_VER = ltv.RID AND ltp.FLAG = 1
+		WHERE   lca.FLAG = 1
+		AND     lca.RID_CUST = #{ridCust}
+		AND     ltp.RID_PGM	= #{ridPgm}
+		AND     lca.AGRE_YN = 'Y'
+		AND     ${strCondWhere}
+		AND     ${strWhere} ) t1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+
+	<select id="selectMbrTxnExcelHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.loyalty.membership.dto.response.LoyMbrTxnHistListResDto">
+	/* LoyMbrMapper.selectMbrTxnExcelHistList */
+	SELECT 	  convert(VARCHAR(10), lph.SELL_DATE, 23)					AS sellDate
+			, lph.INT_DOM_TYPE_CD			AS intDomTypeCd
+			, lph.SELL_TYPE_CD				AS sellTypeCd
+			, lph.DIR_PAS_TYPE_CD			AS dirPasTypeCd
+			, lph.ROUTE_TYPE_Cd				AS routeTypeCd
+			, lph.FLIGHT_NO					AS flightNo
+			, convert(VARCHAR, lph.ONBRD_DATE, 120)				AS onbrdDate
+			, SEAT_NO						AS seatNo
+			, FORMAT(ROUND(SELL_AMT,0,1),'##,##0') AS sellAmt
+			, TICK_NO						AS tickNo
+			, ${strColumn}
+	FROM   LOY.LOY_PUR_HEAD lph WITH (NOLOCK) 
+	JOIN   LOY.LOY_MBR lm WITH (NOLOCK) ON lph.RID_MBR = lm.RID AND lm.FLAG = 1
+	WHERE  lph.FLAG = 1
+	AND    lph.RID_MBR = #{rid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+
+	<select id="selectMbrPointExcelHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyMbrPtnTxnHistReqDto" resultType="com.icignal.loyalty.benefit.point.dto.response.LoyMbrPtnTxnHistListResDto">
+	/* LoyMbrMapper.selectMbrPointExcelHistList" */
+	SELECT   <!--  lpt.TXN_NUM			AS txnNum -->
+			  lpt.TXN_UNIQ_NO		AS txnUniqNo
+			<!-- , lpt.TXN_STAT_CD		AS txnStatCd -->
+			<!-- , lpt.APPR_NO			AS apprNo -->
+			, lpt.PNT_TXN_TYPE_1_CD	AS pntTxnType1Cd
+			, lpt.PNT_TXN_TYPE_2_CD	AS pntTxnType2Cd
+			, lc.CHNL_NM			AS chnlNm
+			, FORMAT(ROUND(ISNULL(lpt.TXN_AMT,0),0,1),'##,##0')   AS txnAmt
+			, CASE WHEN lpt.pnt_txn_type_1_cd = '200' 
+						THEN '-' + CONVERT (VARCHAR, FORMAT(ROUND(lpt.PNT_AMT,0,1),'##,##0'))
+						ELSE CONVERT (VARCHAR, FORMAT(ROUND(lpt.PNT_AMT,0,1),'##,##0'))
+						END AS pntAmt
+			, convert(VARCHAR, lpt.TXN_DT, 120) AS txnDt
+			, convert(VARCHAR, lpt.APPR_DT,120) AS apprDt
+			, lpt.RID				AS rid
+			, ${strColumn}
+	FROM LOY.LOY_PNT_TXN lpt WITH (NOLOCK) 
+	JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON lpt.RID_MBR =lm.RID AND lm.FLAg = 1
+	LEFT OUTER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lc.RID = lpt.RID_CHNL AND lc.FLAG = 1
+	WHERE ${strCondWhere}
+	AND   lpt.FLAG = 1
+	AND   lpt.rid_mbr  = #{rid}
+	AND   ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+
+	<!-- 대한항공 특화 데모용 -->
+	<select id="selectMbrOnBoardExcelHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.loyalty.membership.dto.response.LoyMbrOnBoardTxnHistListResDto">
+	/* LoyMbrMapper.selectMbrOnBoardExcelHistList */
+	SELECT 	  convert(VARCHAR(10), lob.B_DATE, 23)	AS bDate
+			, lob.AIR_TYPE							AS airType
+			, lob.ORIGIN							AS origin
+			, lob.DESTI								AS desti
+			, lob.FLIGHT							AS flight
+			, lob.CLASS								AS seatclass
+			, FORMAT(ROUND(lob.MILE,0,1),'##,##0') AS mile
+			, lob.B_CNT								AS bCnt
+			, lob.TICKET							AS ticket
+			, lob.RID								AS rid
+			, ${strColumn}
+	FROM   DEMO.LOY_ON_BOARD lob WITH (NOLOCK) 
+	JOIN   LOY.LOY_MBR lm WITH (NOLOCK) ON lm.RID = lob.RID_MBR AND lm.FLAG = 1
+	WHERE  lob.FLAG = 1
+	AND    lob.RID_MBR = #{rid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectMbrFamilyList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrFamilyListReqDto"
+													 resultType="com.icignal.loyalty.membership.dto.response.LoyMbrFamilyListResDto">
+	/* LoyMbrMapper.selectMbrFamilyList */
+	SELECT A.mbrNo AS mbrNo
+				, A.custNm AS custNm
+				, A.hhp AS hhp
+				, A.relCd AS relCd 
+				, A.statCd AS statCd
+				, A.createDate AS  createDate
+				, A.secsnDate AS secsnDate
+				, A.rid AS rid
+				, A.totalPntAvl AS totalPntAvl
+				, ${strColumn}
+	FROM (
+			SELECT DISTINCT(lm.MBR_NO) AS mbrNo
+					, lc.CUST_NM AS custNm
+					, lc.HHP AS hhp
+					, lfm.REL_CD AS relCd
+					, lfm.STAT_CD AS statCd
+					<!-- , lpt.TOTAL_PNT_AVL AS totalPntAvl -->
+					, convert(varchar(10), lfm.CREATE_DATE, 120<!-- 'YYYY-MM-DD' -->) AS createDate
+					, convert(varchar(10), lfm.SECSN_DATE, 120<!-- 'YYYY-MM-DD' -->) AS secsnDate
+					, lm.RID AS rid
+					, (SELECT ISNULL(SUM(usePnt), 0)<!-- DECODE(COUNT(*),0,0,ISNULL(SUM(usePnt), 0)) -->    
+				      FROM
+				        (SELECT SUM(CASE WHEN  lpaa.VALID_START_DATE <![CDATA[ <= ]]>  CONVERT(DATETIME, CONVERT(DATE, GETDATE()))
+				                               AND lpaa.VALID_END_DATE <![CDATA[ >= ]]> CONVERT(DATETIME, CONVERT(DATE, GETDATE())) THEN lpaa.BALNC
+				                        ELSE 0 END )                                                            AS usePnt
+				        FROM loy.loy_pnt_acrl lpaa WITH (NOLOCK) 
+				        LEFT OUTER JOIN LOY.LOY_MBR_INT lmi WITH (NOLOCK) ON lpaa.rid_mbr = lmi.RID_MBR AND lmi.MBR_INT_CODE IN (SELECT MBR_INT_CODE 
+												FROM LOY.LOY_MBR_INT WITH (NOLOCK) 
+												WHERE rid_mbr IN (SELECT RID_MBR 
+																	FROM loy.LOY_FMLY_MBR WITH (NOLOCK) 
+																	WHERE RID_FMLY IN (SELECT RID_FMLY 
+																						FROM loy.LOY_FMLY_MBR WITH (NOLOCK)  
+																						WHERE rid_mbr = #{ridMbr}
+																						AND FLAG = 1
+																						) 
+																	AND FLAG = 1
+																) 
+												AND flag = 1
+												)   
+				        WHERE lpaa.rid_mbr = lfm.RID_MBR
+				            AND lpaa.OFFER_TYPE_CD = 'P'  
+				            AND lpaa.BALNC > 0
+				        ) rslt
+				     WHERE 1 = 1) AS totalPntAvl
+			FROM loy.LOY_FMLY_MBR lfm WITH (NOLOCK) 
+			JOIN loy.LOY_FMLY lf WITH (NOLOCK) ON lf.rid  = lfm.RID_FMLY AND lf.FLAG = 1
+			JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON lfm.RID_MBR= lm.RID AND lm.FLAG = 1
+			LEFT OUTER JOIN LOY.LOY_PNT_TXN lpt WITH (NOLOCK) ON lm.RID = lpt.RID_MBR AND lpt.FLAG = 1
+			JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+			WHERE lfm.FLAG = 1
+			AND lfm.RID_FMLY = (SELECT RID_FMLY FROM loy.LOY_FMLY_MBR WITH (NOLOCK) WHERE rid_mbr = #{ridMbr} AND FLAG = 1)
+			) A
+	WHERE ${strWhere}
+    ORDER BY ${strOrderby}
+    				${strEndPaging}
+	</select>
+
+
+	<select id="checkFmlyChiefCnt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrFamilyListReqDto"
+												resultType="java.lang.Integer">
+	/* LoyMbrMapper.checkFmlyChiefCnt */
+	SELECT COUNT(*)
+	FROM loy.LOY_FMLY lf WITH (NOLOCK) 
+	WHERE lf.FLAG = 1
+	AND lf.STAT_CD != '03'
+	AND lf.RID = (SELECT lfm.RID_FMLY AS ridFmly
+						FROM loy.LOY_FMLY_MBR lfm WITH (NOLOCK) 
+						WHERE lfm.FLAG = 1
+						AND lfm.RID_MBR = #{rid})
+	</select>
+
+	<select id="checkFmlyChief" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrFamilyListReqDto"
+												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrFmlyResDto">
+	/* LoyMbrMapper.checkFmlyChief */
+	SELECT lf.RID_REP_MBR AS chiefRid WITH (NOLOCK) 
+	FROM loy.LOY_FMLY lf WITH (NOLOCK) 
+	WHERE lf.FLAG = 1
+	AND lf.STAT_CD != '03'
+	AND lf.RID = (SELECT lfm.RID_FMLY AS ridFmly
+						FROM loy.LOY_FMLY_MBR lfm WITH (NOLOCK) 
+						WHERE lfm.FLAG = 1
+						AND lfm.RID_MBR = #{rid})
+	</select>
+
+	<!-- 패밀리 사용안함 -->
+	<select id="saveNewFmlyMbr" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto" statementType="CALLABLE">
+	/* LoyMbrMapper.saveNewFmlyMbr */
+    { CALL LOY.PKG_LOY_FMLY.SP_ADD_FMLY (
+            #{mbrNo},
+            #{relCd},
+            #{repMbrNo},
+            #{rst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{rstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{rstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+            )
+    }
+    </select>
+
+	<!-- 패밀리 사용안함 -->
+	<select id="deleteFmlyMbr" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto" statementType="CALLABLE">
+	/* LoyMbrMapper.deleteFmlyMbr */
+    { CALL LOY.PKG_LOY_FMLY.SP_REG_FMLY_WITHDRAWAL (
+            #{mbrNo},
+            #{rst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{rstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{rstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+            )
+    }
+    </select>
+
+    <select id="selectTermsListVal" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+    												resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+    /* LoyMbrMapper.selectTermsListVal */
+    SELECT TERMS_TYPE_CD 			AS termsTypeCd
+				 , TERMS_TYPE_SUB_CD 	AS termsTypeSubCd
+				 , VER								AS ver
+				 , START_DATE 					AS startDate
+				 <!-- , TERMS_SUMRY				AS termsSumry
+				 , TERMS_CONTS				AS termsConts -->
+				 , RID 								AS rid
+				 , REQUIRED_YN 				AS requiredYn
+				 , PGM_NM 						AS pgmNm
+				 , PGM_NO 						AS pgmNo
+				 , ridPgm 							AS ridPgm
+				 , ${strColumn}
+    FROM (
+                    SELECT
+                           T1.RID,
+                           T1.TERMS_TYPE_CD ,
+                           T1.TERMS_TYPE_SUB_CD,
+                           T2.VER,
+                           T2.START_DATE,
+                           T2.REQUIRED_YN,
+                           T2.TERMS_SUMRY,
+                           T2.TERMS_CONTS,
+                           lp.RID AS ridPgm,
+                           lp.PGM_NO,
+                           lp.PGM_NM,
+                           ROW_NUMBER() OVER (PARTITION BY T2.RID_TERMS ORDER BY START_DATE DESC ) AS RN
+                    FROM LOY.LOY_TERMS T1 WITH (NOLOCK) 
+                    JOIN LOY.LOY_TERMS_VER T2 WITH (NOLOCK) ON T1.RID = T2.RID_TERMS
+                    JOIN loy.LOY_TERMS_PGM ltp WITH (NOLOCK) ON ltp.RID_TERMS_VER = T2.RID AND ltp.FLAG = 1
+                    LEFT OUTER JOIN loy.LOY_PGM lp WITH (NOLOCK) ON lp.RID = ltp.RID_PGM AND lp.FLAG = 1
+                    WHERE 1=1
+                    AND T1.FLAG  = 1
+                    AND T2.FLAG  = 1
+                    AND T1.STAT_CD = #{statCd}
+                    AND lp.PGM_NO = #{pgmNo}
+                    AND T2.START_DATE <![CDATA[ <= ]]>  GETDATE()
+             ) A
+    WHERE A.RN = 1
+    </select>
+
+	<!-- 회원가입(구버전)사용안함 -->
+    	<!-- <select id="addNewCustomer" parameterType="com.icignal.loyalty.membership.dto.request.LoyNewCustAddReqDto" statementType="CALLABLE">
+	/* LoyMbrMapper.addNewCustomer */
+        { CALL LOY.PKG_LOY_MBR_JOIN.SP_CUST_I_JOIN_MAIN (
+                #{pgmNo},
+                #{custtypecd},
+                #{mbrTypeCd},
+                #{chnlNo},
+                #{sbscPathCd},
+                #{sbscDeviceCd},
+                #{custnm},
+                #{custnmadd},
+                #{birthday},
+                #{lunarCd},
+                #{gen},
+                #{nlty},
+                #{email},
+                #{tel},
+                #{zip},
+                #{adres},
+                #{bunji},
+                #{buildingCode},
+                #{bCode},
+                #{sigunguCode},
+                #{mrrgYn},
+                #{annvrsry},
+                #{annvrsryTypeCd},
+                #{frgnrNo},
+                #{nativeYn},
+                #{wrcnm},
+                #{position},
+                #{empNo},
+                #{certTypeCd},
+                #{certSubTypeCd},
+                #{certVal},
+                #{loginTypeCd},
+                #{userId},
+                #{userPwd},
+                #{rcmmdNo},
+                #{drmncyChngUnit},
+                #{empId},
+                #{Rst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{RstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{RstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{oCustNo , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{oMbrNo , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+                )
+        }
+    </select> -->
+
+    <select id="saveJoinCustAll" parameterType="java.util.Map" statementType="CALLABLE">
+     /* LoyMbrMapper.saveJoinCustAll */
+    	{ CALL LOY.PKG_LOY_MBR.SP_MBR_SBSC_MAIN (
+    		#{commitYn},
+           	#{empId},
+           	#{pgmNo},
+           	#{custTypeCd},
+           	#{mbrTypeCd},
+    		#{tCustTbl, javaType=Object, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyCustTypeHandler},
+    		#{tCustCTbl, javaType=java.lang.String, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyCustCompanyTypeHandler},
+    		#{tCustAgreTbl, javaType=Object, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyCustAgreTypeHandler},
+    		#{tCustAddTbl, javaType=java.lang.String, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyCustAddTypeHandler},
+			#{Rst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	      	#{RstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	      	#{RstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	      	#{oCustNo , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{oMbrNo , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{oMbrCardNo , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+    	) }
+  	</select>
+
+  	<select id="selectTermsMktRcvListVal" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+    														resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsRcvChnlListResDto">
+  	/* LoyMbrMapper.selectTermsMktRcvListVal */
+  	SELECT trc.RID as rid,
+			trc.SEQ_NO as seqNo,
+			trc.MKT_RCV_CHNL_CD as mktRcvChnlCd,
+			trc.START_DATE as startDate,
+			${strColumn}
+  	FROM LOY.LOY_TERMS_RCV_CHNL trc WITH (NOLOCK) 
+  	WHERE trc.USE_YN = 'Y'
+	AND  trc.flag = 1
+	AND RID_TERMS = #{rid}
+	AND trc.START_DATE <![CDATA[ <= ]]> GETDATE()
+	ORDER BY seqNo asc
+  	</select>
+
+  	<select id="selectMbrDetailPop" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+  													resultType="com.icignal.loyalty.membership.dto.response.LoyMbrDetailPopResDto">
+  	/* LoyMbrMapper.selectMbrDetailPop */
+  	SELECT lm.MBR_TYPE_CD 			AS mbrTypeCd
+    		, lc.CUST_TYPE_CD 				AS custTypeCd
+    		, lc.CUST_NO 						AS custNo
+    		, lc.CUST_STAT_CD 				AS custStatCd
+    		, lc.CUST_NM 						AS cust_nm
+    		, lc.GEN_CD 							AS gen_cd
+    		, lc.BIRTHDT 							AS birthdt
+    		, lc.LUNAR_CD 						AS lunar_cd
+    		, lc.HHP 								AS hhp
+    		, lc.EMAIL 								AS email
+    		, lc.ZIP 									AS zip
+    		, lc.ADRES 							AS adres
+    		, lc.BUNJI 								AS bunji
+    		, lc.B_CODE 							AS bCode
+    		, lc.RCMMD_NO 					AS rcmmd_no
+    		, lc.RID_SBSC_CHNL 				AS ridSbscChnl
+    		, lcl.CHNL_NM 						AS chnlNm
+    		, lcl.CHNL_NO 						AS chnlNo
+    		, lc.SBSC_PATH_CD 				AS sbscPathCd
+    		, lc.SBSC_DEVICE_CD 			AS sbscDeviceCd
+    		, lc.CERT_TYPE_CD 				AS certTypeCd
+    		, lc.CERT_SUB_TYPE_CD 		AS certSubTypeCd
+    		, lc.CERT_VAL 						AS certVal
+    		, lci.CUST_NM_ADD 				AS cust_nm_add
+    		, lci.TEL_NO 							AS hhp_add
+    		, lci.ZIP_ADD	 						AS zip_add
+    		, lci.ADRES_ADD 					AS adres_add
+    		, lci.BUNJI_ADD 					AS bunji_add
+    		, lci.B_CODE_ADD					AS bCodeAdd
+    		, lci.NLTY 								AS nlty
+    		, lci.NATIVE_YN 						AS native_yn
+    		, lci.EMP_NO 							AS empNo
+    		, lci.MRRG_YN 						AS mrrg_yn
+    		, lci.ANNVRSRY 						AS annvrsry
+    		, lci.ANNVRSRY_TYPE_CD 		AS annvrsry_type_cd
+    		, lci.FRGNR_NO 						AS frgnrNo
+    		, lci.WRC_NM 						AS wrc_nm
+    		, lci.PSTN 								AS pstn
+    		, lci.LA_NAME 						AS laName
+    		, lci.LA_CERT_VAL 					AS laCertVal
+    		, lci.LA_AGRE_DATE 				AS laAgreDate
+    		, lc.DRMNCY_CHNG_UNIT 		AS drmncyChngUnit
+    		, lp.PGM_NM 						AS pgmNm
+    		, lp.PGM_NO 							AS pgmNo
+    		, lcli.USER_ID							AS user_id
+    		, lcli.USER_PWD						AS user_pwd
+    		, lcli.LOGIN_TYPE_CD				AS loginTypeCd
+    FROM loy.LOY_MBR lm WITH (NOLOCK) 
+    LEFT OUTER JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    LEFT OUTER JOIN loy.LOY_CUST_I lci WITH (NOLOCK) ON lci.RID_CUST = lc.RID AND lci.FLAG = 1
+    LEFT OUTER JOIN loy.LOY_CHNL lcl WITH (NOLOCK) ON lcl.RID = lc.RID_SBSC_CHNL AND lcl.FLAG = 1
+    LEFT OUTER JOIN loy.LOY_CUST_LOGIN_INF lcli WITH (NOLOCK) ON lcli.RID_CUST = lc.RID AND lcli.FLAG = 1
+    JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lp.RID = lm.RID_PGM AND lp.FLAg = 1
+    WHERE lm.RID = #{rid}
+  	</select>
+
+  	<select id="seletMbrPrStore" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+  												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrDetailPopResDto">
+  	/* LoyMbrMapper.seletMbrPrStore */
+  	SELECT CHNL_NO 	AS prStoreCd
+		 , CHNL_NM 			AS prStoreNm
+	FROM (
+   	SELECT lcl2.CHNL_NO
+    	, lcl2.CHNL_NM
+    	, ROW_NUMBER() OVER (ORDER BY lcm.SEQ_NO ASC ) AS RN
+    FROM loy.LOY_MBR lm WITH (NOLOCK) 
+    LEFT OUTER JOIN loy.LOY_CHNL_MBR lcm WITH (NOLOCK) ON lcm.RID_MBR = lm.RID  AND lcm.FLAG = 1 AND lcm.CHNL_REL_TYPE_CD = 'M'
+    LEFT OUTER JOIN loy.LOY_CHNL lcl2 WITH (NOLOCK) ON lcm.RID_CHNL = lcl2.RID AND lcl2.FLAG = 1
+    WHERE lm.RID = #{rid}
+    ) A
+    WHERE A.RN = 1
+  	</select>
+
+  	<select id="selectMbrTermsDetailList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+  															 resultType="com.icignal.loyalty.membership.dto.response.LoyAgreTermsResDto">
+  	/* LoyMbrMapper.selectMbrTermsDetailList */
+  	SELECT lca.AGRE_TYPE_CD 	AS  agreTypeCd
+    		, lca.AGRE_YN 				AS agreYn
+    		, ltv.VER 						AS ver
+    		, lca.RID 						AS rid
+    		,${strColumn}
+    FROM loy.LOY_MBR lm WITH (NOLOCK) 
+    LEFT OUTER JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    LEFT OUTER JOIN loy.LOY_CUST_AGRE lca WITH (NOLOCK) ON lca.RID_CUST = lc.RID AND lca.FLAG = 1
+    LEFT OUTER JOIN loy.LOY_TERMS_VER ltv WITH (NOLOCK) ON ltv.RID = lca.RID_TERMS_VER AND ltv.FLAG = 1
+    WHERE lm.RID = #{rid}
+    <!-- AND ltv.REQUIRED_YN = 'N' -->
+  	</select>
+
+  	<select id="selectCorpMbrListPop" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									    					resultType="com.icignal.common.base.dto.response.LoyMbrListPopResDto">
+	/* LoyMbrMapper.selectCorpMbrListPop */
+	SELECT lmm.RID 					AS rid
+			 , lmm.MBR_NO 			AS mbrNo
+			 , lc.CUST_NM	 			AS custNm
+			 , lcc.BIZR_NO 				AS bizrNo
+			 , lc.HHP	     				AS hhp
+			 , lmm.MBR_STAT_CD 	AS mbrStatCd
+			 , lmm.MBR_TYPE_CD 	AS mbrTypeCd
+			 , ${strColumn}
+	FROM loy.LOY_MBR lmm WITH (NOLOCK) 
+	JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lc.RID = lmm.RID_CUST AND lc.FLAG = 1
+	JOIN LOY.LOY_CUST_C lcc WITH (NOLOCK) ON lc.RID = lcc.RID_CUST AND lcc.flag=1
+	LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lmm.RID_PGM = lp.RID AND lp.FLAG = 1
+	<!-- JOIN LOY.LOY_PGM lp ON lmm.RID_PGM = lp.RID AND lp.FLAG = 1 -->
+	LEFT OUTER JOIN LOY.LOY_CHNL lcl WITH (NOLOCK) ON lmm.RID_SBSC_CHNL = lcl.RID AND lc.FLAG = 1
+	where lmm.FLAG  = 1
+	AND lmm.MBR_STAT_CD = 'A'
+	AND ${strCondWhere}
+	AND ${strWhere}
+	order by ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectCorpBranchListPop" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBranchReqDto"
+														resultType="com.icignal.loyalty.customer.dto.response.LoyCustBranchResDto">
+	/* LoyMbrMapper.selectCorpBranchListPop */
+	SELECT
+			lmcb.RID           	AS rid,
+			lmcb.BR_NO      	AS brNo,
+			lmcb.BR_NM      	AS brNm,
+			lc.CHNL_NO       	AS chnlNo,
+			lc.CHNL_NM 			AS chnlNm,
+			lmcb.CHARGER   	AS charger,
+			lmcb.TEL_NO  		AS telNo,
+			convert(lmcb.CREATE_DATE,'YYYY-MM-DD') 	  AS createDate,
+			${strColumn}
+	FROM LOY.LOY_MBR_C_BR lmcb WITH (NOLOCK) 
+	INNER JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lmcb.RID_CHNL = lc.RID AND lc.FLAG = 1
+	WHERE  ${strCondWhere}
+	AND ${strWhere}
+	AND lmcb.FLAG  = 1
+	AND lmcb.RID_MBR_C = #{ridMbrC}
+	ORDER BY ${strOrderby}
+				${strEndPaging}
+	</select>
+
+	<update id="withdrawMbr" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto" statementType="CALLABLE">
+	/* LoyMbrMapper.withdrawMbr */
+   	{ CALL LOY.PKG_LOY_MBR.SP_MBR_SECSN(
+		#{commitYn},
+      	#{modifyBy},
+	    #{pgmNo},
+	    #{mbrNo},
+	    #{secsnReqDt},
+	    #{secsnResnCd},
+	    #{secsnResnEtc},
+	    #{pRst,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	    #{pRstCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	    #{pRstMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+	    )
+  	}
+  	</update>
+
+	 <select id="checkCardNumber" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+	 												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrCCardResDto">
+	 /* LoyMbrMapper.checkCardNumber */
+        <![CDATA[
+            SELECT
+                PKG_LOY_MBR_CARD.CHK_REGABLE_MBR_CARD(
+                     #{mbrNo}
+                    ,#{cardNo}
+                ) AS rst
+             FROM DUAL
+        ]]>
+    </select>
+
+    <select id="selectMbrCouponHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.loyalty.membership.dto.response.LoyMbrCouponListResDto">
+	/* LoyMbrMapper.selectMbrCouponHistList */
+	SELECT
+			 lcmh.CPN_STATE_CD 											AS cpnStateCd		-- 쿠폰 상태
+			,lcmh.CPN_TXN_STATE_CD										AS cpnTxnStateCd	-- 쿠폰 상세 상태
+			,convert( lcmh.CPN_OCCUR_DT,'YYYY-MM-DD HH24:MI:SS') 		AS cpnOccurDt		-- 쿠폰 발생일시
+			,lc1.CHNL_NO												AS cpnUseChnlNo		-- 사용 채널 번호
+			,lc1.CHNL_NM												AS cpnUseChnlNm		-- 사용 채널명
+			,lc2.CHNL_NO												AS issChnlNo		--
+			,lc2.CHNL_NM												AS issChnlNm		--
+			,lcm.RCPT_NO												AS rcptNo			-- 영수증 번호
+			,lcm.ACRL_CNCL_NO											AS acrlCnclNo		-- 적립 취소 번호
+			,lcm.USE_CNCL_NO											AS useCnclNo		-- 사용 취소 번호
+			,${strColumn}
+	FROM loy.LOY_CPN_MBR_HIST lcmh WITH (NOLOCK) 
+	JOIN loy.LOY_CPN_MBR lcm WITH (NOLOCK) ON lcmh.RID_CPN_MBR = lcm.rid AND lcm.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CHNL lc1 WITH (NOLOCK) ON lcmh.RID_USED_CHNL = lc1.rid AND lc1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CHNL lc2 WITH (NOLOCK) ON lcmh.RID_ISS_CHNL  = lc2.rid AND lc2.FLAG = 1
+	<!-- LEFT OUTER JOIN com.COMM_CODE cc1 ON lcmh.CPN_STATE_CD 		= cc1.CODE_NAME AND cc1.GROUP_CODE = 'LOY_CPN_STAT_CD' 		AND cc1.country =  #{country} AND cc1.flag = 1 AND cc1.lang = #{lang}
+	LEFT OUTER JOIN com.COMM_CODE cc2 ON lcmh.CPN_TXN_STATE_CD 	= cc2.CODE_NAME AND cc2.GROUP_CODE = 'LOY_CPN_TXN_STAT_CD' 	AND cc2.country =  #{country} AND cc2.flag = 1 AND cc2.lang = #{lang} -->
+	WHERE lcm.rid = #{rid}
+	AND ${strCondWhere}
+	AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="checkUserId" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+	 												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrCCardResDto">
+	 /* LoyMbrMapper.checkUserId */
+        <![CDATA[
+            SELECT
+                PKG_LOY_MBR.CHK_USER_ID(
+                     #{loginTypeCd}
+                    ,#{userId}
+                ) AS rst
+             FROM DUAL
+        ]]>
+    </select>
+
+	<select id="checkRcmmdNo" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+	 												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrCCardResDto">
+	 /* LoyMbrMapper.checkRcmmdNo */
+        <![CDATA[
+            SELECT
+                PKG_LOY_MBR.CHK_RCMMD_NO(
+                     #{rcmmdNo}
+                ) AS rst
+             FROM DUAL
+        ]]>
+    </select>
+
+	<select id="updateMbrDetailPop" parameterType="java.util.Map" statementType="CALLABLE">
+     /* LoyMbrMapper.updateMbrDetailPop */
+    	{ CALL LOY.PKG_LOY_MBR.SP_MBR_EDIT (
+    		#{commitYn},
+           	#{empId},
+           	#{mbrNo},
+    		#{tCustTbl, javaType=Object, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyCustTypeHandler},
+    		#{tCustAgreTbl, javaType=Object, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyCustAgreTypeHandler},
+    		#{tCustAddTbl, javaType=java.lang.String, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyCustAddTypeHandler},
+			#{Rst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	      	#{RstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	      	#{RstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+    	) }
+  	</select>
+
+	<select id="selectCustSegmentHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+													 resultType="com.icignal.loyalty.membership.dto.response.LoyMbrSegmentHistListResDto">
+	/* LoyMbrMapper.selectCustSegmentHistList */
+	SELECT h.ID                										 						AS id
+			, convert(varchar, h.CREATE_DATE, 120 <!-- 'YYYY-MM-DD HH24:MI:SS' -->) 						AS createDate
+			, h.CREATE_BY             								 						AS createByName
+			, c.CSEG_NM 												 					AS csegNm
+			, s.CSEG_STAGE_NM 									 						AS csegStageNm
+			, h.CSEG_TYPE_CD																AS csegTypeCd
+			, ${strColumn}
+	FROM LOY.LOY_CSEG_HIST h WITH (NOLOCK) 
+	JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON h.RID_MBR= lm.RID AND lm.FLAG = 1
+	LEFT OUTER JOIN anl.anl_cseg_mst c WITH (NOLOCK) ON c.ID = h.CSEG_ID AND c.FLAG = 1
+	LEFT OUTER JOIN anl.ANL_CSEG_STAGE s WITH (NOLOCK) ON s.id=h.CSEG_STAGE_ID AND s.FLAG =1
+	WHERE ${strWhere}
+		AND h.RID_MBR = #{rid}
+		AND h.FLAG = 1
+    	ORDER BY ${strOrderby}
+    		${strEndPaging}
+	</select>
+
+	<select id="selectCustItemConfList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChangeHistListReqDto"
+													 resultType="com.icignal.loyalty.loyprogram.dto.response.LoyCustItemConfListResDto">
+	/* LoyProgramMapper.selectCustItemConfList */
+	SELECT lcic.CUST_TYPE_CD AS custTypeCd
+			, lcic.FIELD_NM AS fieldNm
+			, lcic.FIELD_DESC AS fieldDesc
+			, lcic.REQUIRED_YN AS requiredYn
+			, lcic.ENCODE_YN AS encodeYn
+			, lcic.FIELD_VAL_CD AS fieldValCdNm
+			, lcic.GRP_CD_NM AS gpCdNm
+			, convert(VARCHAR, lcic.CREATE_DATE, 120<!-- 'YYYY-MM-DD hh24:mi:ss' -->) AS createDate
+			, lcic.RID AS rid
+			, ${strColumn}
+	FROM loy.LOY_CUST_ITEM_CONF lcic WITH (NOLOCK) 
+	WHERE lcic.FLAG = 1
+	AND lcic.RID_PGM = #{ridPgm}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	</select>
+
+	<select id="selectRidPgm" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChangeHistListReqDto"
+													 statementType="CALLABLE">
+	/* LoyMbrMapper.selectRidPgm */
+	{ #{ridPgm,jdbcType=VARCHAR, mode=OUT} = call loy.PKG_LOY_FN.GET_RID_REP_PGM(
+                #{pgmNo,javaType=java.lang.String,jdbcType=VARCHAR,mode=IN}
+               )
+        }
+	</select>
+
+	<select id="selectAchngMarkName" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChangeHistListReqDto"
+													 resultType="java.lang.String">
+	/* LoyMbrMapper.selectAchngMarkName */
+	SELECT mark_name
+	FROM com.comm_code WITH (NOLOCK) 
+	WHERE flag = 1
+	AND   group_code = #{grpCode}
+	AND   code_name  = #{achngData}
+	</select>
+
+	<select id="selectBchngMarkName" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChangeHistListReqDto"
+													 resultType="java.lang.String">
+	/* LoyMbrMapper.selectBchngMarkName */
+	SELECT MARK_NAME
+	FROM COM.COMM_CODE WITH (NOLOCK) 
+	WHERE FLAG = 1
+	AND   GROUP_CODE = #{grpCode}
+	AND   CODE_NAME  = #{bchngData}
+	</select>
+
+	<select id="selectMbrCpnCnt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+												resultType="java.lang.Integer">
+	/* LoyMbrMapper.selectMbrCpnCnt */
+	SELECT count(*)
+	from LOY.LOY_CPN_MBR lcm WITH (NOLOCK) 
+	WHERE FLAG = 1
+	AND CPN_STATE_CD='A'
+	<!-- AND CPN_USED_YN='N' -->
+	AND  CONVERT(DATETIME, CONVERT(DATE, GETDATE())) <![CDATA[>=]]>CONVERT(DATE, CPN_STD_DT)
+	AND  CONVERT(DATETIME, CONVERT(DATE, GETDATE()))<![CDATA[<=]]>CONVERT(DATE, CPN_END_DT)
+	AND RID_MBR IN ${strMbrIntWhere}
+	</select>
+
+	<select id="selectMbrTicketCnt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+												resultType="java.lang.Integer">
+	/* LoyMbrMapper.selectMbrTicketCnt */
+	SELECT ISNULL(count(RID), 0)
+    FROM loy.LOY_EVT_TCKT_MBR WITH (NOLOCK) 
+    WHERE FLAG = 1
+    AND RID_MBR IN ${strMbrIntWhere}
+    AND USE_YN = 'N'
+    AND VALID_START_DT <![CDATA[<=]]> CONVERT(DATETIME, CONVERT(DATE, GETDATE()))
+    AND VALID_END_DT <![CDATA[>=]]> CONVERT(DATETIME, CONVERT(DATE, GETDATE()))
+	</select>
+
+	<select id="selectOneMbrEvt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrDetailNewPageResDto">
+	/* LoyMbrMapper.selectOneMbrEvt */
+	SELECT EVT_NM 				AS evtNm
+		 	, APPLCT_DT 	AS evtDt
+	FROM (
+			SELECT  lem.EVT_NM
+					,  convert(varchar(10), lea.APPLCT_DT, 120<!-- 'YYYY-MM-DD' -->) AS APPLCT_DT
+					, ROW_NUMBER() OVER (ORDER BY lea.APPLCT_DT ASC ) AS RN
+			FROM loy.LOY_EVT_APPLCT lea WITH (NOLOCK) 
+			LEFT OUTER JOIN LOY.LOY_EVT_MST lem WITH (NOLOCK) ON lem.RID = lea.RID_EVT AND lem.FLAG = 1
+			WHERE lea.FLAG = 1
+			AND lea.RID_MBR = #{rid}
+		) A
+	WHERE A.RN = 1
+	</select>
+
+	<select id="selectMbrTierHistListNew" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrTiersListResDto">
+	/* LoyMbrMapper.selectMbrTierHistListNew */
+	SELECT  ltg.TIERS_GRP_NM							        AS tierGrpNm
+		 	 	, lt.TIER_NM										AS tierNm
+		 	 	, lt.TIER_TYPE_CD									AS tierTypeCd
+		 	 	, ltmh.TIER_CHG_TYPE_CD								AS tierChgTypeCd
+		 	 	, ltmh.TIER_CHG_RST_CD								AS tierChgRstCd
+		 	 	, ltmh.TIER_MNL_REASON_CD							AS tierMnlReasonCd
+		 	 	, em.name											AS createBy
+		 	 	, convert(ltmh.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+		 	 	, ltmh.RID											AS rid
+		 	 	, ltmh.RID_TG										AS tierGrpRid
+		 	 	, ltmh.RID_TIER									    AS tierRid
+		 	 	, ${strColumn}
+    FROM LOY.LOY_TIERS_MBR_HIST ltmh WITH (NOLOCK) 
+    JOIN LOY.LOY_MBR lm WITH (NOLOCK) ON ltmh.RID_MBR = lm.RID AND lm.FLAG = 1
+    JOIN LOY.LOY_TIERS lt WITH (NOLOCK) ON ltmh.RID_TIER = lt.RID AND lt.FLAG = 1
+    JOIN LOY.LOY_TIERS_GRP ltg WITH (NOLOCK) ON ltmh.RID_TG = ltg.RID AND ltg.FLAG = 1
+    LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON cu.RID = ltmh.CREATE_BY AND cu.FLAG = 1
+    LEFT OUTER JOIN COM.EMPLOYEE em WITH (NOLOCK) ON cu.ID_EMPLOYEE = em.ID AND em.FLAG = 1
+    WHERE ltmh.RID_MBR = #{rid}
+    AND   ltmh.RID_TG  = #{tierGrpRid}
+    AND ${strWhere}
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+	</select>
+
+	<select id="selectTierDetailPop" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrTiersDetailResDto">
+	/* LoyMbrMapper.selectTierDetailPop */
+	SELECT    ltmh.TIER_MNL_REASON_DESC			AS tierMnlReasonDesc
+				, em.name							AS reqNm
+				, convert(cea.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS')					AS createDate
+				, em2.name							AS resNm
+				, convert(cea.LAST_APV_DD,'YYYY-MM-DD HH24:MI:SS') AS lastApvDd
+    FROM LOY.LOY_TIERS_MBR_HIST ltmh WITH (NOLOCK) 
+    LEFT OUTER JOIN com.com_elec_aprv cea WITH (NOLOCK) ON ltmh.RID = cea.ATRIB_10 AND cea.FLAG = 1
+    LEFT OUTER JOIN com.EMPLOYEE em WITH (NOLOCK) ON cea.ELEC_APRV_RQTR_ID = em.ID AND em.FLAG = 1
+    LEFT OUTER JOIN com.EMPLOYEE em2 WITH (NOLOCK) ON cea.LAST_APVR_ID = em2.ID AND em2.FLAG = 1
+    WHERE ltmh.rid = #{rid}
+	</select>
+
+	<select id="selectTierApprovalPop" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="com.icignal.loyalty.membership.dto.response.LoyMbrApprovalDetailResDto">
+	/* LoyMbrMapper.selectTierApprovalPop */
+	SELECT  ltmh.TIER_MNL_REASON_DESC			AS tierMnlReasonDesc
+    FROM COM.COM_ELEC_APRV cea WITH (NOLOCK) 
+    WHERE cea.ATRIB_1 = #{rid}
+	</select>
+
+	<insert id="insertTierHist" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrTiersDetailReqDto">
+     /* LoyMbrMapper.insertTierHist */
+     INSERT INTO LOY.LOY_TIERS_MBR_HIST
+     (RID
+     , CREATE_BY
+     , MODIFY_BY
+     , CREATE_DATE
+     , MODIFY_DATE
+     , FLAG
+     , RID_MBR
+     , RID_TG
+     , RID_TIER
+     , VALID_START_DT
+     , VAILD_END_DT
+     , VALID_HIST_YN
+     , TIER_CHG_TYPE_CD
+     , TIER_CALC_DATE
+     , TIER_CALC_TYPE_CD
+     , TIER_CHG_RST_CD
+     , TIER_MNL_REASON_CD
+     , TIER_MNL_REASON_DESC)
+     VALUES (#{rid},
+      #{createBy},
+      #{modifyBy},
+      GETDATE(),
+      GETDATE(),
+      1,
+      #{mbrRid},
+      #{tierGrpRid},
+      #{tierRid},
+      GETDATE(),
+      convert(LAST_DAY(ADD_MONTHS(GETDATE(),+${upKeepMm}))),
+      'Y',
+      'R5',
+      GETDATE(),
+      'M',
+      #{tierRstCd},
+      #{tierMnlReasonCd},
+      #{tierMnlReasonDesc} )
+    </insert>
+
+    <update id="updateMbrTier" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrTiersDetailReqDto">
+		 /* LoyMbrMapper.updateMbrTier */
+		UPDATE LOY.LOY_MBR
+		SET RID_TIER = #{tierRid},
+		    TIER_DT	 = convert( VARCHAR(10),GETDATE(), 120)
+		WHERE RID = #{mbrRid}
+	</update>
+
+	<update id="updateMbrLiftTier" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrTiersDetailReqDto">
+		 /* LoyMbrMapper.updateMbrLiftTier */
+		UPDATE LOY.LOY_MBR
+		SET RID_TIER_LIFTTIME = #{tierRid},
+		    TIER_LIFTTIME_DT	 = convert( VARCHAR(10), GETDATE(), 120)
+		WHERE RID = #{mbrRid}
+	</update>
+
+	<select id="selectTierMgtPlcy" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="java.lang.Integer">
+	/* LoyMbrMapper.selectTierMgtPlcy */
+	SELECT count(*)
+    FROM  LOY.LOY_MGT_PLCY lmp WITH (NOLOCK) 
+    WHERE lmp.RID_PGM = #{pgmRid}
+    AND   lmp.CATE_CD = '04'
+    AND   lmp.CATE_SUB_CD = '09'
+    AND   lmp.COND_CD     = '07'
+    AND   lmp.FLAG        = 1
+	</select>
+
+	<select id="selectTierMgtPlcyYn" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+									   resultType="java.lang.String">
+	/* LoyMbrMapper.selectTierMgtPlcyYn */
+	SELECT lmp.VAL
+    FROM  LOY.LOY_MGT_PLCY lmp WITH (NOLOCK) 
+    WHERE lmp.RID_PGM = #{pgmRid}
+    AND   lmp.CATE_CD = '04'
+    AND   lmp.CATE_SUB_CD = '09'
+    AND   lmp.COND_CD     = '07'
+	</select>
+
+	<select id="purAcrlPointProc" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto" statementType="CALLABLE">
+    /* LoyMbrMaper.purAcrlPointProc */
+        { CALL LOY.SP_CALL_BENF(
+                #{pgmRid},
+                #{purHeadRid},
+                #{value}
+               )
+        }
+	</select>
+
+	<select id="searchMbrGiftPntTgtMbr" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+												resultType="com.icignal.common.base.dto.response.LoyMbrListPopResDto">
+	/* LoyMbrMaper.searchMbrGiftPntTgtMbr */
+	SELECT lmm.MBR_NO AS mbrNo
+			, lc.CUST_NM AS custNm
+			, lc.HHP AS unMaskHhp
+			, lc.EMAIL AS unMaskEmail
+			, lc.CUST_NM AS unMaskCustNm
+			, lc.HHP AS hhp
+			, lc.EMAIL AS email
+			, lmm.MBR_TYPE_CD AS mbrTypeCd
+			, lmm.MBR_STAT_CD AS mbrStatCd
+			, convert(lc.SBSC_DATE, 'YYYY-MM-DD') AS sbscDate
+			, lc.RID_SBSC_CHNL AS ridSbscChnl
+			, lchnl.CHNL_NM AS chnlNm
+			, convert(lmm.CREATE_DATE, 'YYYY-MM-DD') AS createDate
+			, lmm.RID AS rid
+			, lc.RID	AS custRid
+			, ${strColumn}
+	FROM loy.LOY_MBR lmm WITH (NOLOCK) 
+	JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lmm.RID_CUST = lc.RID AND lc.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CHNL lchnl WITH (NOLOCK) ON lc.RID_SBSC_CHNL = lchnl.RID AND lchnl.FLAG = 1
+	WHERE ${strWhere}
+		AND ${strCondWhere}
+		AND lmm.FLAG = 1
+		<if test="ridPgm != null and ridPgm != ''">
+		AND lmm.RID_PGM = #{ridPgm}
+		</if>
+		AND NOT lmm.RID = #{rid}
+	ORDER BY ${strOrderby}
+		  			${strEndPaging}
+	</select>
+
+	<select id="setMbrPointGiftProc" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto" statementType="CALLABLE">
+     /* LoyMbrMaper.setMbrPointGiftProc */
+        { call loy.PKG_LOY_PNT.SP_PNT_GIFT(
+                		#{commitYn},
+                		#{chnlNo},
+			           	#{mbrNo},
+			           	#{tgtMbrNo},
+			    		#{pntPwd},
+			    		#{giftPoint},
+			    		#{trDt},
+			    		#{feeLevyCd},
+			    		#{countFee},
+			    		#{feeRcptNo},
+			    		#{giftComment},
+						#{pRst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+				      	#{pRstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+				      	#{pRstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+            )
+        }
+    </select>
+
+	<select id="selectGiftPointHistList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrPointHistListResDto">
+	/* LoyMbrMapper.selectGiftPointHistList */
+	SELECT A.txnUniqNo 		AS txnUniqNo
+			, convert(VARCHAR(10), A.txnDate, 120)			AS txnDate
+			, A.custNm			AS custNm
+			, A.tgtCustNm		AS tgtCustNm
+			, A.pntAmt			AS pntAmt
+			, A.feeAmt				AS feeAmt
+			, A.feeLevyCd		AS feeLevyCd
+			, A.feeRcptNo		AS feeRcptNo
+			, A.giftComment 	AS giftComment
+			, A.rid					AS rid
+			, ${strColumn}
+	FROM(
+				SELECT lpt.TXN_UNIQ_NO 	AS txnUniqNo
+						, lpgm.TXN_DATE 			AS txnDate
+						, lc1.CUST_NM 				AS custNm
+						, lc2.CUST_NM 				AS tgtCustNm
+						, lpgm.PNT_AMT 			AS pntAmt
+						, lpgm.FEE_AMT 			AS feeAmt
+						, lpgm.FEE_LEVY_CD 	AS feeLevyCd
+						, lpgm.FEE_RCPT_NO 	AS feeRcptNo
+						, lpgm.GIFT_COMMENT AS giftComment
+						, lpgm.RID 					AS rid
+				FROM loy.LOY_PNT_GIFT_MBR lpgm WITH (NOLOCK) 
+				JOIN loy.LOY_PNT_TXN lpt WITH (NOLOCK) ON lpgm.RID_TXN_GIFT = lpt.RID AND lpt.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_MBR lm1 WITH (NOLOCK) ON lm1.RID = lpgm.RID_GIFT_MBR AND lm1.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_CUST lc1 WITH (NOLOCK) ON lc1.rid = lm1.RID_CUST AND lc1.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_MBR lm2 WITH (NOLOCK) ON lm2.RID = lpgm.RID_GIFT_TGT_MBR AND lm2.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_CUST lc2 WITH (NOLOCK) ON lc2.rid = lm2.RID_CUST AND lc2.FLAG = 1
+				WHERE lpgm.FLAG = 1
+				AND lpt.RID_MBR = #{rid}
+
+				UNION ALL
+
+				SELECT lpt.TXN_UNIQ_NO 	AS txnUniqNo
+						, lpgm.TXN_DATE 			AS txnDate
+						, lc1.CUST_NM 				AS custNm
+						, lc2.CUST_NM 				AS tgtCustNm
+						, lpgm.PNT_AMT 			AS pntAmt
+						, lpgm.FEE_AMT 			AS feeAmt
+						, lpgm.FEE_LEVY_CD 	AS feeLevyCd
+						, lpgm.FEE_RCPT_NO 	AS feeRcptNo
+						, lpgm.GIFT_COMMENT AS giftComment
+						, lpgm.RID 					AS rid
+				FROM loy.LOY_PNT_GIFT_MBR lpgm WITH (NOLOCK) 
+				JOIN loy.LOY_PNT_TXN lpt WITH (NOLOCK) ON lpgm.RID_TXN_GIFT_TGT = lpt.RID AND lpt.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_MBR lm1 WITH (NOLOCK) ON lm1.RID = lpgm.RID_GIFT_MBR AND lm1.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_CUST lc1 WITH (NOLOCK) ON lc1.rid = lm1.RID_CUST AND lc1.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_MBR lm2 WITH (NOLOCK) ON lm2.RID = lpgm.RID_GIFT_TGT_MBR AND lm2.FLAG = 1
+				LEFT OUTER JOIN loy.LOY_CUST lc2 WITH (NOLOCK) ON lc2.rid = lm2.RID_CUST AND lc2.FLAG = 1
+				WHERE lpgm.FLAG = 1
+				AND lpt.RID_MBR = #{rid}
+			) A
+	WHERE ${strWhere}
+	ORDER BY ${strOrderby}
+		  			${strEndPaging}
+	</select>
+
+	<select id="selectMbrPgmChnlPop" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+															resultType="com.icignal.common.base.dto.response.LoyChnlListResDto">
+	/* LoyMbrMapper.selectMbrPgmChnlPop */
+	SELECT lc1.CHNL_NM 		AS chnlNm
+	            , lc1.chnl_no      AS chnlNo
+	            , lc2.CHNL_NM	AS parChnlNm
+                , lc1.rid          AS rid
+                , lc1.CHNL_TYPE_CD AS chnlTypeCd
+                , lc1.stat_cd AS chnlStatCd
+                , lcp.pnt_acrl_yn AS acrlPsblYn
+                , ${strColumn}
+    FROM LOY.LOY_CHNl lc1 WITH (NOLOCK) 
+    JOIN LOY.LOY_CHNL_PGM lcp WITH (NOLOCK) ON lc1.RID = lcp.RID_CHNL AND lcp.FLAG = 1
+    JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcp.RID_PGM = lp.RID AND lp.FLAG = 1
+    LEFT OUTER JOIN LOY.LOY_CHNL lc2 WITH (NOLOCK) ON lc1.RID_PAR_CHNL = lc2.RID AND lc2.FLAG = 1
+	WHERE ${strWhere}
+	AND lc1.FLAG = 1
+	AND lp.RID = #{pgmRid}
+	ORDER BY ${strOrderby}
+	  			${strEndPaging}
+	</select>
+
+	<select id="selectMbrUsePurMax" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+														resultType="com.icignal.loyalty.membership.dto.response.LoyMbrPointAuthResDto">
+	/* LoyMbrMapper.selectMbrUsePurMax */
+	SELECT USE_1DAY_MAX AS useDayMax
+		  			, USE_PER_MAX AS usePerMax
+		  			, USE_HUDL AS useHudl
+		  			, USE_UNIT AS useUnit
+		  			, (SELECT SUM(lpgm.PNT_AMT) FROM loy.LOY_PNT_GIFT_MBR lpgm
+						JOIN loy.LOY_PNT_TXN lpt ON lpgm.RID_TXN_GIFT = lpt.RID AND lpt.FLAG = 1
+						AND lpt.RID_MBR = #{rid} AND lpgm.CREATE_DATE <![CDATA[>=]]> GETDATE() -1) AS usePoint
+					, GIFT_FEE_CNT_AMT AS giftFeeCntAmt
+					, GIF_FEE_MILEAGE_AMT AS giftFeeMileageAmt
+  	FROM loy.LOY_PNT_PLCY WITH (NOLOCK) 
+  	WHERE RID_PGM = #{pgmRid}
+  	AND FLAG = 1
+	</select>
+
+	<select id="selectPgmMgtPlcy" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+    												resultType="java.lang.Integer">
+    /* LoyProgramMapper.selectPgmMgtPlcy */
+    SELECT COUNT(*)
+    FROM loy.LOY_MGT_PLCY lmp WITH (NOLOCK) 
+    JOIN loy.LOY_PGM lp WITH (NOLOCK) ON lmp.RID_PGM = lp.RID AND lp.FLAG = 1
+    WHERE lmp.FLAG = 1
+    AND lp.PGM_NO = #{pgmNo}
+    AND lmp.CATE_SUB_CD = #{cateSubCd}
+    </select>
+
+    <select id="chkPntUsable" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+	 												resultType="com.icignal.loyalty.membership.dto.response.LoyWithdrawMbrCallResDto">
+	 /* LoyMbrMapper.chkPntUsable */
+        <![CDATA[
+            SELECT
+                LOY.PKG_LOY_FN.CHK_PNT_USABLE(
+                     #{rid},
+                     #{giftPoint},
+                     'Y'
+                ) AS pRst
+             FROM DUAL
+        ]]>
+    </select>
+    
+    <select id="selectMbrIntList" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+	 												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrIntListResDto">
+	 /* LoyMbrMapper.selectMbrIntList */
+    SELECT    lmi.REP_YN	AS repYn
+    		, lm.MBR_NO		AS mbrNo
+    		, lc.CUST_NM	AS custNm
+    		, em.name		AS createBy
+    		, convert(VARCHAR, lmi.CREATE_DATE, 120<!-- 'YYYY-MM-DD HH24:MI:SS' -->) AS createDate
+    		, lmi.RID		AS rid
+    		, lmi.MBR_INT_CODE AS mbrIntCode
+    		, lmi.RID_MBR		AS ridMbr
+    		, ${strColumn}
+    FROM    LOY.LOY_MBR_INT lmi WITH (NOLOCK) 
+    JOIN    LOY.LOY_MBR  lm WITH (NOLOCK) ON lmi.RID_MBR = lm.RID AND lm.FLAG = 1
+    JOIN    LOY.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    LEFT OUTER JOIN COM.CRM_USER cu ON lmi.CREATE_BY = cu.RID AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE em ON cu.ID_EMPLOYEE = em.ID AND em.FLAG = 1
+    WHERE  lmi.FLAG  = 1
+    AND    lmi.MBR_INT_CODE = #{mbrIntCd}
+    AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+    </select>
+    
+    <select id="selectMbrIntCode" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+	 												resultType="java.lang.String">
+	 /* LoyMbrMapper.selectMbrIntCode */
+    SELECT    lmi.MBR_INT_CODE
+    FROM    LOY.LOY_MBR_INT lmi WITH (NOLOCK) 
+    WHERE  lmi.flag  = 1
+    AND    lmi.RID_MBR = #{rid}
+    </select>
+    
+    <select id="callSaveMbrInt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrIntDetailReqDto" statementType="CALLABLE">
+        /* LoyMbrMapper.callSaveMbrInt */
+        { call loy.PKG_LOY_MBR.SP_MBR_INT(
+                'Y',
+                #{modifyBy},
+                #{prevMbrRid},
+                #{intRidMbr},
+                #{p_Rst,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_RstCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_RstMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT} )
+        }
+    </select>
+    
+    <select id="selectMbrIntCnt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrIntDetailReqDto" resultType="java.lang.Integer">
+    /* LoyMbrMapper.selectMbrIntCnt */
+    SELECT   count(*)
+    FROM    LOY.LOY_MBR_INT lmi WITH (NOLOCK) 
+    WHERE  lmi.flag  = 1
+    AND    lmi.MBR_INT_CODE = #{mbrIntCode}
+    </select>
+    
+    <update id="removeMbrInt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrIntDetailReqDto">
+    /* LoyMbrMapper.removeMbrInt */
+    UPDATE LOY.LOY_MBR_INT
+    SET     MODIFY_DATE = GETDATE()
+    	  , MODIFY_BY = #{modifyBy}
+		  , MBR_INT_CODE = #{ridMbr}
+   	WHERE RID = #{rid}
+    </update>
+    
+    <!-- 적립요청 프로시저 실행 -->
+	<update id="callProcPointAcrl" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyPointAcrlRequestDTO" statementType="CALLABLE">
+		/* LoyMbrMapper.callProcPointAcrl */
+		{
+			CALL LOY.PROC_POINT_ACRL(
+				#{isConTran} 
+				, #{pgmNo}
+				, #{identiType}
+				, #{identiVal}
+				, #{encryptKey}
+				, #{offerNo}
+				, #{offerType}
+				, #{ridIntactType}
+				, #{ridIntactDate}
+				, #{chnlNo}
+				, #{posNo}
+				, #{pntTxnType}
+				, #{pntTxnDtlType}
+				, #{sndDate}
+				, #{sndTime}
+				, #{txnUniqNo}
+				, #{txnDate}
+				, #{txnTime}
+				, #{orgnApprDate}
+				, #{orgnApprNo}
+				, #{pntAmt}
+				, #{refNo}
+				, #{rcptNo}
+				, #{txnAmt}
+				, #{calcFlag}
+				, #{keyFieldType}
+				, #{tranDtlTypeDesc}
+				, #{modifyBy}
+				, #{rst, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstCd, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstMsg, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{applyPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{usePnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{preAcrlPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{expr1MonthPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{expr3MonthPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalAcrlPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalRdmPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalAcrlCancelPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalRdmCancelPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{totalExprPnt, javaType=java.lang.Integer, jdbcType=INTEGER, mode=OUT}
+				, #{apprNo, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{apprDate, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{apprTime, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+			)
+		}
+	</update>
+	
+	<!-- 차감 프로시저 실행 -->
+	<update id="callProcPointRdm" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyPointRdmRequestDTO" statementType="CALLABLE">
+		/* LoyMbrMapper.callProcPointRdm */
+		{
+			CALL LOY.PKG_LOY_PNT.SP_PNT_RDM(
+				  'Y'
+				, #{chnlNo}
+				, #{identiVal}
+				, #{pntAmt}
+				, #{rst, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstCd, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+				, #{rstMsg, javaType=java.lang.String, jdbcType=VARCHAR, mode=OUT}
+			)
+		}
+	</update>
+	
+	<select id="clearMaskMbrInt" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto"
+	 												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrIntListResDto">
+	 /* LoyMbrMapper.clearMaskMbrInt */
+    SELECT  lc.CUST_NM	AS unMaskCustNm
+    FROM    LOY.LOY_MBR_INT lmi WITH (NOLOCK) 
+    JOIN    LOY.LOY_MBR  lm WITH (NOLOCK) ON lmi.RID_MBR = lm.RID AND lm.FLAG = 1
+    JOIN    LOY.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    WHERE  lmi.flag  = 1
+    AND    lmi.RID = #{rid}
+    </select>
+    
+    <select id="blackRuleFmly" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto" statementType="CALLABLE">
+    /* LoyMbrMapper.blackRuleFmly */
+   { call loy.PKG_LOY_PNT.SP_FRAUD_MBR_INSERT (
+           'Y',
+           'FMLY_CHG',
+           #{rst,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+           #{rstCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+           #{rstMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT} )
+   }
+    </select>
+
+</mapper>

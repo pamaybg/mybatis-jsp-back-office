@@ -1,0 +1,265 @@
+server:
+  port: 9090
+  servlet:
+    context-path: /
+    jsp:
+      init-parameters:
+        development: true
+  error:
+    include-exception: true
+spring:  
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  devtools:
+      livereload:
+        enabled: true
+      restart:
+        enabled: false
+  messages:
+    basename: Messages
+    encoding: UTF-8
+  h2:
+    console:
+      enabled: false  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      
+#logback logging 설정
+logging:
+  level:
+    root: INFO
+    com:
+      icignal: DEBUG
+  file: ./log
+   
+  
+#loyalty.commCode.languge=ko
+icignal:
+  server-type: Local #Real, Dev, QA, Local
+  application-name: iCIGNAL-BO
+  auth:
+    program-check: false  #프로그램 권한체크 여부
+  context:
+    rootUrl: http://localhost:9080
+    rootPath: /app/admin/webapps/ROOT/
+    imageServerUrl: https://s3.ap-northeast-2.amazonaws.com/dev.icignal.t10   
+    cdnServerUrl: https://dev.icignal.t10
+    server:      
+      appServiceId: 13e28abc1cf39fdb62b00005
+      country: KR
+      lang: ko
+      currency: KRW
+    resource:
+      excelFileUploadFullPath: C:/icignal/UploadFile/ 
+      excelFileUploadExcelPath: C:/icignal/UploadFile/excel/ 
+      excelFileUploadImgPath: C:/icignal/UploadFile/img/ 
+      menu-icon-path: ../../../images/t10/common/leftmenu/
+      #file-sample-path: /webapps/ROOT/WEB-INF/classes/resources/file/sample/
+      file-sample-path: resources/file/sample/
+      file-upload-path: resources/UploadFile/
+      imageUploadPath: resources/UploadImages/
+      mmsimageUploadPath: resources/UploadImages/CAMPAIGN/content/
+      cmsImageUploadPath: resources/UploadImages/CONTENT_MANAGER/
+      tempImageUploadPath: resources/Temp/
+      excelFileUploadPath: resources/UploadFile/membership/해당업무/
+      excelFileDownPathExternal: C:/icignal/UploadFile/excel/해당업무/
+      #fileUpload-sqlloader-external: C:/data/app/UploadFile/sqlloader/해당업무/
+      #excelFileDownSample: resources/UploadFile/membership/excelTemplate/
+      #excelFileDownPathExternal:C:/data/app/UploadFile/membership/해당업무/
+     
+      
+  push:
+    enable: false
+  api-server:
+    ip-address: dev-api.icignal.com
+    service:
+      getAddressXY: xxxx 
+  async:
+    thread-pool:
+      init: 10
+      max: 100
+      queue: 100
+  marketing:
+    realtime-api-url: http://localhost:8080
+    
+    
+#이메일 인증 
+#loyalty.login.auth.email.automailId=60c16e29d64c97ac1f64abecb23d0826
+#loyalty.login.auth.email.authLimitDt=10
+#loyalty.login.auth.email.authLoginLimitDt=10
+#loyalty.login.auth.email.adminEmail=mktmaster@quintet.co.kr,crmmanager@quintet.co.kr
+#loyalty.login.auth.email.check=false
+#loyalty.login.auth.sms.check=false    
+  login:
+    password:
+      limit-day: 90 # 로그인 패스워드 만료일 (단위: 일)
+    dupl-login-limit: false  #중복 로그인 제한 여부  true: 중복로그인 불가, flase: 중복로그인 허용
+    view:
+      selectLang: Y
+    auth-type: single  # 로그인 인증 방법 ( single: pwd 검증만, double : pwd and 본인인증 ) 
+    double:
+      auth-method: sms #이중 인증 수단 (email, sms)
+      auth-pass-users: mktmaster@quintet.co.kr,crmmanager@quintet.co.kr  #
+      email:  # 이메일 인증 수단 속성
+        api-method: thundermail      
+        automailId: 60c16e29d64c97ac1f64abecb23d0826
+        auth-limit-time: 10         #인증 제한 시간 . 단위: 분
+        auth-login-limit-time: 10    #로그인 인증 제한 시간 ( 이메일 인증 후 ). 단위 : 분        
+        check: false
+      sms:
+        check: false   
+      
+    sso: 
+      check: false
+    lock:
+      cnt: 5
+      date: 30       
+      admin-alert:      
+        check: false
+        method: thundermail  # thundermail
+        mail:
+          automail-id: c778d5fcdd5b3e66c75324943e3e0c25
+          mail-addr: loymaster@quintet.co.kr
+          mail-name: 로열티관리자
+          
+    
+    
+      
+  security:
+     #암호화키 key 관리 방법 : db-local, db-awskms, file-local, file-awskms 
+    data-encryption:
+      database:
+        key-managemnet-type: db-local  # db-awskms, db-local
+        key-file: security/encryption_key/db_key_naverCloud.dat
+      file:
+        key-managemnet-type: file-local  # file-awskms, file-local  
+        key-file: security/encryption_key/file_key_naverCloud.dat
+    properties-data-encryption:
+      password: 9pwc3dke        
+    
+  #db 연결 정보 관리 방법 : LocalLoyaltyMaster, LocalLoyaltySlave, AwsLoyalty
+  db-connection-info:    
+#    management-type: LocalLoyaltyMaster, LocalLoyaltySlave, LocalMart, AwsLoyalty 
+#    management-type: AwsLoyalty
+    management-type: LocalLoyaltyMaster
+    local:
+        loy-db:          
+          master:
+            db-type: oracle # mysql,mssql
+            driver-class-name: KnNLh6woirWd/4b1In2HnStCM7Catbm14DCXiU/TundSjQsxnTW5yncx8vXhCHHi
+            data-source-class-Name: urgwfygeP1ayPEbbO2fXGqDJoS35o09kkkt00IxumrjhuJO9Z7AnXqNwiCHAkmQ3
+            jdbc-url: gfhzhXDNm2HX2vqCTD3A8Uv8XjHs4h1czmzHEuCmeA+PJBNE8/I/RFZaVMpDYqa+iE4cGTf9II7r474ObY5k5A==
+            username: Z/8AVJ5K0p1gYbFrQPtsvA==
+            password: 7ldbVoNDBEkWOBBdsXAohA==
+          slave:
+            db-type: oracle # mysql,mssql
+            driver-class-name: k1nDUeU55SLZt+I0Dm945j/+aHVdOgmN7hk/OBnXn1f/ttu1XEYYWg==
+            jdbc-url: yxASZfQqXYLgH9sNQUiLDJpH1PNYVE/utLYTDsOafoToJ356EW1ciJXTDFvZifd9c9cAi+FATWctAqhDgrF5Gw==
+            username: Z/8AVJ5K0p1gYbFrQPtsvA==
+            password: 7ldbVoNDBEkWOBBdsXAohA==
+        mart-db:
+          db-type: oracle # mysql,mssql
+          driver-class-name: k1nDUeU55SLZt+I0Dm945j/+aHVdOgmN7hk/OBnXn1f/ttu1XEYYWg==
+          jdbc-url: SgMN06dzkRMlyTNI6iRfcFbjyAXBPIqpO29AfzYEWhndMbTBsvz1z/Po+Ttckv4cU25+dcC1B+w=
+          username: Z/8AVJ5K0p1gYbFrQPtsvA==
+          password: 7ldbVoNDBEkWOBBdsXAohA==
+            
+  mail-connection-info: #메일서버 연결정보
+    management-type: Local  #Local, Aws
+    local:
+      smtp:
+        host: 5pxG0e6C7EmDQpQgzWE1y3kXsv+CNyDw #mail.gmail.com #NUBbC1AgNBTQzSuWfYhBD6+SE5UyKt9TlnjFD6hxtlE= #mail.quintet.co.kr
+        port: 3EJo+/UUYZ1ynREaGbUVig== #465
+        username: 7pq76+ORtLlRoDrFY39c+uTGiqPhI4Qkv9X9YqftD7Y=
+        password: lRe50VODuUFdyGTvUxqvNoGcsQy4brSa
+ 
+            
+    
+aws:
+  region: ap-northeast-2
+  credentials:
+    access-key: dR4CEiVfje76RWomepIHo2xYFgDJopbBpXTogsqtqsY=
+    secret-key: q5vu9LqQN4fmSIkFjF4/N9vigJcv3mVbpZJzvd3yJ2qtCdn2IteSL8PRVitDKHW3TATaHaYjNws=
+  service:
+    key-management-service:      
+      master-key: vWUr05SQRRAnGiUQ6KRHbIIHWHdb155+pxDQdbVUDfaWze2MZeymoRzTF1jjT7tpxry6TiyvmJbOEUWUf7W/x21WXZeZMmREA091GwOnvUxBON/PgMzjEqciBAUZ8Q1k 
+    secret-manager:           
+      secret-name:
+        loyalty-database: GHBBRorxOzezySpODrG1MemuQx4dbD7/drJLnExYBe4ygzcPN1Txpw==
+        mart-database: cQg95guL7twHJ84J+rUK6Af49QoHNuCgPB7uYqeUJ6w=
+        file-encryption-key: 2+gUXa6le78Ywj8gt/AO1UYn8Wk00LXDkMBWscZFAyE=   #서버상에 업로드된 파일(개인정보가 담긴 파일들) 암복화시 사용할 키   
+        mail-smtp-info: #mail stmp 정보 (host;port;username)
+  s3:
+    bucket-name: dev.icignal.t10 #자격증명정보는 Secret Manager 와 같이 사용한다. ("aws.credentials" 프리픽스 서블릿값 참고.)
+
+
+#push.uracle.api=
+#push.uracle.priority=3
+#push.uracle.badgeno=1
+#push.uracle.reservedate=
+#push.uracle.servicecode=ALL
+#push.uracle.soundfile=default
+#push.uracle.sendercode=admin
+#push.uracle.app_id=
+#push.uracle.reservetime=100000
+
+uracle:
+  push:
+      api-url: 
+      priority: 3
+      badgeno: 1
+      reservedate: 
+      servicecode: ALL
+      soundfile: default
+      sendercode: admin
+      app_id:
+      reservetime: 100000
+      default-msg: ▶ 자세한 내용은 포인트 적립/사용 내역 확인 (클릭시 이동)
+  csvPush:
+    api:
+    type: C
+    priority: 3
+    badgeno: 0
+    serviceCode: ALL
+    senderCode: MKT
+    appId: 
+    dbIn: Y
+    splitMsgCnt: 10000
+    delaySecond: 120
+    pushFailSmsSend: N
+    soundFile: default
+    
+    
+thundermail:
+  api-url: http://54.180.18.123/tm6/app/api/automail/send      
+
+
+kakao:
+  api:
+    key: 1330333808d1a34c7e6615d740d7c024
+    url: https://dapi.kakao.com/v2/local/search/address.json?query=
+  login:
+    client-id: 1C452648DAC3177122593DE1E7BD7D879D599BDC04B03FA34B68F37E7261EC1A3373F1CAA9A1513A19621F207642339F
+    kakao-url: https://kauth.kakao.com/oauth/authorize?
+    redirect-uri: http://localhost:9090/kakaoCallback.do
+    login-redirect-uri: http://localhost:9090/ConfirmKakaoLogin.do
+    request-url: https://kauth.kakao.com/oauth/token
+    request-user-url: https://kapi.kakao.com/v2/user/me
+naver:
+  login:
+    client-id: C538EB41D7292CC95EECC32C9D34DB39C57D317F96AE1E46E26A3E9C0C0478A8
+    client-secret: eShNfllNim
+    redirect-uri: http://localhost:9090/naverCallback.do
+    login-redirect-uri: http://localhost:9090/ConfirmNaverLogin.do
+    request-user-url: https://openapi.naver.com/v1/nid/me
+google:
+  login:
+    client-id: 38D510E8B184244A29CE99B583D06818C8BF36814FD1EC2840EE9FECE74DEA4AAA881377CD839E9D5DF0381C209738DDF79E5FCCD780BE541EDE70CE08F7D42FA803D4C0D0D76BFBE51AC8799B263101
+    client-secret: DEV4h1Wg3J_N5ZjRut_E_biY
+    redirect-uri: http://localhost:9090/googleCallback.do
+    login-redirect-uri: http://localhost:9090/googleLoginConfirm.do
+ 

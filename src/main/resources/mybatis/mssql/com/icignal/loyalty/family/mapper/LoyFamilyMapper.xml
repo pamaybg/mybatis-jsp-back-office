@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.family.mapper.LoyFamilyMapper">
+
+	<select id="selectFamilyList" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto"
+												resultType="com.icignal.loyalty.family.dto.response.LoyFamilyListResDto">
+	/* LoyFamilyMapper.selectFamilyList */
+	SELECT lp.PGM_NM AS pgmNm
+				, lf.FMLY_NM AS fmlyNm
+				, lf.STAT_CD AS statCd
+				, lc.CUST_NM AS custNm
+				, lc.EMAIL AS email
+				, lc.HHP AS hhp
+				, ( SELECT COUNT(lfm.RID)
+					 FROM loy.LOY_FMLY_MBR lfm
+					WHERE lfm.STAT_CD = '01'
+						AND lfm.RID_FMLY = lf.RID) AS fmlyCnt
+				, com.TO_CHAR(lf.APPL_DATE, 'YYYY-MM-DD') AS applDate
+				, com.TO_CHAR(lf.APPR_DATE, 'YYYY-MM-DD') AS apprDate
+				, com.TO_CHAR(lf.CANL_DATE, 'YYYY-MM-DD') AS canlDate
+				, lf.RID AS rid
+				, lm.RID AS mbrRid
+				, ${strColumn}
+	FROM LOY.LOY_FMLY lf
+	JOIN LOY.LOY_PGM lp ON lf.RID_PGM = lp.RID AND lp.FLAG = 1
+	JOIN LOY.LOY_MBR lm ON lf.RID_REP_MBR = lm.RID AND lm.FLAG = 1
+	JOIN loy.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	WHERE ${strCondWhere}
+		AND  ${strWhere}
+		AND  lf.FLAG = 1	
+	ORDER BY ${strOrderby}
+		  			${strEndPaging}					
+	</select>
+	
+	<select id="clearMaskFamilyList" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto"
+												resultType="com.icignal.loyalty.family.dto.response.LoyFamilyListResDto">
+	/* LoyFamilyMapper.clearMaskFamilyList */
+	SELECT    lc.CUST_NM		AS unMaskCustNm
+				, lc.HHP					AS unMaskHhp 
+				, lc.EMAIL					AS unMaskEmail 
+	FROM	LOY.LOY_MBR lm
+	JOIN	LOY.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+	JOIN LOY.LOY_FMLY lf ON lf.RID_REP_MBR = lm.RID AND lf.FLAG = 1
+	WHERE lm.FLAG = 1
+	AND   lf.RID = #{rid}
+	</select>
+	
+	<!-- 패밀리 승인 -->
+	<update id="updateApprProcess" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto">
+	/* LoyFamilyMapper.updateProcess */
+	UPDATE LOY.LOY_FMLY
+	SET
+		  MODIFY_BY = #{empId} 
+		, MODIFY_DATE = GETDATE()
+		, APPR_DATE = GETDATE()
+		, STAT_CD = #{statCd}
+	WHERE RID IN
+		<foreach collection="ridList" item="item" open="(" close=")" separator=","> 
+  		 	#{item}
+		</foreach>
+	</update>
+	
+	<update id="updateCanlProcess" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto">
+	/* LoyFamilyMapper.updateProcess */
+	UPDATE LOY.LOY_FMLY
+	SET
+		  MODIFY_BY = #{empId} 
+		, MODIFY_DATE = GETDATE()
+		, CANL_DATE = GETDATE()
+		, CANL_RSN_DESC = #{canlRsnDesc}
+		, STAT_CD = #{statCd}
+	WHERE RID IN
+		<foreach collection="ridList" item="item" open="(" close=")" separator=","> 
+  		 	#{item}
+		</foreach>
+	</update>
+	
+	<update id="updateMbrCanlProcess" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto">
+	/* LoyFamilyMapper.updateMbrCanlProcess */
+	UPDATE LOY.LOY_FMLY_MBR
+	SET
+		  MODIFY_BY = #{empId} 
+		, MODIFY_DATE = GETDATE()
+		, SECSN_DATE = GETDATE()
+		, STAT_CD = '02'
+	WHERE RID_FMLY IN
+		<foreach collection="ridList" item="item" open="(" close=")" separator=","> 
+  		 	#{item}
+		</foreach>
+	</update>
+	
+	<insert id="insertFmlyMbrHist" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto">
+	/* LoyFamilyMapper.insertFmlyMbrHist */
+	INSERT INTO LOY.LOY_FMLY_MBR_HIST
+	(RID, CREATE_BY, MODIFY_BY, CREATE_DATE, MODIFY_DATE, FLAG, STAT_CD, REL_CD, SECSN_DATE, RID_MBR, RID_FMLY)
+	SELECT com.getNewID('') AS RID
+			, #{empId} 		AS CREATE_BY
+			, #{empId} 		AS MODIFY_BY
+			, GETDATE() 		AS CREATE_DATE
+			, GETDATE() 		AS MODIFY_DATE
+			, 1 					AS FLAG
+			, '02'					AS STAT_CD
+			, A.REL_CD		AS REL_CD
+			, GETDATE()			AS SECSN_DATE
+			, A.RID_MBR		AS RID_MBR
+			, A.RID_FMLY		AS RID_FMLY
+			FROM loy.LOY_FMLY_MBR A
+			<!-- JOIN loy.LOY_FMLY_MBR_HIST B ON A.RID_FMLY = B.RID_FMLY AND A.RID_MBR = A.RID_MBR -->
+			WHERE A.STAT_CD NOT IN ('02')
+			AND A.RID_FMLY IN 
+			<foreach collection="ridList" item="item" open="(" close=")" separator=","> 
+	  		 	#{item}
+			</foreach>
+	</insert>
+	
+	<select id="selectChiefMbr" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrReqDto" 
+												resultType="com.icignal.loyalty.membership.dto.response.LoyMbrListNewPageResDto">
+	/* LoyFamilyMapper.selectChiefMbr */
+	SELECT   lp.PGM_NM								AS pgmNm
+				, lc.CUST_NO							AS custNo
+				, lmm.MBR_NO							AS mbrNo
+				, lc.CUST_NM							AS custNm
+				, lc.HHP										AS hhp
+				, lmm.MBR_STAT_CD						AS mbrstatCd
+				, com.TO_CHAR(lmm.SBSC_DATE,'YYYY-MM-DD')	AS sbscDate
+				, lc.CHNL_NM							AS sbscChnlNm
+				, com.TO_CHAR(lmm.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS')	AS createDate
+				, lmm.RID_PGM							AS pgmRid
+				, lmm.RID									AS rid
+				, ${strColumn}
+	FROM	LOY.LOY_MBR lmm
+	JOIN	LOY.LOY_CUST lc ON lmm.RID_CUST = lc.RID AND lc.FLAG = 1
+	JOIN LOY.LOY_PGM lp ON lmm.RID_PGM = lp.RID AND lp.FLAG = 1
+	LEFT OUTER JOIN LOY.LOY_CHNL lc ON lmm.RID_SBSC_CHNL = lc.RID AND lc.FLAG = 1
+	WHERE ${strCondWhere}
+	AND   ${strWhere}
+	AND   lmm.FLAG = 1
+	AND   lmm.MBR_STAT_CD = 'A'
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<!-- 패밀리 마스터 생성 프로시져 -->
+	<select id="saveNewFmly" parameterType="com.icignal.loyalty.family.dto.request.LoyFamilyListReqDto" statementType="CALLABLE">
+	/* LoyFamilyMapper.saveNewFmly */
+    { CALL LOY.PKG_LOY_FMLY.SP_REG_FMLY (
+            #{repMbrNo},
+            #{fmlyNm},
+            #{rst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{rstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+            #{rstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+            )
+    }
+    </select>
+
+    <!-- TYPE STRUCTURE 테스트 -->
+   <!-- <parameterMap id="fmlyParam" type="java.util.Map">
+	 	<parameter property="tyFmlyTbl"  javaType="java.lang.String" jdbcName="LOY.TY_FMLY_TBL" typeHandler="com.icignal.loyalty.membership.typehandler.LoyFmlyTypeHandler" 	jdbcType="ARRAY" mode="IN" />
+	 	<parameter property="rst" 			javaType="java.lang.String" 		jdbcType="VARCHAR" 		mode="OUT"/>
+	 	<parameter property="rstCd"		javaType="java.lang.String"	    jdbcType="VARCHAR"		mode="OUT"	/>
+		<parameter property="rstMsg"		javaType="java.lang.String"		jdbcType="VARCHAR"		mode="OUT"	/>
+ 	</parameterMap> -->
+
+	<!-- 회원가입 TYPE으로 만들어 본것 (현재 사용 안함) -->
+	 <select id="addFmly" parameterType="java.util.Map" statementType="CALLABLE">
+     /* LoyFamilyMapper.addFmly */
+    	{ CALL LOY.PKG_LOY_FMLY.SP_REG_FMLY (
+    		#{tyFmlyTbl, javaType=java.lang.String, jdbcType=ARRAY, mode=IN, typeHandler=com.icignal.loyalty.membership.typehandler.LoyFmlyTypeHandler},
+			#{rst , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	      	#{rstCd , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+	      	#{rstMsg , javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT}
+    	) }
+  	</select>
+
+</mapper>

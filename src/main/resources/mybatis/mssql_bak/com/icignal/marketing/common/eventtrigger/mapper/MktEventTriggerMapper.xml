@@ -1,0 +1,702 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 16:05:05 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.common.eventTrigger.mapper.MktEventTriggerMapper">
+
+	<insert id="insertIntactDataKe" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto">
+		/* MktEventTriggerMapper.insertIntactDataKe */
+		INSERT INTO DEMO.MKT_INTACT_DATA_KE
+		(GUID
+		, CREATE_DATE
+		, TRK_NO
+		, TG_NO
+		, TRS_DATE
+		, TRS_TIME
+		, EVT_TYPE
+		, EVT_DTL_TYPE
+		, MBR_NO
+		, AIRLINE
+		, R_DATE
+		, ORIGIN
+		, DESTI
+		, CLASS
+		, FLIGHT_NO
+		, PASSENGER
+		, SELL_AMT
+		, TICKET
+		, TXN_MILE
+		, TXN_AMT
+		, ORGN_APPR_NO
+		) VALUES (
+		#{guid}
+		, getdate()
+		, #{trkNo}
+		, #{tgNo}
+		, #{trsDate}
+		, #{trsTime}
+		, #{evtType}
+		, #{evtDtlType}
+		, #{mbrNo}
+		, #{airline}
+		, #{date}
+		, #{origin}
+		, #{desti}
+		, #{classCd}
+		, #{flightNo}
+		, #{passenger}
+		, #{sellAmt}
+		, #{ticket}
+		, #{txnMile}
+		, #{txnAmt}
+		, #{orgnApprNo}
+		)
+	</insert>
+	
+
+   
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getEventTriggerCampaignList)
+    ============================================
+    -   제목                  : 이벤트 트리거 캠페인 목록 조회
+    -   설명                  : 이벤트 트리거 캠페인 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2015.11.24
+    ***************************************/ -->
+    <select id="selectEventTriggerCampaignList" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktEventTriggerCampaignResDto">
+        /* MktEventTriggerMapper.selectEventTriggerCampaignList */
+		select c.ID
+			   , c.CREATE_BY as createBy
+			   , c.MODIFY_BY as modifyBy
+			   , c.CREATE_DATE as createDate
+			   , c.MODIFY_DATE as modifyDate
+			   , c.OFFER_ID as offerId
+			   , o.OFFER_NM as offerName
+			   , c1.MARK_NAME as offerTypeCodeName
+			   , c.DISP_NO as dispNo
+			   , c2.CODE_NAME as campaignStatusCode
+			   , c2.MARK_NAME as campaignStatusCodeName
+			   , c.CAM_NM as campaignName
+			   , c.CAM_DESC as description
+			   , convert(varchar(10),c.CAM_START_DD, 120) as campaignStartDate
+			   , convert(varchar(10),c.CAM_END_DD,120) as campaignEndDate
+			   , c.CAM_PLAN_ORG_CD as planOrgCode
+			   , acc.NAME as planOrgCodeName
+			   , c4.CODE_NAME as exeOrgLvlCode
+			   , c4.MARK_NAME as exeOrgLvlCodeName
+			   , c.CAM_PLNER as campaignPlanner
+			   , e.NAME as campaignPlannerName
+			   , c5.CODE_NAME as campaignPurposeCode
+			   , c5.MARK_NAME as campaignPurposeCodeName
+			   , c6.CODE_NAME as campaignMethodCode
+			   , c6.MARK_NAME as campaignMethodCodeName
+			   , c.CAM_METH_DESC as campaignMethodDesc
+			   , c7.CODE_NAME as channelTypeCode
+			   , c7.MARK_NAME as channelTypeCodeName
+			   , c8.CODE_NAME as campaignTypeCode
+			   , c8.MARK_NAME as campaignTypeCodeName
+			   , c.PAR_CAM_ID as parCampaignId
+			   , c.PROGRAM_ID as programId
+			   , p.CAM_PROG_NM as programName
+			   , c.CAM_TEMP_USE_YN as camTemplateUseYn
+			   , c.FATI_EXCEPT_YN as fatigueExceptYn
+			   , c.CAM_CTG_CD_ID as campaignCategoryCodeId
+			   , c9.code_name as intactType1Code
+			   , c9.mark_name as intactType1CodeName
+			   , c10.code_name as intactType2Code
+			   , c10.mark_name as intactType2CodeName
+		  from mkt.mkt_cam_mst c WITH (NOLOCK) 
+		  left outer join mkt.mkt_cam_offer_rel r 
+			WITH (NOLOCK) on r.flag = 1 and r.cam_id = c.id
+		  left outer join mkt.mkt_offer_mst o
+			WITH (NOLOCK) on r.offer_id = o.id
+		  left outer join com.comm_code c1
+			WITH (NOLOCK) on c1.flag = 1 and c1.lang = 'ko' and c1.code_name = o.OFFER_TYPE_CD and c1.group_code = 'OFFER_TYPE_CD'
+		  left outer join com.comm_code c2
+			WITH (NOLOCK) on c2.flag = 1 and c2.lang = 'ko' and c2.code_name = c.CAM_STATUS_CD and c2.group_code = 'MKT_CAM_STAT'
+		  left outer join com.comm_code c4
+			WITH (NOLOCK) on c4.flag = 1 and c4.lang = 'ko' and c4.code_name = c.EXE_ORG_LVL_CD and c4.group_code = 'ORG_LEVEL_CD'
+		  left outer join com.comm_code c5
+			WITH (NOLOCK) on c5.flag = 1 and c5.lang = 'ko' and c5.code_name = c.CAM_PRPS_CD and c5.group_code = 'MKT_CAM_GOAL_CD'
+		  left outer join com.comm_code c6
+			WITH (NOLOCK) on c6.flag = 1 and c6.lang = 'ko' and c6.code_name = c.CAM_METH_CD and c6.group_code = 'MKT_CAM_SUB_GOAL_CD'
+		  left outer join com.comm_code c7
+			WITH (NOLOCK) on c7.flag = 1 and c7.lang = 'ko' and c7.code_name = c.CHNL_TYPE_CD and c7.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+		  left outer join com.comm_code c8
+			WITH (NOLOCK) on c8.flag = 1 and c8.lang = 'ko' and c8.code_name = c.CAM_TYPE_CD and c8.group_code = 'MKT_CAM_TYPE_CD'
+		  left outer join com.employee e
+			WITH (NOLOCK) on e.id = c.CAM_PLNER
+		  left outer join mkt.mkt_prog p
+			WITH (NOLOCK) on p.id = c.PROGRAM_ID
+		  left outer join com.account acc
+			WITH (NOLOCK) on acc.id = c.CAM_PLAN_ORG_CD
+		  left outer join mkt.mkt_intact_type it
+			WITH (NOLOCK) on it.rid = c.cam_ctg_cd_id
+		  left outer join com.comm_code c9
+			WITH (NOLOCK) on c8.flag = 1 and c9.lang = 'ko' and c9.code_name = it.INTACT_TYPE_1_CD and c9.group_code = 'LOY_INTACT_TYPE'
+		  left outer join com.comm_code c10
+			WITH (NOLOCK) on c8.flag = 1 and c10.lang = 'ko' and c10.code_name = it.INTACT_TYPE_2_CD and c10.group_code = 'LOY_INTACT_DTL_TYPE'
+		 where 1 = 1
+		   and c.flag = 1
+		   and c.cam_status_cd = 'W'
+		   and c.cam_type_cd = 'TRIGGER'
+		   and c.cam_start_dd &lt;= getdate()
+		   and c.cam_end_dd &gt;= getdate()
+		<if test="campaignId == null or campaignId == ''">AND
+			it.intact_type_2_cd = #{intactType2Cd}
+		</if>
+		<if test="campaignId != null and campaignId != ''">AND
+			c.id = #{campaignId}
+		</if>
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getCampaignTargeting)
+    ============================================
+    -   제목                  : 타겟팅 헤더 조회
+    -   설명                  : 타겟팅 헤더 조회
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <select id="selectCampaignTargeting" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktCampaignTargetingResDto">
+        /* MktEventTriggerMapper.selectCampaignTargeting */
+		select t1.id as id
+     		 , t1.cam_tgt_type_cd as camTgtTypeCd
+     		 , t1.tgt_group_id as tgtGroupId
+		  from mkt.mkt_tgt_had t1 WITH (NOLOCK) 
+		 where t1.flag = 1
+		   and t1.cam_id = #{campaignId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getTargetingMemberCount)
+    ============================================
+    -   제목                  : 타겟팅 고객 건수
+    -   설명                  : 타겟팅 고객 건수
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <select id="selectTargetingMemberCount" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="java.lang.Integer">
+        /* MktEventTriggerMapper.selectTargetingMemberCount */
+	    select count(*) 
+		  from mkt.mkt_tgt_dtl WITH (NOLOCK) 
+		 where cam_tgt_had_id = #{camTgtHadId} 
+		   and mem_id = #{memId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getTargetGroupInfo)
+    ============================================
+    -   제목                  : 타겟그룹 정보
+    -   설명                  : 타겟그룹 정보
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.09.23
+    ***************************************/ -->
+    <select id="selectTargetGroupInfo" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktTargetGroupInfoResDto">
+        /* KPRTargetGroup.selectTargetGroupInfo */
+         select di.id as dbId
+        	 , di.con_ip as conIp
+        	 , di.con_port as conPort
+        	 , di.con_id as conId
+        	 , di.con_pw as conPassword
+        	 , di.con_url as conUrl
+        	 , c.code_name as conDbType
+        	 , c.attrib01 as conDbClass
+             , tg.filter_sql as filterSql
+             , substring(ac.tbl_alias_col_nm, instr(ac.tbl_alias_col_nm, '.')+1) as segKeyColNm
+             , di.aws_secret_nm as awsSecretNm
+        from anl.anl_db_inform di WITH (NOLOCK) 
+        join anl.anl_subject_db_rel sdr WITH (NOLOCK) on sdr.flag = 1 and di.id = sdr.db_id
+        join anl.anl_table_mst tm WITH (NOLOCK) on tm.flag = 1 and sdr.id = subject_db_rel_id
+        join anl.anl_lgc_comp_table_rel lct  WITH (NOLOCK) on lct.flag = 1 and tm.id = lct.tbl_id
+        join com.comm_code c WITH (NOLOCK) on c.flag = 1 and c.code_name = di.con_db_type and c.lang = #{lang} and c.group_code = 'ANL_DB_TYPE_CD'
+        join anl.anl_tgt_group tg WITH (NOLOCK) on tg.flag = 1 and tg.lgc_comp_id = lct.lgc_comp_id
+        join anl.anl_atrib_group ag WITH (NOLOCK) on ag.flag = 1 and ag.lgc_comp_id = tg.lgc_comp_id
+        join anl.anl_atrib_group_column ac WITH (NOLOCK) on ac.flag = 1 and ac.atrib_group_id = ag.id and ac.seg_key_yn = 1
+        where di.flag = 1
+        and tg.id = #{tgtGroupId}
+        <!-- and rownum = 1 -->
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getStartEventNodeList)
+    ============================================
+    -   제목                  : 시작 이벤트 노드 목록 조회
+    -   설명                  : 시작 이벤트 노드 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2015.11.24
+    ***************************************/ -->
+    <select id="selectStartEventNodeList" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktEventNodeResDto">
+        /* MktEventTriggerMapper.selectStartEventNodeList */
+		select t1.id as id
+			 , t1.task_id as taskId
+		 	 , t1.task_type_cd as nodeTypeCd
+	     	 , t1.act_task_id as actTaskId
+	     	 , t3.source_node as parTaskId
+	     	 , UPPER(t4.cnctr_nm) as cnctrTypeCd
+		  from mkt.mkt_cam_wf_rel t1 WITH (NOLOCK) 
+		  join com.wf_task_node t2 WITH (NOLOCK) on t2.flag = 1 and t2.id = t1.task_id
+		  left outer join com.wf_task_cnctr t3 WITH (NOLOCK) on t3.flag = 1 and t3.target_node = t2.id
+		  left outer join com.wf_cnctr_mst t4 WITH (NOLOCK) on t4.id = t3.cnctr_id 
+		 where 1=1
+		   and t1.flag = 1
+		   and t1.cam_id = #{campaignId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getChildEventNodeList)
+    ============================================
+    -   제목                  : 하위 이벤트 노드 목록 조회
+    -   설명                  : 하위 이벤트 노드 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2015.11.24
+    ***************************************/ -->
+    <select id="selectChildEventNodeList" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktEventNodeResDto">
+        /* MktEventTriggerMapper.selectChildEventNodeList */
+		select t1.id as id
+			 <!-- , t3.node_type_cd as nodeTypeCd -->
+			 , t1.act_task_id as actTaskId
+		  from mkt.mkt_cam_wf_rel t1 WITH (NOLOCK) 
+		 where t1.par_task_id = #{parTaskId}
+		   and t1.cnctr_type_cd = #{cnctrTypeCd}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getLogicalComponentInfo)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 정보 조회
+    -   설명                  : 로지컬 컴포넌트 정보 조회
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2015.11.24
+    ***************************************/ -->
+    <select id="selectLogicalComponentInfo" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktLogicalComponentInfoResDto">
+        /* KPRSegment.selectLogicalComponentDBInfo */
+		select di.id as dbId
+			 , di.con_ip as conIp
+			 , di.con_port as conPort
+			 , di.con_id as conId
+			 , di.con_pw as conPassword
+			 , di.con_url as conUrl
+			 , c.code_name as conDbType
+			 , c.attrib01 as conDbClass
+			 , l.lgc_sql as lgcSql
+             , ac.col_alias as colAlias
+             , ac.tbl_alias_col_nm as tblAliasColNm
+             , di.aws_secret_nm as awsSecretNm
+             , l.id as id
+		from anl.anl_db_inform di WITH (NOLOCK) 
+		join anl.anl_subject_db_rel sdr WITH (NOLOCK) on sdr.flag = 1 and di.id = sdr.db_id
+		join anl.anl_table_mst tm WITH (NOLOCK) on tm.flag = 1 and sdr.id = subject_db_rel_id
+		join anl.anl_lgc_comp_table_rel lct  WITH (NOLOCK) on lct.flag = 1 and tm.id = lct.tbl_id
+		join com.comm_code c WITH (NOLOCK) on c.flag = 1 and c.lang = 'ko' and c.code_name = di.con_db_type and c.group_code = 'ANL_DB_TYPE_CD'
+		join anl.anl_lgc_comp_mst l WITH (NOLOCK) on l.flag = 1 and l.id = lgc_comp_id
+        join anl.anl_atrib_group g WITH (NOLOCK) on g.flag = 1 and g.lgc_comp_id = l.id
+        join anl.anl_atrib_group_column ac WITH (NOLOCK) on ac.flag = 1 and ac.atrib_group_id = g.id and ac.seg_key_yn = 1
+		where 1=1 
+		and lct.lgc_comp_id = #{lgcCompId}
+		and di.flag = 1
+		<!-- and rownum = 1 -->
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getContentsDetail)
+    ============================================
+    -   제목                  : 콘텐츠 상세 조회
+    -   설명                  : 콘텐츠 상세 조회
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2015.11.24
+    ***************************************/ -->
+    <select id="selectContentsDetail" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktContentsDetailResDto">
+    	/* KPRSegment.selectContentsDetail */
+		select t1.id as id 
+			, t1.CONTS_NM as contentsName
+			, t1.exe_chnl_type_cd as contentsType
+			, t1.CONTS_TITLE as title
+			, c1.CODE_NAME as txtMsgObject
+			, t1.CONTS_SBST as contents
+			, t1.CONTS_DESC as description
+			, t1.CONTS_HTML as html
+			, t1.CONTS_VOL as textByteSize
+			, t1.img_size as imgSize
+			, t1.IMG_APLY_CNT as imgCnt
+			, f1.file_name + '.' + f1.file_type as fileName
+			, f1.file_path + f1.file_name + '.' + f1.file_type as filePath
+			, i1.IMAGE_FOLDER + i1.IMAGE_FILE_NAME + i1.IMAGE_FILE_TYPE as imagepath
+			, i1.id as imgId
+			, i2.IMAGE_FOLDER + i2.IMAGE_FILE_NAME + i2.IMAGE_FILE_TYPE as barpath
+			, i2.id as barId
+			, i3.IMAGE_FOLDER + i3.IMAGE_FILE_NAME + i3.IMAGE_FILE_TYPE as merpath
+			, i3.id as merId
+			, t1.conts_bottom as bottom
+			, c2.code_name as contsPushTypeCode
+			, t1.conts_push_sub_type_cd as contsPushSubTypeCode
+			, t1.conts_push_sub_type_val as contsPushSubTypeVal
+		  from mkt.mkt_conts_mst t1 WITH (NOLOCK) 
+		  join mkt.mkt_conts_chnl_rel t2 WITH (NOLOCK) on t2.flag = 1 and t2.contents_id = t1.id
+		  left outer join com.com_file f1 WITH (NOLOCK) on f1.flag = 1 and f1.parent_id = t1.id
+		  left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and  c1.code_name = t1.conts_prps_cd and c1.lang = 'ko' and c1.group_code = 'TXT_MSG_OBJECT_CD'
+		  left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and  c2.code_name = t1.conts_push_type_cd and c2.lang = 'ko' and c2.group_code = 'CONTS_PUSH_TYPE_CD'
+		  left outer join com.image i1 WITH (NOLOCK) on  i1.id = t1.img_id
+		  left outer join com.image i2 WITH (NOLOCK) on  i2.id = t1.bcode_img_id 
+		  left outer join com.image i3 WITH (NOLOCK) on  i3.id = t1.merge_img_id
+		 where 1=1
+		   and t2.id = #{contentsId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getETCampaignNode)
+    ============================================
+    -   제목                  : et 캠페인 노드 조회
+    -   설명                  : et 캠페인 노드 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2016.11.16
+    ***************************************/ -->
+    <select id="selectETCampaignNode" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktETCampaignNodeResDto">
+    	/* MktEventTriggerMapper.selectETCampaignNode */
+		select 
+			t1.rid as rid
+			, t1.rid_mkt_cam_mst as ridMktCamMst
+			, t1.rid_node_type as ridNodeType
+			, t1.rid_node_sub_type as ridNodeSubType
+			, t1.type AS type
+			, t1.title as title
+			, t1.desctxt as desctxt
+			, t1.x_coord as xCoord
+			, t1.y_coord as yCoord
+			, t1.exec_seq as execSeq
+			, e.name as createByNm
+			, t1.create_date as createDate
+			, t1.modify_date as modifyDate
+			, t2.node_type_cd as nodeTypeCd
+		    , c1.mark_name as nodeTypeCdNm
+			, t2.dsp_val as dspVal
+			, t2.icon_nm as iconNm
+			, t2.input_scrn as inputScrn
+			, t3.sub_type_cd as subTypeCd
+		    , c2.mark_name as subTypeCdNm
+			, t3.exec_cls as execCls
+			, t3.exec_mthd as execMthd
+			, t3.input_scrn as subInputScrn
+			, t3.desctxt as subDesctxt
+		from mkt.mkt_cam_node t1 WITH (NOLOCK) 
+		left outer join mkt.mkt_node_type t2 WITH (NOLOCK) on t2.flag = 1 and t2.rid = t1.rid_node_type
+		left outer join mkt.mkt_node_sub_type t3 WITH (NOLOCK) on t3.flag = 1 and t3.rid = t1.rid_node_sub_type
+		left outer join com.crm_user u WITH (NOLOCK) on u.rid = t1.create_by
+		left outer join com.employee e WITH (NOLOCK) on e.flag = 1 and e.id = u.id_employee
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.lang = #{lang} and c1.group_code ='MKT_NODE_TYPE_CD' and c1.code_name = t2.node_type_cd
+		left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.lang = #{lang} and c2.group_code ='MKT_CAM_NODE_TYPE' and c2.code_name = t3.sub_type_cd
+		where 1=1
+		and t1.flag = 1
+		and t1.rid = #{ridCamNode}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getETCampaignCondValList)
+    ============================================
+    -   제목                  : et 조건값 목록 조회
+    -   설명                  : et 조건값 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2016.11.16
+    ***************************************/ -->
+    <select id="selectETCampaignCondValList" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktETCampaignCondValResDto">
+    	/* MktEventTriggerMapper.selectETCampaignCondValList */
+		select 
+				t1.rid as rid
+				, t1.rid_cam_node as ridCamNode
+				, t1.seq as seq
+				, t1.lgcl_cmpnt_id as lgclCmpntId
+				, t1.lgcl_fld as lgclFld
+				, t1.lc_logic_oper as lcLogicOper
+				, t1.lc_leftbrkt as lcLeftbrkt
+				, t1.lc_rightbrkt as lcRightbrkt
+				, t1.lc_comp_val_type as lcCompValType
+				, t1.lc_comp_val as lcCompVal
+				, t1.lc_comp_oper as lcCompOper
+				, t1.irreglr_exec_cls as irreglrExecCls
+				, t1.irreglr_exec_mthd as irreglrExecMthd
+				, t1.irreglr_rtn_fld as irreglrRtnFld
+				, t1.irreglr_rtn_fld_val as irreglrRtnFldVal
+				, t1.irreglr_comp_oper as irreglrCompOper
+				, t1.irreglr_logic_oper as irreglrLogicOper
+				, t1.irreglr_comp_val as irreglrCompVal
+		        , t2.lgc_comp_nm as lgcCompNm
+		        , t3.dp_nm as fieldDpNm
+                , t3.tbl_alias_col_nm as tblAliasColNm
+                , t3.col_alias as colAlias
+		from mkt.mkt_cam_cond_val t1 WITH (NOLOCK) 
+		left outer join anl.anl_lgc_comp_mst t2 WITH (NOLOCK) on t2.flag = 1 and t2.id = t1.lgcl_cmpnt_id
+		left outer join anl.anl_atrib_group_column t3 WITH (NOLOCK) on t3.flag = 1 and t3.id = t1.lgcl_fld
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.lang = 'ko' and c1.group_code ='MKT_TARGET_SERC_OPRT_TYPE' and c1.code_name = t1.lc_logic_oper
+		where 1=1
+		and t1.flag = 1
+		and t1.rid_cam_node = #{ridCamNode}
+		order by t1.seq
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getETCampaignActVal)
+    ============================================
+    -   제목                  : et 캠페인 활동값 조회
+    -   설명                  : et 캠페인 활동값 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2016.11.16
+    ***************************************/ -->
+    <select id="selectETCampaignActVal" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktETCampaignActValResDto">
+    	/* MktEventTriggerMapper.selectETCampaignActVal */
+		select 
+			   t1.rid as rid
+			 , t1.rid_cam_node as ridCamNode
+			 , t1.logic_oper as logicOper
+			 , t1.comp_val_type as compValType
+			 , t1.comp_val as compVal
+			 , t1.comp_oper as compOper
+			 , t1.rid_mkt_offer_mst as ridMktOfferMst
+			 , t1.acrl_type as acrlType
+			 , c1.mark_name as acrlTypeNm
+			 , t1.bnft_lc_bas as bnftLcBas
+			 , t1.bnft_acrl_amt as bnftAcrlAmt
+			 , t1.snd_chnl_cd as sndChnlCd
+			 , t1.tgt_tbl_input_yn as tgtTblInputYn
+			 , t1.if_call_yn as ifCallYn
+			 , t2.offer_nm as offerNm
+			 , t2.offer_type_cd as offerTypeCd
+			 , c2.mark_name as offerTypeCdNm
+			 , t1.lgcl_cmpnt_id AS lgclCmpntId
+		from mkt.mkt_cam_act_val t1 WITH (NOLOCK) 
+		left outer join mkt.mkt_offer_mst t2 WITH (NOLOCK) on t2.flag = 1 and t2.id = t1.rid_mkt_offer_mst
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.lang = 'ko' and c1.group_code ='LOY_ACRL_TYPE' and c1.code_name = t1.acrl_type
+		left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.lang = 'ko' and c2.group_code ='OFFER_TYPE_CD' and c2.code_name = t2.offer_type_cd
+		where 1=1
+		and t1.flag = 1
+		and t1.rid_cam_node = #{ridCamNode}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getETCampaignActVal)
+    ============================================
+    -   제목                  : et 캠페인 활동값 조회
+    -   설명                  : et 캠페인 활동값 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2016.11.16
+    ***************************************/ -->
+    <select id="selectETCampaignActParamList" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktETCampaignActParamResDto">
+        /* MktEventTriggerMapper.selectETCampaignActParamList */
+        select
+               t1.rid as rid
+             , t1.rid_cam_node as ridCamNode
+             , t1.param_type as paramType
+             , t1.param_nm as paramNm
+             , t1.param_val as paramVal
+             , t1.param_desc as paramDesc
+        from mkt.mkt_cam_act_param t1 WITH (NOLOCK) 
+        where 1=1
+        and t1.flag = 1
+        and t1.rid_cam_node = #{ridCamNode}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : MktEventTriggerMapperDAO.java (getSerarchPersonalType)
+    ============================================
+    -   제목                  : 개인화 정보
+    -   설명                  : 개인화 정보
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2016.11.16
+    ***************************************/ -->
+    <select id="selectSerarchPersonalType" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktCondResDto">
+    	/* MktEventTriggerMapper.selectSerarchPersonalType */
+		select DB_NM
+			, CON_IP as conIp
+			, CON_PORT as conPort
+			, CON_ID as conId
+			, CON_PW as conPw
+	        , c2.ATTRIB02 + metl.con_ip + ':' + metl.con_port + '/' + metl.db_nm as conUrl	
+			, c2.ATTRIB02 as conType
+			, c2.ATTRIB01 as classNm
+			, TBL_SCHEMA_NM as schName
+			, TBL_ENG_NM as tblName
+			, COL_ENG_NM as colName
+			, WHERE_SCH_HP as schPhone
+			, WHERE_SCH_EMAIL as schEmail
+			, COL_KOR_NM as markName
+	        , mec.cond_calmt as condCalmt
+	        , mec.where_sch_memid as schMemId
+	        , metl.con_db_type as conDbType
+		from COM.COM_EXTR_TBL met WITH (NOLOCK) 
+		join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and met.type = c1.code_name and c1.lang = 'ko' and c1.group_code = 'EXTERNAL_TABLE_TYPE' and c1.code_name = 'PERSONALIZATION' 
+		join COM.COM_EXTR_COL mec WITH (NOLOCK) on mec.extr_tbl_id = met.id and mec.flag = 1
+		join COM.COM_EXTR_TARGET_LEVEL metl WITH (NOLOCK) on metl.id = met.target_level_id and metl.flag = 1
+		join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.code_name = CON_DB_TYPE and c2.lang = 'ko' and c2.group_code = 'CHNL_CON_DB_TYPE'
+		where 1=1
+	    and met.flag = 1
+    </select>
+    
+    <!-- 고객명 조회 -->
+    <select id="selectCustNm" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktEventTriggerCustNmResDto">
+    	/* MktEventTriggerMapper.selectCustNm */
+    	select t1.cust_nm
+    	  from loy.loy_cust t1 WITH (NOLOCK) 
+    	  join loy.loy_mbr t2 on t2.rid_cust = t1.rid
+    	 where t2.mbr_no = #{mbrNo}
+    </select>
+    
+    <select id="selectETLogicalComponentColumnList" parameterType="com.icignal.marketing.common.eventTrigger.dto.request.MktEventTriggerReqDto" 
+    resultType="com.icignal.marketing.common.eventTrigger.dto.response.MktETCampaignLCColumnListResDto">
+        /* MKTCampaign.selectETLogicalComponentColumnList */
+        select t3.id
+             , concat(concat(t5.tbl_alias, '.'), t4.col_nm) as columnName
+             , (case when len(t3.dim_col_id) &gt; 0 then t4.dp_nm else t3.dp_nm end) as displayName
+             , col_alias as alias
+        from anl.anl_lgc_comp_mst t1 WITH (NOLOCK) 
+        join anl.anl_atrib_group t2 WITH (NOLOCK) on t2.flag = 1 and t2.lgc_comp_id = t1.id
+        join anl.anl_atrib_group_column t3 WITH (NOLOCK) on t3.flag = 1 and t3.atrib_group_id = t2.id
+        join anl.anl_column_mst t4 WITH (NOLOCK) on t4.flag = 1 and t4.id = (case when len(t3.dim_col_id) &gt; 0 then t3.dim_col_id else t3.col_id end)
+        join anl.anl_lgc_comp_table_rel t5 WITH (NOLOCK) on t5.flag = 1 and t5.tbl_id = t4.tbl_id and t5.lgc_comp_id = t1.id
+        where t1.id = #{lgcCompId}
+        order by t3.seq
+    </select>
+    
+	<parameterMap id="procAcrlMileMap" type="java.util.Map">
+    	<parameter property="pEncryptKey" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pGuid" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pMileage" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pQualMileage" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pMileageEffDt" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pRst" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstCd" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstMsg" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+  	</parameterMap>
+	
+	<!--  마일리지 적립 -->
+	<select id="procAcrlMile" parameterMap="procAcrlMileMap" statementType="CALLABLE">
+		<![CDATA[
+		{ call DEMO.PROC_ACRL_MILE(?, ?, ?, ?, ?, ?, ?, ?) }
+        ]]>
+	</select>
+	
+	<parameterMap id="procAcrlQualMileMap" type="java.util.Map">
+    	<parameter property="pEncryptKey" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pGuid" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pMileage" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pQualMileage" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pMileageEffDt" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pRst" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstCd" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstMsg" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+  	</parameterMap>
+	
+	<!--  자격 마일리지 적립 -->
+	<select id="procAcrlQualMile" parameterMap="procAcrlQualMileMap" statementType="CALLABLE">
+		<![CDATA[
+		{ call DEMO.PROC_ACRL_QUAL_MILE(?, ?, ?, ?, ?, ?, ?, ?) }
+        ]]>
+	</select>
+	
+	<parameterMap id="procRdmMileMap" type="java.util.Map">
+    	<parameter property="pEncryptKey" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pGuid" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pMileage" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pRst" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstCd" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstMsg" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+  	</parameterMap>
+	
+	<!--  마일리지 사용 -->
+	<select id="procRdmMile" parameterMap="procRdmMileMap" statementType="CALLABLE">
+		<![CDATA[
+		{ call DEMO.PROC_RDM_MILE(?, ?, ?, ?, ?, ?) }
+        ]]>
+	</select>
+	
+	<parameterMap id="procPntUploadMap" type="java.util.Map">
+    	<parameter property="pGuid" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pMbrNo" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pMileage" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pTxnAmt" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pRst" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstCd" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstMsg" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+  	</parameterMap>
+	
+	<!--  마일리지 적립 요청 -->
+	<select id="procPntUpload" parameterMap="procPntUploadMap" statementType="CALLABLE">
+		<![CDATA[
+		{ call DEMO.PROC_PNT_UPLOAD(?, ?, ?, ?, ?, ?, ?) }
+        ]]>
+	</select>
+	
+	<parameterMap id="procCancelMileMap" type="java.util.Map">
+		<parameter property="pEncryptKey" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pGuid" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN" />
+    	<parameter property="pTxnAmt" javaType="java.lang.Integer" jdbcType="INTEGER" mode="IN" />
+    	<parameter property="pRst" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstCd" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+    	<parameter property="pRstMsg" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT" />
+  	</parameterMap>
+	
+	<!--  마일리지 구매 취소 -->
+	<select id="procCancelMile" parameterMap="procCancelMileMap" statementType="CALLABLE">
+		<![CDATA[
+		{ call DEMO.PROC_CANCEL_MILE(?, ?, ?, ?, ?, ?) }
+        ]]>
+	</select>
+	
+	<select id="selectQuery" parameterType="String" resultType="hashMap">
+		${query}	 	
+	</select>
+	
+	<select id="selectQueryCount" parameterType="String" resultType="Integer">
+		${query}	 	
+	</select>
+	
+</mapper>

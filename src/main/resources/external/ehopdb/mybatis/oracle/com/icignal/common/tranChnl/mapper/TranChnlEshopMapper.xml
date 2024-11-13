@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.common.tranChnl.mapper.TranChnlEshopMapper">
+
+    <insert id="insertSendSms" parameterType="com.icignal.common.tranChnl.model.TranChnlDto">
+        insert into ESHOPUSER.MSG_QUEUE(mseq,msg_type,dstaddr,callback,stat,text,request_time,OPT_CMP,EXT_COL3)
+        values (msg_queue_seq.nextval,'1',#{receiveMobileNo},#{callbackNo},'0',#{message},sysdate,'CRM',#{authInfoDes})
+    </insert>
+
+    <insert id="insertSendLms" parameterType="com.icignal.common.tranChnl.model.TranChnlDto">
+        insert into ESHOPUSER.MSG_QUEUE (mseq,msg_type,dstaddr,callback,stat,subject,text,request_time,
+                                         filecnt,OPT_CMP,EXT_COL3)
+        values (msg_queue_seq.nextval,'3',#{receiveMobileNo},#{callbackNo},'0',#{subject},#{message}
+               ,sysdate,0,'CRM',#{authInfoDes})
+    </insert>
+
+    <insert id="insertApproSendLms" parameterType="com.icignal.common.tranChnl.model.TranChnlDto">
+        insert into ESHOPUSER.MSG_QUEUE (mseq,msg_type,dstaddr,callback,stat,subject,text,request_time,
+                                         filecnt,OPT_CMP)
+        values (msg_queue_seq.nextval,'3',#{receiveMobileNo},#{callbackNo},'0',#{subject},#{message}
+               ,sysdate,0,'CRM')
+    </insert>
+
+    <insert id="insertSendMms" parameterType="com.icignal.common.tranChnl.model.TranChnlDto">
+        insert into ESHOPUSER.MSG_QUEUE (mseq,msg_type,dstaddr,callback,stat,subject,text,request_time,
+                                         filecnt,fileloc1,OPT_CMP,EXT_COL3)
+        values (msg_queue_seq.nextval,'3',#{receiveMobileNo},#{callbackNo},'0',#{subject},#{message}
+               ,sysdate,1,#{imageFilePath},'CRM',#{authInfoDes})
+    </insert>
+
+    <insert id="insertSendKakaoNoti" parameterType="com.icignal.marketing.contents.dto.response.MktContentResDto">
+        insert into ESHOPUSER.MSG_QUEUE(mseq,msg_type,dstaddr,callback,stat,subject,text,text2,request_time,k_template_code,filecnt,k_next_type,sender_key, k_attach,OPT_CMP,EXT_COL3)
+        values (msg_queue_seq.nextval,'6',#{attrib05},#{toCallbackNo},'0',#{title}
+        ,#{contents},#{attrib06},sysdate,#{attrib03},0,#{attrib04},#{attrib02},#{attrib07},'CRM',#{authInfoDes})
+    </insert>
+
+    <insert id="insertSendKakaoFr" parameterType="com.icignal.marketing.contents.dto.response.MktContentResDto">
+        insert into ESHOPUSER.MSG_QUEUE(mseq,msg_type,dstaddr,callback,stat,subject,text,text2,request_time,filecnt,k_next_type,sender_key, k_attach,OPT_CMP,EXT_COL3)
+        values (msg_queue_seq.nextval,'7',#{attrib05},#{toCallbackNo},'0',#{title}
+               ,#{contents},#{attrib06},sysdate,0,#{attrib04},#{attrib02},#{attrib07},'CRM',#{authInfoDes})
+    </insert>
+
+    <insert id="insertSendEmail" parameterType="com.icignal.common.tranChnl.dto.request.TranChnlReqDto">
+        INSERT INTO ESHOPMAIL.NMAIL_MAILER_QUEUE( MQ_NO
+                                                , MQ_TRGT_SEQ
+                                                , MQ_TYPE
+                                                , MQ_ETC
+                                                , MQ_LOGINID
+                                                , MQ_NAME
+                                                , MQ_EMAIL
+                                                , MQ_DATE
+                                                , MQ_SUBJECT
+                                                , MQ_BODY
+                                                , MQ_FROM
+                                                , MQ_READY
+                                                , MQ_FROM_NAME)
+        values ( ESHOPMAIL.SQC_NMAIL_MAILER_QUEUE.NEXTVAL
+               , ESHOPMAIL.SQC_NMAIL_MAILER_TRGT.NEXTVAL
+               , #{contentSendType} --휴머스온 메일 배치에서 INFO:안내, NONE: 광고
+               , 'LOY'
+               , #{memName}
+               , #{memName}
+               , #{recvEmail}
+               , SYSDATE
+               , #{msgSubject}
+               , #{msgSbst}
+               , 'webmaster@descentekorea.co.kr'
+               , 'Y' --휴머스온 메일 배치에서 N:발송안함, Y:발송
+               , '데상트코리아')
+    </insert>
+	
+</mapper>

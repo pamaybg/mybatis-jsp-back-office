@@ -1,0 +1,10 @@
+version: 0.0
+os: linux
+files:
+  - source: ./icignalT10Bo_Descente.war
+    destination: /app/codedeploy-deployment-staging-area20/
+hooks:
+  ApplicationStop:
+    - location: stop_application
+  ApplicationStart:
+    - location: start_application

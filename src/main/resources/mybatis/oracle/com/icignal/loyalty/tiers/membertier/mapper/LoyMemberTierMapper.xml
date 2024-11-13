@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.tiers.membertier.mapper.LoyMemberTierMapper">
+
+<!-- 등급 목록 조회 -->
+    <select id="selectMbrAllTierList" parameterType="com.icignal.loyalty.tiers.membertier.dto.request.LoyMbrTierReqDto" resultType="com.icignal.loyalty.tiers.membertier.dto.response.LoyMbrTierResDto">
+    	select
+    		lt.tier_nm as tierNm
+    		,lt.tier_cd as tierCd
+    		,lt.rid as rid
+    	from loy.loy_tiers lt
+    	join LOY.LOY_TIERS_GRP t1 on t1.flag = 1 and t1.rid = lt.rid_tier_group
+    	where 1=1
+    	and lt.tier_cd_stat_cd = 'A'
+    	and lt.flag = 1
+    	and lt.rid not in (select rid_tier_cur from loy.loy_mbr where rid = #{ridMbr} )
+    </select>
+    
+    <parameterMap id="callProcMbrTierUpdMap" type="map">
+		<parameter property="ridMbr" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rid" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="desc" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rst" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstCd" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstMsg" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 	</parameterMap>
+	<update id="callProcMbrTierUpd" parameterMap="callProcMbrTierUpdMap" statementType="CALLABLE">
+	/* LOYEventPlan.callProcMbrTierUpd */
+	{
+		CALL  LOY.PKG_LOY_TIER.PROC_MBR_TIER_UPD(?, ?, ?, ?, ?, ?)
+	}
+	</update>
+	
+	<select id="selectMbrTierHistList2" parameterType="com.icignal.loyalty.tiers.membertier.dto.request.LoyMbrTierHistListReqDto"
+	resultType="com.icignal.loyalty.tiers.membertier.dto.response.LoyMbrTierHistListResDto">
+		/* LOYMbr.selectMbrTierHistList2 */
+		SELECT 	lt.TIER_NM 																AS tierNm
+				, lt.TIER_CD 															AS tierCd
+				, to_char(to_date(lmth.VALID_START_DT, 'yymmdd'), 'yyyy-mm-dd') 		AS validStartDt
+				, to_char(to_date(lmth.VALID_END_DT, 'yymmdd'), 'yyyy-mm-dd') 			AS validEndDt
+				, to_char(to_date(lmth.RSLT_EXTR_START_DT, 'yymmdd'), 'yyyy-mm-dd') 	AS rsltExtrStartDt
+				, to_char(to_date(lmth.RSLT_EXTR_END_DT, 'yymmdd'), 'yyyy-mm-dd') 		AS rsltExtrEndDt
+				, to_char(lmth.TIER_CALC_DATE, 'yyyy-mm-dd hh24:mi:ss') 				AS tierCalcDate
+				, lmth.TIER_CHG_DESC 													AS tierChgDesc
+				, ${strColumn}
+		FROM 	LOY.LOY_MBR_TIER_HIST lmth
+		JOIN 	LOY.LOY_TIERS lt ON lt.RID = lmth.RID_TIER_CUR
+		WHERE 	lmth.RID_MBR = #{ridMbr}
+			AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+		
+</mapper>

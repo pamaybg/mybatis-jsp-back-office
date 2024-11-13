@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.promreaction.mapper.LoyPromReactionMapper">
+
+	<select id="selectPromReactionList" parameterType="com.icignal.loyalty.promreaction.dto.request.LoyPromReactionListReqDto" resultType="com.icignal.loyalty.promreaction.dto.response.LoyPromReactionListResDto">
+    	/* LoyPromReactionMapper.selectPromReactionList */
+    	SELECT
+    		  lp.PROM_NO				AS promNo
+    		, lp.PROM_NM				AS promNm
+    		, lp.PROM_TYPE_LV1_CD		AS promTypeLv1Cd
+    		, lp.PROM_TYPE_LV2_CD		AS promTypeLv2Cd
+    		, TO_CHAR(lp.VALID_START_DATE,'YYYY-MM-DD') AS validStartDate
+    		, TO_CHAR(lp.VALID_END_DATE,'YYYY-MM-DD') AS validEndDate
+    		, lpk.RESP_TOT_COST			AS respTotCost
+    		, lpk.KPI_DATE_TYPE_CD		AS kpiDateTypeCd
+    		, lpk.RESP_AMT				AS respAmt
+    		, TO_CHAR(lpk.RESP_LAST_DATE,'YYYY-MM-DD')		AS respLastDate
+    		, lpk.RID					AS rid
+    		, lpk.RID_PROM				AS ridProm
+    		, ${strColumn}
+    	FROM LOY.LOY_PROM_KPI lpk
+    	JOIN LOY.LOY_PROM lp ON lpk.RID_PROM = lp.RID AND lp.FLAG = 1
+    	WHERE lpk.FLAG = 1
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectPromReactDetail" parameterType="com.icignal.loyalty.promreaction.dto.request.LoyPromReactionListReqDto" resultType="com.icignal.loyalty.promreaction.dto.response.LoyPromReactionDetailResDto">
+    	/* LoyPromReactionMapper.selectPromReactDetail */
+    	SELECT
+    		  lp.PROM_NO				AS promNo
+    		, lp.PROM_NM				AS promNm
+    		, lp.DESC_TEXT				AS descText
+    		, lp.PROM_TYPE_LV1_CD		AS promTypeLv1Cd
+    		, lp.PROM_TYPE_LV2_CD		AS promTypeLv2Cd
+    		, TO_CHAR(lp.VALID_START_DATE,'YYYY-MM-DD HH24:MI:SS') AS validStartDate
+    		, TO_CHAR(lp.VALID_END_DATE,'YYYY-MM-DD HH24:MI:SS') AS validEndDate
+    		, lo.OFR_NO					AS ofrNo
+    		, lo.OFR_NM					AS ofrNm
+    		, lp.RID_OFR				AS ofrRid
+    		, lpk.KPI_DATE_TYPE_CD		AS kpiDateTypeCd
+    		, lpk.RESP_AMT				AS respAmt
+    		, TO_CHAR(lpk.RESP_LAST_DATE,'YYYY-MM-DD HH24:MI:SS')	AS respLastDate
+    		, lpk.RESP_CTRL_AMT			AS respCtrlAmt
+    		, lpk.RESP_TOT_COST			AS respTotCost
+    		, lpk.RESP_TOT_SALES		AS respTotSales
+    		, lpk.RESP_TOT_COST			AS respTotCost
+    		, (SELECT count(1) FROM LOY.LOY_PROM lpc 
+    		   JOIN LOY.LOY_TGT_GRP ltg ON lpc.RID_TGT_GRP_INC=ltg.RID AND ltg.FLAG =1 
+    		   WHERE lpc.RID = #{promRid} ) 											AS respTotTgt
+    		, (SELECT count(1) FROM LOY.LOY_PROM_CALC WHERE RID_PROM =#{promRid} )		AS respTotResp
+    		, lpk.RID					AS rid
+    		, lpk.RID_PROM				AS promRid
+    	FROM LOY.LOY_PROM_KPI lpk
+    	JOIN LOY.LOY_PROM lp ON lpk.RID_PROM = lp.RID AND lp.FLAG = 1
+    	LEFT OUTER JOIN LOY.LOY_OFR lo ON  lo.RID = lp.RID_OFR AND lo.FLAG = 1
+    	WHERE lpk.FLAG = 1
+		AND   lpk.RID = #{rid}
+    </select>
+    
+    <select id="selectPromMbrCalcList" parameterType="com.icignal.loyalty.promreaction.dto.request.LoyPromReactionListReqDto" resultType="com.icignal.loyalty.promreaction.dto.response.LoyPromMbrCalcListResDto">
+    	/* LoyPromReactionMapper.selectPromMbrCalcList */
+    	SELECT
+    		  lm.MBR_NO					AS mbrNo
+    		, lc.CUST_NO				AS custNo
+    		, lc.CUST_NM				AS custNm
+    		, TO_CHAR(lpc.CALC_DATE,'YYYY-MM-DD') AS calcDate
+    		, lo.OFR_NM					AS ofrNm
+    		, lpc.OFR_AMT_TYPE			AS ofrAmtType
+    		, lpc.OFR_AMT				AS ofrAmt
+    		, lpc.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_PROM_CALC lpc
+    	JOIN LOY.LOY_MBR lm ON lm.RID = lpc.RID_MBR AND lm.FLAG = 1
+    	JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+    	LEFT OUTER JOIN LOY.LOY_OFR lo ON lpc.RID_OFR = lo.RID AND lo.FLAG = 1
+    	WHERE lpc.FLAG = 1
+		AND   lpc.RID_PROM = #{promRid}
+		AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <select id="selectPromMbrCalcExcelList" parameterType="com.icignal.loyalty.promreaction.dto.request.LoyPromReactionListReqDto" resultType="com.icignal.loyalty.promreaction.dto.response.LoyPromMbrCalcExcelListResDto">
+    	/* LoyPromReactionMapper.selectPromMbrCalcExcelList */
+    	SELECT
+    		  lm.MBR_NO					AS mbrNo
+    		, lc.CUST_NO				AS custNo
+    		, lc.CUST_NM				AS custNm
+    		, TO_CHAR(lpc.CALC_DATE,'YYYY-MM-DD') AS calcDate
+    		, lo.OFR_NM					AS ofrNm
+    		, lpc.OFR_AMT_TYPE			AS ofrAmtType
+    		, lpc.OFR_AMT				AS ofrAmt
+    		, lpc.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_PROM_CALC lpc
+    	JOIN LOY.LOY_MBR lm ON lm.RID = lpc.RID_MBR AND lm.FLAG = 1
+    	JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+    	LEFT OUTER JOIN LOY.LOY_OFR lo ON lpc.RID_OFR = lo.RID AND lo.FLAG = 1
+    	WHERE lpc.FLAG = 1
+		AND   lpc.RID_PROM = #{promRid}
+		AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+
+</mapper>

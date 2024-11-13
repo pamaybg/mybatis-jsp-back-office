@@ -1,0 +1,19 @@
+package com.icignal.loyalty.promotion.campaign.dto.request;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.icignal.common.base.dto.request.CommonDataAuthReqDto;
+
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class LoyCampaignTgtChnlChkReqDto extends CommonDataAuthReqDto {
+	
+	private String id;		//회원 상세 아이디
+    
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+
+}

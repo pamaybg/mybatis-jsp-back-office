@@ -1,0 +1,1094 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.stamp.mapper.LoyStampMapper">
+
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 거래리스트 목록
+    -   설명                  : 스탬프 거래리스트 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.10.13
+    ***************************************/ -->
+    <select id="selectStampTxntList" parameterType="com.icignal.loyalty.stamp.dto.response.LoyStampListResDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStampListResDto">
+		/* LoyStampMapper.selectStampTxntList */
+		SELECT
+			lst.txn_no  as txnNo
+			,lst.appr_dt  as apprDt
+      		<!-- ,(select MARK_NAME from com.comm_code where CODE_NAME = lst.TXN_TYPE_2_CD AND lang = #{lang} AND GROUP_CODE = 'STAMP_TXN_SUB_TYPE_CD' AND country = #{country} AND flag = 1) as txnType2Cd -->
+      		,lm.mbr_no as mbrNo
+      		,lm.MBR_HID_NM  as custNm
+      		<!-- ,(select MARK_NAME from com.comm_code where CODE_NAME = lst.MEM_DIV AND lang = #{lang} AND GROUP_CODE = 'MEMBER_TYPE' AND country = #{country} AND flag = 1) as memDiv
+      		,(select MARK_NAME from com.comm_code where CODE_NAME = lst.MEM_GRADE AND lang = #{lang} AND GROUP_CODE = 'MEMBER_GRADE' AND country = #{country} AND flag = 1) as memGrade -->
+      		,lst.mem_div as memDivCd
+      		,lst.MEM_GRADE as memGradeCd
+      		,lst.TXN_TYPE_2_CD as txn2Cd
+      		,lst.acrl_stamp  as acrlStamp
+      		,lst.use_stamp  as useStamp
+      		,lst.gift_stamp as giftStamp
+      		,lst.avl_stamp as avlStamp
+       		,lc.CHNL_NO  as chnlNo
+       		,lc.CHNL_NM  as chnlNm
+       		,lp.PROD_ID  as prodId
+       		,lp.PROD_NM  as prodNm
+       		,lst.unit_cost as unitCost
+       		,lst.rid as rid
+       		,lc.rid as chnlRid
+       		,lm.rid as mbrRid
+       		,lp.rid as ridProd
+		from loy.loy_stmp_txn lst
+		inner join LOY.LOY_CHNL lc on lc.rid = lst.rid_chnl
+		inner join loy.loy_mbr lm on lm.rid = lst.rid_mbr
+		inner join loy.loy_prod lp on lp.rid = lst.rid_prod
+   		where ${strCondWhere}
+		ORDER BY ${strOrderby}
+				 ${strEndPaging}
+    </select>
+
+
+    <select id="selectStampTxntListCount" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStampListReqDto" resultType="java.lang.Integer">
+    	/* LoyStampMapper.selectStampTxntListCount */
+    	select count(*)as count
+    	from loy.loy_stmp_txn lst
+		inner join LOY.LOY_CHNL lc on lc.rid = lst.rid_chnl
+		inner join loy.loy_mbr lm on lm.rid = lst.rid_mbr
+		inner join loy.loy_prod lp on lp.rid = lst.rid_prod
+   		where ${strCondWhere}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 거래리스트 상세
+    -   설명                  : 스탬프 거래리스트 상세 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.10.13
+    ***************************************/ -->
+    <select id="selectStampDetail" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStampListReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStampDetailResDto">
+    	/* LoyStampMapper.selectStampDetail */
+    	select  lst.appr_dt as dtlApprDt
+    			,lst.appr_no as dtlApprNo
+    			,lst.txn_type_2_cd as dtlTxnType2Cd
+    			,lst.txn_type_1_cd as dtlTxnType1Cd
+    			,lc.CHNL_NO as dtlChnlNo
+    			,lc.CHNL_NM  as dtlChnlNm
+    			,lm.MBR_NO  as dtlMbrNo
+    			,lm.MBR_HID_NM as dtlCustNm
+    			,lst.MEM_DIV  as dtlMemDiv
+    			,lst.MEM_GRADE as dtlMemGrade
+				,lm2.MBR_NO  as dtlGiftMbrNo
+				,lm2.MBR_HID_NM  as dtlGiftCustNm
+				,lst.acrl_stamp as dtlAcrlStamp
+				,lst.use_stamp  as dtlUseStamp
+				,lst.gift_stamp  as  dtlGiftStamp
+				,lst.avl_stamp  as dtlAvlStamp
+				,lp.PROD_ID  as dtlProdId
+				,lp.PROD_NM as dtlProdNm
+				,lst.cncl_yn  as  dtlCnclYn
+				,lst.cncl_rsn_cd  as dtlCnclRsnCd
+				,lst.ticket_num  as dtlTicketNum
+				,lst.compn_appr_no   as dtlCompnApprNo
+		from loy.loy_stmp_txn lst
+		left outer join LOY.LOY_CHNL lc on lc.rid = lst.rid_chnl
+		left outer join loy.loy_mbr lm on lm.rid = lst.rid_mbr
+		left outer join loy.loy_tiers lt on lt.rid = lm.RID_TIER_CUR
+		left outer join loy.loy_mbr lm2 on lm2.rid = lst.rid_mbr_transfer
+		left outer join loy.loy_prod lp on lp.rid = lst.rid_prod
+		<!-- left outer JOIN com.comm_code cc on cc.CODE_NAME = lst.TXN_TYPE_2_CD AND cc.lang=#{lang}  AND cc.GROUP_CODE='STAMP_TXN_SUB_TYPE_CD' and cc.country = #{country} and cc.flag=1
+		left outer JOIN com.comm_code cc1 on cc1.CODE_NAME = lst.TXN_TYPE_1_CD AND cc1.lang=#{lang}  AND cc1.GROUP_CODE='STAMP_TXN_TYPE_CD' and cc1.country = #{country} and cc1.flag=1
+		left outer JOIN com.comm_code cc2 on cc2.CODE_NAME = lst.MEM_DIV AND cc2.lang=#{lang}  AND cc2.GROUP_CODE='MEMBER_TYPE' and cc2.country = #{country} and cc2.flag=1
+		left outer JOIN com.comm_code cc3 on cc3.CODE_NAME = lst.MEM_GRADE AND cc3.lang=#{lang}  AND cc3.GROUP_CODE='MEMBER_GRADE' and cc3.country = #{country} and cc3.flag=1 -->
+		where  lst.rid=#{rid}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 거래리스트 상세 팝업
+    -   설명                  : 스탬프 거래리스트 상세 팝업 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.10.13
+    ***************************************/ -->
+    <select id="selectStampDetailPop" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStampListReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStampDetailResDto">
+		/* LoyStampMapper.selectStampDetailPop */
+		select  st.recp_stamp_cnt as stampTotal
+				, st.avl_stamp_cnt as dtlUseStamp
+				, st.use_stamp_cnt as dtlAvlStamp
+		from loy.loy_stmp_txn stx
+		inner join loy.loy_stmp st on stx.rid_mbr = st.rid_mbr
+		where  stx.rid=#{rid}
+    </select>
+    
+    <!-- ========================= 다이소 스탬프 ========================= -->
+
+    <!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 목록 조회
+    -   설명                  : 스탬프 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<select id="getLoyStmpList" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpListReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpListResDto">
+		/* LoyStampMapper.getLoyStmpList */
+		WITH STMP_LIST AS (
+			SELECT 	ls.RID 																	AS rid				/*스탬프RID*/
+					, ls.STMP_NO 															AS stmpNo			/*스탬프번호*/
+					, ls.STMP_NM 															AS stmpNm 			/*스탬프명*/
+					, c1.MARK_NAME 															AS stmpStatusNm 	/*스탬프상태코드명*/
+					, ls.STMP_STATUS 														AS stmpStatus 		/*스탬프상태코드*/
+					, to_char(ls.STMP_START_DATE, 'yyyy-mm-dd') 								AS stmpStartDt 		/*스탬프 시작일*/
+					, to_char(ls.STMP_END_DATE, 'yyyy-mm-dd') 								AS stmpEndDt		/*스탬프 종료일*/
+					, ls.STMP_CNT 															AS stmpCnt			/*스탬프 개수*/
+					, (SELECT count(distinct RID_MBR) FROM loy.LOY_STMP_MBR WHERE RID_STMP = ls.RID AND FLAG = 1) 	AS mbrCnt			/*참여인원*/
+					, c2.MARK_NAME															AS calcTypeCdNm		/*계산유형코드명*/
+					, c3.MARK_NAME															AS calcTypeSubCdNm	/*계산유형상세코드명*/
+					, CASE 	WHEN ls.STMP_STATUS = 'I'
+								THEN '중지'
+							WHEN ls.STMP_STATUS = 'A'
+								THEN 	CASE 	WHEN ls.STMP_END_DATE >= SYSDATE AND ls.STMP_START_DATE <![CDATA[<=]]> SYSDATE
+													THEN '진행중'
+												WHEN ls.STMP_END_DATE <![CDATA[<]]> SYSDATE
+													THEN '종료'
+												WHEN ls.STMP_START_DATE > SYSDATE
+													THEN '대기중'
+												ELSE ''
+										END
+							ELSE ''
+					  END 																	AS stmpProgStatusNm	/*스탬프 진행상태명*/
+
+					, ls.MBR_TGT_YN AS mbrTgtYn /*특정회원여부*/
+					, NVL( ( SELECT 1 FROM dual WHERE EXISTS(SELECT 1 FROM loy.LOY_STMP_MBR_BNFT lsmb WHERE lsmb.rid_stmp = ls.rid AND lsmb.flag = 1) ), 0) AS BNF_FLG
+					, ${strColumn}
+			FROM 	LOY.LOY_STMP ls
+			JOIN 	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_STMP_SATUS_CD' AND c1.CODE_NAME = ls.STMP_STATUS AND c1.LANG = #{lang} AND c1.FLAG = 1
+			JOIN 	COM.COMM_CODE c2 ON c2.GROUP_CODE = 'LOY_STMP_CALC_TYPE_CD' AND c2.CODE_NAME = ls.CALC_TYPE_CD AND c2.LANG = #{lang} AND c2.FLAG = 1
+			JOIN 	COM.COMM_CODE c3 ON c3.GROUP_CODE = 'LOY_STMP_CALC_TYPE_SUB_CD' AND c3.CODE_NAME = ls.CALC_TYPE_SUB_CD AND c3.PAR_CODE_ID = c2.ID AND c3.LANG = #{lang} AND c3.FLAG = 1
+			WHERE 	${strCondWhere}
+				AND ls.FLAG = 1
+				ORDER BY ${strOrderby}
+				${strEndPaging}
+		)
+		SELECT T1.rid
+		       ,T1.stmpNo
+		       ,T1.stmpNm
+		       ,T1.stmpStatusNm
+		       ,T1.stmpStatus
+		       ,T1.stmpStartDt
+		       ,T1.stmpEndDt
+		       ,T1.stmpCnt
+		       ,T1.mbrCnt
+		       ,T1.calcTypeCdNm
+		       ,T1.calcTypeSubCdNm
+		       ,T1.stmpProgStatusNm
+		       ,T1.mbrTgtYn
+		       ,T1.totalCount
+		       ,DECODE(BNF_FLG,1,(
+						SELECT 	SUM(mom.SELF_TOT_AMT) AS selfTotAmtSum /*혜택포인트 */
+						FROM 	LOY.LOY_STMP_MBR_BNFT lsmb
+						JOIN 	MKT.MKT_CAM_MST mcm 		ON mcm.DISP_NO = lsmb.CAM_NO AND mcm.FLAG = 1
+						JOIN 	MKT.MKT_CAM_OFFER_REL mcor 	ON mcor.CAM_ID = mcm.ID AND mcor.FLAG = 1
+						JOIN 	MKT.MKT_OFFER_MST mom 		ON mom.ID = mcor.OFFER_ID AND mom.FLAG = 1
+						WHERE 	lsmb.RID_STMP = T1.RID
+							AND lsmb.FLAG = 1
+					),0
+		       )AS selfTotAmtSum
+		       ,DECODE(BNF_FLG,1,(
+						SELECT 	SUM(mom.SELF_TOT_AMT) AS acrlPntSum /*적립포인트금액*/
+						FROM 	LOY.LOY_STMP_MBR_BNFT lsmb
+						<!-- JOIN 	LOY.LOY_COUPN_I lci 		ON lci.RID_MBR = lsmb.RID_MBR AND lci.REQ_TYPE_CD = 'STMP' AND lci.REQ_TYPE_KEY = lsmb.RID AND lci.FLAG = 1 AND lci.USE_YN = 'Y' -->
+						JOIN 	MKT.MKT_CAM_MST mcm 		ON mcm.DISP_NO = lsmb.CAM_NO AND mcm.FLAG = 1
+						JOIN 	MKT.MKT_CAM_OFFER_REL mcor 	ON mcor.CAM_ID = mcm.ID AND mcor.FLAG = 1
+						JOIN 	MKT.MKT_OFFER_MST mom 		ON mom.ID = mcor.OFFER_ID AND mom.FLAG = 1
+						WHERE 	lsmb.RID_STMP = T1.RID
+							AND lsmb.FLAG = 1
+					),0
+
+		       )AS acrlPntSum
+		       FROM STMP_LIST T1
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일       fgetLoyStmpDetail      : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 상세 조회
+    -   설명                  : 스탬프 상세 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+    <resultMap id="LOYStmpDetailResultMap" type="com.icignal.loyalty.stamp.dto.response.LoyStmpDetailResDto">
+		<result property="rid" column="rid" />
+		<result property="stmpNm" column="stmpNm" />
+		<result property="stmpStartDt" column="stmpStartDt" />
+		<result property="stmpEndDt" column="stmpEndDt" />
+		<result property="stmpStartDtFullFmt" column="stmpStartDtFullFmt" />
+		<result property="stmpEndDtFullFmt" column="stmpEndDtFullFmt" />
+		<result property="comment1" column="comment1" />
+		<result property="comment2" column="comment2" />
+		<result property="comment3" column="comment3" />
+		<result property="stmpNo" column="stmpNo" />
+		<result property="stmpCnt" column="stmpCnt" />
+		<result property="stmpStatusNm" column="stmpStatusNm" />
+		<result property="applyChnlCd" column="applyChnlCd" />
+		<result property="purCntMinAmt" column="purCntMinAmt" />
+		<result property="calcTypeCd" column="calcTypeCd" />
+		<result property="calcTypeSubCd" column="calcTypeSubCd" />
+		<result property="mbrTgtYn" column="mbrTgtYn" />
+		<collection property="bgImg" javaType="java.util.ArrayList" column="{parentId=rid, category=bgImgType, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="boardImg" javaType="java.util.ArrayList" column="{parentId=rid, category=boardImgType, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg1" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg1Type, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg2" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg2Type, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg3" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg3Type, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg4" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg4Type, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg1Sect" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg1SectType, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg2Sect" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg2SectType, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg3Sect" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg3SectType, imageLang=imageLang}" select="multiSelectImages" />
+		<collection property="stmpImg4Sect" javaType="java.util.ArrayList" column="{parentId=rid, category=stmpImg4SectType, imageLang=imageLang}" select="multiSelectImages" />
+	</resultMap>
+    
+	<select id="getLoyStmpDetail" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpDetailReqDto" resultMap="LOYStmpDetailResultMap">
+		/* LOYStampMapper.getLoyStmpDetail */
+		SELECT 	ls.RID 										AS rid 				/*스탬프RID*/
+				, ls.STMP_NM 								AS stmpNm 			/*스탬프명*/
+				, to_char(ls.STMP_START_DATE, 'yyyy-mm-dd') 	AS stmpStartDt 		/*행사시작일자*/
+				, to_char(ls.STMP_END_DATE, 'yyyy-mm-dd') 	AS stmpEndDt 		/*행사종료일자*/
+				, to_char(ls.STMP_START_DATE, 'yyyy-mm-dd hh24:mi:ss') 	AS stmpStartDtFullFmt
+				, to_char(ls.STMP_END_DATE, 'yyyy-mm-dd hh24:mi:ss') 		AS stmpEndDtFullFmt
+				, ls.COMMENT_1 								AS comment1 		/*적립조건*/
+				, ls.COMMENT_2 								AS comment2 		/*안내*/
+				, ls.COMMENT_3 								AS comment3 		/*유의사항*/
+				, ls.STMP_NO 								AS stmpNo 			/*스탬프번호*/
+				, ls.STMP_CNT 								AS stmpCnt 			/*스탬프갯수*/
+				, ls.STMP_STATUS 							AS stmpStatus 		/*스탬프상태*/
+				, ls.APPLY_CHNL_CD 							AS applyChnlCd 		/*스탬프적용채널코드*/
+				, ls.PUR_CNT_MIN_AMT 						AS purCntMinAmt 	/*구매횟수 최소금액*/
+				, ls.CALC_TYPE_CD							AS calcTypeCd 		/*계산유형코드*/
+				, ls.CALC_TYPE_SUB_CD						AS calcTypeSubCd	/*계산유형상세코드*/
+				, ls.MBR_TGT_YN								AS mbrTgtYn			/*특정회원여부*/
+				, 'STMP_BG' 								AS bgImgType
+				, 'STMP_BOARD' 								AS boardImgType
+				, 'STMP_IMG_1' 								AS stmpImg1Type
+				, 'STMP_IMG_2' 								AS stmpImg2Type
+				, 'STMP_IMG_3' 								AS stmpImg3Type
+				, 'STMP_IMG_4' 								AS stmpImg4Type
+				, 'STMP_IMG_1_SECT' 						AS stmpImg1SectType
+				, 'STMP_IMG_2_SECT' 						AS stmpImg2SectType
+				, 'STMP_IMG_3_SECT' 						AS stmpImg3SectType
+				, 'STMP_IMG_4_SECT' 						AS stmpImg4SectType
+				, #{lang} 									AS imageLang
+				, ls.MBR_NON_TGT_YN						    AS mbrNonTgtYn			/*제외 회원여부*/
+				, ls.STMP_AREA_CODE 						AS stmpAreaCode			/*스탬프 지역 코드*/
+		FROM 	LOY.LOY_STMP ls
+		JOIN 	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_STMP_SATUS_CD' AND c1.CODE_NAME = ls.STMP_STATUS AND c1.LANG = #{lang} AND c1.FLAG = 1
+		WHERE 	ls.RID = #{rid}
+			AND ls.FLAG = 1
+	</select>
+    
+	<select id="getLoyStmpDetail2" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpDetailReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpDetailResDto">
+		/* LOYStampMapper.getLoyStmpDetail2 */
+		SELECT 	ls.RID 										AS rid 				/*스탬프RID*/
+				, ls.STMP_NM 								AS stmpNm 			/*스탬프명*/
+				, to_char(ls.STMP_START_DT, 'yyyy-mm-dd') 	AS stmpStartDt 		/*행사시작일자*/
+				, to_char(ls.STMP_END_DT, 'yyyy-mm-dd') 	AS stmpEndDt 		/*행사종료일자*/
+				, ls.COMMENT_1 								AS comment1 		/*적립조건*/
+				, ls.COMMENT_2 								AS comment2 		/*안내*/
+				, ls.COMMENT_3 								AS comment3 		/*유의사항*/
+				, ls.STMP_NO 								AS stmpNo 			/*스탬프번호*/
+				, ls.STMP_CNT 								AS stmpCnt 			/*스탬프갯수*/
+				, ls.STMP_STATUS 							AS stmpStatus 		/*스탬프상태*/
+				, c1.MARK_NAME								AS stmpStatusNm 	
+				, ls.APPLY_CHNL_CD 							AS applyChnlCd 		/*스탬프적용채널코드*/
+				, c2.MARK_NAME								AS applyChnlCdNm 	
+				, ls.PUR_CNT_MIN_AMT 						AS purCntMinAmt 	/*구매횟수 최소금액*/
+				, ls.CALC_TYPE_CD							AS calcTypeCd 		/*계산유형코드*/
+				, c3.MARK_NAME								AS calcTypeCdNm 	
+				, ls.CALC_TYPE_SUB_CD						AS calcTypeSubCd	/*계산유형상세코드*/
+				, c4.MARK_NAME								AS calcTypeSubCdNm 	
+				, ls.MBR_TGT_YN								AS mbrTgtYn 	
+		FROM 	LOY.LOY_STMP ls
+		JOIN 	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_STMP_SATUS_CD' AND c1.CODE_NAME = ls.STMP_STATUS AND c1.LANG = #{lang} AND c1.FLAG = 1
+		JOIN 	COM.COMM_CODE c2 ON c2.GROUP_CODE = 'LOY_STMP_APPLY_CHNL_CD' AND c2.CODE_NAME = ls.APPLY_CHNL_CD AND c2.LANG = #{lang} AND c2.FLAG = 1
+		JOIN 	COM.COMM_CODE c3 ON c3.GROUP_CODE = 'LOY_STMP_CALC_TYPE_CD' AND c3.CODE_NAME = ls.CALC_TYPE_CD AND c3.LANG = #{lang} AND c3.FLAG = 1
+		JOIN 	COM.COMM_CODE c4 ON c4.GROUP_CODE = 'LOY_STMP_CALC_TYPE_SUB_CD' AND c4.CODE_NAME = ls.CALC_TYPE_SUB_CD AND c4.PAR_CODE_ID = c3.ID AND c4.LANG = #{lang} AND c4.FLAG = 1
+		WHERE 	ls.RID = #{rid}
+			AND ls.FLAG = 1
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 구간별 스탬프 목록 조회
+    -   설명                  : 스탬프 구간별 스탬프 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<select id="getLoyStmpItemList" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpItemListReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpItemListResDto">
+		/* LOYStampMapper.getLoyStmpItemList */
+		SELECT 	/*+ use_nl(mcm mcor mom) */
+				lsi.RID				AS rid		/*스탬프아이템RID*/
+				, lsi.ITEM_NO 		AS itemNo	/*스탬프아이템번호*/
+				, lsi.PUR_AMT 		AS stmpAmt 	/*달성금액*/
+				, lsi.PUR_CNT 		AS stmpCnt	/*달성횟수*/
+				, lsi.CAM_NO 		AS camNo	/*캠페인코드*/
+				, mcm.CAM_NM 		AS camNm	/*캠페인명*/
+				, to_char(mcm.CAM_START_DD, 'yyyy-mm-dd hh24:mi:ss') 	AS camStartDd
+				, to_char(mcm.CAM_END_DD, 'yyyy-mm-dd hh24:mi:ss') 		AS camEndDd
+				, mcm.CAM_STATUS_CD 									AS camStatusCd
+				, nvl2(mom.SELF_TOT_AMT, '포인트 ' || trim(TO_CHAR(mom.SELF_TOT_AMT, '999,999,999,999,999')) || '점 쿠폰 발행', '') AS itemBnftNm
+				, ${strColumn}
+		FROM 		LOY.LOY_STMP_ITEM lsi
+		LEFT JOIN 	MKT.MKT_CAM_MST mcm ON mcm.disp_no = lsi.CAM_NO and mcm.flag = 1
+		LEFT JOIN 	MKT.MKT_CAM_OFFER_REL mcor ON mcor.CAM_ID = mcm.ID AND mcor.FLAG = 1
+		LEFT JOIN 	MKT.MKT_OFFER_MST mom ON mom.ID = mcor.OFFER_ID AND mom.FLAG = 1
+		WHERE 		${strWhere}
+				AND lsi.RID_STMP = #{ridStmp}
+				AND lsi.FLAG = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="getLoyStmpItemList2" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpItemListReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpItemListResDto">
+		/* LOYStampMapper.getLoyStmpItemList */
+		SELECT 	/*+ use_nl(mcm mcor mom) */
+				lsi.RID				AS rid		/*스탬프아이템RID*/
+				, lsi.ITEM_NO 		AS itemNo	/*스탬프아이템번호*/
+				, lsi.PUR_AMT 		AS stmpAmt 	/*달성금액*/
+				, lsi.PUR_CNT 		AS stmpCnt	/*달성횟수*/
+				, lsi.CAM_NO 		AS camNo	/*캠페인코드*/
+				, mcm.CAM_NM 		AS camNm	/*캠페인명*/
+				, to_char(mcm.CAM_START_DD, 'yyyy-mm-dd hh24:mi:ss') 	AS camStartDd
+				, to_char(mcm.CAM_END_DD, 'yyyy-mm-dd hh24:mi:ss') 		AS camEndDd
+				, mcm.CAM_STATUS_CD 									AS camStatusCd
+				, nvl2(mom.SELF_TOT_AMT, '포인트 ' || trim(TO_CHAR(mom.SELF_TOT_AMT, '999,999,999,999,999')) || '점 쿠폰 발행', '') AS itemBnftNm
+		FROM 		LOY.LOY_STMP_ITEM lsi
+		LEFT JOIN 	MKT.MKT_CAM_MST mcm ON mcm.disp_no = lsi.CAM_NO and mcm.flag = 1
+		LEFT JOIN 	MKT.MKT_CAM_OFFER_REL mcor ON mcor.CAM_ID = mcm.ID AND mcor.FLAG = 1
+		LEFT JOIN 	MKT.MKT_OFFER_MST mom ON mom.ID = mcor.OFFER_ID AND mom.FLAG = 1
+		WHERE 		lsi.RID_STMP = #{ridStmp}
+				AND lsi.FLAG = 1
+		ORDER BY lsi.ITEM_NO
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용채널 목록 조회
+    -   설명                  : 스탬프 적용채널 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<select id="getLoyStmpStoreList" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpStoreListReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpStoreListResDto">
+		/* LOYStampMapper.getLoyStmpStoreList */
+		SELECT 	lss.rid 			AS rid
+				, lc.CHNL_NO 		AS chnlNo
+				, c1.MARK_NAME 		AS chnlTypeCdNm
+				, lc.CHNL_NM 		AS chnlNm
+				, ${strColumn}
+		FROM 	LOY.LOY_STMP_STORE lss
+		JOIN 	LOY.LOY_CHNL lc ON lss.RID_CHNL = lc.RID AND lc.FLAG = 1
+		JOIN 	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_CHNL_TYPE_CD' AND c1.CODE_NAME = lc.CHNL_TYPE_CD AND c1.LANG = #{lang} AND c1.flag = 1
+		WHERE 	${strWhere}
+			AND	lss.FLAG = 1
+			AND lss.RID_STMP = #{ridStmp}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 참여회원 목록 조회
+    -   설명                  : 스탬프 참여회원 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<select id="getLoyStmpMbrList" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpMbrListReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpMbrListResDto">
+		/* LOYStampMapper.getLoyStmpMbrList */
+		select 	t1.rid
+				, t1.mbrNo 		
+				, t1.custNm 		
+				, t1.webId 		
+				, t1.mbrStatCdNm 	
+				, t1.stmpJoinDt 	
+				, t1.stmpMbrStatNm
+				, t1.stmpMbrCnt	
+				, t1.stmpMbrBnft	
+				, t1.purAmt	
+				, t1.purCnt	
+				, t1.stmpLastAcrlDt	
+				, t2.totalCount
+		from (
+			SELECT 	lsm.RID 																					AS rid
+					, lm.MBR_NO																					AS mbrNo
+					, LOY.FN_GET_MBRNM_MASKING(lc.CUST_NM) 														AS custNm 		/*회원명*/
+					, lm.WEB_ID 																				AS webId 		/*웹ID*/
+					, c1.MARK_NAME 																				AS mbrStatCdNm 	/*회원상태*/
+					, to_char(lsm.STMP_JOIN_DT, 'yyyy-mm-dd hh24:mi:ss') 										AS stmpJoinDt 	/*참여일시*/
+					, CASE WHEN lsm.STMP_FINISH_DT IS NOT NULL THEN '완료' ELSE '진행중' END 						AS stmpMbrStatNm /*스탬프 참여상태*/
+					, lsm.STMP_ITEM_NO																			AS stmpMbrCnt	/*적립수*/
+					, (SELECT COUNT(1) FROM LOY.LOY_STMP_MBR_BNFT WHERE RID_STMP_MBR = lsm.RID AND FLAG = 1) 	AS stmpMbrBnft /*지급혜택개수*/
+					, to_char(LOY.PKG_APPRO_STMP.GET_STMP_PUR_AMT_SUM(lsm.RID_MBR, lsm.RID_STMP)) 				AS purAmt /*구매금액*/
+					, to_char(LOY.PKG_APPRO_STMP.GET_STMP_PUR_CNT_SUM(lsm.RID_MBR, lsm.RID_STMP)) 				AS purCnt /*구매횟수*/
+					, to_char(lsm.MODIFY_DATE, 'yyyy-mm-dd hh24:mi:ss') 										AS stmpLastAcrlDt /*최근이용일시*/
+			FROM 	LOY.LOY_STMP_MBR lsm
+			JOIN 	LOY.LOY_MBR lm ON lsm.RID_MBR = lm.RID AND lm.FLAG = 1
+			JOIN 	LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+			JOIN 	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_MEM_STAT_CD' AND c1.CODE_NAME = lm.MBR_STAT_CD AND c1.LANG = #{lang} AND c1.flag = 1
+			WHERE 	${strWhere}
+				AND lsm.RID_STMP = #{ridStmp}
+				AND lsm.FLAG = 1
+			ORDER BY ${strOrderby}
+			${strEndPaging}
+		) t1,
+		(
+			select 	count(lsm.RID) AS totalCount
+			from 	LOY.LOY_STMP_MBR lsm
+			JOIN 	LOY.LOY_MBR lm ON lsm.RID_MBR = lm.RID AND lm.FLAG = 1
+			JOIN 	LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+			WHERE 	${strWhere}
+				and lsm.RID_STMP = #{ridStmp}
+				AND lsm.FLAG = 1
+		) t2
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 저장
+    -   설명                  : 스탬프 저장
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<insert id="setLoyStmp" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpDetailReqDto">
+		/* LOYStampMapper.setLoyStmp */
+		insert into LOY.LOY_STMP (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, STMP_NO
+			, STMP_NM
+			, STMP_START_DT
+			, STMP_END_DT
+			, STMP_CNT
+			, COMMENT_1
+			, COMMENT_2
+			, COMMENT_3
+			, APPLY_CHNL_CD
+			, PUR_CNT_MIN_AMT
+			, STMP_STATUS
+			, REG_DT
+			, CALC_TYPE_CD
+			, CALC_TYPE_SUB_CD
+			, MBR_TGT_YN
+			, MBR_NON_TGT_YN
+			, STMP_AREA_CODE
+		) values (
+			#{rid}
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, LOY.FN_GET_STMP_NO()
+			, #{stmpNm}
+			, to_date(#{stmpStartDt} || ' 00:00:00', 'yyyy-mm-dd hh24:mi:ss')
+			, to_date(#{stmpEndDt} || ' 23:59:59', 'yyyy-mm-dd hh24:mi:ss')
+			, #{stmpCnt}
+			, TO_CLOB(#{comment1})
+			, TO_CLOB(#{comment2})
+			, TO_CLOB(#{comment3})
+			, #{applyChnlCd}
+			, #{purCntMinAmt}
+			, #{stmpStatus}
+			, sysdate
+			, #{calcTypeCd}
+			, #{calcTypeSubCd}
+			, #{mbrTgtYn}
+			, #{mbrNonTgtYn}
+			, #{stmpAreaCode}
+		)
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 아이템 저장
+    -   설명                  : 스탬프 아이템 저장
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<insert id="setLoyStmpItem" parameterType="java.util.List">
+		/* LOYStampMapper.setLoyStmpItem */
+		<foreach collection="list" item="item" index="index"  open="INSERT ALL " separator=" " close="SELECT * FROM DUAL" > 
+		into LOY.LOY_STMP_ITEM (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, RID_STMP
+			, ITEM_NO
+			, PUR_AMT
+			, PUR_CNT
+			, CAM_NO
+			, REG_DT
+		) values (
+			com.getNewID('')
+			, #{item.createBy}
+			, #{item.modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, #{item.ridStmp}
+			, #{item.itemNo}
+			, #{item.stmpAmt} /*달성금액*/
+			, #{item.stmpCnt} /*달성횟수*/
+			, #{item.camNo}
+			, sysdate
+		)
+		</foreach>
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 삭제
+    -   설명                  : 스탬프 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<update id="removeLoyStmp" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpDetailReqDto">
+		/* LOYStampMapper.removeLoyStmp */
+		update 	LOY.LOY_STMP
+		set 	flag = flag + 1
+				, modify_by = #{modifyBy}
+				, modify_date = sysdate
+		where 	rid = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 아이템 삭제
+    -   설명                  : 스탬프 아이템 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<update id="removeLoyStmpItem" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpItemDetailReqDto">
+		/* LOYStampMapper.removeLoyStmpItem */
+		update 	LOY.LOY_STMP_ITEM
+		set 	flag = flag + 1
+				, modify_by = #{modifyBy}
+				, modify_date = sysdate
+		where 	1=1 
+		<if test="ridStmp != null and ridStmp != ''">
+			and rid_stmp = #{ridStmp}
+		</if>
+		<if test="rid != null and rid != ''">
+			and rid = #{rid}
+		</if>
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 수정
+    -   설명                  : 스탬프 수정
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<update id="editLoyStmp" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpDetailReqDto">
+		/* LOYStampMapper.editLoyStmp */
+		update 	LOY.LOY_STMP
+		set 	modify_by = #{modifyBy}
+				, modify_date = sysdate
+				<!-- 활성/비활성이 아닌 경우 변경 가능 -->
+				, stmp_start_dt = case when stmp_status != 'A' and stmp_status != 'I' then to_date(#{stmpStartDt} || ' 00:00:00', 'yyyy-mm-dd hh24:mi:ss') else stmp_start_dt end
+				, stmp_cnt = case when stmp_status != 'A' and stmp_status != 'I' then #{stmpCnt} else stmp_cnt end
+				, apply_chnl_cd = case when stmp_status != 'A' and stmp_status != 'I' then #{applyChnlCd} else apply_chnl_cd end
+				, pur_cnt_min_amt = case when stmp_status != 'A' and stmp_status != 'I' then #{purCntMinAmt} else pur_cnt_min_amt end
+				, stmp_status = case when stmp_status != 'A' and stmp_status != 'I' then #{stmpStatus} else stmp_status end
+				, calc_type_cd = case when stmp_status != 'A' and stmp_status != 'I' then #{calcTypeCd} else calc_type_cd end
+				, calc_type_sub_cd = case when stmp_status != 'A' and stmp_status != 'I' then #{calcTypeSubCd} else calc_type_sub_cd end
+				, mbr_tgt_yn = case when stmp_status != 'A' and stmp_status != 'I' then #{mbrTgtYn} else mbr_tgt_yn end
+				, mbr_non_tgt_yn = case when stmp_status != 'A' and stmp_status != 'I' then #{mbrNonTgtYn} else mbr_non_tgt_yn end
+				, STMP_AREA_CODE = case when stmp_status != 'A' and stmp_status != 'I' then #{stmpAreaCode} else STMP_AREA_CODE end
+				<!-- 활성이 아닌 경우 변경 가능 -->
+				, stmp_nm = case when stmp_status != 'A' then #{stmpNm} else stmp_nm end
+				, stmp_end_dt = case when stmp_status != 'A' then to_date(#{stmpEndDt} || ' 23:59:59', 'yyyy-mm-dd hh24:mi:ss') else stmp_end_dt end
+				, comment_1 = case when stmp_status != 'A' then TO_CLOB(#{comment1}) else comment_1 end
+				, comment_2 = case when stmp_status != 'A' then TO_CLOB(#{comment2}) else comment_2 end
+				, comment_3 = case when stmp_status != 'A' then TO_CLOB(#{comment3}) else comment_3 end
+		where 	rid = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 아이템 수정
+    -   설명                  : 스탬프 아이템 수정
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.05
+    ***************************************/ -->
+	<update id="editLoyStmpItem" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpItemDetailReqDto">
+		/* LOYStampMapper.editLoyStmpItem */
+		update 	LOY.LOY_STMP_ITEM
+		set 	PUR_AMT = case when #{stmpAmt} is not null then #{stmpAmt} else PUR_AMT end	/*달성금액*/
+				, PUR_CNT = case when #{stmpCnt} is not null then #{stmpCnt} else PUR_CNT end	/*달성횟수*/
+				, cam_no = case when #{camNo} is not null then #{camNo} else cam_no end
+				, modify_by = #{modifyBy}
+				, modify_date = sysdate
+		where 	rid = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용채널 개수 조회
+    -   설명                  : 스탬프 적용채널 개수 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.14
+    ***************************************/ -->
+	<select id="getLoyStmpStoreCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		/* LOYStampMapper.getLoyStmpStoreCnt */
+		select 	count(1)
+		from 	loy.loy_stmp_store
+		where 	rid_stmp = #{ridStmp}
+			and flag = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용채널 삭제
+    -   설명                  : 스탬프 적용채널 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.14
+    ***************************************/ -->
+	<update id="removeLoyStmpStore" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpStoreDeleteReqDto">
+		/* LOYStampMapper.removeLoyStmpStore */
+		update 	LOY.LOY_STMP_STORE
+		set 	flag = flag + 1
+				, modify_by = #{modifyBy}
+				, modify_date = sysdate
+		where 	1=1 
+		<if test="ridStmp != null and ridStmp != ''">
+			and rid_stmp = #{ridStmp}
+		</if>
+		<if test="selRows != null and selRows.size() > 0">
+			and rid in (
+			<foreach collection="selRows" item="item" index="idx" separator=",">
+				#{item.rid}
+			</foreach>
+			)
+		</if>
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 아이템 상세 조회
+    -   설명                  : 스탬프 아이템 상세 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.14
+    ***************************************/ -->
+	<select id="getStmpItemDetail" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpItemDetailReqDto" resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpItemListResDto">
+		/* LOYStampMapper.getStmpItemDetail */
+		SELECT 	lsi.RID				AS rid		/*스탬프아이템RID*/
+				, lsi.ITEM_NO 		AS itemNo	/*스탬프아이템번호*/
+				, lsi.PUR_AMT 		AS stmpAmt 	/*달성금액*/
+				, lsi.PUR_CNT 		AS stmpCnt	/*달성횟수*/
+				, lsi.CAM_NO 		AS camNo	/*캠페인코드*/
+				, mcm.CAM_NM 		AS camNm	/*캠페인명*/
+		FROM 		LOY.LOY_STMP_ITEM lsi
+		LEFT JOIN 	MKT.MKT_CAM_MST mcm ON mcm.disp_no = lsi.CAM_NO and mcm.flag = 1
+		WHERE 		lsi.rid = #{rid}
+				AND lsi.FLAG = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 상태 변경
+    -   설명                  : 스탬프 상태 변경
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.03.14
+    ***************************************/ -->
+	<update id="editLoyStmpStmpStatus" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpDetailReqDto">
+		/* LOYStampMapper.editLoyStmpStmpStatus */
+		update 	LOY.LOY_STMP
+		set 	STMP_STATUS = #{stmpStatus}
+				, modify_by = #{modifyBy}
+				, modify_date = sysdate
+		where 	rid = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용채널 등록
+    -   설명                  : 스탬프 적용채널 등록
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.12
+    ***************************************/ -->
+	<insert id="setLoyStmpStore" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpStoreInsertReqDto">
+		/* LOYStampMapper.setLoyStmpStore */
+		insert into LOY.LOY_STMP_STORE (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, RID_STMP
+			, RID_CHNL
+			, REG_DT
+		) values (
+			com.getNewID('')
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, #{ridStmp}
+			, #{ridChnl}
+			, sysdate
+		)
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용채널 중복 체크
+    -   설명                  : 스탬프 적용채널 중복 체크
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.12
+    ***************************************/ -->
+	<select id="checkExistLoyStmpStore" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpStoreInsertReqDto" resultType="java.lang.Integer">
+		/* LOYStampMapper.checkExistLoyStmpStore */
+		SELECT 	COUNT(1)
+		FROM 	LOY.LOY_STMP_STORE
+		WHERE 	RID_STMP = #{ridStmp}
+			AND RID_CHNL = #{ridChnl}
+			AND FLAG = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 아이템 구매횟수 초기화
+    -   설명                  : 스탬프 아이템 구매횟수 초기화
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.18
+    ***************************************/ -->
+	<update id="editLoyStmpItemPurCntInitialize" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpItemDetailReqDto">
+		/* LOYStampMapper.editLoyStmpItemPurCntInitialize */
+		UPDATE 	LOY.LOY_STMP_ITEM
+		SET 	PUR_CNT = #{stmpCnt}
+				, MODIFY_DATE = SYSDATE
+				, MODIFY_BY = #{modifyBy}
+		WHERE 	RID_STMP = #{ridStmp}
+			AND FLAG = 1
+	</update>
+	
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용회원 목록 조회
+    -   설명                  : 스탬프 적용회원 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.22
+    ***************************************/ -->
+	<select id="getLoyStmpMbrTgtList" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpMbrTgtListReqDto"
+	resultType="com.icignal.loyalty.stamp.dto.response.LoyStmpMbrTgtListResDto">
+		/* LOYStampMapper.getLoyStmpMbrTgtList */
+		SELECT  	/*+ use_nl(c1 lm) */
+					lc.CUST_NM 	AS custNm
+					, t1.mbrNo 											AS mbrNo
+					, lm.MBR_STAT_CD	 								AS mbrStatCd
+					<!-- , c1.MARK_NAME 										AS mbrStatCdNm -->
+					, lm.MBR_LOCK_YN 									AS mbrLockYn
+					, to_char(t1.createDate, 'yyyy-mm-dd hh24:mi:ss') 	AS createDate
+					, emp.NAME 											AS name
+					, t1.rid											AS rid
+					, ${strColumn}
+		FROM 		(	SELECT 	lsmt.CREATE_DATE 	AS createDate
+								, lsmt.CREATE_BY 	AS createBy
+								, lsmt.MBR_NO 		AS mbrNo
+								, lsmt.RID 			AS rid
+						FROM 	LOY.LOY_STMP_MBR_TGT lsmt
+						WHERE 	lsmt.RID_STMP = #{ridStmp}
+							AND lsmt.FLAG = 1	) t1
+		LEFT JOIN 	LOY.LOY_MBR lm ON lm.MBR_NO = t1.mbrNo AND lm.FLAG = 1
+		LEFT JOIN 	LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+		<!-- LEFT JOIN 	COM.COMM_CODE c1 ON c1.GROUP_CODE = 'LOY_MEM_STAT_CD' AND c1.CODE_NAME = lm.MBR_STAT_CD AND c1.LANG = #{lang} AND c1.FLAG = 1 -->
+		LEFT JOIN 	COM.CRM_USER cu ON cu.RID = t1.createBy
+		LEFT JOIN 	COM.EMPLOYEE emp ON emp.ID = cu.ID_EMPLOYEE
+		WHERE 		${strWhere}
+		ORDER BY 	${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용회원 초기화
+    -   설명                  : 스탬프 적용회원 초기화
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.22
+    ***************************************/ -->
+	<update id="removeLoyStmpMbrTgt" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpMbrTgtRemoveReqDto">
+		/* LOYStampMapper.removeLoyStmpMbrTgt */
+		UPDATE 	LOY.LOY_STMP_MBR_TGT
+		SET 	flag = flag + 1
+				, MODIFY_DATE = SYSDATE
+				, MODIFY_BY = #{modifyBy}
+		WHERE 	RID_STMP = #{ridStmp}
+			AND FLAG = 1
+	</update>	
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용회원 개수 조회
+    -   설명                  : 스탬프 적용회원 개수 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.22
+    ***************************************/ -->
+	<select id="getLoyStmpMbrTgtCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		/* LOYStampMapper.getLoyStmpMbrTgtCnt */
+		select 	count(1)
+		from 	loy.loy_stmp_mbr_tgt
+		where 	rid_stmp = #{ridStmp}
+			and flag = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용회원 개수 조회 (해당 회원)
+    -   설명                  : 스탬프 적용회원 개수 조회 (해당 회원)
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.24
+    ***************************************/ -->
+	<select id="checkExistLoyStmpMbrTgt" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpMbrTgtInsertReqDto" resultType="java.lang.Integer">
+		/* LOYStampMapper.checkExistLoyStmpMbrTgt */
+		select 	count(1)
+		from 	loy.loy_stmp_mbr_tgt
+		where 	rid_stmp = #{ridStmp}
+			and mbr_no = #{mbrNo}
+			and flag = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용회원 등록
+    -   설명                  : 스탬프 적용회원 등록
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.24
+    ***************************************/ -->
+	<insert id="setLoyStmpMbrTgt" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpMbrTgtInsertReqDto">
+		/* LOYStampMapper.setLoyStmpMbrTgt */
+		insert into LOY.LOY_STMP_MBR_TGT (
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, RID_STMP
+			, MBR_NO
+		) values (
+			com.getNewID('')
+			, #{createBy}
+			, #{modifyBy}
+			, sysdate
+			, sysdate
+			, 1
+			, #{ridStmp}
+			, #{mbrNo}
+		)
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 적용회원 삭제
+    -   설명                  : 스탬프 적용회원 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.24
+    ***************************************/ -->
+	<update id="removeLoyStmpMbrTgt2" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpMbrTgtDeleteReqDto">
+		/* LOYStampMapper.removeLoyStmpMbrTgt2 */
+		update 	LOY.LOY_STMP_MBR_TGT
+		set 	flag = flag + 1
+				, modify_by = #{modifyBy}
+				, modify_date = sysdate
+		where 	1=1 
+		<if test="ridStmp != null and ridStmp != ''">
+			and rid_stmp = #{ridStmp}
+		</if>
+		<if test="selRows != null and selRows.size() > 0">
+			and rid in (
+			<foreach collection="selRows" item="item" index="idx" separator=",">
+				#{item.rid}
+			</foreach>
+			)
+		</if>
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LOYStampService.java
+    ============================================
+    -   제목                  : 스탬프 아이템 수정 (캠페인 삭제)
+    -   설명                  : 스탬프 아이템 수정 (캠페인 삭제)
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.04.24
+    ***************************************/ -->
+	<update id="removeLoyStmpItemCamNo" parameterType="com.icignal.loyalty.stamp.dto.request.LoyStmpItemDetailReqDto">
+		/* LOYStampMapper.removeLoyStmpItemCamNo */
+		update 	LOY.LOY_STMP_ITEM
+		set 	cam_no = null
+				, modify_by = #{modifyBy}
+				, modify_date = sysdate
+		where 	rid = #{rid}
+	</update>
+	
+	<select id="multiSelectImages" parameterType="java.util.HashMap" resultType="com.icignal.common.base.dto.response.MultiImage">
+		SELECT 
+			i.id as imageId
+		    , NVL((i.image_folder || i.image_file_name || i.image_file_type), '') as imgOrgUrl
+	    	, i.seq
+	    	, (i.ori_img_file_nm || i.image_file_type) as oriName
+	    	, (i.image_file_name || i.image_file_type) as imgFileName
+		FROM com.image i
+		WHERE 
+			i.parent_id = #{parentId} 
+			and i.image_type = #{category}
+			<if test="imageLang != '' and imageLang != null">
+			and img_lang = #{imageLang}
+			</if>
+		order by seq asc
+	</select>
+
+</mapper>

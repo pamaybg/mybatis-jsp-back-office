@@ -1,0 +1,23 @@
+version: 0.2
+phases: 
+  install:
+    runtime-versions: 
+      java: corretto11
+  pre_build: 
+    commands: 
+      - export LC_ALL="en_US.UTF-8" 
+      - locale-gen en_US en_US.UTF-8 
+      - dpkg-reconfigure locales 
+      - mvn clean 
+  build: 
+    commands: 
+      - mvn package -Dmaven.test.skip=true -Dspring.profiles.active=dev
+artifacts:
+  files:
+      - target/icignalT10Bo_Descente.war
+      - appspec.yml
+      - script/*
+  discard-paths: yes
+cache:
+  paths:
+    - '/root/.m2/**/*'

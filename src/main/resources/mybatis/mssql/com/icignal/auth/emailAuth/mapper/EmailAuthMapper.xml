@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 17:11:54 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmailAuthMapper">
+
+<update id="updateEmailAuth" >
+/* EmailAuthMapper.updateEmailAuth */
+		UPDATE 
+        	loy.loy_login_auth 
+        SET
+           AUTH_SUCCESS_YN='Y'
+          ,AUTH_DT=GETDATE()
+        WHERE
+        	TOKENID = #{tokenId}
+	</update>
+	
+	<insert id="insertEmailAuth" >
+	/* EmailAuthMapper.insertEmailAuth */
+		insert into com.loy_login_auth (
+		rid
+		, create_by
+		, create_date
+		, auth_type
+		, login_id
+		, tokenid
+		, req_dt
+		, auth_limit_dt
+		) 
+		values (
+		#{rid}
+		, ( SELECT com.nvl(e.NAME,'')
+			FROM com.CRM_USER cu
+			JOIN com.EMPLOYEE e ON cu.ID_EMPLOYEE = e.id
+			WHERE USER_id=#{email} )
+		, GETDATE()
+		, 'MAIL'
+		, #{email}
+		, #{tokenId}
+		, GETDATE()
+		, GETDATE() + #{authLimitDt}/24/60
+	)
+	</insert>
+	
+
+	<select id="emailAuthLoginLimitDtCheck"  resultType="java.lang.Integer">
+	select count(*)
+	from loy.loy_login_auth
+	where TOKENID = #{tokenId}
+	<![CDATA[
+	AND AUTH_LOGIN_LIMIT_DT >= GETDATE()
+	]]>
+	</select>
+
+
+	<select id="emailAuthLoginIdCheck"  resultType="java.lang.Integer">
+		select count(*)
+		from loy.loy_login_auth
+		where TOKENID = #{tokenId}
+		and  LOGIN_ID = #{email}
+	</select>
+
+	<select id="checkDupFamilyProm"  resultType="java.lang.Boolean">
+	<![CDATA[	select com.nvl(CASE WHEN count(1) > 0 THEN 1 ELSE 0 END , 0)   as checkCnt ]]>
+		from mkt.mkt_cam_mst
+		where 1=1
+		and cam_status_cd = 'A'
+		and prom_sub_type = 'P012'
+		and id != #{camId}
+		and
+		(
+			(select cam_start_dd from mkt.mkt_cam_mst where id = #{camId} ) &lt;= cam_end_dd
+		)
+		and
+		(
+			cam_start_dd &lt;= (select cam_end_dd from mkt.mkt_cam_mst where id = #{camId} )
+		)
+	</select>
+
+
+	<select id="emailAuthDtCheck"  resultType="java.lang.Integer">
+		select count(*)
+		from loy.loy_login_auth
+		where TOKENID = #{tokenId}
+		AND AUTH_DT IS NOT NULL
+	</select>
+	
+
+	<select id="emailAuthSuccessChk"  resultType="java.lang.Integer">
+	select count(*)
+	from loy.loy_login_auth
+	where TOKENID = #{tokenId}
+	and AUTH_SUCCESS_YN='Y'
+	</select>
+</mapper>

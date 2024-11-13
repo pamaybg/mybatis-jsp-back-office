@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:04:15 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.kepler.analysis.mapper.KprAnalysisPromptMapper">
+
+
+	<!-- 분석 프롬프트 DTO -->
+	<!--
+		Sorry, I can`t migrate	com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto
+		See console output for further details 
+	-->
+	<!--
+		Sorry, I can`t migrate	com.icignal.kepler.analysis.dto.response.KprAnalysisPromptDetailResDto
+		See console output for further details 
+	-->
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (selectAnalysisPromptListInst)
+	============================================
+	-	제목					: 분석 프롬프트 리스트 조회
+	-	설명					: 분석 프롬프트 리스트 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisPromptListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto" 
+														resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisPromptDetailResDto">
+		/* KprAnalysisPromptMapper.selectAnalysisPromptListInst */
+		SELECT	arp.ID					AS	nodeId
+			,	arp.ID					AS	promptId
+			,	ccm.DP_NM				AS	nodeText
+			,	NULL					AS	parNodeId
+			,	'PROMPT'				AS	columnUseTypeCode
+			,	arp.ATRIB_GROUP_COL_ID	AS	atribGroupColumnId
+			,	1						AS	expandedFlag
+		FROM	anl.anl_rpt_prompt_inst		arp
+		JOIN	anl.anl_atrib_group_column	agc	ON	arp.ATRIB_GROUP_COL_ID	=	agc.ID
+												AND	agc.FLAG				=	1
+		JOIN	anl.anl_column_mst			ccm	ON	CASE
+														WHEN	LEN( agc.DIM_COL_ID ) &gt; 0	THEN	agc.DIM_COL_ID
+														ELSE	agc.COL_ID
+													END						=	ccm.ID
+												AND	ccm.FLAG				=	1
+		WHERE	${strSVCType}
+		AND		arp.FLAG		=	1
+		AND		arp.RPT_ID		=	#{analysisId}
+		ORDER BY arp.SEQ ASC
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (selectAnalysisDatePromptList)
+	============================================
+	-	제목					: 분석 프롬프트 DATE/DATE_BETWEEN 리스트 조회
+	-	설명					: 분석 프롬프트 DATE/DATE_BETWEEN 리스트 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisDatePromptList" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto" 
+															resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisPromptDetailResDto">
+		/* KprAnalysisPromptMapper.selectAnalysisDatePromptList */
+		SELECT	arp.ATRIB_GROUP_COL_ID	AS atribGroupColumnId
+			,	arp.RPT_PRPT_COL_ALIAS	AS promptAlias
+			,	false					AS promptFlag
+			,	arp.PROMPT_VAL			AS promptValue
+			,	arp.PROMPT_TYPE_CD		AS promptTypeCode
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			FROM	anl.anl_rpt_prompt		arp
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			FROM	anl.anl_rpt_prompt_inst	arp
+		</if>
+		WHERE	arp.FLAG			=	1
+		AND		arp.PROMPT_TYPE_CD	!=	'LIST_BOX'
+		AND		arp.RPT_ID			=	#{analysisId}
+		ORDER BY arp.SEQ
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (selectAnalysisDatePromptList)
+	============================================
+	-	제목					: 분석 프롬프트 DATE/DATE_BETWEEN 리스트 조회
+	-	설명					: 분석 프롬프트 DATE/DATE_BETWEEN 리스트 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisPromptDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto" 
+																resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisPromptDetailResDto">
+		/* KprAnalysisPromptMapper.selectAnalysisPromptDetailInst */
+		SELECT	arp.ID					AS	promptId
+			,	arp.SEQ					AS	seq
+			,	arp.PROMPT_VAL			AS	promptValue
+			,	arp.ATRIB_GROUP_COL_ID	AS	atribGroupColumnId
+			,	arp.PROMPT_TYPE_CD		AS	promptTypeCode
+		FROM	anl.anl_rpt_prompt_inst	arp
+		WHERE	arp.ID	=	#{promptId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (selectAnalysisPromptIdListInst)
+	============================================
+	-	제목					: 분석 프롬프트 아이디 리스트 조회
+	-	설명					: 분석 프롬프트 아이디 리스트 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisPromptIdListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto" resultType="java.lang.String">
+		/* KprAnalysisPromptMapper.selectAnalysisPromptIdListInst */
+		SELECT	ID	AS	promptId
+		FROM	anl.anl_rpt_prompt_inst
+		WHERE	RPT_ID	=	#{analysisId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (selectAnalysisPromptIdCheckMaster)
+	============================================
+	-	제목					: 분석 프롬프트 아이디 체크
+	-	설명					: 분석 프롬프트 아이디 체크
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisPromptIdCheckMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto" resultType="java.lang.Integer">
+		/* KprAnalysisPromptMapper.selectAnalysisPromptIdCheckMaster */
+		SELECT	COUNT(1)
+		FROM	anl.anl_rpt_prompt
+		WHERE	FLAG	=	1
+		AND		ID		=	#{promptId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (selectAnalysisPromptCount)
+	============================================
+	-	제목					: 분석 프롬프트 갯수 조회
+	-	설명					: 분석 프롬프트 갯수 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisPromptCount" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto" resultType="java.lang.Integer">
+		/* KprAnalysisPromptMapper.selectAnalysisPromptCount */
+		SELECT	COUNT(1)
+		<if test="analysisMasterFlag == 'Y'">
+			FROM	anl.anl_rpt_prompt
+		</if>
+		<if test="analysisMasterFlag != 'Y'">
+			FROM	anl.anl_rpt_prompt_inst
+		</if>
+		WHERE	RPT_ID	=	#{analysisId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (insertAnalysisPromptDetailMaster)
+	============================================
+	-	제목					: 분석 프롬프트 임시 -> 마스터 등록
+	-	설명					: 분석 프롬프트 임시 -> 마스터 등록
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisPromptDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.insertAnalysisPromptDetailMaster */
+		INSERT INTO anl.anl_rpt_prompt (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	com.getNewID('A')
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	#{analysisId_New}
+		FROM	anl.anl_rpt_prompt_inst
+		WHERE	FLAG	=	1
+		AND		RPT_ID	=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (insertAnalysisPromptDetailInst)
+	============================================
+	-	제목					: 분석 프롬프트 등록
+	-	설명					: 분석 프롬프트 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<insert id="insertAnalysisPromptDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.insertAnalysisPromptDetailInst */
+		INSERT INTO anl.anl_rpt_prompt_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_ID
+		) VALUES (
+				#{promptId}
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	0
+			,	#{promptTypeCode}
+			,	NULL
+			,	#{atribGroupColumnId}
+			,	#{analysisId}
+		)
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			SELECT	1
+		</selectKey>
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (insertAnalysisPromptDetailMasterToInst)
+	============================================
+	-	제목					: 분석 프롬프트 마스터 -> 임시 등록
+	-	설명					: 분석 프롬프트 마스터 -> 임시 등록
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisPromptDetailMasterToInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.insertAnalysisPromptDetailMasterToInst */
+		INSERT INTO anl.anl_rpt_prompt_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	GETDATE()
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	RPT_ID
+		FROM	anl.anl_rpt_prompt
+		WHERE	FLAG	=	1
+		AND		RPT_ID	=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (insertAnalysisPromptDetailInstToMaster)
+	============================================
+	-	제목					: 분석 프롬프트 임시 -> 마스터 등록
+	-	설명					: 분석 프롬프트 임시 -> 마스터 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisPromptDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.insertAnalysisPromptDetailInstToMaster */
+		INSERT INTO anl.anl_rpt_prompt (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	RPT_ID
+		FROM	anl.anl_rpt_prompt_inst
+		WHERE	FLAG	=	1
+		AND		ID		=	#{promptId}
+	</update>
+	
+	<update id="insertAnalysisPromptDetailCopy" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.insertAnalysisPromptDetailCopy */
+		INSERT INTO anl.anl_rpt_prompt_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	com.getNewID('A')
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	PROMPT_TYPE_CD
+			,	PROMPT_VAL
+			,	ATRIB_GROUP_COL_ID
+			,	RPT_PRPT_COL_ALIAS
+			,	#{analysisId_New}
+		FROM	anl.anl_rpt_prompt
+		WHERE	FLAG	=	1
+		AND		RPT_ID	=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (updateAnalysisPromptDetailInst)
+	============================================
+	-	제목					: 분석 프롬프트 상세 수정
+	-	설명					: 분석 프롬프트 상세 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisPromptDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.updateAnalysisPromptDetailInst */
+		UPDATE	anl.anl_rpt_prompt_inst
+		SET		MODIFY_BY		=	#{empId}
+			,	MODIFY_DATE		=	GETDATE()
+			,	PROMPT_VAL		=	#{promptValue}
+			,	PROMPT_TYPE_CD	=	#{promptTypeCode}
+		WHERE	ID	=	#{promptId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (updateAnalysisPromptDetailInstToMaster)
+	============================================
+	-	제목					: 분석 프롬프트 임시 -> 마스터 수정
+	-	설명					: 분석 프롬프트 임시 -> 마스터 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisPromptDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.updateAnalysisPromptDetailInstToMaster */
+		update
+		 (select adp.MODIFY_BY,api.MODIFY_BY AS apiModifyBy,adp.MODIFY_DATE,api.MODIFY_DATE AS apiModifyDate 
+		 		,adp.seq ,api.seq AS apiSeq ,adp.prompt_type_cd ,api.prompt_type_cd AS apiPromptTypeCd
+		 		,adp.prompt_val ,api.prompt_val AS apiPromptVal,adp.ATRIB_GROUP_COL_ID ,api.ATRIB_GROUP_COL_ID AS apiAtribGroupColId
+		 		,adp.RPT_PRPT_COL_ALIAS,api.RPT_PRPT_COL_ALIAS AS apiRptPrptColAlias
+		 from anl.anl_rpt_prompt adp
+		 	JOIN anl.anl_rpt_prompt_inst api on adp.ID = api.ID 
+		 	WHERE 1=1 
+		 	AND adp.ID = api.ID 
+		 	AND api.ID = #{promptId} )		 
+		   set modify_by		= apiModifyBy
+		     , modify_date		= apiModifyDate
+		     , seq				= apiSeq
+		     , prompt_type_cd	= apiPromptTypeCd
+		     , prompt_val		= apiPromptVal
+		     , ATRIB_GROUP_COL_ID	= apiAtribGroupColId
+			 , RPT_PRPT_COL_ALIAS	= apiRptPrptColAlias
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (updateAnalysisPromptAllSequenceInst)
+	============================================
+	-	제목					: 분석 프롬프트 순서 수정( 전체 )
+	-	설명					: 분석 프롬프트 순서 수정( 전체 )
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisPromptAllSequenceInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.updateAnalysisPromptAllSequenceInst */
+		UPDATE	anl.anl_rpt_prompt_inst
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	GETDATE()
+			,	SEQ			=
+					CASE
+					 <foreach collection="promptList" item="item" separator=" " close=" " open=" ">
+						WHEN	ID	=	#{item.promptId}	THEN	#{item.seq}
+					</foreach>
+					END
+			, rpt_prpt_col_alias = case
+								    <foreach collection="promptList" item="item" separator=" " close=" " open=" ">
+									when id = #{item.promptId} then CONCAT('p', lpad(#{item.seq}, 4, 0))
+								   </foreach>
+								   end
+		WHERE	FLAG	=	1
+		<if test="promptList.size() > 0">
+		AND		ID		IN
+				 <foreach collection="promptList" item="item" separator=", " close=")" open="(">
+					#{item.promptId}
+				</foreach>
+		</if>
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (updateAnalysisPromptAllSequenceInst)
+	============================================
+	-	제목					: 분석 프롬프트 순서 수정( 특정 프롬프트 이후 )
+	-	설명					: 분석 프롬프트 순서 수정( 특정 프롬프트 이후 )
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisPromptSequenceInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.updateAnalysisPromptSequenceInst */
+		UPDATE	anl.anl_rpt_prompt_inst
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	GETDATE()
+			,	SEQ			=	SEQ - 1
+		WHERE	FLAG		=	1
+		AND		SEQ			&gt;	#{seq}
+		AND		RPT_ID		=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (deleteAnalysisPromptDetailMaster)
+	============================================
+	-	제목					: 분석 프롬프트 마스터 삭제
+	-	설명					: 분석 프롬프트 마스터 삭제
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="deleteAnalysisPromptDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.deleteAnalysisPromptDetailMaster */
+		UPDATE	anl.anl_rpt_prompt
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	GETDATE()
+			,	FLAG		=	flag + 1
+		WHERE	RPT_ID	=	#{analysisId}
+		<if test="promptIdList != null and promptIdList.size() > 0">
+			AND		ID	NOT IN	 <foreach collection="promptIdList" item="item" separator="," close=")" open="(">
+									#{item}
+								</foreach>
+		</if>
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (deleteAnalysisPromptListInst)
+	============================================
+	-	제목					: 분석 프롬프트 전체 삭제
+	-	설명					: 분석 프롬프트 전체 삭제
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<delete id="deleteAnalysisPromptListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.deleteAnalysisPromptListInst */
+		DELETE
+		FROM	anl.anl_rpt_prompt_inst
+		WHERE	RPT_ID	=	#{analysisId}
+	</delete>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (deleteAnalysisPromptDetailInst)
+	============================================
+	-	제목					: 분석 프롬프트 임시 삭제
+	-	설명					: 분석 프롬프트 임시 삭제
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<delete id="deleteAnalysisPromptDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto">
+		/* KprAnalysisPromptMapper.deleteAnalysisPromptDetailInst */
+		DELETE
+		FROM	anl.anl_rpt_prompt_inst
+		WHERE	ID	=	#{promptId}
+	</delete>
+	
+		<!-- /**************************************
+	-	관련 파일				: KprAnalysisPromptMapper.java (selectAnalysisPromptCheck)
+	============================================
+	-	제목					: 분석 프롬프트 리스트 조회
+	-	설명					: 분석 프롬프트 리스트 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: GYEONGYOUNG.LEE
+	-	작성일					: 2020.07.09
+	***************************************/ -->
+	<select id="selectAnalysisPromptCheck" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisPromptDetailReqDto" 
+															resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisPromptDetailResDto">
+		/* KprAnalysisPromptMapper.selectAnalysisPromptCheck */
+		SELECT	
+				arp.ATRIB_GROUP_COL_ID	AS atribGroupColumnId
+			,	arp.RPT_PRPT_COL_ALIAS	AS promptAlias
+			,	arp.PROMPT_VAL			AS promptValue
+			,	arp.PROMPT_TYPE_CD		AS promptTypeCode
+			FROM	anl.anl_rpt_prompt		arp
+		WHERE	arp.FLAG			=	1
+		AND		arp.RPT_ID			=	#{analysisId}
+	</select>
+</mapper>

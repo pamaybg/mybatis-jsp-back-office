@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.worddictionary.mapper.SystemWordDictionaryMapper">
+
+
+	<select id="selectWordDictionary" parameterType="com.icignal.systemmanagement.worddictionary.dto.request.SystemWordDictionaryReqDto" 
+									resultType="com.icignal.systemmanagement.worddictionary.dto.response.SystemWordDictionaryResDto">
+	/* SystemWordDictionaryMapper.selectWordDictionary */
+	SELECT wd.RID             AS rid
+	     , wd.LOGIC_NM	      AS logicalName 
+	     , SUBSTRING(wd.LOGIC_DESC,1,20)      AS logicalDesc
+	     , wd.PHYSICL_NM      AS physicalName
+	     , SUBSTRING(Wd.PHYSICL_DESC,1,20)    AS physicalDesc
+	     , wd.TAG             AS tag
+	     , ${strColumn}
+	FROM com.WORD_DIC wd
+	WHERE ${strWhere}
+	AND ${strCondWhere}
+	AND ${strSVCType}
+    ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectWordDicDetail" parameterType="com.icignal.systemmanagement.worddictionary.dto.request.SystemWordDictionaryReqDto" 
+									resultType="com.icignal.systemmanagement.worddictionary.dto.response.SystemWordDictionaryResDto">
+	/* SystemWordDictionaryMapper.selectWordDicDetail */
+	SELECT wd.RID             AS rid
+	     , wd.LOGIC_NM	      AS logicalName 
+	     , wd.LOGIC_DESC      AS logicalDesc
+	     , wd.LOGIC_SYNONM    AS logicalSynonm
+	     , wd.PHYSICL_NM      AS physicalName
+	     , wd.PHYSICL_DESC    AS physicalDesc
+	     , wd.PHYSICL_SYNONM  AS physicalSynonm
+	     , wd.TAG             AS tag
+	FROM com.WORD_DIC wd
+	WHERE wd.rid = #{rid}
+	</select>
+	
+	<select id="getWordDictionaryChk" parameterType="com.icignal.systemmanagement.worddictionary.dto.request.SystemWordDictionaryReqDto" 
+									resultType="com.icignal.systemmanagement.worddictionary.dto.response.SystemWordDictionaryResDto">
+	/* SystemWordDictionaryMapper.getWordDictionaryChk */
+	SELECT count(*) as cnt
+	FROM com.WORD_DIC wd
+	WHERE 1=1
+    AND wd.LOGIC_NM = #{logicalName}
+    AND wd.physicl_NM = #{physicalName}  
+    AND wd.TAG = #{tag}
+	</select>
+
+
+
+	<insert id="insertWordDictionary" parameterType="com.icignal.systemmanagement.worddictionary.dto.request.SystemWordDictionaryReqDto">
+	/* SystemWordDictionaryMapper.insertWordDictionary */
+	INSERT INTO com.WORD_DIC
+	     ( RID
+	     , LOGIC_NM
+		 , LOGIC_DESC
+		 , LOGIC_SYNONM
+		 , PHYSICL_NM
+		 , PHYSICL_DESC
+		 , PHYSICL_SYNONM
+		 , TAG
+		 )
+	VALUES
+		( #{rid}
+		, #{logicalName}
+        , #{logicalDesc}
+        , #{logicalSynonm}
+        , #{physicalName}
+        , #{physicalDesc}
+        , #{physicalSynonm}
+        , #{tag}
+		)
+	</insert>
+	
+	
+	<update id="updateWordDictionary" parameterType="com.icignal.systemmanagement.worddictionary.dto.request.SystemWordDictionaryReqDto">
+	/* SystemWordDictionaryMapper.updateWordDictionary */
+	UPDATE com.WORD_DIC
+	   SET LOGIC_NM			= #{logicalName}
+		 , LOGIC_DESC		= #{logicalDesc}
+		 , LOGIC_SYNONM		= #{logicalSynonm}
+		 , PHYSICL_NM		= #{physicalName}
+		 , PHYSICL_DESC		= #{physicalDesc}
+		 , PHYSICL_SYNONM	= #{physicalSynonm}
+		 , TAG				= #{tag}
+	 WHERE 1=1
+	   AND rid = #{rid}
+	</update>
+	
+	<delete id="deleteWordDictionary" parameterType="com.icignal.systemmanagement.worddictionary.dto.request.SystemWordDictionaryReqDto">
+	/* SystemWordDictionaryMapper.deleteWordDictionary */
+	DELETE FROM com.WORD_DIC
+	 WHERE rid = #{rid}
+	</delete>
+	
+</mapper>

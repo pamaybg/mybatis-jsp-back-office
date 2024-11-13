@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.offer.mapper.OfferGroupMapper">
+
+	<select id="selectOfferGroupList"
+	    parameterType="com.icignal.offer.dto.request.OfferGroupReqDto"
+	    resultType="com.icignal.offer.dto.response.OfferGroupResDto">
+	    /* OfferGroupMapper.selectOfferGroupList */
+		SELECT
+			A.RID                                AS rid
+			,A.OFRGRP_NO                         AS ofrgrpNo
+			,A.OFRGRP_NM                         AS ofrgrpNm
+			,A.OFRGRP_TYPE                       AS ofrgrpType
+			,A.TOT_AMT                           AS totAmt
+			,A.STAT_CD							 AS statCd
+			,com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') AS  createDate
+		    ,EM.NAME    	  					 AS  createBy
+		   	,${strColumn}
+		FROM
+			LOY.LOY_OFRGRP A
+		LEFT OUTER JOIN COM.CRM_USER US  ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM  ON US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+		    AND ${strWhere}
+		    AND A.FLAG  = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectOfferGroupDetail"
+	    parameterType="com.icignal.offer.dto.request.OfferGroupReqDto"
+	    resultType="com.icignal.offer.dto.response.OfferGroupResDto">
+	    /* OfferGroupMapper.selectOfferGroupDetail */
+			SELECT
+			A.RID                                AS rid
+			,A.OFRGRP_NO                         AS ofrgrpNo
+			,A.OFRGRP_NM                         AS ofrgrpNm
+			,A.DESC_TEXT                         AS descText
+			,A.OFRGRP_TYPE                       AS ofrgrpType
+			,A.TOT_AMT                           AS totAmt
+			,A.STAT_CD							 AS	statCd
+			,com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') AS createDate
+		    ,EM.NAME    	  					 AS createBy
+		FROM
+			LOY.LOY_OFRGRP A
+		LEFT OUTER JOIN COM.CRM_USER US  ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM  ON US.ID_EMPLOYEE = EM.ID
+	    WHERE 1=1
+	        AND A.RID = #{rid}
+	        AND A.FLAG  = 1
+	</select>
+	
+	<insert id="insertOfferGroup"
+	    parameterType="com.icignal.offer.dto.request.OfferGroupReqDto">
+	    /* OfferGroupMapper.insertOfferGroup */
+			INSERT INTO LOY.LOY_OFRGRP (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			OFRGRP_NO,
+			OFRGRP_NM,
+			DESC_TEXT,
+			STAT_CD,
+			OFRGRP_TYPE,
+			TOT_AMT
+		) VALUES (
+	       	#{rid},
+			#{createBy},
+			#{modifyBy},
+			LOY.FN_GET_OFRGRP_NO(),
+			#{ofrgrpNm},
+			#{descText},
+			#{statCd},
+			#{ofrgrpType},
+			#{totAmt}
+		)
+	</insert>
+	
+	<update id="updateOfferGroup"
+	    parameterType="com.icignal.offer.dto.request.OfferGroupReqDto">
+	    /* OfferGroupMapper.updateOfferGroup */
+		UPDATE
+			LOY.LOY_OFRGRP
+		SET
+			MODIFY_BY = #{modifyBy},
+			MODIFY_DATE = GETDATE(),
+			OFRGRP_NO = #{ofrgrpNo},
+			OFRGRP_NM = #{ofrgrpNm},
+			DESC_TEXT = #{descText},
+			OFRGRP_TYPE = #{ofrgrpType},
+			STAT_CD = #{statCd},
+			TOT_AMT = #{totAmt}
+		WHERE
+			1 = 1
+			AND RID = #{rid}
+	</update>
+	
+	<update id="updateOfferGroupDel"
+	    parameterType="com.icignal.offer.dto.request.OfferGroupReqDto">
+	    /* OfferGroupMapper.updateOfferGroupDel */
+		UPDATE LOY.LOY_OFRGRP
+			SET MODIFY_DATE	= GETDATE()
+				, MODIFY_BY	= #{modifyBy}
+		 		, FLAG		= flag + 1
+		 WHERE 1 = 1
+		 	AND RID = #{rid}
+	</update>
+	
+	<select id="selectChildOfferList"
+	    parameterType="com.icignal.offer.dto.request.ChildOfferReqDto"
+	    resultType="com.icignal.offer.dto.response.ChildOfferResDto">
+	    /* ChildOfferMapper.selectChildOfferList */
+        SELECT
+            A.RID         AS rid
+            ,A.MIN_AMT     AS minAmt
+            ,A.MAX_AMT     AS maxAmt
+            ,A.CLICK_AMT   AS clickAmt
+            ,A.REQ_YN      AS reqYn
+            ,B.OFR_NM      AS ofrNm
+            ,B.OFR_NO      AS ofrNo
+            ,B.OFR_VAL_AMT AS ofrValAmt
+            ,${strColumn}
+        FROM LOY.LOY_OFRGRP_OFR A
+        LEFT OUTER JOIN LOY.LOY_OFR B ON A.RID_OFR = B.RID AND B.FLAG = 1
+		WHERE  ${strCondWhere}
+		    AND ${strWhere}
+		    AND A.FLAG  = 1
+		    AND A.RID_OFRGRP = #{ridOfrgrp}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectChildOfferDetail"
+	    parameterType="com.icignal.offer.dto.request.ChildOfferReqDto"
+	    resultType="com.icignal.offer.dto.response.ChildOfferResDto">
+	    /* ChildOfferMapper.selectChildOfferDetail */
+        SELECT
+            A.RID         AS rid
+            ,A.RID_OFR     AS ridOfr
+            ,A.MIN_AMT     AS minAmt
+            ,A.MAX_AMT     AS maxAmt
+            ,A.CLICK_AMT   AS clickAmt
+            ,A.REQ_YN      AS reqYn
+            ,B.OFR_NM      AS ofrNm
+            ,B.OFR_NO      AS ofrNo
+        FROM
+            LOY.LOY_OFRGRP_OFR A
+        LEFT OUTER JOIN LOY.LOY_OFR B ON A.RID_OFR = B.RID AND B.FLAG = 1
+	    WHERE 1=1
+	        AND A.RID = #{rid}
+	        AND A.FLAG  = 1
+	</select>
+	
+	<insert id="insertChildOffer"
+	    parameterType="com.icignal.offer.dto.request.ChildOfferReqDto">
+	    /* ChildOfferMapper.insertChildOffer */
+			INSERT INTO LOY.LOY_OFRGRP_OFR (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+            RID_OFR,
+            RID_OFRGRP,
+            MIN_AMT,
+            MAX_AMT,
+            CLICK_AMT,
+            REQ_YN
+		) VALUES(
+	       	#{rid},
+			#{createBy},
+			#{modifyBy},
+            #{ridOfr},
+            #{ridOfrgrp},
+            #{minAmt},
+            #{maxAmt},
+            #{clickAmt},
+            #{reqYn}
+		)
+	</insert>
+	
+	<update id="updateChildOffer"
+	    parameterType="com.icignal.offer.dto.request.ChildOfferReqDto">
+	    /* ChildOfferMapper.updateChildOffer */
+		UPDATE
+			LOY.LOY_OFRGRP_OFR
+		SET
+			MODIFY_BY = #{modifyBy},
+			MODIFY_DATE = GETDATE(),
+            RID_OFR = #{ridOfr},
+            MIN_AMT = #{minAmt},
+            MAX_AMT = #{maxAmt},
+            CLICK_AMT = #{clickAmt},
+            REQ_YN = #{reqYn}
+		WHERE
+			1 = 1
+			AND RID = #{rid}
+	</update>
+	
+	<update id="updateChildOfferDel"
+	    parameterType="com.icignal.offer.dto.request.ChildOfferReqDto">
+	    /* ChildOfferMapper.updateChildOfferDel */
+		UPDATE LOY.LOY_OFRGRP_OFR
+			SET MODIFY_DATE	= GETDATE()
+				, MODIFY_BY	= #{modifyBy}
+		 		, FLAG		= flag + 1
+		 WHERE 1 = 1
+		 	AND RID = #{rid}
+	</update>
+
+</mapper>

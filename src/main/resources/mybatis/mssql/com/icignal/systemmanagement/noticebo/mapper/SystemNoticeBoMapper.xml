@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.noticebo.mapper.SystemNoticeBoMapper">
+	
+	<select id="selectNoticeBoList" parameterType="com.icignal.systemmanagement.noticebo.dto.request.SystemNoticeBoListReqDto"
+													resultType="com.icignal.systemmanagement.noticebo.dto.response.SystemNoticeBoListResDto">
+	/* SystemNoticeBoMapper.selectNoticeBoList */
+	SELECT nb.RID AS rid
+			, nb.NOTICE_NM AS noticeNm
+			, nb.NOTICE_CONTENT AS noticeContent
+			, com.TO_CHAR(nb.MODIFY_DATE, 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+			, e.name AS modifyBy
+			, ${strColumn}
+	FROM COM.NOTICE_BO nb with(nolock)
+	LEFT OUTER JOIN COM.CRM_USER cu with(nolock) ON nb.MODIFY_BY = cu.RID AND cu.FLAG = 1
+   	LEFT OUTER JOIN COM.EMPLOYEE e with(nolock) ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE ${strCondWhere}
+	AND ${strWhere}
+	AND nb.FLAG = 1
+	ORDER BY ${strOrderby}
+			   ${strEndPaging}
+	</select>
+	
+	<insert id="insertNoticeBo" parameterType="com.icignal.systemmanagement.noticebo.dto.request.SystemNoticeBoListReqDto">
+	/* SystemNoticeBoMapper.insertNoticeBo */
+	INSERT INTO com.NOTICE_BO(
+					RID
+					, FLAG
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, NOTICE_NM
+					, NOTICE_CONTENT
+	) VALUES (
+					#{rid}
+					, 1
+					, #{modifyBy}
+					, #{modifyBy}
+					, GETDATE()
+					, GETDATE()
+					, #{noticeNm}
+					, #{noticeContent}
+	)
+	</insert>
+	
+	<update id="updateNoticeBo" parameterType="com.icignal.systemmanagement.noticebo.dto.request.SystemNoticeBoListReqDto">
+	/* SystemNoticeBoMapper.updateNoticeBo */
+	UPDATE COM.NOTICE_BO
+	SET MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = GETDATE()
+		, NOTICE_NM = #{noticeNm}
+		, NOTICE_CONTENT = #{noticeContent}
+	WHERE RID = #{rid}
+	</update>
+	
+	<update id="deleteNoticeBo" parameterType="com.icignal.systemmanagement.noticebo.dto.request.SystemNoticeBoListReqDto">
+	/* SystemNoticeBoMapper.updateNoticeBo */
+	UPDATE COM.NOTICE_BO
+	SET MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = GETDATE()
+		, flag = flag + 1
+	WHERE RID = #{rid}
+	</update>
+	
+	<select id="selectNoticeBoDetail" parameterType="com.icignal.systemmanagement.noticebo.dto.request.SystemNoticeBoListReqDto"
+													resultType="com.icignal.systemmanagement.noticebo.dto.response.SystemNoticeBoResDto">
+	/* SystemNoticeBoMapper.selectNoticeBoDetail */
+	SELECT nb.NOTICE_NM AS noticeNm
+			, nb.NOTICE_CONTENT AS noticeContent
+			, com.TO_CHAR( nb.MODIFY_DATE, 'YYYY-MM-DD') AS modifyDate
+			, e.NAME AS modifyBy
+	FROM COM.NOTICE_BO nb with(nolock)
+	LEFT OUTER JOIN COM.CRM_USER cu with(nolock) ON nb.MODIFY_BY = cu.RID AND cu.FLAG = 1
+   	LEFT OUTER JOIN COM.EMPLOYEE e with(nolock) ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE nb.FLAG = 1
+	AND nb.RID = #{rid}
+	</select>
+	
+</mapper>

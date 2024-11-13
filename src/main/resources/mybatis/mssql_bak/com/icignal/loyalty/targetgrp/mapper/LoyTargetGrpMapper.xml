@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.targetgrp.mapper.LoyTargetGrpMapper">
+
+	<select id="selectTargetGrpList" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpListReqDto" resultType="com.icignal.loyalty.targetgrp.dto.response.LoyTargetGrpListResDto">
+    	/* LoyTargetGrpMapper.selectTargetGrpList */
+    	SELECT
+    		  ltg.TGT_GRP_NO			AS tgtGrpNo
+    		, ltg.TGT_GRP_NM			AS tgtGrpNm
+    		, ltg.TGT_TYPE_CD			AS tgtTypeCd
+    		, ltg.STAT_CD				AS statCd
+    		, ltg.SRC_TYPE_CD			AS srcTypeCd
+    		, em.name					AS name
+    		, convert(varchar,ltg.CREATE_DATE,120)			AS createDate
+    		, ltg.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_TGT_GRP ltg WITH (NOLOCK) 
+    	LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) on ltg.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em WITH (NOLOCK) on us.id_employee = em.id AND em.FLAG = 1
+    	WHERE ltg.FLAG = 1
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+
+
+	<select id="selectTgtGrpDetail" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpListReqDto" resultType="com.icignal.loyalty.targetgrp.dto.response.LoyTargetGrpDetailResDto">
+    	/* LoyTargetGrpMapper.selectTgtGrpDetail */
+    	SELECT
+    		  ltg.TGT_GRP_NO			AS tgtGrpNo
+    		, ltg.TGT_GRP_NM			AS tgtGrpNm
+    		, ltg.DESC_TEXT				AS descText
+    		, ltg.TGT_TYPE_CD			AS tgtTypeCd
+    		, ltg.STAT_CD				AS statCd
+    		, ltg.SRC_TYPE_CD			AS srcTypeCd
+    		, ld.DS_NM					AS conView
+    		, ltg.RID_DS				AS dsRid
+    		, ltg.REF_VAL				AS refVal
+    		, ltg.GRP_CNT				AS grpCnt
+    		, ltg.RID					AS rid
+    	FROM LOY.LOY_TGT_GRP ltg WITH (NOLOCK) 
+    	LEFT OUTER JOIN LOY.LOY_DATASET ld WITH (NOLOCK) ON ltg.RID_DS = ld.RID AND ld.FLAG = 1
+    	WHERE ltg.FLAG = 1
+    	AND   ltg.RID = #{rid}
+    </select>
+    
+    <insert id="insertTgtDetail" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpDetailReqDto">
+    	/* LoyTargetGrpMapper.insertTgtDetail */
+    	INSERT INTO LOY.LOY_TGT_GRP
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, TGT_GRP_NO
+    		, TGT_GRP_NM
+    		, DESC_TEXT
+    		, TGT_TYPE_Cd
+    		, STAT_CD
+    		, SRC_TYPE_Cd
+    		, RID_DS
+    		, GRP_CNT
+    		, REF_VAL
+    	)
+ 		VALUES
+ 		(
+ 			  #{rid}
+ 			, #{createBy}
+ 			, #{modifyBy}
+ 			, LOY.FN_GET_TGTGRP_NO()
+ 			, #{tgtGrpNm}
+ 			, #{descText}
+ 			, #{tgtTypeCd}
+ 			, #{statCd}
+ 			, #{srcTypeCd}
+ 			, #{dsRid}
+ 			, #{grpCnt}
+ 			, #{refVal}
+ 		)
+    </insert>
+    
+    <update id="updateTgtDetail" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpDetailReqDto">
+    	/* LoyTargetGrpMapper.updateTgtDetail */
+    	UPDATE LOY.LOY_TGT_GRP
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, TGT_GRP_NM		= #{tgtGrpNm}
+    		, DESC_TEXT			= #{descText}
+    		, TGT_TYPE_Cd		= #{tgtTypeCd}
+    		, STAT_CD			= #{statCd}
+    		, SRC_TYPE_Cd		= #{srcTypeCd}
+    		, RID_DS			= #{dsRid}
+    		, GRP_CNT			= #{grpCnt}
+    		, REF_VAL			= #{refVal}
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectTgtGrpXmList" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpListReqDto" resultType="com.icignal.loyalty.targetgrp.dto.response.LoyTargetGrpXmListResDto">
+    	/* LoyTargetGrpMapper.selectTgtGrpXmList */
+    	SELECT
+    		  lm.MBR_NO					AS mbrNo
+    		, lc.CUST_NO				AS custNo
+    		, lc.CUST_NM				AS custNm
+    		, lc.CUST_STAT_Cd			AS custStatCd
+    		, convert(varchar(10),ltgx.REG_DT,120)				AS regDt
+    		, ltgx.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_TGT_GRP_XM ltgx WITH (NOLOCK) 
+    	JOIN LOY.LOY_CUST lc WITH (NOLOCK) ON ltgx.RID_CUST = lc.RID AND lc.FLAG = 1
+    	JOIN LOY.LOY_MBR  lm WITH (NOLOCK) ON ltgx.RID_MBR  = lm.RID AND lm.FLAG = 1
+    	WHERE ltgx.FLAG = 1
+    	AND   ltgx.RID_TGT_GRP = #{tgtGrpRid}
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <update id="deleteTgtGrpXm" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpListReqDto">
+    	/* LoyTargetGrpMapper.deleteTgtGrpXm */
+    	UPDATE LOY.LOY_TGT_GRP_XM
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+		WHERE rid = #{rid}
+    </update>
+    
+    <update id="deleteAllTgtGrpXm" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpListReqDto">
+    	/* LoyTargetGrpMapper.deleteAllTgtGrpXm */
+    	UPDATE LOY.LOY_TGT_GRP_XM
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+    	WHERE RID_TGT_GRP		= #{tgtGrpRid}
+    </update>
+    
+    <select id="selectMbrCustRid" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTgtGrpXmListReqDto" resultType="com.icignal.loyalty.targetgrp.dto.request.LoyTgtGrpXmListReqDto">
+    	/* LoyTargetGrpMapper.selectMbrCustRid */
+    	SELECT    lm.RID_CUST	AS custRid
+    			, lm.RID		AS mbrRid 
+    	FROM LOY.LOY_MBR lm WITH (NOLOCK) 
+    	JOIN LOY.LOY_CUST lc WITH (NOLOCK) ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+    	WHERE lm.MBR_NO = #{mbrNo}
+    </select>
+    
+    <select id="selectMbrRidCheck" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTgtGrpXmListReqDto" resultType="java.lang.Integer">
+    	/* LoyProdGrpMapper.selectMbrRidCheck */
+    	SELECT   count(1)
+    	FROM LOY.LOY_TGT_GRP_XM lpgx WITH (NOLOCK) 
+    	WHERE lpgx.RID_TGT_GRP = #{tgtGrpRid} 
+    	AND   lpgx.RID_MBR     = #{mbrRid}
+    	AND   lpgx.FLAG = 1
+    </select>
+    
+    <update id="deleteTgtGrp" parameterType="com.icignal.loyalty.targetgrp.dto.request.LoyTargetGrpListReqDto">
+    	/* LoyTargetGrpMapper.deleteTgtGrp */
+    	UPDATE LOY.LOY_TGT_GRP
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+		WHERE rid = #{rid}
+    </update>
+    
+</mapper>

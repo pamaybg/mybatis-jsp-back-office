@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:28 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.blackMbr.mapper.LoyBlackMbrMapper">
+
+	<select id="selectBlackMbrList"  parameterType="com.icignal.loyalty.blackMbr.dto.request.LoyBlackMbrListReqDto"
+							    			resultType="com.icignal.loyalty.blackMbr.dto.response.LoyBlackMbrListResDto">
+     /* LoyBlackMbrMapper.selectBlackRuleDetail */
+	SELECT    lcb.BLACK_TYPE_CD	AS blackTypeCd
+			, lcb.CUST_NM		AS custNm
+			, com.TO_CHAR(com.TO_DATE(lcb.BIRTHDT,'YYYY-MM-DD'),'YYYY-MM-DD')		AS birthdt
+			, lcb.HHP			AS hhp
+			, lcb.EMAIL			AS email
+			, lcb.STAT_CD		AS statCd
+			, lcb.SBSC_PLCY_CD	AS sbscPlcyCd
+			, lcb.BL_COMMENT	AS blComment
+			, em.name			AS createBy
+			, com.TO_CHAR(lcb.CREATE_DATE,'YYYY-MM-DD HH24:MI:SS') AS createDate
+			, lcb.RID			AS rid
+			, ${strColumn}
+	FROM LOY.LOY_CUST_BLACK lcb
+	LEFT OUTER JOIN COM.CRM_USER cu ON lcb.CREATE_BY = cu.RID AND cu.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE em ON cu.ID_EMPLOYEE = em.ID AND em.FLAG = 1
+	WHERE lcb.flag  = 1
+	AND ${strCondWhere}
+	AND ${strWhere}
+	order by ${strOrderby}
+	${strEndPaging} 
+    </select>
+    
+    <select id="selectClearMaskBlackMbr"  parameterType="com.icignal.loyalty.blackMbr.dto.request.LoyBlackMbrListReqDto"
+							    			resultType="com.icignal.loyalty.blackMbr.dto.response.LoyBlackMbrListResDto">
+     /* LoyBlackMbrMapper.selectClearMaskBlackMbr */
+	SELECT    lcb.CUST_NM		AS unMaskCustNm
+			, lcb.HHP			AS unMaskHhp
+			, lcb.EMAIL			AS unMaskEmail
+	FROM LOY.LOY_CUST_BLACK lcb
+	WHERE lcb.flag  = 1
+	AND   lcb.RID   = #{rid}
+    </select>
+    
+    <select id="selectBlackMbrDetail"  parameterType="com.icignal.loyalty.blackMbr.dto.request.LoyBlackMbrListReqDto"
+							    			resultType="com.icignal.loyalty.blackMbr.dto.response.LoyBlackMbrDetailResDto">
+     /* LoyBlackMbrMapper.selectBlackMbrDetail */
+	SELECT    lcb.BLACK_TYPE_CD	AS blackTypeCd
+			, lcb.CUST_NM		AS custNm
+			, com.TO_CHAR(com.TO_DATE(lcb.BIRTHDT,'YYYY-MM-DD'),'YYYY-MM-DD')		AS birthdt
+			, lcb.HHP			AS hhp
+			, lcb.EMAIL			AS email
+			, lcb.STAT_CD		AS statCd
+			, lcb.SBSC_PLCY_CD	AS sbscPlcyCd
+			, lcb.BL_COMMENT	AS blComment
+			, lp.PGM_NM		 	AS pgmNm
+			, lcb.RID_PGM		AS pgmRid
+			, lcb.RID			AS rid
+	FROM LOY.LOY_CUST_BLACK lcb
+	LEFT OUTER JOIN LOY.LOY_PGM lp ON lcb.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE lcb.flag  = 1
+	AND lcb.RID = #{rid}
+    </select>
+    
+    <insert id="insertBlackMbrDetail" parameterType="com.icignal.loyalty.blackMbr.dto.request.LoyBlackMbrDetailReqDto">
+    /* LoyBlackMbrMapper.insertBlackMbrDetail */
+    INSERT INTO LOY.LOY_CUST_BLACK
+    (
+    	  RID
+    	, CREATE_DATE
+    	, MODIFY_DATE
+    	, CREATE_BY
+    	, MODIFY_BY
+    	, FLAG
+    	, BLACK_TYPE_Cd
+    	, CUST_NM
+    	, BIRTHDT
+    	, HHP
+    	, EMAIL
+    	, STAT_CD
+    	, SBSC_PLCY_CD
+    	, BL_COMMENT
+    	, RID_PGM
+    )
+    VALUES
+    (
+    	  #{rid}
+    	, GETDATE()
+    	, GETDATE()
+    	, #{createBy}
+    	, #{modifyBy}
+    	, 1
+    	, #{blackTypeCd}
+    	, #{custNm}
+    	, #{birthdt}
+    	, #{hhp}
+    	, #{email}
+    	, #{statCd}
+    	, #{sbscPlcyCd}
+    	, #{blComment}
+    	, #{pgmRid}
+    )
+	</insert>
+	
+	<update id="updateBlackMbrDetail" parameterType="com.icignal.loyalty.blackMbr.dto.request.LoyBlackMbrDetailReqDto">
+    /* LoyBlackMbrMapper.updateBlackMbrDetail */
+    UPDATE LOY.LOY_CUST_BLACK
+    SET	  
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG				= 1
+    	, BLACK_TYPE_CD		= #{blackTypeCd}
+    	, CUST_NM			= #{custNm}
+    	, BIRTHDT			= #{birthdt}
+    	, HHP				= #{hhp}
+    	, EMAIL				= #{email}
+    	, STAT_CD			= #{statCd}
+    	, SBSC_PLCY_CD		= #{sbscPlcyCd}
+    	, BL_COMMENT		= #{blComment}
+    	, RID_PGM			= #{pgmRid}
+    WHERE rid = #{rid}    
+    </update>
+    
+    <update id="deleteBlackListMbr" parameterType="com.icignal.loyalty.blackMbr.dto.request.LoyBlackMbrDetailReqDto">
+    /* LoyBlackMbrMapper.deleteBlackListMbr */
+    UPDATE LOY.LOY_CUST_BLACK
+    SET	  
+    	  MODIFY_DATE		= GETDATE()
+    	, MODIFY_BY			= #{modifyBy}
+    	, FLAG				= flag + 1
+    WHERE rid = #{rid}    
+    </update>
+    
+    
+
+</mapper>

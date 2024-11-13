@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:29 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.batch.mapper.MktBatchMapper">
+
+	<!-- 배치 job 목록 조회 -->
+    <select id="selectMktBatchJobList" parameterType="com.icignal.marketing.batch.dto.request.MktBatchJobReqDto" resultType="com.icignal.marketing.batch.dto.response.MktBatchJobResDto">
+        /* MktBatchMapper.selectMktBatchJobList */
+       select rid as rid
+       		, job_nm as jobNm
+       		, job_desc as jobDesc
+       		, use_yn as useYn
+       		, exec_cycle as execCycle
+       		, last_exec_start_dt as lastExecStartDt
+       		, last_exec_end_dt as lastExecEndDt
+            , ${strColumn}
+       from mkt.mkt_batch_job WITH (NOLOCK)
+       where flag = 1
+         and ${strCondWhere}
+         and ${strWhere}
+         and ${strSVCType}
+       order by ${strOrderby}
+       ${strEndPaging}
+    </select>
+    
+    <!-- 배치 job 등록 -->
+    <insert id="insertMktBatchJob" parameterType="com.icignal.marketing.batch.dto.request.MktBatchJobReqDto">
+    	/* MktBatchMapper.insertMktBatchJob */
+    	insert into mkt.mkt_batch_job (
+    		rid
+    		, create_by
+    		, modify_by
+    		, create_date
+    		, modify_date
+    		, flag
+    		, job_nm
+    		, job_desc
+    		, use_yn
+    		, exec_cycle
+    	) values (
+    		com.getNewID('')
+    		, #{createBy}
+    		, #{modifyBy}
+    		, GETDATE()
+    		, GETDATE()
+    		, 1
+    		, #{jobNm}
+    		, #{jobDesc}
+    		, #{useYn}
+    		, #{execCycle}
+    	)
+    </insert>
+    
+    <!-- 배치 job 수정 -->
+    <update id="updateMktBatchJob" parameterType="com.icignal.marketing.batch.dto.request.MktBatchJobReqDto">
+    	/* MktBatchMapper.updateMktBatchJob */
+    	update mkt.mkt_batch_job
+    	   set modify_date = GETDATE()
+    	     , modify_by = #{modifyBy}
+    	     , job_nm = #{jobNm}
+    	     , job_desc = #{jobDesc}
+    	     , use_yn = #{useYn}
+    	     , exec_cycle = #{execCycle}
+    	 where rid = #{rid}
+    </update>
+    
+    <!-- 배치 job 삭제 -->
+    <update id="deleteMktBatchJob" parameterType="com.icignal.marketing.batch.dto.request.MktBatchJobReqDto">
+    	/* MktBatchMapper.deleteMktBatchJob */
+    	update mkt.mkt_batch_job
+    	   set modify_date = GETDATE()
+    	     , modify_by = #{modifyBy}
+    	     , flag = flag + 1
+    	 where rid = #{rid}
+    </update>
+ 
+    
+    </mapper>

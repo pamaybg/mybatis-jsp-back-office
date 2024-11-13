@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.custdi.mapper.LoyCustDiMapper">
+
+	<select id="selectCustDiList" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiListReqDto"
+												resultType="com.icignal.loyalty.custdi.dto.response.LoyCustDiListResDto">
+	/* LoyCustDiMapper.selectCustDiList */
+	SELECT 
+		 lcd.RID 														AS rid
+		, lcd.DI_NM 													AS diNm
+		, lcd.CUST_TYPE_CD 										AS custTypeCd
+		, lcd.CERT_TYPE_CD 										AS certTypeCd
+		, lcd.ACT_YN 													AS actYn
+		, lp.PGM_NM 													AS pgmNm
+		, e.NAME 														AS createBy
+		, CONVERT(varchar, lcd.CREATE_DATE, 120)	AS createDate
+		, ${strColumn}
+	FROM 
+		LOY.LOY_CUST_DI lcd WITH (NOLOCK)
+		LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lp.RID = lcd.RID_PGM AND lp.FLAG = 1
+		LEFT OUTER JOIN COM.CRM_USER u WITH (NOLOCK) ON lcd.CREATE_BY = u.RID AND u.FLAG = 1
+		LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE 
+		${strCondWhere}
+		AND  ${strWhere}
+		AND  lcd.FLAG = 1
+	ORDER BY 
+		${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustDiDetail" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+													resultType="com.icignal.loyalty.custdi.dto.response.LoyCustDiDetailResDto">
+	/* LoyCustDiMapper.selectCustDiDetail */
+	SELECT
+		lcd.DI_NM 										AS diNm
+		, lcd.CUST_TYPE_CD 						AS custTypeCd
+		, lcd.CERT_TYPE_CD 						AS certTypeCd
+		, lcd.ACT_YN 									AS actYn
+		, lcd.MERGE_SCORE 						AS mergeScore
+		, lcd.SUSPEND_SCORE 					AS suspendScore
+		, lp.RID 											AS parPgmRid
+		, lp.PGM_NM 									AS parPgmNm 
+	FROM 
+		loy.LOY_CUST_DI lcd WITH (NOLOCK)
+	LEFT OUTER JOIN LOY.LOY_PGM lp WITH (NOLOCK) ON lcd.RID_PGM = lp.RID AND lp.FLAG = 1
+ 	WHERE 
+ 		lcd.FLAG = 1
+		AND lcd.RID = #{rid}
+	</select>
+	
+	<select id="selectCustDiValList" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+													resultType="com.icignal.loyalty.custdi.dto.response.LoyCustDiValListResDto">
+	/* LoyCustDiMapper.selectCustDiValList */
+	SELECT 
+			lcdv.FIELD_CD		 										AS fieldCd
+			, lcdv.SEQ 														AS seq
+			, lcdv.SCORE 													AS score
+			, e.NAME														AS createBy
+		    , CONVERT(varchar, lcdv.CREATE_DATE, 120) 	AS createDate
+			, lcdv.RID 														AS rid
+			, ${strColumn}
+	FROM 
+			loy.LOY_CUST_DI_VAL lcdv WITH (NOLOCK)
+	LEFT OUTER JOIN COM.CRM_USER u WITH (NOLOCK) ON lcdv.CREATE_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE  e WITH (NOLOCK) ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE 
+		lcdv.FLAG = 1
+		AND lcdv.RID_CUST_DI = #{ridCustDi}
+		AND ${strWhere}
+	ORDER BY 
+		${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<insert id="insertCustDiDetail" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto">
+	/* LoyCustDiMapper.insertCustDiDetail */
+        INSERT INTO LOY.LOY_CUST_DI(
+		          RID
+				, CREATE_BY
+				, MODIFY_BY
+				, CUST_TYPE_CD
+				, CERT_TYPE_CD
+				, ACT_YN
+				, MERGE_SCORE
+				, SUSPEND_SCORE
+				, DI_NM
+				, RID_PGM
+       )VALUES(
+	       		  #{rid}
+	       		, #{empId}
+	       		, #{empId}
+	       		, #{custTypeCd}
+	       		, #{certTypeCd}
+	       		, #{actYn}
+	       		, #{mergeScore}
+	       		, #{suspendScore}
+	       		, #{diNm}
+	       		, #{ridPgm}
+	       		)
+	</insert>
+	
+	<update id="updateCustDiDetail" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto">
+	/* LoyCustDiMapper.updateCustDiDetail */
+	UPDATE 
+		LOY.LOY_CUST_DI
+	SET 
+		  MODIFY_BY 			= #{empId} 
+		, MODIFY_DATE 			= getDate()
+		, CUST_TYPE_CD 		= #{custTypeCd}
+		, CERT_TYPE_CD 		= #{certTypeCd}
+		, ACT_YN 					= #{actYn}
+		, MERGE_SCORE 		= #{mergeScore}
+		, SUSPEND_SCORE 	= #{suspendScore}
+		, DI_NM						= #{diNm}
+		, RID_PGM 				= #{ridPgm}
+	WHERE 
+		RID = #{rid}
+	</update>
+	
+	<select id="selectCustDiValDetail" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+														resultType="com.icignal.loyalty.custdi.dto.response.LoyCustDiDetailResDto">
+	/* LoyCustDiMapper.selectCustDiValDetail */
+	SELECT 
+		  lcdv.FIELD_CD 			AS fieldCd
+		, lcdv.SEQ 					AS seq
+		, lcdv.SCORE 				AS score
+	FROM 
+		LOY.LOY_CUST_DI_VAL lcdv 
+	WHERE 
+		lcdv.FLAG = 1
+		AND lcdv.RID_CUST_DI 	= #{ridCustDi}
+		AND lcdv.RID 				= #{rid}
+	</select>
+	
+	<insert id="insertCustDiValDetail" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto">
+	/* LoyCustDiMapper.insertCustDiValDetail */
+	INSERT INTO LOY.LOY_CUST_DI_VAL(
+	        	RID
+				, CREATE_BY
+				, MODIFY_BY
+				, FIELD_CD
+				, RID_CUST_DI
+				, SEQ
+				, SCORE
+	)VALUES(
+	        	  #{rid}
+	        	, #{empId}
+	       		, #{empId}
+	       		, #{fieldCd}
+	       		, #{ridCustDi}
+	       		, #{seq}
+	       		, #{score}
+	        	)
+	</insert>
+	
+	<update id="updateCustDiValDetail" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto">
+	/* LoyCustDiMapper.updateCustDiValDetail */
+	UPDATE 
+		LOY.LOY_CUST_DI_VAL
+	SET 
+		 MODIFY_BY 		= #{empId} 
+		, MODIFY_DATE = getDate()
+		, FIELD_CD 		= #{fieldCd}
+		, SEQ 				= #{seq}
+		, SCORE 			= #{score}
+	WHERE 
+		RID 			= #{rid}
+	</update>
+	
+	<select id="selectCustDupRstList" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+														resultType="com.icignal.loyalty.custdi.dto.response.LoyCustDupRstResDto">
+	/* LoyCustDiMapper.selectCustDupRstList */
+	SELECT 
+		  lc1.CUST_NM 											AS tgtCustNm
+		, lc1.CUST_NO 											AS tgtCustNo
+		, lc2.CUST_NM 											AS similrCustNm
+		, lc2.CUST_NO 											AS similrCustNo
+		, lcdr.SCORE												AS score
+		, lcdr.MRG_TYPE_CD 									AS mrgTypeCd
+		, lcdr.STAT_CD 											AS statCd
+		, CONVERT(varchar, lcdr.create_date, 120) 	AS createDate
+		, lcdr.RID 													AS rid
+		, ${strColumn}
+	FROM 
+		loy.LOY_CUST_DUP_RST lcdr WITH (NOLOCK)
+	LEFT OUTER JOIN loy.LOY_CUST lc1 WITH (NOLOCK) ON lcdr.RID_TGT_CUST= lc1.RID AND lc1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST lc2 WITH (NOLOCK) ON lcdr.RID_SIMILR_CUST = lc2.RID AND lc2.FLAG = 1
+	WHERE  
+			${strWhere}
+		   AND lcdr.FLAG = 1
+		   AND lcdr.RID_CUST_DI = #{ridCustDi}
+	ORDER BY 
+		${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<update id="deleteCustDiVal" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto">
+	/* LoyCustDiMapper.deleteCustDiVal */
+	UPDATE 
+		LOY.LOY_CUST_DI_VAL
+	SET 
+		  MODIFY_BY 	= #{empId} 
+		, MODIFY_DATE = getDate()
+		, flag = flag + 1
+	WHERE 
+		RID = #{rid}
+	</update>
+	
+	<select id="fieldValCheck" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+											resultType="java.lang.Integer">
+	/* LoyCustDiMapper.fieldValCheck */
+	SELECT 
+		COUNT(*)
+	FROM 
+		loy.LOY_CUST_DI_VAL lcdr
+	WHERE 
+		lcdr.RID_CUST_DI = #{ridCustDi}
+		AND lcdr.FIELD_CD =#{fieldCd}
+		AND lcdr.FLAG = 1
+	<if test="rid != null">
+	AND NOT lcdr.RID = #{rid} 
+	</if>
+	</select>
+	
+	<select id="selectDupRstDetailI" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+													resultType="com.icignal.loyalty.custdi.dto.response.LoyCustDupRstDetailResDto">
+	/* LoyCustDiMapper.selectDupRstDetail */
+	SELECT 
+			lcdv.FIELD_CD 					AS fieldCd
+			, lcdr.SCORE 						AS totalScore
+			, lcdv.SCORE 						AS score
+			, lcdr.RID_TGT_CUST  		AS tgtCustRid
+			, lc1.CUST_NM 					AS tgtCustNm
+			, lci1.CUST_NM_ADD 			AS tgtCustNmAdd
+			, lc1.BIRTHDAY					AS tgtBirthday
+			, lc1.EMAIL 						AS tgtEmail
+			, lc1.GEN_CD 					AS tgtGenCd
+			, lc1.HHP 							AS tgtHhp
+			, lc1.CUST_NO 					AS tgtCustNo
+			, lcdr.RID_SIMILR_CUST 	AS similrCustRid
+			, lc2.CUST_NM 					AS similrCustNm
+			, lci2.CUST_NM_ADD 			AS similrCustNmAdd
+			, lc2.BIRTHDAY 					AS similrBirthday
+			, lc2.EMAIL 						AS similrEmail
+			, lc2.GEN_CD 					AS similrGenCd
+			, lc2.HHP 							AS similrHhp
+			, lc2.CUST_NO 					AS similrCustNo
+			, lcdr.RID 							AS rid
+			, lcc1.CERT_VAL 				AS tgtCertVal
+			, lcc2.CERT_VAL 				AS similrCertVal
+			, ${strColumn}
+	FROM 
+		loy.LOY_CUST_DUP_RST lcdr WITH (NOLOCK)
+	JOIN loy.LOY_CUST_DI lcd  WITH (NOLOCK) ON lcdr.RID_CUST_DI = lcd.RID AND lcd.FLAG = 1 AND lcd.CUST_TYPE_CD = #{custTypeCd}
+	LEFT OUTER JOIN loy.LOY_CUST_DI_VAL lcdv WITH (NOLOCK) ON lcdr.RID_CUST_DI = lcdv.RID_CUST_DI AND lcdv.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST lc1 WITH (NOLOCK) ON lc1.RID = lcdr.RID_TGT_CUST AND lc1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_CERT lcc1 WITH (NOLOCK) ON lc1.RID = lcc1.RID_CUST AND lcc1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_I lci1 WITH (NOLOCK) ON lci1.RID_CUST = lc1.RID AND lci1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST lc2 WITH (NOLOCK) ON lc2.RID = lcdr.RID_SIMILR_CUST AND lc2.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_CERT lcc2 WITH (NOLOCK) ON lc2.RID = lcc2.RID_CUST AND lcc2.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_I lci2 WITH (NOLOCK) ON lci2.RID_CUST = lc2.RID AND lci2.FLAG = 1
+	WHERE 
+		lcdr.FLAG = 1
+		AND lcdr.RID_CUST_DI = #{ridCustDi}
+		AND lcdr.rid = #{rid}
+	</select>
+	
+	<select id="selectDupRstDetailC" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+													resultType="com.icignal.loyalty.custdi.dto.response.LoyCustDupRstDetailResDto">
+	/* LoyCustDiMapper.selectDupRstDetailC */
+	SELECT 
+				lcdv.FIELD_CD 						AS fieldCd
+				, lcdr.SCORE 							AS totalScore
+				, lcdv.SCORE 							AS score
+				, lcdr.RID_TGT_CUST 				AS tgtCustRid
+				, lc1.CUST_NM 						AS tgtCustNm
+				, lci1.CUST_NM_ADD 				AS tgtCustNmAdd
+				, lc1.BIRTHDAY 						AS tgtBirthday
+				, lc1.EMAIL 							AS tgtEmail
+				, lc1.GEN_CD 						AS tgtGen
+				, lc1.HHP 								AS tgtHhp
+				, lc1.CUST_NO 						AS tgtCustNo
+				, lcdr.RID_SIMILR_CUST 		AS similrCustRid
+				, lc2.CUST_NM 						AS similrCustNm
+				, lci2.CUST_NM_ADD 				AS similrCustNmAdd
+				, lc2.BIRTHDAY 						AS similrBirthday
+				, lc2.EMAIL 							AS similrEmail
+				, lc2.GEN_CD 						AS similrGen
+				, lc2.HHP 								AS similrHhp
+				, lc2.CUST_NO 						AS similrCustNo
+				, lcc1.BIZR_NO 						AS tgtBizrNo
+				, lcc2.BIZR_NO 						AS similrBizrNo
+				, lcc1.JURIR_NO 					AS tgtJurNo
+				, lcc2.JURIR_NO 					AS similrJurNo
+				, lcc1.TEL_NO 						AS tgtTelNo
+				, lcc2.TEL_NO 						AS similrTelNo
+				, ${strColumn}
+	FROM 
+		loy.LOY_CUST_DUP_RST lcdr WITH (NOLOCK)
+	JOIN loy.LOY_CUST_DI lcd  WITH (NOLOCK) ON lcdr.RID_CUST_DI = lcd.RID AND lcd.FLAG = 1 AND lcd.CUST_TYPE_CD = #{custTypeCd}
+	LEFT OUTER JOIN loy.LOY_CUST_DI_VAL lcdv WITH (NOLOCK) ON lcdr.RID_CUST_DI = lcdv.RID_CUST_DI AND lcdv.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST lc1 WITH (NOLOCK) ON lc1.RID = lcdr.RID_TGT_CUST AND lc1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_CERT lcc1 WITH (NOLOCK) ON lc1.RID = lcc1.RID_CUST AND lcc1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_I lci1 WITH (NOLOCK) ON lci1.RID_CUST = lc1.RID AND lci1.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST lc2 WITH (NOLOCK) ON lc2.RID = lcdr.RID_SIMILR_CUST AND lc2.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_CERT lcc2 WITH (NOLOCK) ON lc2.RID = lcc2.RID_CUST AND lcc2.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CUST_I lci2 WITH (NOLOCK) ON lci2.RID_CUST = lc2.RID AND lci2.FLAG = 1
+	WHERE lcdr.FLAG = 1
+	AND lcdr.RID_CUST_DI = #{ridCustDi}
+	AND lcdr.rid = #{rid}
+	</select>
+	
+	<!-- 작업상태만 완료로 바뀌게 해놨음 - 추후 개발 필요 -->
+	<update id="custMergePrcs" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto">
+	/* LoyCustDiMapper.custMergePrcs */
+	UPDATE 
+		LOY.LOY_CUST_DUP_RST
+	SET
+		MODIFY_DATE = getDate()
+		, MODIFY_BY   = #{empId}
+		, STAT_CD = 'C'
+	WHERE 
+		RID_CUST_DI  = #{ridCustDi}
+		AND RID = #{rid}
+	</update>
+	
+	<!-- 고객 식별 정책 삭제 -->
+	<update id="deleteCustDi" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiListReqDto">
+	/* LoyCustDiMapper.deleteCustDi */
+	UPDATE 
+		LOY.LOY_CUST_DI
+	SET
+		MODIFY_DATE = getDate()
+		, MODIFY_BY   = #{empId}
+		, flag = flag + 1
+	WHERE 
+		RID = #{rid}
+	</update>
+	
+		
+	<select id="selectMaxSeq" parameterType="com.icignal.loyalty.custdi.dto.request.LoyCustDiDetailReqDto"
+						resultType="java.lang.Integer">
+	/* LoyCustDiMapper.selectMaxSeq */
+	SELECT 
+		max(lcdv.SEQ)
+	FROM 
+		loy.LOY_CUST_DI_VAL lcdv
+	WHERE 
+		lcdv.FLAG = 1
+		AND lcdv.RID_CUST_DI = #{ridCustDi}
+	</select>
+
+</mapper>

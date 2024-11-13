@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Sep 21 09:04:15 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.dashboard.mapper.KprDashboardPromptMapper">
+
+	<select id="selectDashboardCommonColumnList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" 
+																	resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptResDto">
+	/* KprDashboardPromptMapper.selectDashboardCommonColumnList */
+		SELECT acm.id		AS nodeId
+			 , acm.dp_nm + '(' + acm.col_nm + ')' AS nodeText
+			 , acm.dp_nm	AS displayName
+			 , acm.col_nm	AS columnName
+		  FROM ANL.ANL_COLUMN_MST acm WITH (NOLOCK)
+		  JOIN ANL.ANL_TABLE_MST atm WITH (NOLOCK) ON acm.tbl_id = atm.id and atm.flag = 1
+		  JOIN (
+			SELECT acm.id
+			  FROM (
+				SELECT arm.DASHBRD_ID			as id
+					 , coalesce(count(1), 0)	 AS anl_cnt
+				  FROM ANL.ANL_RPT_MST_INST arm WITH (NOLOCK)
+				 WHERE arm.FLAG	 = 1
+				   AND arm.DASHBRD_ID = #{dashboardId}
+				 GROUP BY arm.DASHBRD_ID
+			) tmp
+			  JOIN ANL.ANL_RPT_MST_INST arm WITH (NOLOCK) ON tmp.id = arm.dashbrd_id and arm.flag = 1
+			  JOIN ANL.ANL_LGC_COMP_MST lcm WITH (NOLOCK) ON arm.lgc_comp_id = lcm.id and lcm.flag = 1
+			  JOIN ANL.ANL_ATRIB_GROUP aag WITH (NOLOCK) ON lcm.id = aag.lgc_comp_id and aag.flag = 1
+			  JOIN ANL.ANL_ATRIB_GROUP_COLUMN agc WITH (NOLOCK)ON aag.id = agc.atrib_group_id and agc.flag = 1
+			  JOIN ANL.ANL_COLUMN_MST acm WITH (NOLOCK) ON CASE WHEN LEN(agc.dim_col_id) &gt; 0 THEN agc.dim_col_id ELSE agc.col_id END = acm.id and acm.col_type_cd = 'DIMENSION' and acm.flag = 1
+			 GROUP BY acm.id
+			having count(acm.id) &gt;= max(tmp.anl_cnt)
+		) tmp ON acm.id = tmp.id
+		  LEFT JOIN COM.COMM_CODE tcd WITH (NOLOCK) ON atm.tbl_type_cd = tcd.code_name and tcd.group_code = 'ANL_TABLE_TYPE_CD' and tcd.flag = 1 and tcd.lang = #{lang}
+		 ORDER BY tcd.seq asc, atm.id asc, acm.seq asc
+	</select>
+	
+	<select id="selectDashboardPromptInstList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" 
+																resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptResDto">
+	/* KprDashboardPromptMapper.selectDashboardPromptInstList */
+		SELECT dpi.rid				as nodeId
+			 , dpi.rid				as promptId
+			 , dpi.prompt_type_cd	as promptTypeCode
+			 , dpi.prompt_val		as promptValue
+			 , acm.dp_nm
+			 		+ '('
+			 		+ acm.col_nm
+			 		+ ')'
+			 						as nodeText
+			 , acm.id				as columnId
+			 , acm.dp_nm			as displayName
+			 , acm.col_nm			as columnName
+		  FROM ANL.ANL_DASHBRD_MST_INST adm WITH (NOLOCK)
+		  join ANL.ANL_DASHBRD_PROMPT_INST dpi WITH (NOLOCK) ON adm.id = dpi.dashbrd_id and dpi.flag = 1
+		  join ANL.ANL_COLUMN_MST acm WITH (NOLOCK) ON dpi.col_id = acm.id and acm.flag = 1
+		 WHERE adm.flag	= 1
+		   AND adm.id	= #{dashboardId}
+		dpi.seq asc
+	</select>
+	
+	<select id="selectDashboardPromptMasterIdCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" resultType="java.lang.Integer">
+	/* KprDashboardPromptMapper.selectDashboardPromptMasterIdCheck */
+		select count(*)
+		  from anl.anl_dashbrd_prompt WITH (NOLOCK)
+		 where flag	= 1
+		   and rid	= #{promptId}
+	</select>
+	
+	<select id="selectDashboardPromptInstIdCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" resultType="java.lang.Integer">
+	/* KprDashboardPromptMapper.selectDashboardPromptInstIdCheck */
+		select count(*)
+		  from anl.anl_dashbrd_prompt_inst WITH (NOLOCK)
+		 where flag	= 1
+		   and rid	= #{promptId}
+	</select>
+	
+	<insert id="insertDashboardPromptMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptMaster */
+		insert into anl.anl_dashbrd_prompt (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select com.getNewID('A')
+			 , #{createBy}
+			 , #{modifyBy}
+			 , GETDATE()
+			 , GETDATE()
+			 , flag
+			 , #{dashboardId_New}
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt_inst with(nolock)
+		 where flag			= 1
+		   and dashbrd_id	= #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardPromptInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptInst */
+		insert into anl.anl_dashbrd_prompt_inst (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		) values (
+			#{promptId}
+		  , #{createBy}
+		  , #{modifyBy}
+		  , GETDATE()
+		  , GETDATE()
+		  , 1
+		  , #{dashboardId}
+		  , #{seq}
+		  , #{promptTypeCode}
+		  , #{promptValue}
+		  , #{columnId}
+		)
+		
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardPromptMasterToInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptMasterToInst */
+		insert into anl.anl_dashbrd_prompt_inst (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select rid
+			 , create_by
+			 , modify_by
+			 , create_date
+			 , modify_date
+			 , flag
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt WITH (NOLOCK)
+		 where flag			= 1
+		   and dashbrd_id	= #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertDashboardPromptInstToMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptInstToMaster */
+		insert into anl.anl_dashbrd_prompt (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select rid
+			 , create_by
+			 , modify_by
+			 , create_date
+			 , modify_date
+			 , flag
+			 , dashbrd_id
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt_inst WITH (NOLOCK)
+		 where flag	= 1
+		   and rid	= #{promptId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+
+	<insert id="insertDashboardPromptCopy" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.insertDashboardPromptCopy */
+		insert into anl.anl_dashbrd_prompt_inst (
+			rid
+		  , create_by
+		  , modify_by
+		  , create_date
+		  , modify_date
+		  , flag
+		  , dashbrd_id
+		  , seq
+		  , prompt_type_cd
+		  , prompt_val
+		  , col_id
+		)
+		select com.getNewID('A')
+			 , #{createBy}
+			 , #{modifyBy}
+			 , GETDATE()
+			 , GETDATE()
+			 , flag
+			 , #{dashboardId_New}
+			 , seq
+			 , prompt_type_cd
+			 , prompt_val
+			 , col_id
+		  from anl.anl_dashbrd_prompt WITH (NOLOCK)
+		 where flag			= 1
+		   and dashbrd_id	= #{dashboardId}
+
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<update id="updateDashboardPromptInstToMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.updateDashboardPromptInstToMaster */
+		 update 
+		 (select adp.MODIFY_BY,api.MODIFY_BY AS apiModifyBy,adp.MODIFY_DATE,api.MODIFY_DATE AS apiModifyDate 
+		 		,adp.seq ,api.seq AS apiSeq ,adp.prompt_type_cd ,api.prompt_type_cd AS apiPromptTypeCd
+		 		,adp.prompt_val ,api.prompt_val AS apiPromptVal,adp.COL_ID ,api.COL_ID AS apiColId
+		 from anl.anl_dashbrd_prompt adp WITH (NOLOCK)
+		 	JOIN anl.anl_dashbrd_prompt_inst api WITH (NOLOCK) on adp.rid = api.rid 
+		 	WHERE 1=1 
+		 	AND adp.rid = api.rid 
+		 	AND api.rid = #{promptId} )		 
+		   set modify_by		= apiModifyBy
+		     , modify_date		= apiModifyDate
+		     , seq				= apiSeq
+		     , prompt_type_cd	= apiPromptTypeCd
+		     , prompt_val		= apiPromptVal
+		     , col_id			= apiColId
+	</update>
+	
+	<update id="updateDashboardPromptInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.updateDashboardPromptInst */
+		update anl.anl_dashbrd_prompt_inst
+		   set modify_by		= #{modifyBy}
+		     , modify_date		= GETDATE()
+		     , seq				= #{seq}
+		     , prompt_type_cd	= #{promptTypeCode}
+		     , prompt_val		= #{promptValue}
+		 where rid = #{promptId}
+	</update>
+	
+	<update id="deleteDashboardPromptMaster" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.deleteDashboardPromptMaster */
+		update anl.anl_dashbrd_prompt
+		   set modify_by	= #{modifyBy}
+		     , modify_date	= GETDATE()
+		     , flag			= flag + 1
+		 where dashbrd_id = #{dashboardId}
+		<if test="promptList != null and promptList.size() > 0">
+		   and rid not in (
+			 <foreach collection="promptList" item="item" separator=",">
+				#{item.promptId}
+			</foreach>
+		 )
+		 </if>
+	</update>
+	
+	<delete id="deleteDashboardPromptInst" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto">
+	/* KprDashboardPromptMapper.deleteDashboardPromptInst */
+		delete
+		  from anl.anl_dashbrd_prompt_inst with(nolock)
+		 where dashbrd_id = #{dashboardId}
+		 <if test="promptList != null and promptList.size() > 0">
+		   and rid not in (
+			 <foreach collection="promptList" item="item" separator=",">
+				#{item.promptId}
+			</foreach>
+		 )
+		 </if>
+	</delete>
+	
+	<select id="selectDashboardPromptMasterList" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptReqDto" 
+																	resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptResDto">
+	/* KprDashboardPromptMapper.selectDashboardPromptMasterList */
+		select adp.rid				as promptId
+			 , adp.prompt_type_cd	as promptTypeCode
+			 , adp.prompt_val		as promptValue
+			 , adp.col_id			as columnId
+			 , acm.dp_nm			as displayName
+			 , atm.tbl_nm			as tableName
+			 , acm.col_nm			as columnName
+			 , t.upper_prompt_id	as upperPromptId
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		  from anl.anl_dashbrd_prompt		adp WITH (NOLOCK)
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		  from anl.anl_dashbrd_prompt_inst	adp WITH (NOLOCK)
+		</if>
+		  join anl.anl_column_mst			acm WITH (NOLOCK) on adp.col_id = acm.id and acm.flag = 1
+		  join anl.anl_table_mst			atm	WITH (NOLOCK) on acm.tbl_id = atm.id and atm.flag = 1
+		  left join (
+			select adp.rid	as col_id
+				 , udp.rid	as upper_prompt_id
+				 , t.seq	as seq
+			<if test="analysisMasterFlag == &quot;Y&quot;">
+			  from anl.anl_dashbrd_prompt		adp with(nolock)
+			</if>
+			<if test="analysisMasterFlag != &quot;Y&quot;">
+			  from anl.anl_dashbrd_prompt_inst	adp with(nolock)
+			</if>
+			  join (
+				select t.col_id
+					 , t.lower_col_id
+					 , t.seq
+				  from (
+					select case col.seq when 1 then adg.lv1_col_id
+										when 2 then adg.lv2_col_id
+										when 3 then adg.lv3_col_id
+										when 4 then adg.lv4_col_id
+						   end as col_id
+						 , case col.seq when 1 then case lower_col.seq when 1 then adg.lv2_col_id
+																	   when 2 then adg.lv3_col_id
+																	   when 3 then adg.lv4_col_id
+																	   when 4 then adg.lv5_col_id
+													end
+										when 2 then case lower_col.seq when 1 then adg.lv3_col_id
+																	   when 2 then adg.lv4_col_id
+																	   when 3 then adg.lv5_col_id
+													end
+										when 3 then case lower_col.seq when 1 then adg.lv4_col_id
+																	   when 2 then adg.lv5_col_id
+													end
+										when 4 then adg.lv5_col_id
+						   end as lower_col_id
+						 , col.seq as seq
+					  from (
+						select 1 as seq 
+						 union
+						select 2 as seq 
+						 union
+						select 3 as seq 
+						 union
+						select 4 as seq
+					) col
+					, (
+						select 1 as seq 
+						 union
+						select 2 as seq 
+						 union
+						select 3 as seq 
+						 union
+						select 4 as seq
+					) lower_col
+					, anl.anl_drilldown_group adg
+				) t
+			 WHERE LEN(t.lower_col_id) <![CDATA[>]]> 0
+			) t on adp.col_id = t.lower_col_id
+			<if test="analysisMasterFlag == &quot;Y&quot;">
+			  JOIN ANL.ANL_DASHBRD_PROMPT udp WITH (NOLOCK)
+			</if>
+			<if test="analysisMasterFlag != &quot;Y&quot;">
+			  JOIN ANL.ANL_DASHBRD_PROMPT_INST udp WITH (NOLOCK)
+			</if>
+			 on t.col_id = udp.col_id and adp.dashbrd_id = udp.dashbrd_id and udp.flag = 1
+			 WHERE adp.flag			= 1
+			   AND adp.dashbrd_id	= #{dashboardId}
+		) t on adp.rid = t.col_id
+		 WHERE adp.flag			= 1
+		   AND adp.dashbrd_id	= #{dashboardId}
+		 ORDER BY  adp.seq , t.seq
+				
+	</select>
+	
+    <!-- /**************************************
+    -   관련 파일             : KprDashboardPromptMapper.java
+    ============================== ==============
+    -   제목                  : prompt의 value값 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.07.10
+    ***************************************/ -->
+	<select id="selectDashBoardPromptCheck" parameterType="com.icignal.kepler.dashboard.dto.request.KprDashboardPromptCheckReqDto" 
+																resultType="com.icignal.kepler.dashboard.dto.response.KprDashboardPromptCheckResDto">
+	/* KprDashboardPromptMapper.selectDashBoardPromptCheck */
+		SELECT dpi.PROMPT_VAL as promptValue , dpi.PROMPT_TYPE_CD as promptTypeCd
+		  from anl.anl_dashbrd_mst		adm WITH (NOLOCK)
+		  join anl.anl_dashbrd_prompt	dpi WITH (NOLOCK) on adm.id = dpi.dashbrd_id and dpi.flag = 1
+		  join anl.anl_column_mst		acm WITH (NOLOCK) on dpi.col_id = acm.id and acm.flag = 1
+		 where 1=1
+		   and adm.id	= #{dashboardId}
+		   and adm.flag	= 1
+	</select>
+	
+</mapper>

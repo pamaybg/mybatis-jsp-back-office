@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.coupon.mapper.LoyCouponMapper">
+
+    <insert id="insertPaymentCouponHeader" parameterType="com.icignal.loyalty.coupon.dto.response.LOYCpnPayUploadResDto">
+	INSERT INTO LOY.LOY_CPN_REQ_MANY_HEADER (
+		RID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		, FLAG
+		, FILE_PATH
+		, FILE_NAME
+		)VALUES(
+		  #{headerRid}
+		, #{createBy}
+		, #{modifyBy}
+		, GETDATE()
+		, GETDATE()
+		, 1
+		, #{filePath}
+		, #{fileName}
+		)
+	</insert>
+
+
+ 	<select id="selectCouponUploadList"  parameterType="com.icignal.loyalty.coupon.dto.request.LoyCouponListReqDto"
+							    			resultType="com.icignal.loyalty.coupon.dto.response.LoyCouponListResDto">
+		SELECT com.TO_CHAR(CREATE_DATE,'YYYYMMDD HH24:MI:SS')	as createDate
+	   			,FILE_PATH	as filePath
+	   			,FILE_NAME	as fileName
+	   			,rid 		as rid
+	   			,${strColumn}
+		FROM LOY_CPN_REQ_MANY_HEADER
+		where 1=1
+		AND ${strCondWhere}
+		AND ${strWhere}
+		AND FLAG = 1
+	    ORDER BY ${strOrderby}
+	    ${strEndPaging}
+	</select>
+
+		<parameterMap id="callSaveMbrCouponMap" type="com.icignal.loyalty.coupon.dto.request.LoyCouponDetailReqDto">
+		<parameter property="mbrNo" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="ofrNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="cpnAmt" 		jdbcType="INTEGER" javaType="java.lang.Integer" mode="IN"/>
+		<parameter property="issueDate" 		jdbcType="DATE" javaType="java.util.Date" mode="IN"/>
+		<parameter property="validStDate" 	jdbcType="DATE" javaType="java.util.Date" mode="IN"/>
+		<parameter property="chnlNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rst" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstCd" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstMsg" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 		<parameter property="rstCpnNo" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/> 	
+		<parameter property="createBy" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+ 	</parameterMap>
+	<update id="callSaveMbrCoupon" parameterMap="callSaveMbrCouponMap" statementType="CALLABLE">
+	/* LoyCouponMapper.callSaveMbrCoupon */
+	{
+		<!-- CALL  LOY.PKG_LOY_API_CPN.SP_CPN_ISSUE_ONE_KE(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) -->
+		CALL  LOY.PKG_LOY_CPN.SP_CPN_ISSUE_ONE(?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+	}
+	</update>
+
+		<parameterMap id="callUseMbrCouponMap" type="com.icignal.loyalty.coupon.dto.request.LoyCouponDetailReqDto">
+		<parameter property="cpnNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="mbrNo" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="chnlNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="prodId" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rst" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstCd" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstMsg" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 	</parameterMap>
+	<update id="callUseMbrCoupon" parameterMap="callUseMbrCouponMap" statementType="CALLABLE">
+	/* LoyCouponMapper.callUseMbrCoupon */
+	{
+		CALL  LOY.PKG_LOY_CPN.SP_USE_CPN_KE(?, ?, ?, ?, ?, ?, ?)
+	}
+	</update>
+
+	<parameterMap id="callSaveCnclMbrCouponMap" type="com.icignal.loyalty.coupon.dto.request.LoyCouponDetailReqDto">
+		<parameter property="rcptNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="cpnNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="chnlNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rst" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstCd" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstMsg" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 	</parameterMap>
+	<update id="callSaveCnclMbrCoupon" parameterMap="callSaveCnclMbrCouponMap" statementType="CALLABLE">
+	/* LoyCouponMapper.callSaveCnclMbrCoupon */
+	{
+		CALL  LOY.PKG_LOY_CPN.SP_CPN_ISSUE_ONE_CNCL_KE(?, ?, ?, ?, ?, ?)
+	}
+	</update>
+
+
+	<parameterMap id="callUseCnclMbrCouponMap" type="com.icignal.loyalty.coupon.dto.request.LoyCouponDetailReqDto">
+		<parameter property="rcptNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="cpnNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="chnlNo" 		jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="rst" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstCd" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+		<parameter property="rstMsg" 	jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 	</parameterMap>
+	<update id="callUseCnclMbrCoupon" parameterMap="callUseCnclMbrCouponMap" statementType="CALLABLE">
+	/* LoyCouponMapper.callUseCnclMbrCoupon */
+	{
+		CALL  LOY.PKG_LOY_CPN.SP_CPN_USE_CNCL_KE(?, ?, ?, ?, ?, ?)
+	}
+	</update>
+
+ 	<select id="selectCpnOffer"  parameterType="com.icignal.loyalty.coupon.dto.request.LoyCouponDetailReqDto"
+							    			resultType="com.icignal.loyalty.coupon.dto.response.LoyCpnOfferResDto">
+	SELECT 
+		  ofr.rid  		as rid
+		, ofr.ofr_no  as ofrNo
+	FROM loy.loy_cpn_mbr lcm 
+	LEFT OUTER JOIN loy.loy_ofr ofr ON ofr.rid = lcm.RID_OFR AND ofr.flag=1
+	AND lcm.flag=1
+	WHERE lcm.rid=#{rid}
+	</select>
+
+ 	<select id="selectCpnChnl"  parameterType="com.icignal.loyalty.coupon.dto.request.LoyCouponDetailReqDto"
+							    			resultType="com.icignal.loyalty.coupon.dto.response.LoyCpnOfferResDto">
+	SELECT 
+		 chnl.RID AS chnlRid
+    	,chnl.CHNL_NM  AS chnlNm
+    	,chnl.CHNL_No  AS chnlNo
+	FROM loy.loy_cpn_mbr lcm
+	LEFT OUTER JOIN loy.loy_chnl chnl ON chnl.RID = lcm.RID_ISS_CHNL and chnl.flag=1
+	AND lcm.flag=1
+	WHERE lcm.rid=#{rid}
+	</select>
+
+</mapper>

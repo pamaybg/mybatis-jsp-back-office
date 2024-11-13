@@ -1,0 +1,1593 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 16:49:24 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.promotion.offer.mapper.LoyOfferMapper">
+
+<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(getLoyOfferMstList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 마스터 목록
+    -   설명                  : 로얄티 오퍼 마스터 목록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <select id="selectLoyOfferMstList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto"
+resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferMstListResDto">
+        /* LOYOffer.selectLoyOfferMstList */
+        select
+              mom.id                as id
+            , e1.name               as createByNm
+            , mom.type              as type
+            <!-- , mom.accnt_id          as accntId -->
+            , mom.offer_no          as offerNo
+            , mom.offer_nm          as offerNm
+            , mom.offer_cost_div_cd as offerCostDivCd
+            <!-- , c1.mark_name          as offerCostDivNm -->
+            , mom.offer_type_cd     as offerTypeCd
+            <!-- , c2.mark_name          as offerTypeNm -->
+            , mom.offer_sub_type_cd as offerSubTypeCd
+          <!--   , c5.mark_name          as offerSubTypeNm -->
+            , mom.dc_type_cd        as dcTypeCd
+            <!-- , c3.mark_name          as dcTypeNm -->
+            , mom.dc_amt            as dcAmt
+            , mom.offer_desc        as offerDesc
+            , mom.offer_status_cd   as offerStatusCd
+            <!-- , c4.mark_name          as offerStatusNm -->
+            , mom.offer_ecnrs_accnt_id  as offerEcnrsAccntId
+            , mom.par_offer_id          as parOfferId
+            , mom.type_idfy_no          as typeIdfyNo
+            , mom.extr_ref_id           as extrRefId
+            , mom.offer_aply_dd_type_cd as offerAplyDdTypeCd
+            , mom.offer_aply_day        as offerAplyDay
+            , com.TO_CHAR(mom.create_date, 'yyyy-MM-dd')    as createDate
+            , com.TO_CHAR(mom.aply_start_dd, 'yyyy-MM-dd')  as aplyStartDd
+            , com.TO_CHAR(mom.aply_end_dd, 'yyyy-MM-dd')    as aplyEndDd
+            , ${strColumn}
+        from mkt.mkt_offer_mst mom
+        <!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = mom.offer_cost_div_cd and c1.lang = #{lang} and c1.group_code = 'MKT_OFFER_COST_GBN'
+        left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = mom.offer_type_cd     and c2.lang = #{lang} and c2.group_code = 'OFFER_TYPE_CD'
+        left outer join com.comm_code c3 on c3.flag = 1 and c3.code_name = mom.dc_type_cd        and c3.lang = #{lang} and c3.group_code = 'OFFER_DISCOUNT_TYPE_CD'
+        left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = mom.offer_status_cd   and c4.lang = #{lang} and c4.group_code = 'COMM_STATUS'
+        left outer join com.comm_code c5 on c5.flag = 1 and c5.code_name = mom.offer_sub_type_cd   and c5.lang = #{lang} and c5.group_code = 'OFFER_SUB_TYPE_CD' -->
+        left outer join com.crm_user u1 on u1.rid = mom.create_by
+        left outer join com.employee e1 on e1.id = u1.id_employee
+        where ${strCondWhere}
+          and ${strSVCType}
+          and ${strWhere}
+          and mom.flag = 1
+          AND mom.offer_div_cd = 'T'
+          <!-- and mom.accnt_id = #{accountId} -->
+          and mom.rid_pgm = #{loyProgramId}
+          and mom.type = #{type}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(getLoyOfferMst)
+    ============================================
+    -   제목                  : 로얄티 오퍼 마스터
+    -   설명                  : 로얄티 오퍼 마스터
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <select id="selectLoyOfferMst" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferMstResDto">
+    	/* LOYOffer.selectLoyOfferMst */
+		select
+			t1.id as id
+			, e1.name as createByNm
+			, com.TO_CHAR(t1.create_date, 'yyyy-MM-dd') as createDate
+			, t1.type as type
+			<!-- , t1.accnt_id as accntId -->
+			, t1.offer_no as offerNo
+			, t1.offer_nm as offerNm
+			, t1.offer_cost_div_cd as offerCostDivCd
+			<!-- , c1.mark_name as offerCostDivNm -->
+			, t1.offer_type_cd as offerTypeCd
+			<!-- , c2.mark_name as offerTypeNm -->
+			, t1.offer_sub_type_cd as offerSubTypeCd
+			<!-- , c5.mark_name as offerSubTypeNm -->
+			, t1.dc_type_cd as dcTypeCd
+			<!-- , c3.mark_name as dcTypeNm -->
+			, t1.dc_amt as dcAmt
+			, t1.offer_desc as offerDesc
+			, t1.offer_status_cd as offerStatusCd
+			<!-- , c4.mark_name as offerStatusNm -->
+			, com.TO_CHAR(t1.aply_start_dd, 'yyyy-MM-dd') as aplyStartDd
+			, com.TO_CHAR(t1.aply_end_dd, 'yyyy-MM-dd') as aplyEndDd
+			, t1.offer_ecnrs_accnt_id as offerEcnrsAccntId
+			, t1.par_offer_id as parOfferId
+			, t1.type_idfy_no as typeIdfyNo
+			, t1.extr_ref_id as extrRefId
+			, t1.offer_aply_dd_type_cd as offerAplyDdTypeCd
+			, t1.offer_aply_day as offerAplyDay
+			, t1.SELF_TOT_AMT AS selfTotAmt
+			, lc.COUPN_USE_GDNC1 AS offerNotiOne
+			, lc.COUPN_USE_GDNC2 AS offerNotiTwo
+			, lc.COUPN_USE_GDNC3 AS offerNotiThree
+			, t1.rid_coupn as ridCoupon
+		from mkt.mkt_offer_mst t1
+	<!-- 	left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = t1.offer_cost_div_cd and c1.lang = #{lang} and c1.group_code = 'MKT_OFFER_COST_GBN'
+		left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = t1.offer_type_cd 	and c2.lang = #{lang} and c2.group_code = 'OFFER_TYPE_CD'
+		left outer join com.comm_code c3 on c3.flag = 1 and c3.code_name = t1.dc_type_cd        and c3.lang = #{lang} and c3.group_code = 'OFFER_DISCOUNT_TYPE_CD'
+		left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = t1.offer_status_cd   and c4.lang = #{lang} and c4.group_code = 'COMM_STATUS'
+		left outer join com.comm_code c5 on c5.flag = 1 and c5.code_name = t1.offer_sub_type_cd   and c5.lang = #{lang} and c5.group_code = 'OFFER_SUB_TYPE_CD' -->
+		left outer join com.crm_user u1 on u1.rid = t1.create_by
+		left outer join com.employee e1 on e1.id = u1.id_employee
+		left outer join loy.LOY_COUPN lc on lc.rid = t1.rid_coupn and lc.flag = 1
+		where t1.id = #{id}
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(addLoyOfferMst)
+    ============================================
+    -   제목                  : 로얄티 오퍼 마스터 등록
+    -   설명                  : 로얄티 오퍼 마스터 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+	<insert id="insertLoyOfferMst" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto">
+		/* LOYOffer.insertLoyOfferMst */
+		insert into mkt.mkt_offer_mst (
+			  id
+	        , rid_pgm
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			, type
+			<!-- , accnt_id -->
+			, offer_no
+			, offer_nm
+			, offer_div_cd
+			, offer_cost_div_cd
+			, offer_type_cd
+			, offer_sub_type_cd
+			, dc_type_cd
+			, dc_amt
+			, offer_desc
+			, offer_status_cd
+			, aply_start_dd
+			, aply_end_dd
+			, offer_ecnrs_accnt_id
+			, par_offer_id
+			, type_idfy_no
+			, extr_ref_id
+			, offer_aply_dd_type_cd
+			, offer_aply_day
+			, self_tot_amt
+			, rid_coupn
+		)
+		values (
+			  #{id}
+	        , #{loyProgramId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			<!-- , #{country} -->
+			<!-- , #{appServiceId} -->
+			, #{type}
+			<!-- , #{accountId} -->
+			, #{offerNo}
+			, #{offerNm}
+			, #{offerDivCd}
+			, #{offerCostDivCd}
+			, #{offerTypeCd}
+			, #{offerSubTypeCd}
+			, #{dcTypeCd}
+			, #{dcAmt}
+			, #{offerDesc}
+			, #{offerStatusCd}
+			, com.TO_DATE(#{aplyStartDd} , 'YYYY-MM-DD')
+			, com.TO_DATE(#{aplyEndDd} , 'YYYY-MM-DD')
+			, #{offerEcnrsAccntId}
+			, #{parOfferId}
+			, #{typeIdfyNo}
+			, #{extrRefId}
+			, #{offerAplyDdTypeCd}
+			, #{offerAplyDay}
+			, #{selfTotAmt}
+			, #{ridCoupon}
+		)
+
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from mkt.mkt_offer_mst where id = #{id} limit 0, 1 -->
+<!--         </selectKey> -->
+	</insert>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(editLoyOfferMst)
+    ============================================
+    -   제목                  : 로얄티 오퍼 마스터 수정
+    -   설명                  : 로얄티 오퍼 마스터 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+	<update id="updateLoyOfferMst" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto">
+		/* LOYOffer.updateLoyOfferMst */
+		update mkt.mkt_offer_mst
+		set
+			modify_by = #{modifyBy}
+			, modify_date = GETDATE()
+			, flag = 1
+			, offer_nm = #{offerNm}
+			, offer_cost_div_cd = #{offerCostDivCd}
+			, offer_type_cd = #{offerTypeCd}
+			, offer_sub_type_cd = #{offerSubTypeCd}
+			, dc_type_cd = #{dcTypeCd}
+			, dc_amt = #{dcAmt}
+			, offer_desc = #{offerDesc}
+			, offer_status_cd = #{offerStatusCd}
+			, aply_start_dd = com.TO_DATE(#{aplyStartDd}, 'YYYY-MM-DD')
+			, aply_end_dd = com.TO_DATE(#{aplyEndDd} , 'YYYY-MM-DD')
+			, offer_ecnrs_accnt_id = #{offerEcnrsAccntId}
+			, par_offer_id = #{parOfferId}
+			, type_idfy_no = #{typeIdfyNo}
+			, extr_ref_id = #{extrRefId}
+			, offer_aply_dd_type_cd = #{offerAplyDdTypeCd}
+			, offer_aply_day = #{offerAplyDay}
+			, self_tot_amt = #{selfTotAmt}
+			, rid_coupn	= #{ridCoupon}
+		where id = #{id}
+	</update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(removeLoyOfferMst)
+    ============================================
+    -   제목                  : 로얄티 오퍼 마스터 삭제
+    -   설명                  : 로얄티 오퍼 마스터 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="deleteLoyOfferMst" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto">
+    	/* LOYOffer.deleteLoyOfferMst */
+        update mkt.mkt_offer_mst
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+         where id = #{id}
+    </update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(getLoyOfferExpDividList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 분담률 목록
+    -   설명                  : 로얄티 오퍼 분담률 목록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <select id="selectLoyOfferExpDividList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferExpDividReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferExpDividResDto">
+    	/* LOYOffer.selectLoyOfferExpDividList */
+		select
+			  t1.rid 				as rid
+			, t1.rid_mkt_offer_mst 	as ridMktOfferMst
+			, t1.settle_type_cd 	as settleTypeCd
+			<!-- , c1.mark_name 			as settleTypeNm -->
+			, t1.settle_dtl_type_cd as settleDtlTypeCd
+			<!-- , c2.mark_name 			as settleDtlTypeNm -->
+			, t1.dividor_type_cd 	as dividorTypeCd
+			<!-- , c3.mark_name 			as dividorTypeNm -->
+			, t1.rid_dividor_chnl 	as ridDividorChnl
+			, t1.dividor 			as dividor
+			, t1.divid_val 			as dividVal
+			, t1.divid_unit 		as dividUnit
+			<!-- , c4.mark_name 			as dividUnitNm -->
+			, e1.name 				as createByNm
+			, com.TO_CHAR(t1.create_date, 'yyyy-MM-dd') as createDate
+
+            , t1.divid_desc as dividDesc    <!-- 비고 -->
+
+		from loy.loy_offer_exp_divid  t1
+		<!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = t1.settle_type_cd 		and c1.lang = #{lang} and c1.group_code = 'LOY_SETTLE_TYPE_CD'
+		left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = t1.settle_dtl_type_cd 	and c2.lang = #{lang} and c2.group_code = 'LOY_SETTLE_DTL_TYPE_CD'
+		left outer join com.comm_code c3 on c3.flag = 1 and c3.code_name = t1.dividor_type_cd       and c3.lang = #{lang} and c3.group_code = 'LOY_SHCHN_TYPE_CD'
+		left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = t1.divid_unit   			and c4.lang = #{lang} and c4.group_code = 'LOY_ACRL_TYPE' -->
+		left outer join com.crm_user  u1 on u1.rid = t1.create_by
+		left outer join com.employee  e1 on e1.id = u1.id_employee
+		where t1.flag = 1
+		and t1.rid_mkt_offer_mst = #{ridMktOfferMst}
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(addLoyOfferExpDividList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 분담률 등록
+    -   설명                  : 로얄티 오퍼 분담률 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <insert id="insertLoyOfferExpDivid" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferExpDividReqDto">
+    	/* LOYOffer.insertLoyOfferExpDivid */
+		insert into loy.loy_offer_exp_divid (
+			 rid
+			, rid_mkt_offer_mst
+			, settle_type_cd
+			, settle_dtl_type_cd
+			, dividor_type_cd
+			, rid_dividor_chnl
+			, dividor
+			, divid_val
+			, divid_unit
+			<!-- , accnt_id -->
+			<!-- , app_service_type -->
+			<!-- , country -->
+			, flag
+			, mod_num
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, divid_desc )
+		values (
+			 #{rid}
+			, #{ridMktOfferMst}
+			, #{settleTypeCd}
+			, #{settleDtlTypeCd}
+			, #{dividorTypeCd}
+			, #{ridDividorChnl}
+			, #{dividor}
+			, #{dividVal}
+			, #{dividUnit}
+			<!-- , #{accountId} -->
+			<!-- , #{appServiceId} -->
+			<!-- , #{country} -->
+			, 1
+			, 0
+			, GETDATE()
+			, #{createBy}
+			, GETDATE()
+			, #{modifyBy}
+			, #{dividDesc} )
+
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select rid from loy.loy_offer_exp_divid where rid = #{rid} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(editLoyOfferExpDivid)
+    ============================================
+    -   제목                  : 로얄티 오퍼 분담률 수정
+    -   설명                  : 로얄티 오퍼 분담률 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="updateLoyOfferExpDivid" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferExpDividReqDto">
+    	/* LOYOffer.updateLoyOfferExpDivid */
+    	update loy.loy_offer_exp_divid
+			set
+				rid_mkt_offer_mst = #{ridMktOfferMst}
+				, settle_type_cd = #{settleTypeCd}
+				, settle_dtl_type_cd = #{settleDtlTypeCd}
+				, dividor_type_cd = #{dividorTypeCd}
+				, rid_dividor_chnl = #{ridDividorChnl}
+				, dividor = #{dividor}
+				, divid_val = #{dividVal}
+				, divid_unit = #{dividUnit}
+				, divid_desc = #{dividDesc}
+				, flag = 1
+				, mod_num = mod_num + 1
+				, modify_date = GETDATE()
+				, modify_by = #{modifyBy}
+		where rid = #{rid}
+	</update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(removeLoyOfferExpDivid)
+    ============================================
+    -   제목                  : 로얄티 오퍼 분담률 삭제
+    -   설명                  : 로얄티 오퍼 분담률 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="deleteLoyOfferExpDivid" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferExpDividReqDto">
+    	/* LOYOffer.deleteLoyOfferExpDivid */
+        update loy.loy_offer_exp_divid
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+         where rid = #{rid}
+    </update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(getLoyOfferRelCampaignList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 관계 캠페인 목록
+    -   설명                  : 로얄티 오퍼 관계 캠페인 목록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <select id="selectLoyOfferRelCampaignList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferRelCampaignResDto">
+    	/* LOYOffer.selectLoyOfferRelCampaignList */
+		select t1.id as id
+			, e1.name as createByNm
+			, com.TO_CHAR(t1.create_date, 'yyyy-MM-dd') as createDate
+			, t1.disp_no as dispNo
+			, t1.cam_status_cd as camStatusCd
+			<!-- , c1.mark_name as camStatusNm -->
+			, t1.cam_type_cd as camTypeCd
+			<!-- , c1.mark_name as camTypeNm -->
+			, t1.cam_nm as camNm
+			, t1.cam_desc as camDesc
+			, com.TO_CHAR(t1.cam_start_dd, 'yyyy-MM-dd') as camStartDd
+			, com.TO_CHAR(t1.cam_end_dd, 'yyyy-MM-dd') as camEndDd
+			, d1.div_nm as divNm
+		from mkt.mkt_cam_mst t1
+		join mkt.mkt_cam_offer_rel t2 on t2.flag = 1 and t2.cam_id = t1.id
+	<!-- 	left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = t1.cam_status_cd and c1.lang = #{lang} and c1.group_code = 'MKT_CAM_STAT'
+		left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = t1.cam_type_cd 	and c2.lang = #{lang} and c2.group_code = 'MKT_CAM_TYPE_CD' -->
+		left outer join com.crm_user u1 on u1.rid = t1.create_by
+		left outer join com.employee e1 on e1.id = u1.id_employee
+		left outer join com.crm_division d1 on d1.rid = t1.cam_plan_org_cd
+		where t1.flag = 1
+		and t2.offer_id = #{ridMktOfferMst}
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(getLoyOfferUseLmtChnlList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한채널 목록
+    -   설명                  : 로얄티 오퍼 제한채널 목록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <select id="selectLoyOfferUseLmtChnlList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferUseLmtChnlResDto">
+    	/* LOYOffer.selectLoyOfferUseLmtChnlList */
+        select t1.rid as rid
+            , t1.rid_mkt_offer_mst as ridMktOfferMst
+            , t1.use_psbl_chnl_range as usePsblChnlRange
+          <!--   , c1.mark_name as usePsblChnlRangeNm -->
+            , t1.use_psbl_chnl_sub_range as usePsblChnlSubRange
+           <!--  , c2.mark_name as usePsblChnlSubRangeNm -->
+            , t1.rid_chnl as ridChnl
+            , t2.chnl_no as chnlNo  <!-- 채널코드 -->
+            , t2.chnl_nm as chnlNm  <!-- 채널명   -->
+            , e1.name as createByNm
+            , com.TO_CHAR(t1.create_date, 'yyyy-MM-dd') as createDate
+            <!-- , c4.mark_name  as pointContType --> <!-- 포인트 계약유형 -->
+			, t2.point_cont_type as pointContTypeCd
+        from loy.loy_offer_use_lmt_chnl t1
+        left outer join LOY.LOY_CHNL t2 on t2.flag = 1 and t2.rid = t1.rid_chnl
+        left outer join LOY.LOY_CHNL t3 on t3.flag = 1 and t3.rid = t2.par_rid
+     <!--    left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = t1.use_psbl_chnl_range     and c1.lang = #{lang} and c1.group_code = 'LOY_CHNL_TYPE_CD'
+        left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = t1.use_psbl_chnl_sub_range and c2.lang = #{lang} and c2.group_code = 'LOY_CHNL_SUB_TYPE_CD' -->
+     <!--    left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = t2.point_cont_type         and c4.lang = #{lang} and c4.group_code = 'POINT_CONTRACT' -->
+
+        left outer join com.crm_user u1 on u1.rid = t1.create_by
+        left outer join com.employee e1 on e1.id = u1.id_employee
+
+        where t1.flag = 1
+		and t1.rid_mkt_offer_mst = #{ridMktOfferMst}
+   </select>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(addLoyOfferUseLmtChnl)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한채널 등록
+    -   설명                  : 로얄티 오퍼 제한채널 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <insert id="insertLoyOfferUseLmtChnl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.insertLoyOfferUseLmtChnl */
+		insert into loy.loy_offer_use_lmt_chnl (
+			 rid
+			, rid_mkt_offer_mst
+			, use_psbl_chnl_range
+			, use_psbl_chnl_sub_range
+			, rid_chnl
+			<!-- , accnt_id -->
+			<!-- , app_service_type -->
+			<!-- , country -->
+			, flag
+			, mod_num
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by )
+		values (
+			 #{rid}
+			, #{ridMktOfferMst}
+			, #{usePsblChnlRange}
+			, #{usePsblChnlSubRange}
+			, #{ridChnl}
+			<!-- , #{accountId} -->
+			<!-- , #{appServiceId} -->
+			<!-- , #{country} -->
+			, 1
+			, 0
+			, GETDATE()
+			, #{createBy}
+			, GETDATE()
+			, #{modifyBy} )
+
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select rid from loy.loy_offer_use_lmt_chnl where rid = #{rid} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(editLoyOfferUseLmtChnlList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한채널 수정
+    -   설명                  : 로얄티 오퍼 제한채널 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="updateLoyOfferUseLmtChnl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.updateLoyOfferUseLmtChnl */
+		update loy.loy_offer_use_lmt_chnl
+			set
+				rid_mkt_offer_mst = #{ridMktOfferMst}
+				, use_psbl_chnl_range = #{usePsblChnlRange}
+				, use_psbl_chnl_sub_range = #{usePsblChnlSubRange}
+				, rid_chnl = #{ridChnl}
+				, flag = 1
+				, mod_num = mod_num + 1
+				, modify_date = GETDATE()
+				, modify_by = #{modifyBy}
+		 where rid = #{rid}
+    </update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(removeLoyOfferUseLmtChnlList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한채널 삭제
+    -   설명                  : 로얄티 오퍼 제한채널 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="deleteLoyOfferUseLmtChnl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.deleteLoyOfferUseLmtChnl */
+        update loy.loy_offer_exp_divid
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+        where rid = #{rid}
+    </update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(getLoyOfferUseLmtProdList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한모델 목록
+    -   설명                  : 로얄티 오퍼 제한모델 목록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <select id="selectLoyOfferUseLmtProdList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferUseLmtProdResDto">
+    	/* LOYOffer.selectLoyOfferUseLmtProdList */
+		select t1.rid as rid
+			, t1.rid_mkt_offer_mst as ridMktOfferMst
+			, t1.bas_grp_cd as basGrpCd
+			<!-- , c1.mark_name as basGrpNm -->
+			, t1.use_psbl_prod_range as usePsblProdRange
+			, t1.rid_brd_cat as ridBrdCat
+			, t2.brd_id as brdId
+			, t2.brd_nm as brdNm
+			, t1.rid_prod_cat as ridProdCat
+			, t3.cat_id as catId
+			, t3.cat_nm as catNm
+			, t1.rid_prod as ridProd
+			, t4.prod_id as prodId
+			, t4.prod_nm as prodNm
+			, e1.name as createByNm
+			, com.TO_CHAR(t1.create_date, 'yyyy-MM-dd') as createDate
+            , pos_prod_cnt  as posProdCnt
+            , pos_prod_cd   as posProdCd
+            , pos_bcode_no  as posBcodeNo
+            , pos_chnl_cd	as posChnlCd
+            , pos_prod_amt	as posProdAmt
+		from loy.loy_offer_use_lmt_prod t1
+		left outer join loy.loy_brd_category t2 on t2.flag = 1 and t2.rid = t1.rid_brd_cat
+		left outer join loy.loy_prod_category t3 on t3.flag = 1 and t3.rid = t1.rid_prod_cat
+		left outer join loy.loy_prod t4 on t4.flag = 1 and t4.rid = t1.rid_prod
+		<!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = t1.bas_grp_cd and c1.lang = #{lang} and c1.group_code = 'LOY_BAS_GRP_CD' -->
+		left outer join com.crm_user u1 on u1.rid = t1.create_by
+		left outer join com.employee e1 on e1.id = u1.id_employee
+		where t1.flag = 1
+		and t1.rid_mkt_offer_mst = #{ridMktOfferMst}
+   	</select>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(addLoyOfferUseLmtProdList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한모델 등록
+    -   설명                  : 로얄티 오퍼 제한모델 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <insert id="insertLoyOfferUseLmtProd" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+        /* LOYOffer.insertLoyOfferUseLmtProd */
+		insert into loy.loy_offer_use_lmt_prod (
+			rid
+			, rid_mkt_offer_mst
+			, bas_grp_cd
+			, use_psbl_prod_range
+			, rid_prod_cat
+			, rid_brd_cat
+			, rid_prod
+			<!-- , accnt_id -->
+			<!-- , app_service_type -->
+			<!-- , country -->
+			, flag
+			, mod_num
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+		)
+		values (
+			#{rid}
+			, #{ridMktOfferMst}
+			, #{basGrpCd}
+			, #{usePsblProdRange}
+			, #{ridProdCat}
+			, #{ridBrdCat}
+			, #{ridProd}
+			<!-- , #{accountId} -->
+			<!-- , #{appServiceId} -->
+			<!-- , #{country} -->
+			, 1
+			, 0
+			, GETDATE()
+			, #{createBy}
+			, GETDATE()
+			, #{modifyBy}
+		)
+
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select rid from loy.loy_offer_use_lmt_prod where rid = #{rid} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(editLoyOfferUseLmtProd)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한모델 수정
+    -   설명                  : 로얄티 오퍼 제한모델 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="updateLoyOfferUseLmtProd" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+        /* LOYOffer.updateLoyOfferUseLmtProd */
+		update loy.loy_offer_use_lmt_prod
+		set
+				  rid_mkt_offer_mst = #{ridMktOfferMst}
+				, bas_grp_cd 	= #{basGrpCd}
+				, use_psbl_prod_range = #{usePsblProdRange}
+				, rid_prod_cat 	= #{ridProdCat}
+				, rid_brd_cat 	= #{ridBrdCat}
+				, rid_prod 		= #{ridProd}
+				, flag 			= 1
+				, mod_num 		= mod_num + 1
+				, modify_date 	= GETDATE()
+				, modify_by		= #{modifyBy}
+		where rid = #{rid}
+    </update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(removeLoyOfferUseLmtProd)
+    ============================================
+    -   제목                  : 로얄티 오퍼 제한모델 삭제
+    -   설명                  : 로얄티 오퍼 제한모델 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="deleteLoyOfferUseLmtProd" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.deleteLoyOfferUseLmtProd */
+        update loy.loy_offer_use_lmt_prod
+        set
+                 flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+         where rid = #{rid}
+    </update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(getLoyOfferPntDtlList)
+    ============================================
+    -   제목                  : 로얄티 오퍼 포인트 목록
+    -   설명                  : 로얄티 오퍼 포인트 목록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <select id="selectLoyOfferPntDtlList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto"
+     resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferPntDtlResDto">
+    	/* LOYOffer.selectLoyOfferPntDtlList */
+		select
+			  t1.rid as rid
+			, t1.rid_mkt_offer_mst		as ridMktOfferMst
+			, t1.valid_startdt_bas_cd 	as validStartdtBasCd
+			<!-- , c1.mark_name 				as validStartdtBasNm -->
+			, t1.valid_start_dtnum 		as validStartDtnum
+			, t1.valid_end_dtnum 		as validEndDtnum
+			, t1.rdm_seq 				as rdmSeq
+			, e1.name 					as createByNm
+			, com.TO_CHAR(t1.create_date, 'yyyy-mm-dd') as createDate
+		from loy.loy_offer_pnt_dtl t1
+		<!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = t1.valid_startdt_bas_cd and c1.lang = #{lang} and c1.group_code = 'LOY_VALID_STARTDT_BAS_CD' -->
+		left outer join com.crm_user u1 on u1.rid = t1.create_by
+		left outer join com.employee e1 on e1.id = u1.id_employee
+		where t1.flag = 1
+		and t1.rid_mkt_offer_mst = #{ridMktOfferMst}
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(addLoyOfferPntDtl)
+    ============================================
+    -   제목                  : 로얄티 오퍼 포인트 등록
+    -   설명                  : 로얄티 오퍼 포인트 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <insert id="insertLoyOfferPntDtl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.insertLoyOfferPntDtl */
+		insert into loy.loy_offer_pnt_dtl (
+			  rid
+			, rid_mkt_offer_mst
+			, valid_startdt_bas_cd
+			, valid_start_dtnum
+			, valid_end_dtnum
+			, rdm_seq
+			<!-- , accnt_id -->
+			<!-- , app_service_type -->
+			<!-- , country -->
+			, flag
+			, mod_num
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+		)
+		values (
+		  	  #{rid}
+			, #{ridMktOfferMst}
+			, #{validStartdtBasCd}
+			, #{validStartDtnum}
+			, #{validEndDtnum}
+			, #{rdmSeq}
+			<!-- , #{accountId} -->
+			<!-- , #{appServiceId} -->
+			<!-- , #{country} -->
+			, 1
+			, 0
+			, GETDATE()
+			, #{createBy}
+			, GETDATE()
+			, #{modifyBy}
+		)
+
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select rid from loy.loy_offer_pnt_dtl where rid = #{rid} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(editLoyOfferPntDtl)
+    ============================================
+    -   제목                  : 로얄티 오퍼 포인트 수정
+    -   설명                  : 로얄티 오퍼 포인트 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="updateLoyOfferPntDtl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.updateLoyOfferPntDtl */
+		update loy.loy_offer_pnt_dtl
+		set
+			  rid_mkt_offer_mst 	= #{ridMktOfferMst}
+			, valid_startdt_bas_cd 	= #{validStartdtBasCd}
+			, valid_start_dtnum 	= #{validStartDtnum}
+			, valid_end_dtnum 		= #{validEndDtnum}
+			, rdm_seq 				= #{rdmSeq}
+			, flag 					= 1
+			, mod_num 				= mod_num + 1
+			, modify_date 			= GETDATE()
+			, modify_by 			= #{modifyBy}
+		where rid = #{rid}
+    </update>
+
+	<!-- /**************************************
+    -   관련 파일             : LOYOfferDao.java(removeLoyOfferPntDtl)
+    ============================================
+    -   제목                  : 로얄티 오퍼 포인트 삭제
+    -   설명                  : 로얄티 오퍼 포인트 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2017.01.02
+    ***************************************/ -->
+    <update id="deleteLoyOfferPntDtl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.deleteLoyOfferPntDtl */
+        update loy.loy_offer_pnt_dtl
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+         where rid = #{rid}
+    </update>
+
+
+  
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(checkActCamUsingOffer)
+    ============================================
+    -   제목                  : 해당 오퍼를 사용하는 활성화된 캠페인 개수 확인
+    -   설명                  : 해당 오퍼를 사용하는 활성화된 캠페인 개수 확인
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.07.12
+    ***************************************/ -->
+    <select id="checkActCamUsingOffer" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto" 
+    resultType="java.lang.Integer">
+
+        SELECT count(*) as count <!-- cam.*  -->
+        FROM mkt.mkt_cam_offer_rel rel
+        LEFT JOIN mkt.mkt_cam_mst cam ON cam.id = rel.cam_id AND cam.flag = 1 AND cam.cam_status_cd = 'A'
+        WHERE rel.flag = 1
+          AND rel.offer_id = #{id}
+
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(getOfferChnlList)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 매장 리스트 출력
+    -   설명                  : 오퍼 관리 상세 내, 매장 리스트 출력
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 25.
+    ***************************************/ -->
+    <select id="selectOfferChnlList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LOYGetOfferChnlResDto">
+    	/* LOYOffer.selectOfferChnlList */
+    	SELECT
+    		motat.id						as id
+			, lc1.chnl_nm 					as chnlNm
+			, lc1.chnl_type_cd 				as chnlTypeCd
+			<!-- , cc1.mark_name 				as chnlTypeNm -->
+			<!-- , cc2.mark_name 				as chnlTypeSubNm -->
+			, lc1.chnl_type_sub_cd			as chnlTypeSubCd
+			, lc2.chnl_nm 					as parChnlNm
+			, lc3.chnl_nm 					as topChnlNm
+			, lc1.chnl_stat_cd				as chnlStatCd
+			<!-- , cc3.mark_name 				as chnlStatNm -->
+		FROM mkt.mkt_offer_type_aply_tgt motat
+			JOIN LOY.LOY_CHNL lc1 ON lc1.rid = motat.tgt_idfy_key
+		<!-- 	LEFT OUTER JOIN com.comm_code cc1 ON lc1.chnl_type_cd = cc1.code_name and cc1.lang=#{lang} and cc1.country = #{country} and cc1.group_code='LOY_CHNL_TYPE_CD'
+			LEFT OUTER JOIN com.comm_code cc2 ON lc1.chnl_type_sub_cd = cc2.code_name and cc2.lang=#{lang} and cc2.country = #{country} and cc2.group_code='LOY_CHNL_SUB_TYPE_CD' -->
+			LEFT OUTER JOIN LOY.LOY_CHNL lc2 ON lc1.par_rid = lc2.rid and lc2.flag = '1' <!-- and lc2.country = #{country} -->
+			LEFT OUTER JOIN LOY.LOY_CHNL lc3 ON lc1.par_rid_top = lc3.rid and lc3.flag = '1'  <!-- and lc3.country = #{country} -->
+			<!-- LEFT OUTER JOIN com.comm_code cc3 ON lc1.chnl_stat_cd = cc3.code_name and cc3.lang=#{lang} and cc3.country = #{country} and cc3.group_code='LOY_CHNL_STAT_CD' -->
+		WHERE
+			${strSVCType}
+			AND ${strWhere}
+			AND motat.flag = '1'
+			AND motat.offer_id = #{offerid}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(insertOfferChnl)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 매장 추가
+    -   설명                  : 오퍼 관리 상세 내, 매장 추가
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 25.
+    ***************************************/ -->
+    <insert id="insertOfferChnl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.insertOfferChnl */
+    	INSERT INTO mkt.mkt_offer_type_aply_tgt
+    	(
+    		id
+    		, offer_aply_tgt_cd
+    		, tgt_idfy_key
+	        <!-- , accnt_id -->
+	        <!-- , app_service_type -->
+	        <!-- , country -->
+	        , create_date
+	        , create_by
+	        , flag
+	        , offer_id
+    	)
+    	VALUES
+    	(
+    		#{id}
+    		, 'CHNL'
+    		, #{rid}
+    		<!-- , #{accountId} -->
+    		<!-- , #{appServiceId} -->
+    		<!-- , #{country} -->
+    		, GETDATE()
+    		, #{memId}
+    		, '1'
+    		, #{offerid}
+    	)
+
+    	<selectKey keyProperty="" resultType="java.lang.String">
+            select id from mkt.mkt_offer_type_aply_tgt where id = #{id} and rownum =  1
+        </selectKey>
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(deleteOfferChnl)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 매장 삭제
+    -   설명                  : 오퍼 관리 상세 내, 매장 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 25.
+    ***************************************/ -->
+    <update id="deleteOfferChnl" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto">
+    	/* LOYOffer.deleteOfferChnl */
+    	UPDATE mkt.mkt_offer_type_aply_tgt
+    	SET
+    		modify_by = #{memId}
+    		, modify_date = GETDATE()
+    		, flag = '0'
+    	WHERE
+    		id = #{id}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(checkOfferChnlExist)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 매장 추가 시 중복 조회
+    -   설명                  : 오퍼 관리 상세 내, 매장 추가 시 중복 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 25.
+    ***************************************/ -->
+    <select id="checkOfferChnlExist" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto" 
+    resultType="java.lang.Integer">
+ 		/* LOYOffer.checkOfferChnlExist */
+ 		SELECT
+ 			count(*)
+ 		FROM mkt.mkt_offer_type_aply_tgt
+ 		WHERE
+ 			tgt_idfy_key = #{rid}
+ 			AND flag = '1'
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(getOfferProdList)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 상품 리스트 조회
+    -   설명                  : 오퍼 관리 상세 내, 상품 리스트 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 26.
+    ***************************************/ -->
+    <select id="selectOfferProdList" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyGetOfferReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LOYGetOfferProdResDto">
+    	/* LOYCommon.selectChnlProdList */
+		SELECT
+			 motat.id			as id
+		     , lp.PROD_ID 		as prodId
+		     , lp.PROD_NM 		as prodNm
+		     , lp.PROD_AMT 		as prodAmt
+		     , lbc.BRD_NM 		as brdNm
+		     , lpc.CAT_NM 		as catNm
+		     , lc.CHNL_NM 		as chnlNm
+		FROM mkt.mkt_offer_type_aply_tgt motat
+			JOIN loy.loy_prod lp ON motat.tgt_idfy_key = lp.rid
+			LEFT OUTER JOIN loy.loy_brd_category lbc ON lp.RID_BRD_CAT = lbc.RID and lbc.FLAG = 1
+			LEFT OUTER JOIN loy.loy_prod_category lpc ON lp.RID_PROD_CAT = lpc.RID and lpc.FLAG = 1
+			LEFT OUTER JOIN LOY.LOY_CHNL lc ON lp.RID_CHNL = lc.RID and lc.FLAG = 1
+		WHERE
+			${strSVCType}
+			AND ${strWhere}
+		    AND motat.flag = 1
+		    AND motat.offer_id = #{offerid}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(insertOfferProd)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 상품 추가
+    -   설명                  : 오퍼 관리 상세 내, 상품 추가
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 26.
+    ***************************************/ -->
+    <insert id="insertOfferProd" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferProdReqDto">
+    	/* LOYOffer.insertOfferProd */
+    	INSERT INTO mkt.mkt_offer_type_aply_tgt
+    	(
+    		id
+    		, offer_aply_tgt_cd
+    		, tgt_idfy_key
+	        <!-- , accnt_id -->
+	        <!-- , app_service_type -->
+	        <!-- , country -->
+	        , create_date
+	        , create_by
+	        , flag
+	        , offer_id
+    	)
+    	VALUES
+    	(
+    		#{id}
+    		, 'PROD'
+    		, #{rid}
+    		<!-- , #{accountId} -->
+    		<!-- , #{appServiceId} -->
+    		<!-- , #{country} -->
+    		, GETDATE()
+    		, #{memId}
+    		, '1'
+    		, #{offerid}
+    	)
+
+    	<selectKey keyProperty="" resultType="java.lang.String">
+            select TOP 1 id from mkt.mkt_offer_type_aply_tgt where id = #{id}
+        </selectKey>
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(deleteOfferProd)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 상품 삭제
+    -   설명                  : 오퍼 관리 상세 내, 상품 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 26.
+    ***************************************/ -->
+    <update id="deleteOfferProd" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferProdReqDto">
+    	/* LOYOffer.deleteOfferProd */
+    	UPDATE mkt.mkt_offer_type_aply_tgt
+    	SET
+    		modify_by = #{memId}
+    		, modify_date = GETDATE()
+    		, flag = '0'
+    	WHERE
+    		id = #{id}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYOfferDAO.java(checkOfferProdExist)
+    ============================================
+    -   제목                  : 오퍼 관리 상세 내, 상품 추가 시 중복 조회
+    -   설명                  : 오퍼 관리 상세 내, 상품 추가 시 중복 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jun.lee
+    -   작성일                : 2017. 7. 26.
+    ***************************************/ -->
+    <select id="checkOfferProdExist" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferProdReqDto" 
+    resultType="java.lang.Integer">
+ 		/* LOYOffer.checkOfferProdExist */
+ 		SELECT
+ 			count(*)
+ 		FROM mkt.mkt_offer_type_aply_tgt
+ 		WHERE
+ 			tgt_idfy_key = #{rid}
+ 			AND flag = '1'
+    </select>
+	
+	<!-- /**************************************
+    -   관련 파일             :
+    ============================================
+    -   제목                  : 오퍼 쿠폰 저장
+    -   설명                  : 오퍼 쿠폰 저장
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum
+    -   작성일                : 2019.03.19
+    ***************************************/ -->
+	<insert id="createOfferCoupon" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto">
+		/* LOYOffer.createOfferCoupon */
+		insert into loy.LOY_COUPN (
+			  RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			<!-- , COUNTRY -->
+			<!-- , CURRENCY -->
+			<!-- , APP_SERVICE_TYPE -->
+			<!-- , ACCNT_ID -->
+			, RID_MKT_CAM_MST
+			, RID_OFFER_MST
+			, COUPN_NO
+			, COUPN_NM
+			, COUPN_ACT_YN
+			, USE_START_DT
+			, USE_END_DT
+			, COUPN_USE_GDNC1
+			, COUPN_USE_GDNC2
+			, COUPN_USE_GDNC3
+		)
+		values (
+			  #{ridCoupon}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			<!-- , #{country} -->
+			<!-- , 'KRW' -->
+			<!-- , #{appServiceId} -->
+			<!-- , #{accountId} -->
+			, #{camId}
+			, #{id}
+			, (SELECT loy.fn_getCoupnDispNo() FROM dual)
+			, #{offerNm}
+			, #{offerStatusCd}
+			, com.TO_DATE(#{camStartDd} , 'YYYY-MM-DD')
+			, com.TO_DATE(#{camEndDd} , 'YYYY-MM-DD')
+			, #{offerNotiOne}
+			, #{offerNotiTwo}
+			, #{offerNotiThree}
+		)
+
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from mkt.mkt_offer_mst where id = #{id} limit 0, 1 -->
+<!--         </selectKey> -->
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일            :
+    ============================================
+    -   제목                  : 오퍼 쿠폰 수정
+    -   설명                  : 오퍼 쿠폰 수정
+    -   결과형태            :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum
+    -   작성일                : 2019.03.19
+    ***************************************/ -->
+	<update id="editLoyOfferCouponMst" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto">
+	/* LOYOffer.editLoyOfferCouponMst */
+		update loy.LOY_COUPN
+		set
+			  modify_by = #{modifyBy}
+			, modify_date = GETDATE()
+			, RID_MKT_CAM_MST = #{camId}
+			, COUPN_NM = #{offerNm}
+			, COUPN_ACT_YN = #{offerStatusCd}
+			, USE_START_DT = com.TO_DATE(#{camStartDd},'YYYY-MM-DD')
+			, USE_END_DT = com.TO_DATE(#{camEndDd},'YYYY-MM-DD')
+			, COUPN_USE_GDNC1 = #{offerNotiOne}
+			, COUPN_USE_GDNC2 = #{offerNotiTwo}
+			, COUPN_USE_GDNC3 = #{offerNotiThree}
+		where rid = #{ridCoupon}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            :
+    ============================================
+    -   제목                  : 캠페인 시작시간 종료시간 
+    -   설명                  : 캠페인 시작시간 종료시간 
+    -   결과형태            :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum
+    -   작성일                : 2019.03.19
+    ***************************************/ -->
+	<select id="getCamMstInfo" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto"
+	 resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferMstResDto">
+		select com.TO_CHAR(mcm.cam_start_dd , 'yyyy-mm-dd') as camStartDd,
+			   com.TO_CHAR(mcm.cam_end_dd , 'yyyy-mm-dd') as camEndDd
+		  from mkt.MKT_CAM_MST mcm
+		 where id = #{camId}
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일            :
+    ============================================
+    -   제목                  : 쿠폰데이터 존재여부 
+    -   설명                  : 쿠폰데이터 존재여부  
+    -   결과형태            :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum
+    -   작성일                : 2019.03.19
+    ***************************************/ -->
+	<select id="selectOfferCoupon" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto" 
+	resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferMstResDto">
+		select rid as id
+		  from loy.loy_coupn
+		 where rid = #{ridCoupon} and flag = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일            :
+    ============================================
+    -   제목                  : 쿠폰 데이터 삭제 
+    -   설명                  : 쿠폰 데이터 삭제  
+    -   결과형태            :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum
+    -   작성일                : 2019.03.19
+    ***************************************/ -->
+	<update id="deleteLoyOfferCouponMst" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferMstReqDto">
+		update loy.loy_coupn 
+		   set flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+		 where rid = #{ridCoupon} and flag = 1
+	</update>
+	 <!-- /**************************************
+    -   관련 파일               : MKTOfferDAO.java(selectListOffer)
+    ============================================
+    -   제목                  : 오퍼 목록 조회
+    -   설명                  : 조건 조회를 통한 오퍼 목록 조회
+    -   결과형태                : 복수
+    ============================================
+    -   입력
+        offerNo             : 오퍼 번호
+        offerName           : 오퍼 명
+        applyStrDate        : 적용 시작 날자
+        applyEndDate        : 적용 종료 날자
+        commStatus          : 상태
+        offerTypeCd         : 타입
+        mktOfferCostGbn     : 오퍼 비용 구분
+    -   출력
+        offerNo             : 오퍼 번호
+        offerName           : 오퍼명
+        applyStrDate        : 적용 시작 날자
+        applyEndDate        : 적용 종료 날자
+        commStatus          : 상태
+        mktOfferCostGbn     : 오퍼 비용 구분
+        offerTypeCd         : 타입
+        discountType        : 할인 유형
+        discountAmt         : 할인 금액
+        parOfferId          : 상위 오퍼 ID
+
+        description         : 설명
+        modifyBy            : 수정자
+        modifyDate          : 수정일
+    ============================================
+    -   작성자                 : 박지열
+    -   작성일                 : 2015.09.23
+    ***************************************/ -->
+    <select id="selectListOffer" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferReqDto" 
+    resultType="com.icignal.loyalty.promotion.offer.dto.response.LoyOfferResDto">
+    select
+          mof.id        as id
+        , mof.offer_no  as offerNo
+        , mof.offer_nm  as offerName
+        , com.TO_CHAR(mof.APLY_START_DD,'YYYY-MM-DD') as applyStrDate
+        , com.TO_CHAR(mof.APLY_END_DD,'YYYY-MM-DD') as applyEndDate
+        <!-- , c4.mark_name  as commStatus -->
+        , mof.OFFER_STATUS_CD as commStatusCd
+        <!-- , c1.mark_name  as mktOfferCostGbn -->
+		, mof.offer_cost_div_cd as mktOfferCostGbnCd
+        <!--  , c2.mark_name          as offerTypeCd -->
+        , mof.offer_type_cd as offerType
+        
+        <!--   , c8.mark_name          as offerSubTypeNm -->
+        , mof.offer_sub_type_cd as offerSubTypeCd
+        <!--  , c3.mark_name          as discountType -->
+        , mof.DC_TYPE_CD as discountTypeCd
+       
+        , CASE WHEN (mof.DC_AMT is null OR mof.DC_AMT = '') THEN  0 ELSE mof.DC_AMT END as discountAmt
+        , c7.offer_nm as parOfferId
+        
+        , mof.OFFER_DESC as description
+        , c5.name as modifyBy
+        , com.TO_CHAR(mof.modify_date,'YYYY-MM-DD') as modifyDate
+        , c6.name as offerFownerId
+        , mof.offer_aply_day as offerAplyDay
+		, mof.offer_ecnrs_div_cd    as offerEcnrsDivCd
+        , mof.offer_use_desk_div_cd as offerUseDeskDivCd
+        
+        , ${strColumn}
+    FROM mkt.mkt_offer_mst mof
+  <!--   left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = mof.offer_cost_div_cd and c1.lang = #{lang} and c1.group_code = 'MKT_OFFER_COST_GBN'
+    left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = mof.offer_type_cd     and c2.lang = #{lang} and c2.group_code = 'OFFER_TYPE_CD'
+    left outer join com.comm_code c3 on c3.flag = 1 and c3.code_name = mof.DC_TYPE_CD        and c3.lang = #{lang} and c3.group_code = 'OFFER_DISCOUNT_TYPE_CD'
+    left outer join com.comm_code c4 on c4.flag = 1 and c4.code_name = mof.OFFER_STATUS_CD   and c4.lang = #{lang} and c4.group_code = 'COMM_STATUS'
+    left outer join com.comm_code c8 on c8.flag = 1 and c8.code_name = mof.offer_sub_type_cd and c8.lang = #{lang} and c8.group_code = 'OFFER_SUB_TYPE_CD'
+    left outer join com.comm_code c9 on c9.flag = 1 and c9.code_name = mof.offer_ecnrs_div_cd and c9.lang = #{lang} and c9.group_code = 'OFFER_ECNRS_DIV_CD'
+    left outer join com.comm_code c10 on c10.flag = 1 and c10.code_name = mof.offer_use_desk_div_cd and c10.lang = #{lang} and c10.group_code = 'OFFER_USE_DESK_DIV_CD' -->
+    left outer join com.crm_user  u1 on u1.rid = mof.modify_by
+    left outer join com.employee  c5 on c5.id = u1.id_employee
+    left outer join com.account   c6 on c6.id = mof.OFFER_ECNRS_ACCNT_ID
+    left outer join mkt.mkt_offer_mst c7 on c7.id = mof.par_offer_id
+    WHERE ${strSVCType}
+      AND ${strCondWhere}
+      AND mof.flag = 1
+      AND mof.offer_div_cd = 'T'
+<!--       AND mof.accnt_id = #{accountId} -->
+<!--       AND mof.rid_pgm = #{loyProgramId} -->
+      AND mof.type = #{type}
+      and ${strWhere}
+    <!-- 17.07.11 jh.kim. 상태 조회 조건 추가 -->
+
+    <if test="offerName != null and offerName != ''">
+      AND mof.offer_nm = (#{offerName},'%')
+    </if>
+    <if test="offerStatusCd != null and offerStatusCd != ''">
+      AND mof.offer_status_cd = #{offerStatusCd}
+    </if>
+    <if test="offerTypeCd != null and offerTypeCd != ''">
+      and mof.offer_type_cd = #{offerTypeCd}
+<!--     order by mof.create_date desc -->
+    </if>
+    <if test="offerName != null and offerName != ''">
+    </if>
+    <if test="offerName != null and offerName != ''">
+    </if>
+    ORDER BY ${strOrderby}
+    ${strEndPaging}
+
+    </select>
+    
+    
+    <select id="createOfferNum" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferInsertReqDto" resultType="java.lang.String">
+    	<!-- 2019.05.28 hy.jun 오퍼번호 채번 변경 -->
+    	SELECT MKT.GETOFFERNO() FROM DUAL
+<!--         select ('OFR' || com.TO_CHAR(GETDATE(), 'YYYY') || com.nvl(LPAD(MAX(SUBSTRING(mof.offer_no, -5)) + 1,5,'0'),'00001')) as offerNo -->
+<!--             from mkt.mkt_offer_mst mof -->
+<!--          where mof.offer_no like ('OFR' || com.TO_CHAR(GETDATE(), 'YYYY') || '%') and ${strSVCType} -->
+    </select>
+ <!-- /**************************************
+    -   관련 파일               : MKTOfferDAO.java(insertOffer)
+    ============================================
+    -   제목                  : 오퍼 추가
+    -   설명                  : 오퍼 추가
+    -   결과형태                :
+    ============================================
+    -   입력
+        offerNo             : 오퍼 번호
+        offerName           : 오퍼 명
+        commStatus          : 상태
+        applyStrDate        : 적용 시작 일자
+        applyEndDate        : 적용 종료 일자
+    -   출력
+        offerNo             : 오퍼 번호
+        offerName           : 오퍼 명
+        offerlimit          : 오퍼 목록 숫자
+    ============================================
+    -   작성자                 : 박지열
+    -   작성일                 : 2015.09.23
+    ***************************************/ -->
+    <insert id="insertOffer" parameterType="com.icignal.loyalty.promotion.offer.dto.request.LoyOfferInsertReqDto" useGeneratedKeys="false">
+        insert into mkt.mkt_offer_mst (
+              id
+            , type
+            , rid_pgm
+            , create_by
+            , modify_by
+            , create_date
+            , modify_date
+            , flag
+      <!--       , country
+            , app_service_type -->
+            , offer_no
+            , offer_nm
+            , APLY_START_DD
+            , APLY_END_DD
+            , OFFER_STATUS_CD
+            , offer_cost_div_cd
+            , offer_type_cd
+            , offer_sub_type_cd
+            , DC_TYPE_CD
+            , DC_AMT
+            , OFFER_ECNRS_ACCNT_ID
+            , par_offer_id
+            , OFFER_DESC
+           <!--  , ACCNT_ID -->
+            , type_idfy_no
+            , extr_ref_id
+            , offer_aply_dd_type_cd
+            , offer_aply_day
+
+            , offer_ecnrs_div_cd
+            , offer_use_desk_div_cd
+            , dc_prod_type_cd
+            , coupn_apv_type_cd
+            , coupn_iss_type_cd
+            , settl_use_posbl_yn
+            , lowst_settl_amt
+            , ref_key
+            , rid_coupn
+            , coupn_trnsfr_yn
+
+            , offer_div_cd
+            <!-- 셀프오퍼 : 총 해택금액  -->
+		    <if test="selfTotAmt != null and selfTotAmt != ''">
+				, self_tot_amt
+		    </if>
+<!-- 	        , PNT_VALID_PEROID_TYPE -->
+<!-- 		    , PNT_VALID_PEROID_VAL -->
+<!-- 		    , PNT_TRNSFR_YN -->
+<!-- 		    , OFFER_SEQ_NO -->
+
+
+        )
+        values (
+              #{id}
+            , #{type}
+            , #{loyProgramId}
+            , #{memId}
+            , #{memId}
+            , GETDATE()
+            , GETDATE()
+            , '1'
+         <!--    , #{country}
+            , #{appServiceId} -->
+            , #{offerNo}
+            , #{offerName}
+            , #{applyStrDate}
+            , #{applyEndDate}
+            , #{commStatus}
+            , #{mktOfferCostGbn}
+            , #{offerTypeCd}
+            , #{offerSubTypeCd}
+            , #{discountType}
+            , CASE WHEN (#{discountAmt} is null OR #{discountAmt} = '') THEN 0 ELSE #{discountAmt} END
+            , #{offerFownerId}
+            , #{parOfferId}
+            , #{description}
+          <!--   , #{accntId} -->
+            , #{idfyNO}
+            , #{couponId}
+            , #{offerAplyDdTypeCd}
+            , #{offerAplyDay}
+
+            , #{offerEcnrsDivCd}
+            , #{offerUseDeskDivCd}
+            , #{dcProdTypeCd}
+            , #{coupnApvTypeCd}
+            , #{coupnIssTypeCd}
+            , #{settlUsePosblYn}
+            , #{lowstSettlAmt}
+            , #{refKey}
+            , #{ridCoupn}
+            , #{coupnTrnsfrYn}
+
+            , #{offerDivCd}
+            <!-- 셀프오퍼 : 총 해택금액  -->
+		    <if test="selfTotAmt != null and selfTotAmt != ''">
+				, #{selfTotAmt}
+		    </if>
+<!-- 			, #{pntValidPeroidType} -->
+<!-- 		    , #{pntValidPeroidVal} -->
+<!-- 		    , #{pntTrnsfrYn} -->
+<!-- 		    , #{offerSeqNo} -->
+        )
+<!--         ON DUPLICATE KEY UPDATE ID = VALUES(ID) -->
+
+    </insert>
+
+</mapper>

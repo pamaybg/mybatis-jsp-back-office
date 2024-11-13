@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#systemctl stop iCignalMkt
+sudo systemctl stop tomcat_Descente
+#sh /app/tomcat/bin/shutdown.sh
+sleep 3
+
+sudo systemctl stop tomcat_Descente

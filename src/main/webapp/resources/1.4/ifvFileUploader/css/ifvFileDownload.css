@@ -1,0 +1,5 @@
+.ifv_fileDownload_item{width:100%; border:1px solid #eee;}
+.ifv_fileDownload_item > li{position:relative; width:100%; height:30px; line-height:30px;}
+.ifv_fileDownload_item .name{color:#666; margin-left:10px;}
+.ifv_fileDownload_item .size{color:#5fefe5; margin-left:10px;}
+.ifv_fileDownload_item .delete_btn{position:absolute; right:10px; top:2px;}

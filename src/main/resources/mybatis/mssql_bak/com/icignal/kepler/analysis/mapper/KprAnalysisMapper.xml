@@ -1,0 +1,900 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Sep 21 09:56:18 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.kepler.analysis.mapper.KprAnalysisMapper">
+	
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (selectAnalysisList)
+	============================================
+	-	제목					: 분석/대시보드 목록 조회
+	-	설명					: 분석/대시보드 목록 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisList" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisListReqDto" 
+												resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisListResDto">
+		/* KprAnalysisMapper.selectAnalysisList */
+		SELECT	
+				t.ID			AS	analysisId
+			,	t.NAME			AS	analysisName
+			,	t.CREATE_DATE	AS	createDate
+			,	t.MODIFY_DATE	AS	modifyDate
+			,	cemp.NAME		AS	createName
+			,	memp.NAME		AS	modifyName
+			,	tcde.CODE_NAME	AS	typeCode
+			,	tcde.MARK_NAME	AS	typeName
+			, 	${strColumn} 
+		FROM	(
+			<!-- 분석 리스트 -->
+			SELECT	ID			AS	ID
+				,	RPT_NM		AS	NAME
+				,	TYPE		AS	TYPE
+				,	CREATE_BY	AS	CREATE_BY
+				,	CREATE_DATE	AS	CREATE_DATE
+				,	MODIFY_BY	AS	MODIFY_BY
+				,	MODIFY_DATE	AS	MODIFY_DATE
+			FROM	anl.anl_rpt_mst with (nolock)
+			WHERE	${strSVCType}
+			AND		FLAG				=	1
+			AND		DASHBRD_YN			=	'0'
+			AND		ANL_SAVE_INFO_ID	=	#{nodeId}
+			
+			UNION	ALL
+			
+			<!-- 대시보드 리스트 -->
+			SELECT	ID			AS	ID
+				,	DASHBRD_NM	AS	NAME
+				,	TYPE		AS	TYPE
+				,	CREATE_BY	AS	CREATE_BY
+				,	CREATE_DATE	AS	CREATE_DATE
+				,	MODIFY_BY	AS	MODIFY_BY
+				,	MODIFY_DATE	AS	MODIFY_DATE
+			FROM	anl.anl_dashbrd_mst with (nolock)
+			WHERE	${strSVCType}
+			AND		FLAG				=	1
+			AND		ANL_SAVE_INFO_ID	=	#{nodeId}
+		)	t
+	LEFT JOIN	COM.CRM_USER u1 with (nolock) ON	t.CREATE_BY	 = u1.RID
+	LEFT JOIN	COM.EMPLOYEE cemp with (nolock) ON	u1.ID_EMPLOYEE = cemp.ID AND	cemp.FLAG		=	1
+	LEFT JOIN	COM.CRM_USER u2 with (nolock) ON	t.MODIFY_BY	 = u2.RID
+	LEFT JOIN	COM.EMPLOYEE memp with (nolock) ON	u2.ID_EMPLOYEE = memp.ID AND	memp.FLAG		=	1
+	JOIN	COM.COMM_CODE tcde with (nolock) ON	t.TYPE = tcde.CODE_NAME AND	tcde.GROUP_CODE	=	'ANL_TYPE_CD' AND	tcde.FLAG		=	1 AND	tcde.LANG		=	#{lang}
+	WHERE	${strWhere}
+	ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (selectAnalysisDetailInst)
+	============================================
+	-	제목					: 분석 상세 조회
+	-	설명					: 분석 상세 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto" 
+													resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisDetailResDto">
+	/* KprAnalysisMapper.selectAnalysisDetailInst */
+		SELECT	arm.ID					AS	analysisId
+			,	arm.RPT_NM				AS	analysisName
+			,	arm.ANL_SAVE_INFO_ID	AS	folderId
+			,	arm.DASHBRD_ID			AS	dashboardId
+			,	arm.COL_GROUP_YN		AS	columnGroupFlag
+			,	lcm.ID					AS	logicalCompId
+			,	lcm.LGC_COMP_NM			AS	logicalCompName
+			,	arm.CHART_TYPE_CD		AS	chartType
+			,	arm.DASHBRD_EBD_TYPE	AS	dashboardType
+		FROM		anl.anl_rpt_mst_inst	arm with (nolock)
+		JOIN		anl.anl_lgc_comp_mst	lcm with (nolock) ON	arm.LGC_COMP_ID = lcm.ID AND	lcm.FLAG = 1
+		WHERE	${strSVCType}
+		AND		arm.FLAG		=	1
+		AND		arm.ID			=	#{analysisId}
+	</select>
+	
+	<select id="selectAnalysisName" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto" 
+												resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisDetailResDto">
+	/* KprAnalysisMapper.selectAnalysisName */
+		SELECT	RPT_NM		AS	analysisName
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		FROM	anl.anl_rpt_mst with (nolock)
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		FROM	anl.anl_rpt_mst_inst with (nolock)
+		</if>
+		WHERE	${strSVCType}
+		AND		ID	=	#{analysisId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (selectAnalysisIdCheckMaster)
+	============================================
+	-	제목					: 분석 아이디 체크
+	-	설명					: 분석 아이디 체크
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisIdCheckMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto" resultType="java.lang.Integer">
+	/* KprAnalysisMapper.selectAnalysisIdCheckMaster */
+		SELECT	COUNT(1)
+		FROM	anl.anl_rpt_mst with (nolock)
+		WHERE	${strSVCType}
+		AND		FLAG		=	1
+		AND		ID			=	#{analysisId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (selectAnalysisNameCheckMaster)
+	============================================
+	-	제목					: 분석명 체크
+	-	설명					: 분석명 체크
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisNameCheckMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto" resultType="java.lang.Integer">
+	/* KprAnalysisMapper.selectAnalysisNameCheckMaster */
+		SELECT	COUNT(1)
+		FROM	anl.anl_rpt_mst with (nolock)
+		WHERE	${strSVCType}
+		AND		FLAG				=	1
+		AND		DASHBRD_YN			=	'0'
+		AND		ANL_SAVE_INFO_ID	=	#{folderId}
+		AND		RPT_NM				=	#{analysisName}
+		AND		ID					!=	#{analysisId}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (insertAnalysisDetailMaster)
+	============================================
+	-	제목					: 분석 임시 -> 마스터 등록( 다른 이름 저장 시 )
+	-	설명					: 분석 임시 -> 마스터 등록( 다른 이름 저장 시 )
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.insertAnalysisDetailMaster */
+		INSERT INTO anl.anl_rpt_mst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	LGC_COMP_ID
+			,	RPT_NM
+			,	CHART_TYPE_CD
+			,	DASHBRD_YN
+			,	DASHBRD_EBD_TYPE
+			,	DASHBRD_SEQ
+			,	DASHBRD_ID
+			,	COL_GROUP_YN
+			,	ANL_SAVE_INFO_ID
+			,	CHART_LABEL_CD_1
+			,	CHART_LABEL_CD_2
+			,	CHART_DP_TYPE
+			, chart_hori_nm
+			, chart_verti_1_nm
+			, chart_verti_2_nm
+			, legend_pos_cd
+			, col_tot_type_cd
+			, row_tot_type_cd
+		)
+		SELECT	#{analysisId_New}
+			,	#{empId}
+			,	#{empId}
+			,	getdate()
+			,	getdate()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	LGC_COMP_ID
+			<if test="analysisName == null or analysisName == ''">
+			,	RPT_NM
+			</if>
+			<if test="analysisName != null and analysisName != ''">
+			,	#{analysisName}
+			</if>
+			,	CHART_TYPE_CD
+			,	DASHBRD_YN
+			,	DASHBRD_EBD_TYPE
+			,	DASHBRD_SEQ
+			<if test="dashboardId == null or dashboardId == ''">
+			,	DASHBRD_ID
+			</if>
+			<if test="dashboardId != null and dashboardId != ''">
+			,	#{dashboardId}
+			</if>
+			,	COL_GROUP_YN
+			<if test="folderId == null or folderId == ''">
+			,	ANL_SAVE_INFO_ID
+			</if>
+			<if test="folderId != null and folderId != ''">
+			,	#{folderId}
+			</if>
+			,	CHART_LABEL_CD_1
+			,	CHART_LABEL_CD_2
+			,	CHART_DP_TYPE
+			, chart_hori_nm
+			, chart_verti_1_nm
+			, chart_verti_2_nm
+			, legend_pos_cd
+			, col_tot_type_cd
+			, row_tot_type_cd
+		FROM	anl.anl_rpt_mst_inst with (nolock)
+		WHERE	FLAG	=	1
+		AND		ID		=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (insertAnalysisDetailInst)
+	============================================
+	-	제목					: 분석 신규 등록
+	-	설명					: 분석 신규 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<insert id="insertAnalysisDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.insertAnalysisDetailInst */
+		INSERT INTO anl.anl_rpt_mst_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	LGC_COMP_ID
+			,	RPT_NM
+			,	CHART_TYPE_CD
+			,	DASHBRD_YN
+			,	DASHBRD_EBD_TYPE
+			,	DASHBRD_SEQ
+			,	COL_GROUP_YN
+			,	DASHBRD_ID
+			,	ANL_SAVE_INFO_ID
+			,	CHART_LABEL_CD_1
+			,	CHART_LABEL_CD_2
+			,	CHART_DP_TYPE
+		) VALUES (
+				#{analysisId}
+			,	#{empId}
+			,	#{empId}
+			,	getdate()
+			,	getdate()
+			,	1
+			,	'ANALYSIS'
+			,	NULL				<!-- STORE_ID -->
+			,	NULL				<!-- LGC_COMP_ID -->
+			,	NULL				<!-- RPT_NM -->
+			,	#{chartTypeCode}
+			,	'0'
+			,	NULL				<!-- DASHBRD_EBD_TYPE -->
+			,	NULL				<!-- DASHBRD_SEQ -->
+			,	'0'
+			,	NULL				<!-- DASHBRD_ID -->
+			,	NULL				<!-- ANL_SAVE_INFO_ID -->
+			,	'DEFAULT'
+			,	'DEFAULT'
+			,	'NM_AND_VAL'
+		)
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			SELECT	1
+		</selectKey>
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (insertAnalysisDetailMasterToInst)
+	============================================
+	-	제목					: 분석 마스터 -> 임시 등록
+	-	설명					: 분석 마스터 -> 임시 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisDetailMasterToInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.insertAnalysisDetailMasterToInst */
+		INSERT INTO anl.anl_rpt_mst_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	LGC_COMP_ID
+			,	RPT_NM
+			,	CHART_TYPE_CD
+			,	DASHBRD_YN
+			,	DASHBRD_EBD_TYPE
+			,	DASHBRD_SEQ
+			,	COL_GROUP_YN
+			,	DASHBRD_ID
+			,	ANL_SAVE_INFO_ID
+			,	CHART_LABEL_CD_1
+			,	CHART_LABEL_CD_2
+			,	CHART_DP_TYPE
+			, chart_hori_nm
+			, chart_verti_1_nm
+			, chart_verti_2_nm
+			, legend_pos_cd
+			, col_tot_type_cd
+			, row_tot_type_cd
+		)
+		SELECT	ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	getdate()
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	LGC_COMP_ID
+			,	RPT_NM
+			,	CHART_TYPE_CD
+			,	DASHBRD_YN
+			,	DASHBRD_EBD_TYPE
+			,	DASHBRD_SEQ
+			,	COL_GROUP_YN
+			,	DASHBRD_ID
+			,	ANL_SAVE_INFO_ID
+			,	CHART_LABEL_CD_1
+			,	CHART_LABEL_CD_2
+			,	CHART_DP_TYPE
+			, chart_hori_nm
+			, chart_verti_1_nm
+			, chart_verti_2_nm
+			, legend_pos_cd
+			, col_tot_type_cd
+			, row_tot_type_cd
+		FROM	anl.anl_rpt_mst with (nolock)
+		WHERE	FLAG	=	1
+		AND		ID		=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (insertAnalysisDetailInstToMaster)
+	============================================
+	-	제목					: 분석 임시 -> 마스터 등록( 저장 시 )
+	-	설명					: 분석 임시 -> 마스터 등록( 저장 시 )
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.insertAnalysisDetailInstToMaster */
+		INSERT INTO anl.anl_rpt_mst (
+				ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, LGC_COMP_ID
+			, RPT_NM
+			, CHART_TYPE_CD
+			, DASHBRD_YN
+			, DASHBRD_EBD_TYPE
+			, DASHBRD_SEQ
+			, COL_GROUP_YN
+			, DASHBRD_ID
+			, ANL_SAVE_INFO_ID
+			, CHART_LABEL_CD_1
+			, CHART_LABEL_CD_2
+			, CHART_DP_TYPE
+			, CHART_HORI_NM
+			, CHART_VERTI_1_NM
+			, CHART_VERTI_2_NM
+			, LEGEND_POS_CD
+			, COL_TOT_TYPE_CD
+			, ROW_TOT_TYPE_CD
+		)
+		SELECT	ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, getdate()
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, LGC_COMP_ID
+			, RPT_NM
+			, CHART_TYPE_CD
+			, DASHBRD_YN
+			, DASHBRD_EBD_TYPE
+			, DASHBRD_SEQ
+			, COL_GROUP_YN
+			, DASHBRD_ID
+			, ANL_SAVE_INFO_ID
+			, CHART_LABEL_CD_1
+			, CHART_LABEL_CD_2
+			, CHART_DP_TYPE
+			, CHART_HORI_NM
+			, CHART_VERTI_1_NM
+			, CHART_VERTI_2_NM
+			, LEGEND_POS_CD
+			, COL_TOT_TYPE_CD
+			, ROW_TOT_TYPE_CD
+		FROM	anl.anl_rpt_mst_inst with (nolock)
+		WHERE	FLAG	=	1
+		AND		ID		=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (insertAnalysisDetailCopy)
+	============================================
+	-	제목					: 생성자와 다른 사용자가 분석 접근 시 복사 등록
+	-	설명					: 생성자와 다른 사용자가 분석 접근 시 복사 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisDetailCopy" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.insertAnalysisDetailCopy */
+		INSERT INTO anl.anl_rpt_mst_inst (
+				ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			,TYPE
+			, STORE_ID
+			, LGC_COMP_ID
+			, RPT_NM
+			, CHART_TYPE_CD
+			, COL_GROUP_YN
+			, DASHBRD_YN
+			, DASHBRD_ID
+			, DASHBRD_EBD_TYPE
+			, DASHBRD_SEQ
+			, ANL_SAVE_INFO_ID
+			, CHART_LABEL_CD_1
+			, CHART_LABEL_CD_2
+			, CHART_DP_TYPE
+			, chart_hori_nm
+			, chart_verti_1_nm
+			, chart_verti_2_nm
+			, legend_pos_cd
+			, col_tot_type_cd
+			, row_tot_type_cd
+		)
+		SELECT	#{analysisId_New}
+			, #{empId}
+			, #{empId}
+			, getdate()
+			, getdate()
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, LGC_COMP_ID
+			, RPT_NM
+			, CHART_TYPE_CD
+			, COL_GROUP_YN
+			<if test="dashboardId == null or dashboardId == ''">
+			, DASHBRD_YN
+			, DASHBRD_ID
+			</if>
+			<if test="dashboardId != null and dashboardId != ''">
+			, 1
+			, #{dashboardId}
+			</if>
+			<if test="dashboardEmbedType == null or dashboardEmbedType == ''">
+			, DASHBRD_EBD_TYPE
+			</if>
+			<if test="dashboardEmbedType != null and dashboardEmbedType != ''">
+			, #{dashboardEmbedType}
+			</if>
+			<if test="dashboardSeq == null or dashboardSeq == ''">
+			, DASHBRD_SEQ
+			</if>
+			<if test="dashboardSeq != null and dashboardSeq != ''">
+			, #{dashboardSeq}
+			</if>
+			<if test="folderId == null or folderId == ''">
+			, null
+			</if>
+			<if test="folderId != null and folderId != ''">
+			, ANL_SAVE_INFO_ID
+			</if>
+			, CHART_LABEL_CD_1
+			, CHART_LABEL_CD_2
+			, CHART_DP_TYPE
+			, chart_hori_nm
+			, chart_verti_1_nm
+			, chart_verti_2_nm
+			, legend_pos_cd
+			, col_tot_type_cd
+			, row_tot_type_cd
+		FROM	anl.anl_rpt_mst with (nolock)
+		WHERE	FLAG	=	1
+		AND		ID		=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (updateAnalysisDetailInst)
+	============================================
+	-	제목					: 분석 상세 수정
+	-	설명					: 분석 상세 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.updateAnalysisDetailInst */
+		UPDATE	anl.anl_rpt_mst_inst
+		SET		MODIFY_BY			=	#{empId}
+			,	MODIFY_DATE			=	getdate()
+			,	RPT_NM				=	#{analysisName}
+			,	ANL_SAVE_INFO_ID	=	#{folderId}
+		WHERE	ID	=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (updateAnalysisColumnGroupFlagInst)
+	============================================
+	-	제목					: 분석 컬럼 그룹 수정
+	-	설명					: 분석 컬럼 그룹 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisColumnGroupFlagInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.updateAnalysisColumnGroupFlagInst */
+		UPDATE	anl.anl_rpt_mst_inst
+		SET		MODIFY_BY		=	#{empId}
+			,	MODIFY_DATE		=	getdate()
+			,	COL_GROUP_YN	=	#{columnGroupFlag}
+		WHERE	ID				=	#{analysisId}
+	</update>
+		
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (updateAnalysisChartTypeChangeInst)
+	============================================
+	-	제목					: 분석 차트 타입 수정
+	-	설명					: 분석 차트 타입 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisChartTypeChangeInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.updateAnalysisChartTypeChangeInst */
+		UPDATE	anl.anl_rpt_mst_inst
+		SET		MODIFY_BY		=	#{empId}
+			,	MODIFY_DATE		=	getdate()
+			,	CHART_TYPE_CD	=	#{chartTypeCode}
+		WHERE	ID				=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (updateAnalysisLogicalCompIdInst)
+	============================================
+	-	제목					: 분석 로지컬 컴포넌트 아이디 수정
+	-	설명					: 분석 로지컬 컴포넌트 아이디 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisLogicalCompIdInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.updateAnalysisLogicalCompIdInst */
+		UPDATE	anl.anl_rpt_mst_inst
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	getdate()
+			,	LGC_COMP_ID	=	#{logicalCompId}
+		WHERE	ID	=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (updateAnalysisDetailInstToMaster)
+	============================================
+	-	제목					: 분석 임시 -> 마스터 수정( 수정 시 )
+	-	설명					: 분석 임시 -> 마스터 수정( 수정 시 )
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.updateAnalysisDetailInstToMaster */
+		update anl.anl_rpt_mst arm
+		   set (
+		   	   arm.modify_by		
+			 , arm.modify_date		
+			 , arm.lgc_comp_id		
+			 , arm.rpt_nm			
+			 , arm.chart_type_cd	
+			 , arm.col_group_yn		
+			 , arm.anl_save_info_id	
+			 , arm.chart_label_cd_1	
+			 , arm.chart_label_cd_2	
+			 , arm.chart_dp_type	
+			 , arm.chart_hori_nm	
+			 , arm.chart_verti_1_nm	
+			 , arm.chart_verti_2_nm 
+			 , arm.legend_pos_cd	
+			 , arm.col_tot_type_cd	
+			 , arm.row_tot_type_cd
+			 )
+			 =(
+			 SELECT 
+			   ari.modify_by              
+              ,ari.modify_date            
+              ,ari.lgc_comp_id            
+              ,ari.rpt_nm                 
+              ,ari.chart_type_cd          
+              ,ari.col_group_yn           
+              ,ari.anl_save_info_id       
+              ,ari.chart_label_cd_1       
+              ,ari.chart_label_cd_2       
+              ,ari.chart_dp_type          
+              ,ari.chart_hori_nm          
+              ,ari.chart_verti_1_nm       
+              ,ari.chart_verti_2_nm       
+              ,ari.legend_pos_cd          
+              ,ari.col_tot_type_cd        
+              ,ari.row_tot_type_cd    
+              FROM anl.anl_rpt_mst_inst ari with (nolock)
+             where arm.id = ari.id
+		      and ari.id = #{analysisId})
+		      where arm.id=#{analysisId}
+		  
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (deleteAnalysisDetailMaster)
+	============================================
+	-	제목					: 분석 마스터 삭제
+	-	설명					: 분석 마스터 삭제
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="deleteAnalysisDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.deleteAnalysisDetailMaster */
+		UPDATE	anl.anl_rpt_mst
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	getdate()
+			,	FLAG		=	flag + 1
+		WHERE	ID	=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (deleteAnalysisDetailInst)
+	============================================
+	-	제목					: 분석 임시 삭제
+	-	설명					: 분석 임시 삭제
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<delete id="deleteAnalysisDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisDetailReqDto">
+	/* KprAnalysisMapper.deleteAnalysisDetailInst */
+		DELETE
+		FROM	anl.anl_rpt_mst_inst
+		WHERE	ID	=	#{analysisId}
+	</delete>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (selectAnalysisAtribGroupColumnList)
+	============================================
+	-	제목					: 어트리뷰트 그룹 컬럼 아이디 리스트 조회
+	-	설명					: 분석과 연결된 로지컬 컴포넌트의 어트릐뷰트 그룹 컬럼 리스트를 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisAtribGroupColumnList" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisCommonReqDto" 
+																	resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisAtribGroupColumnDetailResDto">
+	/* KprAnalysisMapper.selectAnalysisAtribGroupColumnList */
+		SELECT agc.id					as atribGroupColumnId
+			 , agc.dp_nm || case when LEN(agc.dim_col_id) &gt; 0 then '(' || dcm.dp_nm || ')' else '' END as displayName
+			 , acm.col_type_cd			as columnTypeCode
+			 , dcd.code_name			as columnDataType
+			 , dcd.attrib02				as singleQuoteFlag
+			 , CASE WHEN agc.cal_col_yn = '1' THEN agc.cal_dtl
+			 		ELSE agc.tbl_alias_col_nm
+			   END						AS aliasName
+		  FROM ANL.ANL_LGC_COMP_MST lcm with (nolock)
+		 JOIN ANL.ANL_ATRIB_GROUP aag with (nolock) ON lcm.ID = aag.LGC_COMP_ID AND aag.FLAG = 1
+		 JOIN ANL.ANL_ATRIB_GROUP_COLUMN agc ON aag.ID = agc.ATRIB_GROUP_ID AND agc.FLAG = 1
+		 JOIN ANL.ANL_COLUMN_MST acm ON case when LEN(agc.dim_col_id) &gt; 0 THEN agc.DIM_COL_ID ELSE agc.col_id end = acm.id and acm.flag = 1
+		 JOIN ANL.ANL_TABLE_MST atm ON acm.tbl_id = atm.id and atm.flag = 1
+		 JOIN ANL.ANL_COLUMN_MST dcm ON agc.col_id = dcm.id and dcm.flag = 1
+		 JOIN COM.COMM_CODE dcd ON acm.data_type_cd = dcd.code_name and dcd.group_code = 'DB_DATA_TYPE_CD' and dcd.flag = 1 and dcd.lang = #{lang}
+		 JOIN COM.COMM_CODE tcd ON atm.tbl_type_cd = tcd.code_name and tcd.group_code = 'ANL_TABLE_TYPE_CD' and tcd.flag = 1 and tcd.lang = #{lang}
+		 WHERE lcm.flag = '1'
+		 AND lcm.id = #{logicalCompId}
+		 ORDER BY tcd.SEQ ASC, SUBSTR(agc.TBL_ALIAS_COL_NM, 1, CHARINDEX('.', agc.TBL_ALIAS_COL_NM)), acm.SEQ ASC
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (selectAnalysisAtribGroupColumnDetail)
+	============================================
+	-	제목					: 어트리뷰트 그룹 컬럼 상세 조회
+	-	설명					: 어트리뷰트 그룹 컬럼 상세 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisAtribGroupColumnDetail" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisCommonReqDto" 
+																		resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisAtribGroupColumnDetailResDto">
+	/* KprAnalysisMapper.selectAnalysisAtribGroupColumnDetail */
+	SELECT agc.id			as atribGroupColumnId
+			 , agc.dp_nm		as nodeText
+			 , ccm.col_type_cd	as columnTypeCode
+			 , dcd.code_name	as columnDataType
+			 , dcd.attrib02		as singleQuoteFlag
+	FROM ANL.ANL_ATRIB_GROUP_COLUMN agc WITH (NOLOCK)
+	JOIN ANL.ANL_COLUMN_MST ccm WITH (NOLOCK) ON CASE WHEN LEN(agc.dim_col_id) &gt; 0 THEN agc.DIM_COL_ID ELSE agc.COL_ID END = ccm.ID AND ccm.FLAG = 1
+	LEFT JOIN COM.COMM_CODE dcd WITH (NOLOCK) ON ccm.DATA_TYPE_CD = dcd.CODE_NAME AND dcd.GROUP_CODE = 'DB_DATA_TYPE_CD' and dcd.flag = 1 and dcd.lang = #{lang}
+		<if test="atribGroupColumnList != null and atribGroupColumnList.size() > 0">
+		 WHERE agc.ID IN 
+		   <foreach collection="atribGroupColumnList" item="item" separator="," close=")" open="(">
+			#{item.atribGroupColumnId}
+		 </foreach>
+		</if>
+		<if test="atribGroupColumnId != null and atribGroupColumnId != ''">
+		 WHERE agc.ID = #{atribGroupColumnId}
+		</if>
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisMapper.java (selectAnalysisDatabaseInfo)
+	============================================
+	-	제목					: 데이터베이스 정보 조회
+	-	설명					: 분석과 연결된 데이터베이스 정보 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisDatabaseInfo" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisCommonReqDto" 
+															resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisDatabaseInfoResDto">
+	/* KprAnalysisMapper.selectAnalysisDatabaseInfo */
+		SELECT	arm.ID			AS	analysisId
+			,	adi.ID			AS	databaseId
+			,	adi.CON_IP		AS	connectIp
+			,	adi.CON_PORT	AS	connectPort
+			,	adi.CON_ID		AS	connectId
+			,	adi.CON_PW		AS	connectPw
+			,	adi.CON_URL		AS	connectUrl
+			,	atm.SCHMA_NM	AS	tableSchemaName
+			,	atm.TBL_NM		AS	tableName
+			,	acm.COL_NM		AS	columnName
+			,	agc.ID			AS	atribGroupColumnId
+			,	dcm.CODE_NAME	AS	connectDatabaseType
+			,	dcm.ATTRIB01	AS	connectDatabaseClass
+			,   adi.AWS_SECRET_NM AS secretNm
+		FROM	anl.anl_db_inform adi WITH (NOLOCK)
+		JOIN	anl.anl_subject_db_rel sdr WITH (NOLOCK) ON adi.ID = sdr.DB_ID AND	sdr.FLAG = 1
+		JOIN	anl.anl_table_mst atm WITH (NOLOCK) ON sdr.ID = atm.SUBJECT_DB_REL_ID AND	atm.FLAG			=	1
+		JOIN	anl.anl_column_mst acm WITH (NOLOCK) ON atm.ID = acm.TBL_ID AND	acm.FLAG = 1
+		JOIN	anl.anl_atrib_group_column	agc WITH (NOLOCK) ON acm.ID =	CASE WHEN	LEN( agc.DIM_COL_ID )	&gt;	0	THEN	agc.DIM_COL_ID
+																					ELSE	agc.COL_ID
+																				END
+													AND	acm.FLAG =	1
+		JOIN	ANL.ANL_ATRIB_GROUP aag WITH (NOLOCK) ON	agc.ATRIB_GROUP_ID	=	aag.ID AND	aag.FLAG = 1
+		JOIN	ANL.ANL_LGC_COMP_MST lcm WITH (NOLOCK) ON	aag.LGC_COMP_ID =	lcm.ID AND	lcm.FLAG =	1
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			LEFT JOIN	ANL.ANL_RPT_COLUMN rcm WITH (NOLOCK) ON	agc.ID =	rcm.ATRIB_GROUP_COL_ID AND	rcm.FLAG =	1
+			LEFT JOIN	ANL.ANL_RPT_MST	 arm WITH (NOLOCK) ON	rcm.RPT_ID = arm.ID AND arm.FLAG =	1
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			LEFT JOIN	anl.anl_rpt_column_inst	rcm WITH (NOLOCK) ON	agc.ID = rcm.ATRIB_GROUP_COL_ID AND	rcm.FLAG =	1
+			LEFT JOIN	anl.anl_rpt_mst_inst	arm WITH (NOLOCK) ON	rcm.RPT_ID = arm.ID AND	arm.FLAG =	1
+		</if>
+		JOIN	COM.COMM_CODE dcm WITH (NOLOCK) ON	adi.CON_DB_TYPE		=	dcm.CODE_NAME
+													AND	dcm.GROUP_CODE		=	'ANL_DB_TYPE_CD'
+													AND	dcm.FLAG			=	1
+													AND	dcm.LANG			=	#{lang}
+		<if test="atribGroupColumnId == null or atribGroupColumnId == ''">
+			WHERE	arm.ID	=	#{analysisId}
+		</if>
+		<if test="atribGroupColumnId != null and atribGroupColumnId != ''">
+			WHERE	agc.ID	=	#{atribGroupColumnId}
+		</if>
+		offset 0 rows fetch next 1 rows ONLY
+	</select>
+
+	<select id="selectAnalysisAtribGroupColumnValueDetail" parameterType="com.icignal.kepler.analysis.common.dto.request.KprAnalysisCommonReqDto" 
+																				resultType="com.icignal.kepler.analysis.common.dto.response.KprAnalysisCommonResDto">
+	/* KprAnalysisMapper.selectAnalysisAtribGroupColumnValueDetail */
+		SELECT CASE agc.CAL_COL_YN WHEN '1' THEN agc.CAL_DTL
+											ELSE agc.TBL_ALIAS_COL_NM
+			   END											   AS columnName
+			 , SUBSTR(lcm.LGC_SQL, CHARINDEX('FROM', UPPER(lcm.LGC_SQL))) AS logicalCompSql
+		  FROM ANL.ANL_ATRIB_GROUP_COLUMN agc WITH (NOLOCK)
+		  JOIN ANL.ANL_COLUMN_MST acm WITH (NOLOCK) ON CASE WHEN LEN(agc.DIM_COL_ID) &gt; 1 THEN agc.DIM_COL_ID ELSE agc.COL_ID END = acm.ID AND acm.FLAG = 1
+		  JOIN ANL.ANL_TABLE_MST atm WITH (NOLOCK) ON acm.tbl_id = atm.id and atm.FLAG = 1
+		  JOIN ANL.ANL_ATRIB_GROUP aag WITH (NOLOCK) ON agc.ATRIB_GROUP_ID = aag.ID AND aag.FLAG = 1
+		  JOIN ANL.ANL_LGC_COMP_MST lcm WITH (NOLOCK) ON aag.LGC_COMP_ID = lcm.ID AND lcm.FLAG = 1
+		 WHERE agc.FLAG = 1
+		   AND agc.ID = #{atribGroupColumnId}
+	</select>
+</mapper>

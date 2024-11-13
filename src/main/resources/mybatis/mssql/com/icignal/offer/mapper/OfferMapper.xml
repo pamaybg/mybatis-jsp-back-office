@@ -1,0 +1,1344 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.offer.mapper.OfferMapper">
+
+	<select id="selectOfferList"
+		parameterType="com.icignal.offer.dto.request.OfferReqDto"
+		resultType="com.icignal.offer.dto.response.OfferResDto">
+		/* OfferMapper.selectOfferList */
+		SELECT
+			A.RID                                   AS  rid
+			,A.OFR_CTG								AS ofrCtg
+			,A.OFR_NO                               AS  ofrNo
+			,A.OFR_NM                               AS  ofrNm                   
+			,A.OFR_TYPE                             AS  ofrType
+			,A.OFR_SUB_TYPE                         AS  ofrSubType
+			,A.STAT_CD								AS  statCd
+			,A.CPN_YN								AS  cpnYn
+			,convert(varchar,A.VALID_START_DATE,23) 	AS  validStartDate
+			,convert(varchar,A.VALID_END_DATE,23) 	AS  validEndDate
+			,convert(varchar,A.CREATE_DATE,23) 	AS  createDate
+		    ,EM.NAME    	  						AS  createBy
+		    ,com.nvl2(lc.USE_MIN_PUR_AMT,concat(com.TO_CHAR(lc.USE_MIN_PUR_AMT	,'999,999,999,999,999'), N'원'),NULL)				AS useMinPurAmt
+		    ,com.nvl2(lc.USE_MIN_PUR_AMT,concat(com.TO_CHAR(lc.USE_MAX_DC_AMT,'999,999,999,999,999'), N'원'),NULL)						AS useMaxDcAmt
+		    ,lc.USE_DUP_YN							AS useDupYn
+		    , lc.USABLE_MAX_CNT                 AS usableMaxCnt
+		    , CASE WHEN A.OFR_VAL_TYPE ='F' THEN com.NVL2(A.OFR_VAL_AMT,concat(com.TO_CHAR(A.OFR_VAL_AMT,'999,999,999,999,999'), N'원'),NULL)
+        		       WHEN A.OFR_VAL_TYPE ='A' THEN com.NVL2(A.OFR_VAL_AMT,concat(com.TO_CHAR(A.OFR_VAL_AMT,'999,999,999,999,999'), N'원'),NULL)
+        		  ELSE 	com.NVL2(A.OFR_VAL_AMT,concat(A.OFR_VAL_AMT, '%'),NULL) END 	AS ofrValAmt
+        	, A.USE_PROD_LIMIT_YN AS useProdLimitYn
+			, lc.USE_EXPIR_TYPE as useExpirType
+			, case when lc.USE_EXPIR_DAY_CNT = 0 then convert(nvarchar, com.TO_CHAR(lc.USE_FIX_END_DATE,'YYYY-MM-DD')) else convert(nvarchar, lc.USE_EXPIR_DAY_CNT) end as valDate
+		    ,${strColumn}
+		FROM
+			LOY.LOY_OFR A
+		LEFT OUTER JOIN LOY.LOY_CPN    lc ON A.RID = lc.RID_OFR AND lc.FLAG = 1
+	    LEFT OUTER JOIN COM.CRM_USER US  ON A.CREATE_BY = US.RID
+	    LEFT OUTER JOIN COM.EMPLOYEE EM  ON US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+			AND A.OFR_TYPE in ('C','P')
+			AND A.OFR_CTG   = #{ofrCtg}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectOfferDetail"
+		parameterType="com.icignal.offer.dto.request.OfferReqDto"
+		resultType="com.icignal.offer.dto.response.OfferResDto">
+		/* OfferMapper.selectOfferDetail */
+		SELECT
+			A.RID                                   AS  rid
+			,A.OFR_NO                               AS  ofrNo
+			,A.OFR_NM                               AS  ofrNm                   
+			,A.DESC_TEXT                            AS  descText
+			,com.TO_CHAR(A.VALID_START_DATE,'YYYY-MM-DD') 	AS  validStartDate
+			,com.TO_CHAR(A.VALID_END_DATE,'YYYY-MM-DD') 	AS  validEndDate
+			,A.STAT_CD                              AS  statCd
+			,A.OFR_TYPE                             AS  ofrType
+			,A.OFR_SUB_TYPE                         AS  ofrSubType
+			,A.REF_CD                               AS  refCd
+			,A.CPN_YN                               AS  cpnYn
+			,A.FEE_YN                               AS  feeYn
+			,A.FEE_AMT                              AS  feeAmt
+			,A.FEE_CURNCY                           AS  feeCurncy
+			,A.FEE_SHARE_BASE_AMT                   AS  feeShareBaseAmt
+			,A.OFR_VAL_TYPE                         AS  ofrValType
+			,floor(A.OFR_VAL_AMT)                   AS  ofrValAmt
+			,A.OFR_COST_AMT                         AS  ofrCostAmt
+			,A.SETTLE_TYPE                          AS  settleType
+			,A.HQ_SETTLE_RATE                       AS  hqSettleRate
+			,A.SETTLE_REF_CD                        AS  settleRefCd
+			,A.FEE_SETTLE_USE_RATE                  AS  feeSettleUseRate
+			,A.VOC_YN                               AS  vocYn
+			,A.EXPIR_TYPE                           AS  expirType
+			,A.EXPIR_CNT                            AS  expirMM
+			,A.GIFT_YN                              AS  giftYn
+			,A.USE_CHNL_LIMIT_YN                    AS  useChnlLimitYn
+			,A.USE_PROD_LIMIT_YN                    AS  useProdLimitYn
+			,A.RID_SUPPLY_CHNL                      AS  ridChnl
+			,B.CHNL_NM								AS  chnlNm
+			,A.RID_OFRGRP_SEL                       AS  ridOfrgrp
+			,C.OFRGRP_NM							AS  ofrgrpNm
+			,com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') 	AS  createDate
+		    ,EM.NAME    	  						AS  createBy
+		    ,A.MAX_AMT								AS maxAmt
+		    ,A.MAX_LIMIT_TYPE_CD					AS maxLimitTypeCd
+		    ,A.MAX_LIMIT_AMT						AS maxLimitAmt
+		    ,A.EFF_START_DAY_CNT					AS effStartDayCnt
+		    ,com.TO_CHAR(A.EFF_START_DATE,'YYYY-MM-DD HH24:MI:SS')  AS effStartDate
+		    ,A.EFF_DATE_TYPE						AS effDateType
+		    ,A.EMP_YN								AS empYn
+		    ,A.OFR_CTG								AS ofrCtg
+			,D.USE_FIX_START_DATE 					as useFixStartDate
+			,D.USE_FIX_END_DATE 					as useFixEndDate
+			,floor(A.X_USE_MIN_PUR_AMT) 				as useMinPurAmt
+			,floor(A.X_USE_MAX_DC_AMT) 				as useMaxDcAmt
+			,D.USE_EXPIR_TYPE 						as useExpirType
+			,D.USE_EXPIR_DAY_CNT 					AS useExpirDayCnt
+			,D.DESC_TEXT							as cpndescText
+		FROM
+			LOY.LOY_OFR A
+		LEFT OUTER JOIN LOY.LOY_CHNL   B  ON A.RID_SUPPLY_CHNL = B.RID AND B.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_OFRGRP C  ON A.RID_OFRGRP_SEL = C.RID AND C.FLAG = 1
+		LEFT OUTER JOIN COM.CRM_USER   US ON A.CREATE_BY = US.RID
+	    LEFT OUTER JOIN COM.EMPLOYEE   EM ON US.ID_EMPLOYEE = EM.ID
+		LEFT OUTER JOIN LOY.LOY_CPN	   D  ON D.RID_OFR = A.RID
+		WHERE 1=1
+			AND A.RID = #{rid}
+			AND A.FLAG  = 1
+	</select>
+
+	<insert id="insertOffer"
+		parameterType="com.icignal.offer.dto.request.OfferReqDto">
+		/* OfferMapper.insertOffer */
+		INSERT INTO LOY.LOY_OFR ( 
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			OFR_NO,
+			OFR_NM,
+			DESC_TEXT,
+			VALID_START_DATE,
+			VALID_END_DATE,
+			STAT_CD,
+			OFR_TYPE,
+			OFR_SUB_TYPE,
+			RID_SUPPLY_CHNL,
+			REF_CD,
+			CPN_YN,
+			FEE_YN,
+			FEE_AMT,
+			FEE_CURNCY,
+			FEE_SHARE_BASE_AMT,
+			OFR_VAL_TYPE,
+			OFR_VAL_AMT,
+			OFR_COST_AMT,
+			RID_OFRGRP_SEL,
+			SETTLE_TYPE,
+			HQ_SETTLE_RATE,
+			SETTLE_REF_CD,
+			FEE_SETTLE_USE_RATE,
+			VOC_YN,
+			EXPIR_TYPE,
+			EXPIR_CNT,
+			GIFT_YN,
+			USE_CHNL_LIMIT_YN,
+			USE_PROD_LIMIT_YN,
+			MAX_AMT,
+			MAX_LIMIT_TYPE_CD,
+			MAX_LIMIT_AMT,
+			EFF_START_DAY_CNT,
+			EFF_START_DATE,
+			EFF_DATE_TYPE,
+			EMP_YN,
+			OFR_CTG,
+			X_USE_MIN_PUR_AMT,
+			X_USE_MAX_DC_AMT
+		) VALUES(
+	       #{rid},
+			#{createBy},
+			#{modifyBy},
+			LOY.FN_GET_OFR_NO(),
+			#{ofrNm},
+			#{descText},
+			com.TO_DATE(#{validStartDate},'YYYY-MM-DD HH24:MI:SS'),
+			com.TO_DATE(#{validEndDate},'YYYY-MM-DD HH24:MI:SS'),
+			#{statCd},
+			#{ofrType},
+			#{ofrSubType},
+			#{ridChnl},
+			#{refCd},
+			#{cpnYn},
+			#{feeYn},
+			com.NVL(#{feeAmt}, 0),
+			com.NVL(#{feeCurncy}, 0),
+			com.NVL(#{feeShareBaseAmt}, 0),
+			#{ofrValType},
+			com.NVL(#{ofrValAmt}, 0),
+			com.NVL(#{ofrCostAmt}, 0),
+			com.NVL(#{ridOfrgrp}, 0),
+			#{settleType},
+			#{hqSettleRate},
+			#{settleRefCd},
+			com.NVL(#{feeSettleUseRate}, 0),
+			#{vocYn},
+			#{expirType},
+			#{expirMM},
+			#{giftYn},
+			#{useChnlLimitYn},
+			#{useProdLimitYn},
+			com.NVL(#{maxAmt}, 0),
+			com.NVL(#{maxLimitTypeCd}, 0),
+			com.NVL(#{maxLimitAmt}, 0),
+			com.NVL(#{effStartDayCnt}, 0),
+			com.TO_DATE(#{effStartDate},'YYYY-MM-DD HH24:MI:SS'),
+		    com.NVL(#{effDateType},0),
+			#{empYn},
+			#{ofrCtg},
+		    #{useMinPurAmt},
+		    #{useMaxDcAmt}
+		)
+	</insert>
+
+	<update id="updateOffer"
+		parameterType="com.icignal.offer.dto.request.OfferReqDto">
+		/* OfferMapper.updateOffer */
+		UPDATE
+			LOY.LOY_OFR
+		SET
+			MODIFY_BY = #{modifyBy},
+			MODIFY_DATE = GETDATE(),
+	        OFR_NM = #{ofrNm},
+			DESC_TEXT = #{descText},
+			VALID_START_DATE = com.TO_DATE(#{validStartDate},'YYYY-MM-DD HH24:MI:SS'),
+			VALID_END_DATE = com.TO_DATE(#{validEndDate},'YYYY-MM-DD HH24:MI:SS'),
+			STAT_CD = #{statCd},
+			OFR_TYPE = #{ofrType},
+			OFR_SUB_TYPE = #{ofrSubType},
+			RID_SUPPLY_CHNL = #{ridChnl},
+			REF_CD = #{refCd},
+			CPN_YN = #{cpnYn},
+			FEE_YN = #{feeYn},
+			FEE_AMT = #{feeAmt},
+			FEE_CURNCY = #{feeCurncy},
+			FEE_SHARE_BASE_AMT = #{feeShareBaseAmt},
+			OFR_VAL_TYPE = #{ofrValType},
+			OFR_VAL_AMT = #{ofrValAmt},
+			OFR_COST_AMT = #{ofrCostAmt},
+			RID_OFRGRP_SEL = #{ridOfrgrp},
+			SETTLE_TYPE = #{settleType},
+			HQ_SETTLE_RATE = #{hqSettleRate},
+			SETTLE_REF_CD = #{settleRefCd},
+			FEE_SETTLE_USE_RATE = #{feeSettleUseRate},
+			VOC_YN = #{vocYn},
+			EXPIR_TYPE = #{expirType},
+			EXPIR_CNT = #{expirMM},
+			GIFT_YN = #{giftYn},
+			USE_CHNL_LIMIT_YN = #{useChnlLimitYn},
+			USE_PROD_LIMIT_YN = #{useProdLimitYn},
+			MAX_AMT = #{maxAmt},
+			MAX_LIMIT_TYPE_CD = #{maxLimitTypeCd},
+			MAX_LIMIT_AMT = #{maxLimitAmt},
+			EFF_START_DAY_CNT = #{effStartDayCnt},
+			EFF_START_DATE = com.TO_DATE(#{effStartDate},'YYYY-MM-DD HH24:MI:SS'),
+			EFF_DATE_TYPE = #{effDateType},
+			EMP_YN	= #{empYn},
+			OFR_CTG = #{ofrCtg},
+			X_USE_MIN_PUR_AMT = #{useMinPurAmt},
+			X_USE_MAX_DC_AMT = #{useMaxDcAmt}
+		WHERE 1 = 1
+			AND RID = #{rid}
+	</update>
+
+	<update id="updateOfferDel"
+		parameterType="com.icignal.offer.dto.request.OfferReqDto">
+		/* OfferMapper.updateOfferDel */
+		UPDATE LOY.LOY_OFR
+			SET MODIFY_DATE	= GETDATE()
+				, MODIFY_BY	= #{modifyBy}
+		 		, FLAG		= flag + 1
+		 WHERE 1 = 1
+		 	AND RID = #{rid}
+	</update>
+
+
+	<select id="selectCouponDetail"
+		parameterType="com.icignal.offer.dto.request.CouponDtlReqDto"
+		resultType="com.icignal.offer.dto.response.CouponDtlResDto">
+	/* OfferMapper.selectCouponDetail */
+		SELECT A.RID as rid,
+			A.CREATE_BY 				as createBy, 
+			A.MODIFY_BY 				as modifyBy, 
+			A.CREATE_DATE 			as createDate, 
+			A.MODIFY_DATE 			as modifyDate,  
+			A.FLAG 							as flag, 
+			A.RID_OFR 					as ridOfr,
+			A.ISS_TYPE					as issType, 
+			A.ISS_DUP_YN 				as issDupYn, 
+			A.ISS_START_DATE		as issStartDate,
+			A.ISS_END_DATE 			as issEndDate,
+			A.ISS_MAX_CNT 			as issMaxCnt,
+			A.THUMB_IMG_BEF_URL as thumbImgBefUrl,
+			A.THUMB_IMG_AFT_URL as thumbImgAftUrl,
+			A.DESC_TEXT 				as cpndescText, 
+			A.USE_EXPIR_TYPE 		as useExpirType,
+			A.USE_EXPIR_DAY_CNT as useExpirDayCnt, 
+			A.USE_FIX_START_DATE as useFixStartDate,
+			A.USE_FIX_END_DATE 	as useFixEndDate, 
+			A.USE_DUP_YN 				as useDupYn, 
+			A.USE_MIN_PUR_AMT 	as useMinPurAmt, 
+			A.USE_MAX_DC_AMT 	as useMaxDcAmt,
+			A.USE_WEEK_MON 		as useWeekMon, 
+			A.USE_WEEK_TUE 		as useWeekTue, 
+			A.USE_WEEK_WED 		as useWeekWed,
+			A.USE_WEEK_THU 		as useWeekThu,
+			A.USE_WEEK_FRI 			as useWeekFri, 
+			A.USE_WEEK_SAT 			as useWeekSat, 
+			A.USE_WEEK_SUN        as useWeekSun,
+			A.USABLE_MAX_CNT     as usableMaxCnt,
+			A.USE_START_TIME	    as useFixStartTime,
+			A.USE_END_TIME		    as useFixEndTime,
+			A.RID_ISS_CHNL			as issChnlRid,
+			C.CHNL_NM				as issChnl,
+			A.OFF_YN				as offYn
+			FROM
+				 LOY.LOY_CPN A
+			LEFT OUTER JOIN LOY.LOY_OFR B  ON A.RID_OFR = B.RID AND B.FLAG = 1
+			LEFT OUTER JOIN LOY.LOY_CHNL C ON A.RID_ISS_CHNL = C.RID AND C.FLAG = 1
+			WHERE 
+				A.RID_OFR =  #{ridOfr}
+		</select>
+		
+		<insert id="insertCoupon"
+		parameterType="com.icignal.offer.dto.request.CouponDtlReqDto">
+		/* OfferMapper.insertCoupon */
+		INSERT INTO LOY.LOY_CPN (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			CREATE_DATE,
+			MODIFY_DATE,
+			FLAG,
+			RID_OFR,
+			ISS_TYPE,
+			ISS_DUP_YN,
+			ISS_START_DATE,
+			ISS_END_DATE,
+			ISS_MAX_CNT,
+			THUMB_IMG_BEF_URL,
+			THUMB_IMG_AFT_URL,
+			DESC_TEXT,
+			USE_EXPIR_TYPE,
+			USE_EXPIR_DAY_CNT,
+			USE_FIX_START_DATE,
+			USE_FIX_END_DATE,
+			USE_DUP_YN,
+			USE_WEEK_MON,
+			USE_WEEK_TUE,
+			USE_WEEK_WED,
+			USE_WEEK_THU,
+			USE_WEEK_FRI,
+			USE_WEEK_SAT,
+			USE_WEEK_SUN,
+			USABLE_MAX_CNT,
+			USE_START_TIME,
+			USE_END_TIME,
+			RID_ISS_CHNL,
+			OFF_YN
+		) VALUES(
+			com.getNewID(''),
+			#{createBy},
+			#{modifyBy},
+			GETDATE(),
+			GETDATE(),
+			1,
+			#{ridOfr},
+			#{issType},
+			#{issDupYn},
+			com.TO_DATE(#{issStartDate},'YYYY-MM-DD HH24:MI:SS'),
+			com.TO_DATE(#{issEndDate},'YYYY-MM-DD HH24:MI:SS'),
+			#{issMaxCnt},
+			#{thumbImgBefUrl},
+			#{thumbImgAftUrl},
+			#{cpndescText},
+			#{useExpirType},
+			#{useExpirDayCnt},
+			com.TO_DATE(#{useFixStartDate},'YYYY-MM-DD'),
+			com.TO_DATE(#{useFixEndDate},'YYYY-MM-DD'),
+			#{useDupYn},
+			#{useWeekMon},
+			#{useWeekTue},
+			#{useWeekWed},
+			#{useWeekThu},
+			#{useWeekFri},
+			#{useWeekSat},
+			#{useWeekSun},
+			#{usableMaxCnt},
+			#{useFixStartTime},
+			#{useFixEndTime},
+			CASE WHEN #{issChnlRid} IS NULL THEN LOY.PKG_LOY_FN_GET_CHNL_PR_RID() ELSE #{issChnlRid} END,
+			#{offYn}
+		  )
+	</insert>
+	
+	<update id="updateCoupon"
+		parameterType="com.icignal.offer.dto.request.CouponDtlReqDto">
+		UPDATE
+			LOY.LOY_CPN
+		SET
+			MODIFY_BY=#{modifyBy},
+			MODIFY_DATE=GETDATE(),
+			ISS_TYPE=#{issType},
+			ISS_DUP_YN=#{issDupYn},
+			ISS_START_DATE= com.TO_DATE(#{issStartDate},'YYYY-MM-DD HH24:MI:SS'),
+			ISS_END_DATE=com.TO_DATE(#{issEndDate},'YYYY-MM-DD HH24:MI:SS'),
+			ISS_MAX_CNT=#{issMaxCnt},
+			THUMB_IMG_BEF_URL=#{thumbImgBefUrl},
+			THUMB_IMG_AFT_URL=#{thumbImgAftUrl},
+			DESC_TEXT=#{cpndescText},
+			USE_EXPIR_TYPE=#{useExpirType},
+			USE_EXPIR_DAY_CNT=#{useExpirDayCnt},
+			USE_FIX_START_DATE=com.TO_DATE(#{useFixStartDate},'YYYY-MM-DD'),
+			USE_FIX_END_DATE=com.TO_DATE(#{useFixEndDate},'YYYY-MM-DD'),
+			USE_DUP_YN=#{useDupYn},
+			USE_WEEK_MON=#{useWeekMon},
+			USE_WEEK_TUE=#{useWeekTue},
+			USE_WEEK_WED=#{useWeekWed},
+			USE_WEEK_THU=#{useWeekThu},
+			USE_WEEK_FRI=#{useWeekFri},
+			USE_WEEK_SAT=#{useWeekSat},
+			USE_WEEK_SUN=#{useWeekSun},
+			USABLE_MAX_CNT=#{usableMaxCnt},
+			USE_START_TIME =#{useFixStartTime},
+			USE_END_TIME =#{useFixEndTime},
+			RID_ISS_CHNL =CASE WHEN #{issChnlRid} IS NULL THEN LOY.PKG_LOY_FN_GET_CHNL_PR_RID() ELSE #{issChnlRid} END,
+			OFF_YN       =#{offYn}
+		WHERE
+			 RID_OFR=#{ridOfr}
+	</update>
+	
+	<select id="selectCouponExtAttr"
+		parameterType="com.icignal.offer.dto.request.CouponReqDto"
+		resultType="com.icignal.offer.dto.response.CouponResDto">
+		SELECT 
+			a.RID 						AS rid, 
+			a.CREATE_BY  			AS createBy, 
+			a.MODIFY_BY 			AS modifyBy, 
+			a.CREATE_DATE   		AS createDate,  		
+			a.MODIFY_DATE		AS modifyDate,  
+			a.FLAG						AS flag,  
+			a.CALL_API_URL  		AS callApiUrl,  	 
+			a.CALL_METHOD		AS callMethod,  
+			a.AUTH_KEY				AS authKey,  
+			a.PAR1_NAME			AS par1Name,  
+			a.PAR1_VAL_TYPE		AS par1ValType,  
+			a.PAR1_VAL				AS par1Val,  
+			a.PAR2_NAME			AS par2Name,   
+			a.PAR2_VAL_TYPE		AS par2ValType,  
+			a.PAR2_VAL				AS par2Val,  
+			a.PAR3_NAME			AS par3Name, 
+			a.PAR3_VAL_TYPE		AS par3ValType, 
+			a.PAR3_VAL				AS par3Val,  
+			a.PAR4_NAME			AS par4Name,   
+			a.PAR4_VAL_TYPE		AS par4ValType,
+			a.PAR4_VAL				AS par4Val, 
+			a.PAR5_NAME			AS par5Name,  
+			a.PAR5_VAL_TYPE		AS par5ValType,  
+			a.PAR5_VAL				AS par5Val
+			FROM 
+				LOY.LOY_CPN_IF_ATTR a
+			LEFT OUTER JOIN LOY.LOY_CPN c ON a.RID_CPN = c.RID 	
+			LEFT OUTER JOIN LOY.LOY_OFR f ON a.RID_OFR =f.rid
+			WHERE
+				a.FLAG = 1
+				AND	a.RID_OFR=#{ridOfr}
+				AND	a.RID_CPN=#{ridCpn}				
+	</select>
+	<insert id="insertCpnAttr" parameterType="com.icignal.offer.dto.request.CouponReqDto">
+		INSERT INTO LOY.LOY_CPN_IF_ATTR (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			CREATE_DATE,
+			MODIFY_DATE,
+			FLAG,
+			CALL_API_URL,
+			CALL_METHOD,
+			AUTH_KEY,
+			PAR1_NAME,
+			PAR1_VAL_TYPE,
+			PAR1_VAL,
+			PAR2_NAME,
+			PAR2_VAL_TYPE,
+			PAR2_VAL,
+			PAR3_NAME,
+			PAR3_VAL_TYPE,
+			PAR3_VAL,
+			PAR4_NAME,
+			PAR4_VAL_TYPE,
+			PAR4_VAL,
+			PAR5_NAME,
+			PAR5_VAL_TYPE,
+			PAR5_VAL,
+			RID_CPN,
+			RID_OFR
+		) VALUES(
+			com.getNewID(''),
+			#{createBy},
+			#{modifyBy},
+			GETDATE(),
+			GETDATE(),
+			1,
+			#{callApiUrl},
+			#{callMethod},
+			#{authKey},
+			#{par1Name},
+			#{par1ValType},
+			#{par1Val},
+			#{par2Name},
+			#{par2ValType},
+			#{par2Val},
+			#{par3Name},
+			#{par3ValType},
+			#{par3Val},
+			#{par4Name},
+			#{par4ValType},
+			#{par4Val},
+			#{par5Name},
+			#{par5ValType},
+			#{par5Val},
+			#{ridCpn},
+			#{ridOfr}
+		)
+	</insert>
+
+	<update id="updateCpnAttr"
+		parameterType="com.icignal.offer.dto.request.CouponReqDto">	
+		UPDATE 
+			LOY.LOY_CPN_IF_ATTR
+		SET 
+			MODIFY_BY=#{modifyBy},
+			MODIFY_DATE=GETDATE(),
+			CALL_API_URL=#{callApiUrl},
+			CALL_METHOD=#{callMethod}, 
+			AUTH_KEY=#{authKey}, 
+			PAR1_NAME=#{par1Name},
+			PAR1_VAL_TYPE=#{par1ValType},
+			PAR1_VAL=#{par1Val},
+			PAR2_NAME=#{par2Name},
+			PAR2_VAL_TYPE=#{par2ValType},
+			PAR2_VAL=#{par2Val},
+			PAR3_NAME=#{par3Name},
+			PAR3_VAL_TYPE=#{par3ValType},
+			PAR3_VAL=#{par3Val},
+			PAR4_NAME=#{par4Name},
+			PAR4_VAL_TYPE=#{par4ValType},
+			PAR4_VAL=#{par4Val},
+			PAR5_NAME=#{par5Name},
+			PAR5_VAL_TYPE=#{par5ValType},
+			PAR5_VAL=#{par5Val}
+		WHERE
+			 RID=#{rid}
+	</update>	
+	
+	<select id="selectCpnStatusList"
+		parameterType="com.icignal.offer.dto.request.CouponReqDto"
+		resultType="com.icignal.offer.dto.response.CouponHistResDto" fetchSize="1000">
+		SELECT
+		   A.CPN_NO as  cpnNo,
+		   com.TO_CHAR(C.CPN_ISSUE_DT,'YYYY-MM-DD HH24:MI:SS')  as cpnCreateDate,
+		   B.ISS_TYPE AS issType,
+		   com.TO_CHAR(C.CPN_LST_USED_DT,'YYYY-MM-DD HH24:MI:SS')  as cpnOccurDt,
+		   A.MBR_NO AS mbrNo,
+		   A.RID_USED_CHNL  AS ridUsedChnl,
+		   C.CPN_LST_USED_DT AS cpnLstusedDt,
+		   C.RCPT_NO AS rcptNo,
+		   ${strColumn}
+		FROM
+			LOY.LOY_CPN_TXN A
+		LEFT OUTER JOIN LOY.LOY_CPN_MBR C ON A.RID_CPN_MBR = C.RID AND C.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_OFR f ON a.RID_OFR =f.rid AND f.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CPN B ON f.RID = B.RID_OFR AND B.FLAG = 1
+         WHERE ${strCondWhere}
+         AND  ${strWhere}
+        AND  	a.FLAG =1
+		AND	a.RID_OFR =#{rid}
+		AND a.CPN_TXN_STATE_CD ='10'
+		<!-- AND C.CPN_ISSUE_DT >= com.TO_DATE('19000101','YYYYMMDD') --> <!-- INDEX걸기위한 조건 (지우기X)-->
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+		
+	</select>
+
+	<select id="selectOfferJoinPgmList"
+		parameterType="com.icignal.offer.dto.request.OfferJoinPgmReqDto"
+		resultType="com.icignal.offer.dto.response.OfferJoinPgmResDto">
+		/* OfferMapper.selectOfferJoinPgmList */
+		SELECT
+			A.RID 														AS rid					/* 관계 RID */
+			, A.RID_OFR 												AS ridOfr				/* 연결 오퍼 RID*/
+			, A.RID_PGM 												AS ridPgm			/* 연결 로열티프로그램 RID*/
+			, B.PGM_NO         										AS pgmNo       	/* 프로그램 번호 */
+			, B.PGM_NM         										AS pgmNm       	/* 프로그램 명 */
+			, C.CHNL_NM      											AS chnlPrNm     	/* 채널명 (주관사)*/
+			, B.JOIN_TYPE_CD  										AS pgmType     	/* 프로그램 유형 코드 */
+			, B.STAT_CD       											AS pgmStat     	/* 프로그램 상태 코드 */
+			, com.TO_CHAR(A.CREATE_DATE, 'YYYY-MM-DD') 	AS createDate		/* 개설일(관계연결 생성일) */
+			, A.DESC_TEXT 											AS descText 		/* 비고 */
+			, ${strColumn}
+		FROM LOY.LOY_OFR_PGM A
+		INNER JOIN LOY.LOY_PGM B ON A.RID_PGM = B.RID AND B.FLAG = 1
+		INNER JOIN LOY.LOY_CHNL C	ON B.RID_CHNL_PR = C.RID AND C.FLAG = 1
+		LEFT OUTER JOIN COM.CRM_USER US  ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.CRM_USER US1 ON A.MODIFY_BY = US1.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM  ON US.ID_EMPLOYEE = EM.ID
+		LEFT OUTER JOIN COM.EMPLOYEE EM1 ON US1.ID_EMPLOYEE = EM1.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+			AND A.RID_OFR = #{ridOfr}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="chekOfrPgmRel" parameterType="com.icignal.offer.dto.request.OfferJoinPgmReqDto"
+												resultType="java.lang.Integer">
+	/* OfferMapper.chekOfrPgmRel */
+	SELECT COUNT(*)
+	FROM LOY.LOY_OFR_PGM
+	WHERE FLAG = 1
+	AND RID_PGM = #{ridPgm}
+	AND RID_OFR = #{ridOfr}
+	</select>
+	
+	<insert id="insertOfferJoinPgm"
+		parameterType="com.icignal.offer.dto.request.OfferJoinPgmReqDto">
+		/* OfferMapper.insertOfferJoinPgm */
+		INSERT INTO LOY.LOY_OFR_PGM ( 
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			RID_OFR,
+			RID_PGM
+		) VALUES(
+	       	#{rid},
+			#{createBy},
+			#{modifyBy},
+			#{ridOfr},
+			#{ridPgm}
+		)
+	</insert>
+	
+	<update id="updateOfferJoinPgmDel"
+		parameterType="com.icignal.offer.dto.request.OfferJoinPgmReqDto">
+		/* OfferMapper.updateOfferJoinPgmDel */
+		UPDATE LOY.LOY_OFR_PGM
+			SET MODIFY_DATE	= GETDATE()
+				, MODIFY_BY	= #{modifyBy}
+		 		, FLAG		= flag + 1
+		 WHERE 1 = 1
+		 	AND RID = #{rid}
+	</update>
+
+   	<select id="selectCouponChk"
+		parameterType="com.icignal.offer.dto.request.CouponReqDto"
+		resultType="com.icignal.offer.dto.response.CouponResDto">
+	/* OfferMapper.selectCouponChk */
+		SELECT
+			c.RID as ridCpn
+		FROM
+			loy.loy_cpn c
+		LEFT OUTER JOIN loy.loy_ofr o ON c.RID_OFR  = o.RID
+		WHERE
+		 c.FLAG ='1'
+		 AND c.RID_OFR = #{ridOfr}
+   	</select>
+	
+	<insert id ="insertCouponGuide" parameterType="com.icignal.offer.dto.request.CouponGuideListReqDto">
+	/* OfferMapper.insertCouponGuide */
+		<selectKey keyProperty="" resultType="int" order="AFTER">
+			SELECT 1 FROM DUAL
+		</selectKey>
+		INSERT ALL
+	<foreach collection="cpnGuideList" item="item" separator=" ">
+		INTO LOY.LOY_CPN_GUIDE
+		(
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			CREATE_DATE,
+			MODIFY_DATE,
+			FLAG,
+			LINE_NO,
+			MSG_TEXT,
+			RID_CPN,
+			RID_OFR
+		 ) VALUES(
+			com.getNewID(''),
+			#{createBy},
+			#{modifyBy},
+			GETDATE(),
+			GETDATE(),
+			1,
+			#{item.lineNo},
+			#{item.msgText},
+			#{ridCpn},
+			#{ridOfr}
+		)
+		</foreach>
+		 SELECT 1 FROM DUAL
+	</insert>
+	
+	<select id="selectCouponGuide"
+		parameterType="com.icignal.offer.dto.request.CouponReqDto"
+		resultType="com.icignal.offer.dto.response.CouponGuideResDto">
+	/* OfferMapper.selectCouponGuide */
+		SELECT
+		    RID_OFR as rid,
+		  	MSG_TEXT as msgText,
+		  	LINE_NO as lineNo
+		FROM 
+			LOY.LOY_CPN_GUIDE
+		WHERE 
+			flag=1 
+			AND RID_OFR=#{ridOfr}
+			AND RID_CPN=#{ridCpn}
+	</select>
+	
+	<update id="updateCouponGuide"
+		parameterType="com.icignal.offer.dto.request.CouponGuideListReqDto">
+		<foreach collection="cpnGuideList" item="item" index="index"   separator=";" open="DECLARE BEGIN" close="; END;">
+	/* OfferMapper.updateCouponGuide */
+		UPDATE 
+			LOY.LOY_CPN_GUIDE
+		SET 
+			MSG_TEXT	= #{item.msgText}
+			,MODIFY_BY	= #{modifyBy}
+			,MODIFY_DATE =GETDATE()
+		  WHERE 
+		 	 RID_OFR = #{ridOfr}
+		 	 AND LINE_NO = #{item.lineNo}
+		 	 </foreach>
+
+	</update>
+
+	<select id="selectOfferJoinChnlList"
+		parameterType="com.icignal.offer.dto.request.OfferJoinChnlReqDto"
+		resultType="com.icignal.offer.dto.response.OfferJoinChnlResDto">
+		/* OfferMapper.selectOfferJoinChnlList */
+		SELECT
+			A.RID 														AS rid				/* 관계 RID */
+			, A.RID_OFR 												AS ridOfr			/* 연결 오퍼 RID*/
+			, A.RID_CHNL_M 											  	AS ridChnlM 		/* 연결 채널 RID*/
+			, B.CHNL_NO 												AS chnlNo			/* 채널번호 */
+			, B.CHNL_NM      											AS chnlNm     		/* 채널명 */
+			, com.TO_CHAR(A.CREATE_DATE, 'YYYY-MM-DD') 	AS createDate		/* 생성일 */
+			, EM.NAME    	  											AS createBy			/* 생성자 */
+			, ${strColumn}
+		FROM LOY.LOY_OFR_CHNL A
+		INNER JOIN LOY.LOY_CHNL B ON B.RID = A.RID_CHNL_M AND B.FLAG = 1
+		LEFT OUTER JOIN COM.CRM_USER US  ON A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM  ON US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+			AND A.RID_OFR = #{ridOfr}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<insert id="insertOfferJoinChnl"
+		parameterType="com.icignal.offer.dto.request.OfferJoinChnlReqDto">
+		/* OfferMapper.insertOfferJoinChnl */
+		INSERT INTO LOY.LOY_OFR_CHNL ( 
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			RID_OFR,
+			RID_CHNL_M,
+			REL_TYPE_CD
+		) VALUES(
+	       	#{rid},
+			#{createBy},
+			#{modifyBy},
+			#{ridOfr},
+			#{ridChnlM},
+			#{relTypeCd}
+		)
+	</insert>
+	
+	<update id="updateOfferJoinChnlDel"
+		parameterType="com.icignal.offer.dto.request.OfferJoinChnlReqDto">
+		/* OfferMapper.updateOfferJoinChnlDel */
+		UPDATE LOY.LOY_OFR_CHNL
+			SET MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		 		, flag = flag + 1
+		 WHERE 1 = 1
+		 	AND RID = #{rid}
+	</update>
+	
+	<update id="updateOfferJoinAllChnlDel"
+		parameterType="com.icignal.offer.dto.request.OfferJoinChnlReqDto">
+		/* OfferMapper.updateOfferJoinChnlDel */
+		UPDATE LOY.LOY_OFR_CHNL
+			SET MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		 		, flag = flag + 1
+		 WHERE 1 = 1
+		 	AND RID_OFR = #{ridOfr}
+	</update>
+	
+	<select id="selectOfferJoinProdList"
+		parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto"
+		resultType="com.icignal.offer.dto.response.OfferJoinProdResDto">
+		/* OfferMapper.selectOfferJoinProdList */
+		  SELECT
+		      rid
+             , prodId
+             , mmzzStdItemCd
+             , mmzzItemCd
+             , mmzzRepCd1
+             , mmzzRepCd2
+             , mmSkucd
+             , prodNm
+             , shGoodsNo
+             , shGoodsCode
+             , shGoodsName
+             , mmMtart
+             , lCtg
+             , mCtg
+             , sCtg
+             , ${strColumn}
+        FROM (
+             SELECT 
+                  A.rid                       AS rid  
+                 ,lp.PROD_ID             AS prodId
+	             ,MAX(T.MMZZSTDITEMCD)      AS mmzzStdItemCd
+	             ,MAX(T.MMZZITEMCD)         AS mmzzItemCd
+	             ,MAX(T.MMZZREPCD1)         AS mmzzRepCd1
+	             ,MAX(T.MMZZREPCD2)         AS mmzzRepCd2
+	             ,MAX(T.MMSKUCD)            AS mmSkucd
+	             ,lp.PROD_NM            AS prodNm
+	             ,MAX(T.SHGOODSNO)          AS shGoodsNo
+	             ,MAX(T.SHGOODSCODE)        AS shGoodsCode
+	             ,MAX(T.SHGOODSNAME)        AS shGoodsName
+	             ,MAX(T.MMMTART)            AS mmMtart
+	             ,MAX(T.LCTG)              AS lCtg
+	             ,MAX(T.MCTG)              AS mCtg
+                 ,MAX(T.SCTG)              AS sCtg
+	        FROM LOY.LOY_OFR_PROD A
+	        LEFT OUTER JOIN LOY.LOY_PROD lp ON lp.RID = A.RID_PROD_M AND lp.FLAG = 1
+	        LEFT OUTER  JOIN LOY.LOY_PROD_XM T ON T.PRODID = lp.PROD_ID
+	        WHERE  1=1
+	            AND 1=1
+	            AND A.FLAG  = 1
+	            AND A.PROD_USE_TYPE = 'PU' 
+	            AND A.RID_OFR = #{ridOfr}
+	            GROUP BY A.RID,lp.PROD_ID,lp.PROD_NM
+        ) ofrProdTable    
+        WHERE 1=1
+             AND   ${strCondWhere}
+             AND   ${strWhere}
+        ORDER BY ${strOrderby}
+            ${strEndPaging}          
+	</select>
+	
+	    <select id="selectOfferJoinProdNotUsedList" parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto"
+                                                                                     resultType="com.icignal.offer.dto.response.OfferJoinProdResDto">
+        /* OfferMapper.selectOfferJoinProdNotUsedList */
+             SELECT 
+                  A.RID                                 AS rid  
+                 ,lp.PROD_ID                       AS prodId
+                 ,MAX(T.MMZZSTDITEMCD)      AS mmzzStdItemCd
+                 ,MAX(T.MMZZITEMCD)         AS mmzzItemCd
+                 ,MAX(T.MMZZREPCD1)         AS mmzzRepCd1
+                 ,MAX(T.MMZZREPCD2)         AS mmzzRepCd2
+                 ,MAX(T.MMSKUCD)            AS mmSkucd
+                 ,lp.PROD_NM            AS prodNm
+                 ,MAX(T.SHGOODSNO)          AS shGoodsNo
+                 ,MAX(T.SHGOODSCODE)        AS shGoodsCode
+                 ,MAX(T.SHGOODSNAME)        AS shGoodsName
+                 ,MAX(T.MMMTART)            AS mmMtart
+                 ,MAX(T.LCTG)              AS lCtg
+                 ,MAX(T.MCTG)              AS mCtg
+                 ,MAX(T.SCTG)              AS sCtg
+                 ,${strColumn}
+            FROM LOY.LOY_OFR_PROD A
+            LEFT OUTER JOIN LOY.LOY_PROD lp ON lp.RID = A.RID_PROD_M AND lp.FLAG = 1
+            LEFT OUTER  JOIN LOY.LOY_PROD_XM T ON T.PRODID = lp.PROD_ID
+            WHERE  1=1
+                AND 1=1
+                AND A.FLAG  = 1
+                AND A.PROD_USE_TYPE = 'PN' 
+                AND lp.CPN_AVL_YN = 'Y'
+                AND A.RID_OFR = #{ridOfr}
+             	AND   ${strCondWhere}
+             	AND   ${strWhere}
+            GROUP BY A.RID,lp.PROD_ID,lp.PROD_NM
+        ORDER BY ${strOrderby}
+            ${strEndPaging}          
+    </select>   
+	
+	
+	<insert id="insertOfferJoinProd"
+		parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto">
+		/* OfferMapper.insertOfferJoinProd */
+		INSERT INTO LOY.LOY_OFR_PROD ( 
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			RID_OFR,
+			RID_PROD_M,
+			REL_TYPE_CD,
+			PROD_USE_TYPE
+		) VALUES(
+	       	#{rid},
+			#{createBy},
+			#{modifyBy},
+			#{ridOfr},
+			#{ridProdM},
+			#{relTypeCd},
+			#{prodUseType}
+		)
+	</insert>
+	
+	
+	<update id="updateOfferProdLimitYCheck"
+		parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto">
+		/* OfferMapper.updateOfferProdLimitYCheck */
+		UPDATE LOY.LOY_OFR
+			SET MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		 		, USE_PROD_LIMIT_YN =#{prodLimitYn}
+		 WHERE 1 = 1
+		 	AND RID = #{ridOfr}
+	</update>
+	
+	<select id ="selectChkCnt" 	parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto" resultType="java.lang.Integer">
+		/* OfferMapper.selectChkCnt */
+		SELECT count(1) as cnt
+		FROM LOY.LOY_OFR_CHNL
+		WHERE 1 = 1
+		AND FLAG=1
+	    AND RID_OFR = #{ridOfr}
+		</select>
+		
+		<select id ="selectChkProdCnt" 	parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto" resultType="java.lang.Integer">
+		/* OfferMapper.selectChkProdCnt */
+		SELECT count(1) as cnt
+		FROM LOY.LOY_OFR_PROD
+		WHERE 1 = 1
+		AND FLAG=1
+	    AND RID_OFR = #{ridOfr}
+	    AND PROD_USE_TYPE = 'PU'
+		</select>
+	
+	<update id="updateOfferChnlLimitYCheck"
+		parameterType="com.icignal.offer.dto.request.OfferJoinChnlReqDto">
+		/* OfferMapper.updateOfferChnlLimitYCheck */
+		UPDATE LOY.LOY_OFR
+			SET MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		 		, USE_CHNL_LIMIT_YN = #{chnlLimitYn}
+		 WHERE 1 = 1
+		 	AND RID = #{ridOfr}
+	</update>
+	
+	
+	<update id="updateOfferJoinProdDel"
+		parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto">
+		/* OfferMapper.updateOfferJoinProdDel */
+		UPDATE LOY.LOY_OFR_PROD
+			SET MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		 		, flag = flag + 1
+		 WHERE 1 = 1
+		 	AND RID = #{rid}
+	</update>
+	
+	<update id="updateOfferJoinAllProdDel"
+		parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto">
+		/* OfferMapper.updateOfferJoinAllProdDel */
+		UPDATE LOY.LOY_OFR_PROD
+			SET MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		 		, flag = flag + 1
+		 WHERE 1 = 1
+		 	AND PROD_USE_TYPE = 'PU' 
+		 	AND RID_OFR = #{ridOfr}
+	</update>
+	
+	   <update id="updateOfferJoinNotAllProdDel"
+        parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto">
+        /* OfferMapper.updateOfferJoinNotAllProdDel */
+        UPDATE LOY.LOY_OFR_PROD
+            SET MODIFY_DATE = GETDATE()
+                , MODIFY_BY = #{modifyBy}
+                , flag = flag + 1
+         WHERE 1 = 1
+            AND PROD_USE_TYPE = 'PN' 
+            AND RID_OFR = #{ridOfr}
+    </update>
+	
+	<select id="selectOfferGroupList"
+	    parameterType="com.icignal.offer.dto.request.OfferGroupReqDto"
+	    resultType="com.icignal.offer.dto.response.OfferGroupResDto">
+	    /* OfferGroupMapper.selectOfferGroupList */
+		SELECT
+			A.RID AS rid,
+			B.OFRGRP_NO AS ofrgrpNo,
+			B.OFRGRP_NM AS ofrgrpNm,
+			B.OFRGRP_TYPE AS ofrgrpType,
+			B.STAT_CD AS statCd,
+			com.TO_CHAR(A.CREATE_DATE, 'YYYY-MM-DD') AS createDate,
+			EM.NAME AS createBy,
+		   	${strColumn}
+		FROM
+			LOY.LOY_OFRGRP_OFR A
+		INNER JOIN LOY_OFRGRP B ON A.RID_OFRGRP = B.RID AND B.FLAG = 1
+		LEFT OUTER JOIN COM.CRM_USER US ON
+			A.CREATE_BY = US.RID
+		LEFT OUTER JOIN COM.EMPLOYEE EM ON
+			US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+		    AND ${strWhere}
+		    AND A.FLAG  = 1
+		   	AND A.RID_OFR = #{ridOfr}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectOfferCouponPoolList"
+		parameterType="com.icignal.offer.dto.request.OfferCouponPoolReqDto"
+		resultType="com.icignal.offer.dto.response.OfferCouponPoolResDto">
+		/* OfferMapper.selectOfferCouponPoolList */
+		SELECT 
+			a.ISSUE_TYPE_CD			AS issueTypeCd			/* 유형 */
+			, a.CPN_NO						AS cpnNo		/* 쿠폰번호 */
+			, a.SEARCH_NO				AS searchNo			/* 검색번호 */
+			, a.ISSUE_APPLY_FLAG		AS issueApplyFlag	/* 발급여부 */
+			, a.ISSUE_APPLY_DATE		AS issueApplyDate	/* 발급일자 */
+			, a.CREATE_DATE				AS createDate		/* 등록일 */
+			, ${strColumn}
+		FROM
+		(
+			SELECT cn.ISSUE_TYPE_CD, cnm.CPN_NO, cnm.SEARCH_NO, cnm.ISSUE_APPLY_FLAG, cnm.ISSUE_APPLY_DATE, cnm.CREATE_DATE
+			FROM LOY.LOY_CPN_NO cn
+			INNER JOIN LOY.LOY_CPN_NO_MANY cnm ON cn.RID = cnm.RID_CPN_POOL AND cnm.FLAG = 1
+			UNION ALL
+			SELECT cn.ISSUE_TYPE_CD, cno.CPN_NO, cno.SEARCH_NO, cno.ISSUE_APPLY_FLAG, cno.ISSUE_APPLY_DATE, cno.CREATE_DATE
+			FROM LOY.LOY_CPN_NO cn
+			INNER JOIN LOY.LOY_CPN_NO_ONE cno ON cn.RID = cno.RID_CPN_POOL AND cno.FLAG = 1
+		) a
+		WHERE  ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectOfferCpnPoolListCond"
+		parameterType="com.icignal.offer.dto.request.OfferCpnPoolListCondReqDto"
+		resultType="com.icignal.offer.dto.response.OfferCpnPoolListCondResDto">
+		/* OfferMapper.selectOfferCpnPoolListCond */
+		SELECT
+			com.TO_CHAR(MAX(M_TYPE_TOT_CNT), 'FM9,999,999')  			AS mTypeTotCnt			/* 대량(M) Pool 전체건수 */
+			, com.TO_CHAR(MAX(M_TYPE_ISSUE_CNT), 'FM9,999,999') 		AS mTypeIssueCnt		/* 대량(M) Pool 발급건수 */
+			, com.TO_CHAR(MAX(M_TYPE_REMAIN_CNT), 'FM9,999,999') 		AS mTypeRemainCnt		/* 대량(M) Pool 잔여건수 */
+			, com.TO_CHAR(MAX(S_TYPE_TOT_CNT), 'FM9,999,999') 			AS sTypeTotCnt			/* 단건(S) Pool 전체건수 */
+			, com.TO_CHAR(MAX(S_TYPE_ISSUE_CNT), 'FM9,999,999') 		AS sTypeIssueCnt		/* 단건(S) Pool 발급건수 */
+			, com.TO_CHAR(MAX(S_TYPE_REMAIN_CNT), 'FM9,999,999') 		AS sTypeRemainCnt		/* 단건(S) Pool 잔여건수 */
+		FROM
+		(
+			SELECT
+				CASE WHEN X1.ISSUE_TYPE_CD = 'M' THEN X1.CPN_TOT_CNT END AS M_TYPE_TOT_CNT
+				, CASE WHEN X1.ISSUE_TYPE_CD = 'M' THEN X2.CNT END AS M_TYPE_ISSUE_CNT
+				, CASE WHEN X1.ISSUE_TYPE_CD = 'M' THEN GREATEST((X1.CPN_TOT_CNT - X2.CNT), 0) END AS M_TYPE_REMAIN_CNT
+				, CASE WHEN X1.ISSUE_TYPE_CD = 'S' THEN X1.CPN_TOT_CNT END AS S_TYPE_TOT_CNT
+				, CASE WHEN X1.ISSUE_TYPE_CD = 'S' THEN X3.CNT END AS S_TYPE_ISSUE_CNT
+				, CASE WHEN X1.ISSUE_TYPE_CD = 'S' THEN GREATEST((X1.CPN_TOT_CNT - X3.CNT), 0) END AS S_TYPE_REMAIN_CNT
+			FROM
+				(SELECT ISSUE_TYPE_CD, SUM(CPN_TOT_CNT) AS CPN_TOT_CNT FROM LOY.LOY_CPN_NO WHERE FLAG = 1 GROUP BY ISSUE_TYPE_CD) X1
+				LEFT OUTER JOIN (SELECT 'M' AS ISSUE_TYPE_CD, COUNT(*) AS CNT FROM LOY.LOY_CPN_NO X1 INNER JOIN LOY.LOY_CPN_NO_MANY X2 ON X1.RID = X2.RID_CPN_POOL AND X2.FLAG = 1) X2
+					ON X1.ISSUE_TYPE_CD = X2.ISSUE_TYPE_CD
+				LEFT OUTER JOIN (SELECT 'S' AS ISSUE_TYPE_CD, COUNT(*) AS CNT FROM LOY.LOY_CPN_NO X1 INNER JOIN LOY.LOY_CPN_NO_ONE X2 ON X1.RID = X2.RID_CPN_POOL AND X2.FLAG = 1) X3
+					ON X1.ISSUE_TYPE_CD = X3.ISSUE_TYPE_CD
+		)
+	</select>
+	
+	<update id="updateOfferJoinPgm" parameterType="com.icignal.offer.dto.request.OfferJoinPgmReqDto">
+	/* OfferMapper.updateOfferJoinPgm */
+	UPDATE LOY.LOY_OFR_PGM
+	SET
+		  MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = GETDATE()
+		, RID_PGM = #{ridPgm}
+	WHERE RID = #{rid}
+	</update>
+	
+	<update id="initOfrCouponDetail" parameterType="com.icignal.offer.dto.request.CouponDtlReqDto">
+	/* OfferMapper.initOfrCouponDetail */
+	UPDATE LOY.LOY_CPN
+	SET    MODIFY_BY = #{modifyBy}
+			, MODIFY_DATE = GETDATE()
+			, ISS_TYPE = NULL
+			, ISS_DUP_YN = NULL
+			, ISS_START_DATE = NULL
+			, ISS_END_DATE = NULL
+			, ISS_MAX_CNT = NULL
+			, THUMB_IMG_BEF_URL = NULL
+			, THUMB_IMG_AFT_URL = NULL
+			, DESC_TEXT = NULL
+			, USE_EXPIR_TYPE = NULL
+			, USE_EXPIR_DAY_CNT = NULL
+			, USE_FIX_START_DATE = NULL
+			, USE_FIX_END_DATE = NULL
+			, USE_DUP_YN = NULL
+			, USE_MIN_PUR_AMT = NULL
+			, USE_MAX_DC_AMT = NULL
+			, USE_WEEK_MON = 'Y'
+			, USE_WEEK_TUE = 'Y'
+			, USE_WEEK_WED = 'Y'
+			, USE_WEEK_THU = 'Y'
+			, USE_WEEK_FRI = 'Y'
+			, USE_WEEK_SAT = 'Y'
+			, USE_WEEK_SUN = 'Y'
+			, USABLE_MAX_CNT = 1
+			, USE_START_TIME = NULL
+			, USE_END_TIME = NULL
+	WHERE RID_OFR = #{ridOfr}
+	</update>
+	
+	<update id="initOfrCouponGuide" parameterType="com.icignal.offer.dto.request.CouponGuideListReqDto">
+	/* OfferMapper.initOfrCouponGuide */
+	UPDATE loy.LOY_CPN_GUIDE
+	SET MODIFY_BY = #{modifyBy}
+			, MODIFY_DATE = GETDATE()
+			, MSG_TEXT = NULL
+	WHERE RID_OFR = #{ridOfr}
+	</update>
+	
+	   <select id="ofrSelectLoyPgmListNew" resultType="com.icignal.loyalty.channel.dto.response.LoyProgramListResDto">
+    /* OfferMapper.ofrSelectLoyPgmListNew */
+    SELECT    lp.PGM_NO         AS pgmNo
+            , lp.PGM_NM         AS pgmNm
+            , lp.RID            AS rid
+    FROM  LOY.LOY_PGM lp
+    WHERE lp.FLAG = 1
+    AND   lp.STAT_CD = 'A'
+    </select>
+  
+    <select id="selectOfrChnlListPage" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlMasterReqDto" 
+                                    resultType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto">
+     /* OfferMapper.selectOfrChnlListPage */
+    SELECT    lcm.CHNL_NO           AS chnlNo
+            , lcm.CHNL_NM           AS chnlNm
+            , lcm.STAT_CD           AS statCd
+            , lcm.CHNL_TYPE_CD      AS chnlTypeCd
+            , lcm.CHNL_SUB_TYPE_CD  AS chnlSubTypeCd
+            , com.TO_CHAR(lcm.CREATE_DATE,'YYYY-MM-DD HH24:Mi:SS')      AS createDate
+            , em.name               AS createBy
+            , lcm.RID               AS rid
+    FROM LOY.LOY_CHNL lcm
+    LEFT OUTER JOIN com.crm_user us on lcm.create_by = us.rid AND us.FLAG = 1
+    LEFT OUTER JOIN com.employee em on us.id_employee = em.id AND em.FLAG = 1
+    WHERE lcm.FLAG = 1 
+    AND lcm.CHNL_NO = #{chnlNo}
+    </select>
+    
+       <select id="selectOfrProdListPage" parameterType="com.icignal.loyalty.channel.dto.request.LoyChnlMasterReqDto" 
+                                    resultType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto">
+        /* OfferMapper.selectOfrProdListPage */
+    	SELECT
+           	 T1.RID     AS ProdRid
+         FROM LOY.LOY_PROD T1
+    	 WHERE
+    	 T1.PROD_ID=#{ridProdM} 
+    	  AND T1.flag=1
+     </select>
+     
+     	
+	<select id="selectProdDupChk" parameterType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto"
+												resultType="java.lang.Integer">
+	/* OfferMapper.selectProdDupChk */
+	SELECT 
+		COUNT(*)
+	FROM 
+		LOY.LOY_OFR_PROD
+	WHERE 
+		FLAG = 1
+		AND RID_PROD_M = #{prodRid}
+		AND RID_OFR = #{ridOfr}
+		AND PROD_USE_TYPE = #{prodUseType}
+	</select>
+	
+	<select id="selectIsProdData" parameterType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto"
+												resultType="java.lang.Integer">
+	/* OfferMapper.selectIsProdData */
+	SELECT 
+		COUNT(*)
+	FROM 
+		LOY.LOY_PROD
+	WHERE 
+		FLAG = 1
+		AND RID = #{prodRid}
+	</select>
+	
+	<select id="selectChnlDupChk" parameterType="com.icignal.loyalty.channel.dto.response.LoyChannelListPageResDto"
+												resultType="java.lang.Integer">
+	/* OfferMapper.selectChnlDupChk */
+	SELECT 
+		COUNT(*)
+	FROM 
+		LOY.LOY_OFR_CHNL
+	WHERE 
+		FLAG = 1
+		AND RID_OFR = #{ridOfr}
+		AND RID_CHNL_M = #{ridChnl}
+	</select>
+
+	<select id="selectOfferProdRidList"
+		parameterType="com.icignal.offer.dto.request.OfferJoinProdReqDto"
+		resultType="java.lang.String">
+		/* OfferMapper.selectOfferProdRidList */
+		 SELECT 
+		 	RID_PROD_M AS rid 
+		 FROM LOY.LOY_OFR_PROD T2
+         WHERE 
+         	T2.RID_OFR = #{ridOfr} AND T2.flag=1
+        	AND T2.PROD_USE_TYPE =#{prodUseTypeDup}
+	</select>
+	
+	<select id="selectOfrCpnCnt" parameterType="com.icignal.offer.dto.request.OfferReqDto"
+												resultType="java.lang.Integer">
+	/* OfferMapper.selectOfrCpnCnt */
+	SELECT 
+		COUNT(*)
+	FROM 
+		 LOY.LOY_CPN lc
+	WHERE 
+		lc.FLAG = 1
+	AND lc.RID_OFR = #{rid}
+	</select>
+	
+	<update id="updateOfrStatCdStop" parameterType="com.icignal.offer.dto.request.OfferReqDto">
+	/* LoyEventMapper.updateOfrStatCdStop */
+	UPDATE loy.LOY_OFR
+	   SET MODIFY_BY    	= #{modifyBy},
+	 	   MODIFY_DATE 	=  GETDATE(),
+	 	   STAT_CD = 'E'
+	 WHERE rid = #{rid}
+	</update>
+	
+	<update id="updateOfrStatCdStart" parameterType="com.icignal.offer.dto.request.OfferReqDto">
+	/* LoyEventMapper.updateOfrStatCdStart */
+	UPDATE loy.LOY_OFR
+	   SET MODIFY_BY    	= #{modifyBy},
+	 	   MODIFY_DATE 	=  GETDATE(),
+	 	   STAT_CD = 'A'
+	 WHERE rid = #{rid}
+	</update>
+	
+	<select id="selectOfferPointCommCodeList" parameterType="com.icignal.common.base.dto.request.CommonCodeReqDto" resultType="com.icignal.systemmanagement.commcode.dto.response.ICNCommonCodeResponseDTO">
+    	/* OfferMapper.selectOfferPointCommCodeList */
+       select * from (
+	        SELECT
+	            id as codeId,
+	            code_name as codeName,
+	            mark_name as markName,
+	            par_code_id as parCodeId,
+	            ATTRIB01 as attrib01,
+	            ATTRIB02 as attrib02,
+	            ATTRIB03 as attrib03,
+	            ATTRIB04 as attrib04,
+	            ATTRIB05 as attrib05,
+	            seq+1 as seq
+	        FROM
+	            com.comm_code
+	          WHERE flag = 1
+	          AND group_code = #{groupCode}
+	          AND CODE_NAME = 'P'
+	          ) a
+          		order by seq
+    </select>
+    
+    <select id="selectOfferPointList"
+		parameterType="com.icignal.offer.dto.request.OfferReqDto"
+		resultType="com.icignal.offer.dto.response.OfferResDto">
+		/* OfferMapper.selectOfferPointList */
+		SELECT
+			A.RID                                   AS  rid
+			,A.OFR_CTG								AS ofrCtg
+			,A.OFR_NO                               AS  ofrNo
+			,A.OFR_NM                               AS  ofrNm                   
+			,A.OFR_TYPE                             AS  ofrType
+			,A.OFR_SUB_TYPE                         AS  ofrSubType
+			,A.EXPIR_TYPE							AS expirType
+			,CASE WHEN A.EXPIR_TYPE = 'DAY' AND A.EXPIR_CNT = 0 THEN N'유효시작일부터 당일까지'
+			      WHEN A.EXPIR_TYPE = 'DAY' AND A.EXPIR_CNT != 0 THEN concat(N'유효시작일부터 ', A.EXPIR_CNT, N'일 후 까지')
+			      WHEN A.EXPIR_TYPE = 'DAY' AND A.EXPIR_CNT IS NULL THEN N'유효시작일부터 당일까지'
+			      WHEN A.EXPIR_TYPE = 'MONTH' AND A.EXPIR_CNT = 0 THEN N'유효시작일부터 당일까지'
+			      WHEN A.EXPIR_TYPE = 'MONTH' AND A.EXPIR_CNT != 0 THEN concat(N'유효시작일부터 ', A.EXPIR_CNT, N'개월 후 까지')
+			      WHEN A.EXPIR_TYPE = 'MONTH' AND A.EXPIR_CNT IS NULL THEN N'유효시작일부터 당일까지'
+			      WHEN A.EXPIR_TYPE = 'YEAR' AND A.EXPIR_CNT = 0 THEN N'유효시작일부터 당일까지'
+			      WHEN A.EXPIR_TYPE = 'YEAR' AND A.EXPIR_CNT != 0 THEN concat(N'유효시작일부터 ', A.EXPIR_CNT, N'년 후 까지')
+			      WHEN A.EXPIR_TYPE = 'YEAR' AND A.EXPIR_CNT IS NULL THEN N'유효시작일부터 당일까지'
+			      WHEN A.EXPIR_TYPE = 'EOM' AND A.EXPIR_CNT = 0 THEN N'유효시작일부터 당월 말일까지'
+			      WHEN A.EXPIR_TYPE = 'EOM' AND A.EXPIR_CNT != 0 THEN concat(N'유효시작일부터 ', A.EXPIR_CNT, N'개월 후 말일 까지')
+			      WHEN A.EXPIR_TYPE = 'EOM' AND A.EXPIR_CNT IS NULL THEN N'유효시작일부터 당월 말일까지'
+			      WHEN A.EXPIR_TYPE = 'EOY' AND A.EXPIR_CNT = 0 THEN N'유효시작일부터 금년 12월31일까지'
+			      WHEN A.EXPIR_TYPE = 'EOY' AND A.EXPIR_CNT != 0 THEN concat(N'유효시작일부터 ', A.EXPIR_CNT, N'년 후 12월31일까지')
+			      WHEN A.EXPIR_TYPE = 'EOY' AND A.EXPIR_CNT IS NULL THEN N'유효시작일부터 금년 12월31일까지'
+			      WHEN A.EXPIR_TYPE = 'NA'  THEN '기한제한없음'
+			END
+			AS expirCnt
+			,A.VOC_YN								AS vocYn
+			,A.EMP_YN								AS empYn
+			,A.STAT_CD								AS  statCd
+			,A.CPN_YN								AS  cpnYn
+ 			,com.TO_CHAR(A.VALID_START_DATE,'YYYY-MM-DD') 	AS  validStartDate
+			,com.TO_CHAR(A.VALID_END_DATE,'YYYY-MM-DD') 	AS  validEndDate 
+			,com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') 	AS  createDate
+		    ,EM.NAME    	  						AS  createBy
+		    ,com.nvl2(lc.USE_MIN_PUR_AMT,concat(com.TO_CHAR(lc.USE_MIN_PUR_AMT	,'999,999,999,999,999'), N'원'),NULL)				AS useMinPurAmt
+		    ,com.nvl2(lc.USE_MIN_PUR_AMT,concat(com.TO_CHAR(lc.USE_MAX_DC_AMT,'999,999,999,999,999'), N'원'),NULL)						AS useMaxDcAmt
+		    ,lc.USE_DUP_YN							AS useDupYn
+		    , lc.USABLE_MAX_CNT                 AS usableMaxCnt
+		    , CASE WHEN A.OFR_VAL_TYPE ='F' THEN com.NVL2(A.OFR_VAL_AMT,concat(com.TO_CHAR(A.OFR_VAL_AMT,'999,999,999,999,999'), N'원'),NULL)
+        		       WHEN A.OFR_VAL_TYPE ='A' THEN com.NVL2(A.OFR_VAL_AMT,concat(com.TO_CHAR(A.OFR_VAL_AMT,'999,999,999,999,999'), N'원'),NULL)
+        		  ELSE 	com.NVL2(A.OFR_VAL_AMT,concat(A.OFR_VAL_AMT, '%'),NULL) END 	AS ofrValAmt
+        	, A.USE_PROD_LIMIT_YN AS useProdLimitYn
+		    ,${strColumn}
+		FROM
+			LOY.LOY_OFR A
+		LEFT OUTER JOIN LOY.LOY_CPN    lc ON A.RID = lc.RID_OFR AND lc.FLAG = 1
+	    LEFT OUTER JOIN COM.CRM_USER US  ON A.CREATE_BY = US.RID
+	    LEFT OUTER JOIN COM.EMPLOYEE EM  ON US.ID_EMPLOYEE = EM.ID
+		WHERE  ${strCondWhere}
+			AND ${strWhere}
+			AND A.FLAG  = 1
+			AND A.OFR_TYPE = 'P'
+			AND A.OFR_CTG = #{ofrCtg}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="OfflineYCheck" parameterType ="com.icignal.offer.dto.request.OfferJoinChnlReqDto" resultType="java.lang.String" >
+		SELECT LOY.PKG_LOY_FN_FN_CHK_CPN_OFF_ONLY(#{ridOfr})
+	</select>
+	
+	<update id="updateOfferOfflineYCheck"
+		parameterType="com.icignal.offer.dto.request.OfferJoinChnlReqDto">
+		/* OfferMapper.updateOfferOfflineYCheck */
+		UPDATE LOY.LOY_CPN
+			SET MODIFY_DATE = GETDATE()
+				, MODIFY_BY = #{modifyBy}
+		 		, OFF_YN = #{offYn}
+		 WHERE 1 = 1
+		 	AND RID_OFR = #{ridOfr}
+	</update>
+	
+</mapper>

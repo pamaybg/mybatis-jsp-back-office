@@ -1,0 +1,1272 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.customer.mapper.LoyCustomerMapper">
+    
+    <!-- /**************************************
+    -   관련 파일            : LOYCustDAO.java (getPgmDetail)
+    ============================================
+    -   제목                   : 고객 상세 조회
+    -   설명                   : 고객 상세 조회
+    -   결과형태             : 단건
+    ============================================
+    -   입력			  : accountId, rid
+    -	출력			  :
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.12.13.
+    ***************************************/ -->
+    <select id="selectCust" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCustDetailResDto">
+       	/* LoyCustomerMapper.selectCust */
+		select
+		       	 a.rid                as    rid               /* RID */
+				,a.cust_type_cd       as    custTypeCd        /* 고객 유형 코드 */
+				,a.cust_nm    as    custNm            /** 고객 명 */
+				,com.TO_CHAR(com.TO_DATE(a.birth_dt,'YYYYMMDD'),'YYYY-MM-DD')				as    birthDt           /* 생년월일 */
+				,a.gen_gbn_cd         as    genGbnCd          /* 성별 구분 코드 */
+
+				,com.TO_CHAR(com.TO_DATE(a.real_birth_dt,'YYYYMMDD'),'YYYY-MM-DD')	 	as    realBirthDt  /* 실 생년월일 */
+				,a.lunar_gbn_cd       as    lunarGbnCd        /* 양음력 구분 코드 */
+				,a.identi_type_cd     as    identiTypeCd      /* 식별 유형 코드 */
+				,a.identi_val as identiVal	/* 식별 값 */
+				,a.realnm_certi_yn    as    realnmCertiYn     /* 실명 인증 여부 */
+				,com.TO_CHAR(a.realnm_certi_date,'YYYY-MM-DD')   as    realnmCertiDate   /* 실명 인증 일자 */
+		  from loy.loy_cust a
+	     where 1=1
+		   <!-- and a.accnt_id = #{accountId} -->
+		   and a.rid = #{rid}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : LOYCustDAO.java (updatePgm)
+    ============================================
+    -   제목                   : 고객 수정
+    -   설명                   : 고객 수정
+    -   결과형태             : 단건
+    ============================================
+    -   입력			  : custRequest
+    -	출력			  :
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.12.13.
+    ***************************************/ -->
+    <update id="updateCust" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto">
+		/* LoyCustomerMapper.updateCust */
+		update loy.loy_cust
+		set
+			cust_nm = #{custNm}
+		    , cust_type_cd = #{custTypeCd}
+		    , identi_type_cd = #{identiTypeCd}
+			, identi_val = #{identiVal}
+			, realnm_certi_yn = #{realnmCertiYn}
+			, realnm_certi_date = #{realnmCertiDate}
+			, birth_dt= #{birthDt}
+			, gen_gbn_cd = #{genGbnCd}
+			, real_birth_dt  = #{realBirthDt}
+			, lunar_gbn_cd = #{lunarGbnCd}
+            , modify_date = GETDATE()
+            , modify_by = #{modifyBy}
+		where 1 = 1
+		  and rid	= #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : LOYCustDAO.java (insertCust)
+    ============================================
+    -   제목                   : 고객 등록
+    -   설명                   : 고객 등록
+    -   결과형태             : 단건
+    ============================================
+    -   입력			  : custRequest
+    -	출력			  :
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.12.13.
+    ***************************************/ -->
+	<insert id="insertCust" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto">
+		/* LoyCustomerMapper.insertCust */
+		insert into loy.loy_cust (
+			     rid
+				,cust_type_cd
+				,cust_nm
+				,birth_dt
+				,gen_gbn_cd
+				,real_birth_dt
+				,lunar_gbn_cd
+				,identi_type_cd
+				,identi_val
+				,realnm_certi_yn
+				,realnm_certi_date
+                <!-- ,accnt_id -->
+                <!-- ,app_service_type -->
+                <!-- ,country -->
+                ,create_date
+                ,create_by
+				,flag
+		) values (
+			     #{rid} 
+               , #{custTypeCd}
+               , #{custNm}
+               , #{birthDt}
+               , #{genGbnCd}
+               , #{realBirthDt}
+               , #{lunarGbnCd}
+               , #{identiTypeCd}
+               , #{identiVal}
+               , #{realnmCertiYn}
+               , com.TO_DATE(#{realnmCertiDate},'yyyy-mm-dd')
+               <!-- , #{accountId} -->
+               <!-- , #{appServiceId} -->
+               <!-- , #{country} -->
+               , GETDATE()
+               , #{createBy}
+               , 1
+		)
+		<selectKey keyProperty="" resultType="java.lang.String">
+			select 1 from dual
+		</selectKey>
+	</insert>
+	
+	 <!-- /**************************************
+    -   관련 파일            : LOYCustDAO.java ()
+    ============================================
+    -   제목                   : 고객 중복 체크
+    -   설명                   : 고객 중복 체크
+    -   결과형태             : 단건
+    ============================================
+    -   입력			  : accountId, identiTypeCd, identiVal
+    -	출력			  :
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2017.01.09.
+    ***************************************/ -->
+    <select id="duplCust" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto" resultType="java.lang.Integer">
+       	/* LoyCustomerMapper.duplCust */
+       	select count(1)
+		from dual
+		where EXISTS (
+		 select 1 from loy.loy_cust a
+		 where 1=1
+		 <!-- and a.accnt_id = #{accountId} -->
+		 and a.identi_type_cd = #{identiTypeCd}
+		 and a.identi_val = secu.fn_getEncrypt(#{cipherKey},#{identiVal})
+		 and a.flag = 1
+		)
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : LOYCustDAO.java (delPgm)
+    ============================================
+    -   제목                   : 고객 삭제
+    -   설명                   : 고객 삭제
+    -   결과형태             : 단건
+    ============================================
+    -   입력			  : rid
+    -	출력			  :
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.12.13.
+    ***************************************/ -->
+	<update id="updateCustDel" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto">
+		/* LoyCustomerMapper.updateCustDel */
+		update loy.loy_cust
+		   set modify_date	= GETDATE()
+			  , modify_by	= #{modifyBy}
+		      , flag		= flag + 1
+		 where 1 = 1
+		   and rid = #{rid}
+	</update>
+	
+	<select id="clearMaskCust" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto" resultType="com.icignal.loyalty.customer.dto.response.LOYCustResDto">
+       	/* LoyCustomerMapper.clearMaskCust */
+		select
+		       	 a.rid                as    rid               /** RID */
+				,a.cust_type_cd       as    custTypeCd        /** 고객 유형 코드 */
+				,a.cust_nm    as    custNm            /** 고객 명 */
+				,a.cust_nm    			as    custNmR            /** 고객 명 */
+				,a.birth_dt 			as    birthDt           /** 생년월일 */
+				,a.gen_gbn_cd         as    genGbnCd          /** 성별 구분 코드 */
+				,a.real_birth_dt,'YYYY-MM-DD'  as    realBirthDt       /** 실 생년월일 */
+				,a.lunar_gbn_cd       as    lunarGbnCd        /** 양음력 구분 코드 */
+				,a.identi_type_cd     as    identiTypeCd      /** 식별 유형 코드 */
+				,a.identi_val			as identiVal
+				,a.realnm_certi_yn    as    realnmCertiYn     /** 실명 인증 여부 */
+				,com.TO_DATE(a.realnm_certi_date,'YYYY-MM-DD')  as    realnmCertiDate   /** 실명 인증 일자 */
+		  from loy.loy_cust a
+	     where 1=1
+		   <!-- and a.accnt_id = #{accountId} -->
+		   and a.rid = #{rid}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : LOYCustDAO.java (getCustAddInfoList)
+    ============================================
+    -   제목                   : 고객부가정보 리스트 조회
+    -   설명                   : 고객부가정보 리스트 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, rid_cust
+    -	출력			  :
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.12.16
+    ***************************************/ -->
+    <select id="selectCustAddInfoList" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto" resultType="com.icignal.loyalty.customer.dto.response.LOYCustAddInfoResDto">
+       	/* LoyCustomerMapper.selectCustAddInfoList */
+		select
+               a.rid                      as    rid               /* 부가정보 RID */
+              ,a.rid_cust                 as    ridCust           /* RID_고객 */
+              ,a.add_info_type_cd         as    addInfoTypeCd     /* 부가 정보 유형 코드 */
+              ,cd.mark_name               as    addInfoTypeNm     /* 부가 정보 유형  명 */
+              ,a.attr_type_cd             as    attrTypeCd        /* 속성 유형 코드 */
+              ,cd1.mark_name              as    attrTypeNm        /* 속성유형명*/
+              ,a.attr_val                 as    attrVal           /* 속성 값*/
+              ,com.TO_DATE(a.create_date,'YYYY-MM-DD')  as    createDate
+		      ,com.TO_DATE(a.modify_date,'YYYY-MM-DD')  as    modifyDate
+		      ,em.name    	  as    createBy
+		      ,em1.name    	  as    modifyBy
+         from loy.loy_cust_add_info a
+         left join com.crm_user us   on a.create_by = us.rid
+		 left join com.crm_user us1  on a.modify_by = us1.rid
+         left join com.employee em   on us.id_employee = em.id
+         left join com.employee em1  on us1.id_employee = em1.id
+         left join com.comm_code cd  on a.add_info_type_cd = cd.code_name and cd.group_code   = 'LOY_CUST_ADD_INFO_CD' <!-- and cd.country = #{country} -->  and cd.flag  = 1  and cd.lang  = #{lang}
+         left join com.comm_code cd1 on a.attr_type_cd     = cd1.code_name and cd1.group_code = 'LOY_DATA_TYPE_CD'     <!-- and cd1.country = #{country} --> and cd1.flag = 1  and cd1.lang = #{lang}
+         where  ${strSVCType}
+		   and ${strWhere}
+		   <!-- and a.accnt_id = #{accountId} -->
+		   and a.rid_cust = #{rid}
+		   and a.flag = 1
+		 order by ${strOrderby}
+		   ${strEndPaging}
+    </select>
+    
+    <!-- 고객 멤버쉽회원 리스트 조회 -->
+	<select id="selectMemberList" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto" resultType="com.icignal.loyalty.customer.dto.response.LOYMemberResDto">
+       	/* LoyCustomerMapper.selectMemberList */
+       	select
+               a.mbr_no          as    mbrNo         /* 회원 번호 */
+              ,c.chnl_nm         as    chnlNm        /* 가입 채널 */
+              ,com.TO_CHAR(a.join_date,'YYYY-MM-DD')       as    joinDate      /* 가입 일자 */
+              ,a.mbr_type_cd     as    mbrTypeCd     /* 회원 유형 코드 */
+              ,cd.mark_name      as    mbrTypeNm     /* 회원 유형명 */
+              ,a.mbr_stat_cd     as    mbrStatCd     /* 회원 상태코드 */
+              ,cd1.mark_name     as    mbrStatNm     /* 부가 정보 유형  명 */
+              ,b.pgm_nm          as    pgmNm         /* 로열티 프로그램명*/
+              ,d.tier_nm         as    tierNm        /* 등급*/
+         from loy.loy_mbr a
+        inner join loy.loy_pgm b on a.rid_pgm = b.rid
+        left outer join LOY.LOY_CHNL c on a.rid_chnl_join = c.rid
+        left outer join loy.loy_tiers d on a.rid_tier_cur = d.rid
+        left outer join com.comm_code cd  on a.mbr_type_cd = cd.code_name  and cd.group_code  = 'LOY_MEM_TYPE_CD' <!-- and cd.country  = #{country} --> and cd.flag   = 1  and cd.lang   = #{lang}
+        left outer join com.comm_code cd1 on a.mbr_stat_cd = cd1.code_name and cd1.group_code = 'LOY_MEM_STAT_CD' <!-- and cd1.country = #{country} --> and cd1.flag  = 1  and cd1.lang  = #{lang}
+        where ${strSVCType}
+		  and ${strWhere}
+		  <!-- and a.accnt_id = #{accountId} -->
+		  and a.rid_cust =  #{rid}    /* 'recCust0001' */
+		  and a.flag = 1
+		order by ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+     <!-- 고객 부가정보 조회  -->
+      <select id="selectCustAddInfo" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustAddInfoReqDto" resultType="com.icignal.loyalty.customer.dto.response.LOYCustAddInfoResDto">
+       	/* LoyCustomerMapper.selectCustAddInfo */
+		select
+               a.rid                      as    rid               /* 부가정보 RID */
+              ,a.rid_cust                 as    ridCust           /* RID_고객 */
+              ,a.add_info_type_cd         as    addInfoTypeCd     /* 부가 정보 유형 코드 */
+              ,a.attr_type_cd             as    attrTypeCd        /* 속성 유형 코드 */
+              ,a.attr_val                 as    attrVal           /* 속성 값*/
+         from loy.loy_cust_add_info a
+         where  a.rid = #{rid}
+    </select>
+    
+    <!-- 고객 부가정보 추가 -->
+	<insert id="insertCustAddInfo" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustAddInfoReqDto">
+		/* LoyCustomerMapper.insertCustAddInfo */
+		insert into loy.loy_cust_add_info
+				(
+				 rid
+				,rid_cust
+				,add_info_type_cd
+				,attr_type_cd
+				,attr_val
+				<!-- ,accnt_id -->
+				<!-- ,app_service_type -->
+				<!-- ,country -->
+				,create_date
+				,create_by
+				,modify_by
+				)
+				values(
+				com.getNewID('A')
+				, #{ridCust}
+				, #{addInfoTypeCd}
+				, #{attrTypeCd}
+				, #{attrVal}
+				<!-- , #{accountId} -->
+	            <!-- , #{appServiceId} -->
+				<!-- , #{country} -->
+				, GETDATE()
+				, #{createBy}
+				, #{modifyBy}
+				)
+		<selectKey keyProperty="" resultType="java.lang.String">
+			select 1 from dual
+		</selectKey>
+	</insert>
+	
+	<!-- 고객부가정보 수정 -->
+	<update id="updateCustAddInfo" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustAddInfoReqDto">
+		/* LoyCustomerMapper.updateCustAddInfo */
+		update loy.loy_cust_add_info
+		set   add_info_type_cd = #{addInfoTypeCd}
+		    , attr_type_cd = #{attrTypeCd}
+			, attr_val = #{attrVal}
+            <!-- , mod_num = mod_num +1 -->
+            , modify_date = GETDATE()
+            , modify_by = #{modifyBy}
+		where 1 = 1
+		  and rid	= #{rid}
+	</update>
+	
+	<!-- 고객부가정보 삭제  -->
+	<update id="updateCustAddInfoDel" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustAddInfoReqDto">
+		/* LoyCustomerMapper.updateCustAddInfoDel */
+		update loy.loy_cust_add_info
+		set   flag = flag + 1
+            , modify_date = GETDATE()
+            , modify_by = #{modifyBy}
+		where 1 = 1
+		  and rid	= #{rid}
+	</update>
+	
+	<select id="selectCustListPage" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCustNewResDto">
+		/* LoyCustomerMapper.selectCustListPage */
+		SELECT   lc.CUST_NO 	 AS custNo
+			   , lc.CUST_NM 	 AS custNm
+			   , lc.hhp	     AS hhp
+			   , lc.CUST_TYPE_CD AS custtypeCd
+			   , lc.CUST_STAT_CD AS custStatCd
+			   <!-- , com.TO_CHAR(lc.SBSC_DATE,'YYYY-MM-DD') AS sbscDate -->
+			   <!-- , lch.CHNL_NM		 AS chnlNm -->
+			   <!-- , com.TO_CHAR(lch.CREATE_DATE,'YYYY-MM-DD HH24:Mi:SS') AS createDate -->
+			   , lc.RID		 AS rid
+			   , ${strColumn}
+		FROM   LOY.LOY_CUST lc
+		LEFT OUTER JOIN   LOY.LOY_CUST_I lci ON lc.RID = lci.RID_CUST AND lci.flag=1
+		<!-- LEFT OUTER JOIN LOY.LOY_CHNL lch ON lc.RID_SBSC_CHNL = lch.RID AND lc.flag=1 -->
+		where  lc.flag  = 1
+		AND    lc.CUST_STAT_CD in ('A','D') /* 활성고객,휴먼고객*/
+		AND    ${strCondWhere}
+		AND    ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustDetailNewPage" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" 
+										 resultType="com.icignal.loyalty.customer.dto.response.LoyCustDetailNewResDto">
+		/* LoyCustomerMapper.selectCustDetailNewPage */
+			SELECT    TOP 1
+				lc.CUST_NO								AS custNo
+				, lc.CUST_TYPE_CD 								AS custTypeCd
+				, lc.CUST_STAT_CD								AS custStatCd
+				, lc.CUST_NM										AS cust_nm
+				, lc.GEN_CD											AS gen_cdNm
+				, lci.NLTY												AS nltyCd
+				, lci.CUST_NM_ADD								AS cust_nm_add
+				<!-- , com.TO_CHAR(com.TO_DATE(lc.BIRTHDT,'YY/MM/DD'),'YYYY-MM-DD')  			AS birthdt -->
+				, lc.BIRTH_DATE											AS birthdt
+				, lc.LUNAR_CD										AS lunar_cd
+				, lc.HHP													AS hhp
+				, lc.EMAIL												AS email
+				, com.nvl(secu.fn_getDecrypt('863859AEA32184842D8372BE3ABBF146345FA4D39920C7E6A503470A0CE8E406@@@!!!FBE2BD72A610E3B0010AEF0587CD62ED803B612387A8F0D62C3B50F8670357DA', lc.ZIP, null), '') AS zip
+				, lc.ADRES												AS adres
+				, lc.BUNJI												AS bunji
+ 				, lci.ZIP_ADD											AS zip_add
+				, lci.ADRES_ADD									AS adres_add
+				, lci.BUNJI_ADD										AS bunji_add
+				<!-- , com.TO_CHAR(lc.SBSC_DATE,'YYYY-MM-DD')			AS sbscDate -->
+				<!-- , lc1.CHNL_NM										AS sbscChnlNm -->
+				, lc2.CHNL_NM										AS lastChnlNm
+				<!-- , lc.SBSC_PATH_CD								AS sbscPathCd
+				, lc.SBSC_DEVICE_CD 							AS sbscDeviceCd -->
+				, com.TO_CHAR(com.TO_DATE(lcsh.SVC_DT,'YY/MM/DD'),'YYYY-MM-DD')				AS svrDt
+				<!-- , lcd.SBSC_CD									AS sbscCd -->
+				, lc.RCMMD_NO										AS rcmmdNo
+				, lc.DRMNCY_CHNG_UNIT						AS drmmcyChngUnitCd
+				, lcwi.USER_ID										AS user_id
+				<!-- , lc.SLF_CERT_YN								AS slfCertYn -->
+				<!-- , NVL2(lc.BIRTHDT,(LOY.FN_GET_AGE('Y1',lc.BIRTHDT)),'')				AS age -->
+				, lc.CERT_TYPE_CD								AS custCertTypeCd
+				, lc.CERT_SUB_TYPE_CD						AS certSubTypeCd
+				<!-- , lc.CERT_VAL										AS certVal -->
+				, com.TO_CHAR(lc.CERT_DATE,'YYYY-MM-DD HH24:MI:SS') AS certDate
+				<!-- , com.TO_CHAR(com.TO_DATE(lci.ANNVRSRY,'MM/DD'),'MM-DD')									AS annvrsry -->
+				, lci.ANNVRSRY										AS annvrsry
+				, lci.ANNVRSRY_TYPE_CD						AS annvrsryTypeCd
+				, lci.WRC_NM											AS wrc_nm
+				, lci.PSTN												AS pstnCd
+				, lci.MRRG_YN										AS mrrg_yn
+				, lci.NATIVE_YN										AS native_yn	
+				, lc3.CHNL_NM										AS lastConChnlNm 																/* 최근접속채널 */
+				, com.TO_CHAR(com.TO_DATE(lcsh1.SVC_DT,'YY/MM/DD'),'YYYY-MM-DD')				AS conSvrDt 		/* 최근접속일 */
+				, lc4.CHNL_NM 										AS lastPurChnlNm																	/* 최근구매채널 */	
+				, com.TO_CHAR(com.TO_DATE(lcsh2.SVC_DT,'YY/MM/DD'),'YYYY-MM-DD')				AS purSvrDt 		/* 최근구매일 */
+				, lp1.PGM_NM										AS joinMembership				
+				, lc.RID 													AS rid
+				, lm.MCARD_NO  										AS mcardNo
+		FROM    LOY.LOY_CUST  lc
+	    LEFT OUTER JOIN	LOY.LOY_CUST_I  lci ON lc.RID = lci.RID_CUST      AND lci.FLAG = 1
+		<!-- LEFT OUTER JOIN LOY.LOY_CHNL lc1  ON lc.RID_SBSC_CHNL = lc1.RID    AND lc1.FLAG  = 1 -->
+		LEFT OUTER JOIN LOY.LOY_CUST_LOGIN_INF lcwi ON lc.RID = lcwi.RID_CUST AND lcwi.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CUST_SVC_HIST lcsh ON lc.RID = lcsh.RID_CUST AND lcsh.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CHNL lc2 ON lc2.RID = lcsh.RID_CHNL AND lc2.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CUST_SVC_HIST lcsh1 ON lc.RID = lcsh1.RID_CUST AND lcsh1.FLAG = 1 AND lcsh1.SVC_USE_CD	='WEB'
+		LEFT OUTER JOIN LOY.LOY_CUST_SVC_HIST lcsh2 ON lc.RID = lcsh2.RID_CUST AND lcsh2.FLAG = 1 AND lcsh2.SVC_USE_CD	='PUR'
+		LEFT OUTER JOIN LOY.LOY_CHNL lc3 ON lc3.RID = lcsh1.RID_CHNL AND lc3.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CHNL lc4 ON lc4.RID = lcsh2.RID_CHNL AND lc4.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_PGM lp1 ON lp1.RID = lc.RID_SBSC_PGM AND lp1.FLAG = 1
+		LEFT OUTER JOIN loy.LOY_MBR lm ON lc.rid = lm.RID_CUST AND lm.FLAG = 1
+		WHERE   lc.FLAG = 1
+		AND     lc.CUST_STAT_CD in ('A','D') /* 활성고객만*/
+		AND     lc.rid = #{rid}
+	</select>
+	
+	<select id="selectCorpCustListPage" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" 
+									    resultType="com.icignal.loyalty.customer.dto.response.LoyCorporationCustResDto">
+		/* LoyCustomerMapper.selectCorpCustListPage */
+		SELECT   lcm.RID		 AS rid
+			   , lcm.CUST_NO 	 AS custNo
+			   , lcm.CUST_NM	 AS custNm
+			   , lcc.BIZR_NO		AS bizrNo
+			   , lcm.HHP	     AS hhp
+			   , lcm.CUST_TYPE_CD AS custtypeCd
+			   , lcm.CUST_STAT_CD AS custStatCd
+			   , com.TO_CHAR(lm.SBSC_DATE,'YYYY-MM-DD') AS sbscDate
+			   , lc.CHNL_NM		 AS chnlNm
+			   , com.TO_CHAR(lcm.CREATE_DATE,'YYYY-MM-DD HH24:Mi:SS') AS createDate
+			   , ${strColumn}
+		FROM   LOY.LOY_CUST lcm
+		JOIN   LOY.LOY_CUST_C lcc ON lcm.RID = lcc.RID_CUST AND lcc.flag=1
+	    JOIN loy.LOY_MBR lm ON lm.RID_CUST = lcm.RID AND lm.FLAG =1
+        LEFT OUTER JOIN LOY.LOY_CHNL lc ON lm.RID_SBSC_CHNL = lc.RID AND lc.flag=1
+		where  lcm.flag  = 1
+		AND    lcm.CUST_STAT_CD in ('A','D') /* 활성고객만*/
+		AND    ${strCondWhere}
+		AND    ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCorpCustDetailNewPage" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto"
+										     resultType="com.icignal.loyalty.customer.dto.response.LoyCorpDetailResDto">
+		/* LoyCustomerMapper.selectCorpCustDetailNewPage */
+		SELECT    TOP 1
+				lc.CUST_NO									AS custNo
+				, lc.CUST_TYPE_CD 								AS custTypeCd
+				, lc.CUST_STAT_CD								AS custStatCd
+				, lc.CUST_NM									AS custNm
+				, com.TO_CHAR(com.TO_DATE(lc.BIRTH_DATE,'YY/MM/DD'),'YYYY-MM-DD')  			AS birthDt
+				, lc.HHP										AS hhp
+				, lc.EMAIL										AS email
+				<!-- , com.TO_CHAR(lc.SBSC_DATE,'YYYY-MM-DD')			AS sbscDate -->
+				<!-- , lc1.CHNL_NM									AS chnlNm -->
+				, lc2.CHNL_NM									AS lastChnlNm
+				<!-- , lc.SBSC_PATH_CD								AS sbscPathCd -->
+				, com.TO_CHAR(com.TO_DATE(lcsh.SVC_DT,'YY/MM/DD'),'YYYY-MM-DD')				AS svrDt
+				<!-- , lcd.SBSC_CD									AS sbscCd -->
+				, lc.RCMMD_NO									AS rcmmdNo
+				, lc.DRMNCY_CHNG_UNIT							AS drmmcyChngUnit
+				, lcwi.USER_ID									AS webId
+				<!-- , lc.SLF_CERT_YN								AS slfCertYn -->
+				, LOY.FN_GET_AGE('Y1',lc.BIRTH_DATE)				AS age
+				, lc.CERT_TYPE_CD								AS custCertTypeCd
+				, lc.CERT_SUB_TYPE_CD							AS certSubTypeCd
+				, lc.CERT_VAL									AS certVal
+				, lcc.CMPNY_NM									AS cmpnyNm
+				, lcc.BIZR_NO									AS bizrNo
+				, lcc.JURIR_NO									AS jurirNo
+				, lcc.TEL_NO									AS telNo
+				, com.TO_CHAR(com.TO_DATE(lcc.FOND_DT,'YY/MM/DD'),'YYYY-MM-DD')				AS fondDt
+				, lcc.CEO										AS ceo
+				, lcc.CHARGER									AS charger
+				, REGEXP_REPLACE(lcc.FAX, '(02|.{3})(.+)(.{4})', '\1-\2-\3') 		AS fax
+				, com.TO_CHAR(lc.CERT_DATE,'YYYY-MM-DD HH24:MI:SS') AS certDate
+				, lc.ZIP											AS zip
+				, lc.ADRES										AS adres
+				, lc.BUNJI										AS bunji	
+				, lcc.INDUTY									AS induty
+				, lcc.BIZCND									AS bizcnd
+				, lcc.CAPL										AS capl		
+			    , lm.MCARD_NO 								AS mcardNo
+		FROM    LOY.LOY_CUST  lc
+	    JOIN	LOY.LOY_CUST_C  lcc ON lc.RID = lcc.RID_CUST      AND lcc.FLAG = 1
+		<!-- LEFT OUTER JOIN LOY.LOY_CHNL lc1  ON lc.RID_SBSC_CHNL = lc1.RID    AND lc1.FLAG  = 1 -->
+		LEFT OUTER JOIN LOY.LOY_CUST_LOGIN_INF lcwi ON lc.RID = lcwi.RID_CUST AND lcwi.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CUST_SVC_HIST lcsh ON lc.RID = lcsh.RID_CUST AND lcsh.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CHNL lc2 ON lc2.RID = lcsh.RID_CHNL AND lc2.FLAG = 1
+		LEFT OUTER JOIN Loy.LOY_MBR lm ON lc.rid = lm.RID_CUST AND lm.FLAG = 1
+		WHERE   lc.FLAG = 1
+		AND     lc.CUST_STAT_CD in ('A','D') /* 활성고객만*/
+		AND     lc.rid = #{rid}
+	</select>
+	
+	<select id="clearMaskCustList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCustNewResDto">
+		/* LoyCustomerMapper.clearMaskCustList */
+		SELECT    lc.CUST_NM						AS unMaskCustNm
+				, lc.HHP							AS unMaskHhp
+				, lc.EMAIL  						AS unMaskEmail
+				, lcli.USER_ID 						AS unMaskUserId
+		FROM   LOY.LOY_CUST lc
+		LEFT OUTER JOIN LOY.LOY_CUST_I lci ON lc.RID = lci.RID_CUST AND lci.flag=1
+		LEFT OUTER JOIN LOY.LOY_CUST_LOGIN_INF lcli ON lc.RID = lcli.RID_CUST AND lcli.FLAG =1 AND lcli.REP_YN ='Y'
+		where  lc.flag  = 1
+		AND    lc.rid = #{rid}
+	</select>
+	
+	<select id="clearMaskCorpCustList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCorporationCustResDto">
+		/* LoyCustomerMapper.clearMaskCorpCustList */
+		SELECT     lcm.CUST_NM	AS unMaskCustNm
+				,  lcm.HHP		AS unMaskHhp
+		FROM   LOY.LOY_CUST lcm
+		JOIN   LOY.LOY_CUST_C lcc ON lcm.RID = lcc.RID_CUST AND lcc.flag=1
+		LEFT OUTER JOIN LOY.LOY_CHNL lc ON lcm.RID_SBSC_CHNL = lc.RID AND lc.flag=1
+		where  lcm.flag  = 1
+		AND    lcm.CUST_STAT_CD in ('A','D') /* 활성고객만*/
+		AND    lcm.rid = #{rid}
+	</select>
+	
+	<select id="selectCertList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCertCustResDto">
+		/* LoyCustomerMapper.selectCertList */
+		SELECT  lcct.CERT_TYPE_CD						AS certTypeCd
+			  , lcct.CERT_VAL							AS certVal
+			  , com.TO_CHAR(lcct.CERT_DATE,'YYYY-MM-DD HH24:Mi:SS')	as certDate
+			  , lcct.rid								AS rid 
+			  , ${strColumn}
+		FROM  LOY.LOY_CUST_CERT lcct
+		WHERE lcct.FLAG = 1
+		AND   lcct.RID_CUST = #{rid}
+		AND    ${strCondWhere}
+		AND    ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustLoginList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCustLoginListResDto">
+		/* LoyCustomerMapper.selectCustLoginList */
+		SELECT    lc.CUST_NO				AS custNo
+				, lcwh.WEB_USE_CD			AS webUseCd
+				, lcwh.WEB_INPUT_CD			AS webInputCd
+                , lcwh.REG_DATE             AS regDate
+				, lcwh.RID					AS rid
+				, ${strColumn}
+		FROM   LOY.LOY_CUST_WEB_HIST lcwh 
+		JOIN loy.LOY_CUST lc ON lcwh.RID_CUST = lc.RID AND lc.FLAG = 1
+		WHERE  lcwh.FLAG = 1  
+		AND    lc.CUST_NO = #{custNo}
+		AND    ${strCondWhere}
+		AND    ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustRid" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto"
+							   resultType="java.lang.String">
+		/* LoyCustomerMapper.selectCustRid */
+		SELECT cust_no 		AS custNo
+		FROM   LOY.LOY_CUST
+		WHERE  rid = #{rid}
+	</select>
+	
+	<select id="selectCustAgreList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCustAgreListResDto">
+		/* LoyCustomerMapper.selectCustAgreList */
+		SELECT    t1.agreTypeCd
+        		, t1.ver
+        		, t1.regDate
+        		, t1.custRid
+        		, t1.rid
+        		, t1.termRid
+        		, t1.termVerRid
+        		,  CEILING(COUNT(1) OVER()) totalCount
+        FROM (SELECT    lca.AGRE_TYPE_CD				AS agreTypeCd
+				, ltv.VER						AS ver
+				, com.TO_CHAR(lca.REG_DATE,'YYYY-MM-DD HH24:MI:SS')					AS regDate
+				, lca.RID_CUST				    AS custRid
+				, lca.RID						AS rid
+				, lt.RID						AS termRid
+				, lca.RID_TERMS_VER				AS termVerRid
+				, ${strColumn}
+		FROM   LOY.LOY_CUST_AGRE lca
+		JOIN LOY.LOY_TERMS_VER ltv ON lca.RID_TERMS_VER = ltv.RID AND ltv.FLAG = 1
+		JOIN LOY.LOY_TERMS lt ON lt.RID = ltv.RID_TERMS AND lt.FLAG = 1
+		WHERE   lca.FLAG = 1
+		AND     lca.RID_CUST = #{rid}
+		AND     lca.AGRE_YN = 'Y'
+		AND     ${strCondWhere}
+		AND     ${strWhere}
+		UNION
+		SELECT    lca.AGRE_TYPE_CD				AS agreTypeCd
+				, null							AS ver
+				, com.TO_CHAR(lca.REG_DATE,'YYYY-MM-DD HH24:MI:SS')					AS regDate
+				, lca.RID_CUST				    AS custRid
+				, lca.RID						AS rid
+				, lt.RID						AS termRid	
+				, lca.RID_TERMS_VER				AS termVerRid
+				, ${strColumn}
+		FROM   LOY.LOY_CUST_AGRE lca
+		JOIN   LOY.LOY_TERMS_RCV_CHNL ltrc ON lca.AGRE_TYPE_CD = ltrc.MKT_RCV_CHNL_CD AND ltrc.FLAG = 1
+		JOIN   LOY.LOY_TERMS lt ON ltrc.RID_TERMS = lt.RID AND lt.flag = 1
+		LEFT OUTER JOIN   LOY.LOY_TERMS_VER ltv ON ltv.RID_TERMS = lt.RID  AND ltv.FLAG = 1
+		WHERE   lca.FLAG = 1
+		AND     lca.RID_CUST = #{rid}
+		AND     lca.AGRE_YN = 'Y'
+		AND     ${strCondWhere}
+		AND     ${strWhere} ) t1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustAgreHistList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustAgreHistListReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCustAgreHistListResDto">
+		/* LoyCustomerMapper.selectCustAgreHistList */
+		SELECT  t1.agreTypeCd
+		      , t1.ver
+		      , t1.agreYn
+		      , t1.regDate
+		      , t1.rid
+		      , t1.termRid
+		      , t1.termVerRid
+		      ,  CEILING(COUNT(1) OVER()) totalCount
+		FROM (SELECT    lcah.AGRE_TYPE_CD				AS agreTypeCd
+				, ltv.VER						AS ver
+				, lcah.AGRE_YN					AS agreYn
+				, com.TO_CHAR(lcah.REG_DATE,'YYYY-MM-DD HH24:MI:SS')					AS regDate
+				, lcah.RID						AS rid
+				, lt.RID						AS termRid
+				, lcah.RID_TERMS_VER			AS termVerRid
+				, ${strColumn}
+		FROM    LOY.LOY_CUST_AGRE_HIST lcah
+			LEFT JOIN LOY.LOY_TERMS_VER ltv ON lcah.RID_TERMS_VER = ltv.RID AND ltv.FLAG = 1
+			LEFT JOIN LOY.LOY_TERMS lt ON lt.RID = ltv.RID_TERMS AND lt.FLAG = 1
+		WHERE   lcah.FLAG = 1
+		AND     lcah.RID_CUST = #{rid}
+		AND     lcah.AGRE_TYPE_CD = #{agreTypeCd}
+		AND     ${strCondWhere}
+		AND     ${strWhere} ) t1
+		ORDER BY ${strOrderby}  
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustSvrHistList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" resultType="com.icignal.loyalty.customer.dto.response.LoyCustSvrHistListResDto">
+		/* LoyCustomerMapper.selectCustSvrHistList */
+		SELECT     lcsh.SVC_USE_CD		AS svrTypeCd
+		      	 , lc.CHNL_NM			AS chnlNm
+		      	 , lc.CHNL_NO			AS chnlNo
+		      	 , lc.CHNL_TYPE_CD		AS chnlTypeCd
+		      	 <!-- , lc.CHNL_TYPE_SUB_CD	AS chnlTypeSubCd -->
+		      	 , com.TO_CHAR(com.TO_DATE(lcsh.SVC_DT,'YY/MM/DD'),'YYYY-MM-DD') AS svrDt
+		      	 , lcsh.RID AS rid
+		      	 , ${strColumn} 
+		FROM   LOY.LOY_CUST_SVC_HIST lcsh
+		LEFT OUTER JOIN LOY.LOY_CHNL lc ON lc.RID = lcsh.RID_CHNL AND lc.FLAG = 1
+		WHERE ${strCondWhere}
+		AND   ${strWhere}
+		AND   lcsh.FLAG = 1
+		AND   lcsh.RID_CUST = #{rid}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectAlterSvrHistList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto"
+										resultType="com.icignal.loyalty.customer.dto.response.LoyCustAlterHistResDto">
+		/* LoyCustomerMapper.selectAlterSvrHistList */
+		SELECT    lmam.ACTION_DT			AS actionDt
+				, lmam.MSG_TYPE				AS msgType
+				, lc.CHNL_NM				AS chnlNm
+				, lmam.MSG					AS msg
+				, lmam.SHOW_YN				AS showYn
+				, lmam.CONFIRM_DT			AS confirmDt
+				, ${strColumn} 
+		FROM   LOY.LOY_MBR_ALERT_MSG lmam
+		JOIN   LOY.LOY_MBR lmm on lmm.RID = lmam.RID_MBR AND lmm.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_CHNL lc ON lc.RID = lmam.RID_CHNL AND lc.FLAG = 1
+		WHERE ${strWhere}
+		AND   lmam.FLAG = 1
+		AND   lmam.RID_MBR in ( SELECT RID FROM LOY.LOY_MBR WHERE RID_CUST = #{rid} )
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectAppSvrHistList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto"
+									  resultType="com.icignal.loyalty.customer.dto.response.LoyCustAppHistListResDto">
+		/* LoyCustomerMapper.selectAppSvrHistList */
+		SELECT    lmah.REG_DATE				AS regDate
+				, lmah.MOBILE_DEVICE_CD		AS mobileDeviceCd
+				, lmah.VER_NO				AS verNo
+				, lmah.TOKEN_VAL			AS tokenVal
+				, ${strColumn}
+		FROM   LOY.LOY_MOBILE_APP_HIST lmah
+		WHERE ${strWhere}
+		AND   lmah.FLAG = 1
+		AND   lmah.RID_CUST = #{rid}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectChangeHistList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto"
+									  resultType="com.icignal.loyalty.customer.dto.response.LoyCustChangeHistListResDto">
+		/* LoyCustomerMapper.selectChangeHistList */
+		SELECT    lmch.CREATE_DATE				AS createDate
+				, lmch.CHG_COL					AS chgCol
+				, lmch.BCHNG_DATA				AS bchngData
+				, lmch.ACHNG_DATA				AS achngData
+				, e.NAME						AS employName
+				, ${strColumn}
+		FROM   LOY.LOY_MBR_CHG_HIST lmch
+		LEFT JOIN com.crm_user 		cu ON cu.rid = lmch.CREATE_BY AND cu.FLAG = 1
+   		LEFT JOIN com.employee 		e  ON cu.ID_EMPLOYEE = e.id AND e.FLAG = 1
+   		WHERE lmch.FLAG = 1
+   		AND   lmch.RID_MBR in ( SELECT RID FROM LOY.LOY_MBR WHERE RID_CUST = #{rid} )
+   		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectCustDetailMbrList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustDetailMbrReqDto"
+															resultType="com.icignal.loyalty.customer.dto.response.LoyCustDetailMbrListResDto">
+		/* LoyCustomerMapper.selectCustDetailMbrList */
+		SELECT lm.MBR_NO AS mbrNo
+				, lp.PGM_NM AS pgmNm
+				, lm.MBR_STAT_CD  AS mbrStatCd
+				, com.TO_CHAR(lm.SBSC_DATE, 'YYYY-MM-DD hh24:mi:ss')  AS sbscDate
+				, lch.CHNL_NM AS chnlNm
+				, lm.RID AS rid
+				, ${strColumn}
+		FROM loy.LOY_CUST lc
+		INNER JOIN loy.LOY_MBR lm ON lc.rid = lm.RID_CUST AND lm.FLAG = 1
+		INNER JOIN loy.LOY_PGM lp ON lm.rid_pgm = lp.RID AND lp.FLAG = 1
+		INNER JOIN loy.LOY_CHNL lch ON lm.RID_SBSC_CHNL = lch.RID AND lch.FLAG = 1
+		WHERE ${strWhere}
+		AND lc.FLAG = 1
+		AND lc.RID = #{ridCust}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectCustLoginInfo" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustDetailMbrReqDto"
+															resultType="com.icignal.loyalty.customer.dto.response.LoyCustLoginInfoListResDto">
+		/* LoyCustomerMapper.selectCustLoginInfo */
+		SELECT  
+		         lcli.RID 						AS rid
+		      ,  lcli.LOGIN_TYPE_CD			AS loginTypeCd
+			  , lcli.USER_ID				AS userId
+			  , com.nvl(lcli.FAIL_CNT,0)				AS failCnt
+			  , lcli.REP_YN					AS repYn
+			  , com.TO_CHAR(lcli.FAIL_DATE,'YYYY-MM-DD HH24:Mi:SS')				AS failDate
+			   , com.TO_CHAR(lcli.REG_DATE,'YYYY-MM-DD HH24:Mi:SS')				AS createDate			  
+			  , ${strColumn}
+		FROM  LOY.LOY_CUST_LOGIN_INF lcli
+		WHERE ${strWhere}
+		AND lcli.FLAG = 1
+		AND lcli.RID_CUST = #{rid}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectCustMbrRelList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustMbrRelReqDto"
+									  resultType="com.icignal.loyalty.customer.dto.response.LoyCustMbrRelResDto">
+		/* LoyCustomerMapper.selectCustMbrRelList */
+		SELECT
+			com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') 	AS createDate,
+			com.TO_CHAR(A.MODIFY_DATE,'YYYY-MM-DD') 	AS modifyDate,
+			G.CUST_NO 					            AS custNo,
+			G.CUST_NM 					            AS custNm,
+			B.CARD_NO								AS cardNo,
+			A.STAT_CD								AS statCd,
+			C.BR_NM									AS brNm,
+			${strColumn}
+		FROM LOY.LOY_MBR T2
+		JOIN LOY.LOY_MBR_C_REL A ON A.RID_MBR_C = T2.RID
+		LEFT OUTER JOIN LOY.LOY_MBR_CARD B ON A.RID_MBR_CARD = B.RID AND B.FLAG = 1
+		LEFT OUTER JOIN LOY.LOY_MBR_C_BR C ON A.RID_BR = C.RID AND C.FLAG = 1
+		INNER JOIN LOY.LOY_MBR F ON A.RID_MBR = F.RID AND F.FLAG = 1
+		INNER JOIN LOY.LOY_CUST G ON F.RID_CUST = G.RID AND G.FLAG = 1
+		WHERE ${strWhere}
+		AND T2.RID_CUST = #{ridMbrC}
+		AND T2.MBR_STAT_CD = 'A'
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectCustBranchList"
+			parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBranchReqDto"
+			resultType="com.icignal.loyalty.customer.dto.response.LoyCustBranchResDto">
+		/* LoyCustomerMapper.selectCustBranchList */
+		SELECT
+			A.RID                                     AS rid,
+			A.BR_NO                                   AS brNo,
+			A.BR_NM                                   AS brNm,
+			B.CHNL_NO                                 AS chnlNo,
+			B.CHNL_NM                                 AS chnlNm,
+			A.CHARGER                                 AS charger,
+			A.TEL_NO                                  AS telNo,
+			com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') 	  AS createDate,
+			${strColumn}
+		FROM LOY.LOY_MBR_C_BR A
+		INNER JOIN LOY.LOY_CHNL B ON A.RID_CHNL = B.RID AND B.FLAG = 1
+		WHERE  ${strCondWhere}
+		AND ${strWhere}
+		AND A.FLAG  = 1
+		AND A.RID_MBR_C = #{ridMbrC}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectCustBranchDetail"
+			parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBranchReqDto"
+			resultType="com.icignal.loyalty.customer.dto.response.LoyCustBranchResDto">
+		/* LoyCustomerMapper.selectCustBranchDetail */
+		SELECT
+			A.RID                                     AS rid,
+			A.BR_NO                                   AS brNo,
+			A.BR_NM                                   AS brNm,
+			A.RID_CHNL                                AS ridChnl,
+			B.CHNL_NM                                 AS chnlNm,
+			A.CHARGER                                 AS charger,
+			A.TEL_NO                                  AS telNo
+		FROM LOY.LOY_MBR_C_BR A
+		INNER JOIN LOY.LOY_CHNL B ON A.RID_CHNL = B.RID AND B.FLAG = 1
+		WHERE 1=1
+		AND A.RID = #{rid}
+		AND A.FLAG  = 1
+	</select>
+
+	<insert id="insertCustBranch"
+			parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBranchReqDto">
+		/* LoyCustomerMapper.insertCustBranch */
+		INSERT INTO LOY.LOY_MBR_C_BR (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			BR_NO,
+			BR_NM,
+			RID_CHNL,
+			CHARGER,
+			TEL_NO,
+			RID_MBR_C
+		) VALUES (
+			#{rid},
+			#{createBy},
+			#{modifyBy},
+			#{brNo},
+			#{brNm},
+			#{ridChnl},
+			#{charger},
+			#{telNo},
+			#{ridMbrC}
+		)
+	</insert>
+
+	<update id="updateCustBranch"
+			parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBranchReqDto">
+		/* LoyCustomerMapper.updateCustBranch */
+		UPDATE LOY.LOY_MBR_C_BR
+		SET
+			MODIFY_DATE = GETDATE(),
+			MODIFY_BY = #{modifyBy},
+			BR_NO = #{brNo},
+			BR_NM = #{brNm},
+			RID_CHNL = #{ridChnl},
+			CHARGER = #{charger},
+			TEL_NO = #{telNo}
+		WHERE 1 = 1
+		AND RID = #{rid}
+	</update>
+
+	<update id="updateCustBranchDel"
+			parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBranchReqDto">
+		/* LoyCustomerMapper.updateCustBranchDel */
+		UPDATE LOY.LOY_MBR_C_BR
+		SET MODIFY_DATE	= GETDATE()
+			,MODIFY_BY	= #{modifyBy}
+			,FLAG		= flag + 1
+		WHERE 1 = 1
+		AND RID = #{rid}
+	</update>
+
+	<select id="selectCustBnftList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBnftReqDto"
+			resultType="com.icignal.loyalty.customer.dto.response.LoyCustBnftResDto">
+		/* LoyCustomerMapper.selectCustBnftList */
+		SELECT
+			A.RID                               AS rid,
+			com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') AS createDate,
+			com.TO_CHAR(A.START_DATE,'YYYY-MM-DD')  AS startDate,
+			com.TO_CHAR(A.END_DATE,'YYYY-MM-DD')    AS endDate,
+			A.QTY                               AS qty,
+			A.RID_OFR                           AS ridOfr,
+			B.OFR_NO                            AS ofrNo,
+			B.OFR_NM                            AS ofrNm,
+			${strColumn}
+		FROM
+		LOY.LOY_MBR_C_BNFT A
+		INNER JOIN LOY.LOY_OFR B ON A.RID_OFR = B.RID AND B.FLAG = 1
+		WHERE ${strCondWhere}
+		AND ${strWhere}
+		AND A.FLAG = 1
+		AND A.RID_MBR_C = #{ridMbrC}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+
+	<select id="selectCustBnftDetail" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBnftReqDto"
+			resultType="com.icignal.loyalty.customer.dto.response.LoyCustBnftResDto">
+		/* LoyCustomerMapper.selectCustBnftDetail */
+		SELECT
+			A.RID                               AS rid,
+			com.TO_CHAR(A.CREATE_DATE,'YYYY-MM-DD') AS createDate,
+			com.TO_CHAR(A.START_DATE,'YYYY-MM-DD')  AS startDate,
+			com.TO_CHAR(A.END_DATE,'YYYY-MM-DD')    AS endDate,
+			A.QTY                               AS qty,
+			A.RID_OFR                           AS ridOfr,
+			B.OFR_NO                            AS ofrNo,
+			B.OFR_NM                            AS ofrNm
+		FROM LOY.LOY_MBR_C_BNFT A
+		INNER JOIN LOY.LOY_OFR B ON A.RID_OFR = B.RID AND B.FLAG = 1
+		WHERE 1=1
+		AND A.RID = #{rid}
+		AND A.FLAG = 1
+	</select>
+
+	<insert id="insertCustBnft" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBnftReqDto">
+		/* LoyCustomerMapper.insertCustBnft */
+		INSERT INTO LOY.LOY_MBR_C_BNFT (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			START_DATE,
+			END_DATE,
+			QTY,
+			RID_OFR,
+			RID_MBR_C
+		) VALUES (
+			#{rid},
+			#{createBy},
+			#{modifyBy},
+			com.TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),
+			com.TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),
+			#{qty},
+			#{ridOfr},
+			#{ridMbrC}
+		)
+	</insert>
+
+	<update id="updateCustBnft" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBnftReqDto">
+		/* LoyCustomerMapper.updateCustBnft */
+		UPDATE LOY.LOY_MBR_C_BNFT
+		SET
+			MODIFY_DATE = GETDATE(),
+			MODIFY_BY = #{modifyBy},
+			START_DATE = com.TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS'),
+			END_DATE = com.TO_DATE(#{endDate},'YYYY-MM-DD HH24:MI:SS'),
+			QTY = #{qty},
+			RID_OFR = #{ridOfr}
+		WHERE 1 = 1
+		AND RID = #{rid}
+	</update>
+
+	<update id="updateCustBnftDel" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustBnftReqDto">
+		/* LoyCustomerMapper.updateCustBnftDel */
+		UPDATE LOY.LOY_MBR_C_BNFT
+		SET MODIFY_DATE = GETDATE()
+			,MODIFY_BY = #{modifyBy}
+			,flag = flag + 1
+		WHERE 1 = 1
+		AND RID = #{rid}
+	</update>
+
+	<select id="selectCustSettleDetail" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustSettleReqDto"
+			resultType="com.icignal.loyalty.customer.dto.response.LoyCustSettleResDto">
+		/* LoyCustomerMapper.selectCustSettleDetail */
+		SELECT
+			RID 				AS rid,
+			STL_CYCLE_CD 		AS stlCycleCd,
+			SHA_CHNL_CD 		AS shaChnlCd,
+			CHNL_SHA_RATE 		AS chnlShaRate
+		FROM LOY.LOY_MBR_C_SETTLE
+		WHERE 1=1
+		AND RID_MBR_C = #{ridMbrC}
+		AND FLAG = 1
+	</select>
+
+	<insert id="insertCustSettle" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustSettleReqDto">
+		/* LoyCustomerMapper.insertCustSettle */
+		INSERT INTO LOY.LOY_MBR_C_SETTLE (
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			STL_CYCLE_CD,
+			SHA_CHNL_CD,
+			CHNL_SHA_RATE,
+			RID_MBR_C
+		) VALUES (
+			#{rid},
+			#{createBy},
+			#{modifyBy},
+			#{stlCycleCd},
+			#{shaChnlCd},
+			#{chnlShaRate},
+			#{ridMbrC}
+		)
+	</insert>
+
+	<update id="updateCustSettle" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustSettleReqDto">
+		/* LoyCustomerMapper.updateCustSettle */
+		UPDATE LOY.LOY_MBR_C_SETTLE
+		SET
+			RID = #{rid},
+			STL_CYCLE_CD = #{stlCycleCd},
+			SHA_CHNL_CD = #{shaChnlCd},
+			CHNL_SHA_RATE = #{chnlShaRate},
+			MODIFY_DATE = GETDATE(),
+			MODIFY_BY = #{modifyBy}
+		WHERE 1 = 1
+		AND RID = #{rid}
+	</update>
+
+	<update id="updateCustSettleDel" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustSettleReqDto">
+		/* LoyCustomerMapper.updateCustSettleDel */
+		UPDATE LOY.LOY_MBR_C_SETTLE
+		SET MODIFY_DATE = GETDATE()
+			,MODIFY_BY = #{modifyBy}
+			,flag = flag + 1
+		WHERE 1 = 1
+		AND RID = #{rid}
+	</update>
+
+	<select id="selectCustSegmentRuleHist" parameterType="com.icignal.loyalty.customer.dto.request.LOYCustReqDto"
+													 resultType="com.icignal.loyalty.membership.dto.response.LoyMbrSegmentHistListResDto">
+		/* LoyMbrMapper.selectCustSegmentRuleHist */
+		SELECT 
+			  h.ID                										 						AS id
+			, com.TO_CHAR(h.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') 	AS createDate
+			, h.CREATE_BY            								 						AS createByName
+			, c.CSEG_NM 												 					AS csegNm
+			, s.CSEG_STAGE_NM 									 						AS csegStageNm
+			, h.CSEG_TYPE_CD																AS csegTypeCd
+			, ${strColumn}
+		FROM 
+			LOY.LOY_CSEG_HIST h
+			JOIN LOY.LOY_MBR lm ON h.RID_MBR= lm.RID AND lm.FLAG = 1
+		 	LEFT OUTER JOIN anl.anl_cseg_mst c ON c.ID = h.CSEG_ID AND c.FLAG = 1
+		 	LEFT OUTER JOIN anl.ANL_CSEG_STAGE s ON s.id=h.CSEG_STAGE_ID AND s.FLAG =1
+		WHERE 
+			${strWhere}
+		AND lm.rid_cust = #{rid}
+		AND h.FLAG = 1
+    	ORDER BY 
+    		${strOrderby}
+    		${strEndPaging}
+	</select>
+	
+	<select id="selectCustWebHistList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto"
+															resultType="com.icignal.loyalty.customer.dto.response.LoyCustWebHistListResDto">
+	/* LoyCustomerMapper.selectCustWebHistList */
+	SELECT lcwh.RID AS rid
+				, lcwh.IP_ADDR AS ipAddr
+				, lcwh.ACCESS_TYPE_CD AS accessTypeCd
+				, lcwh.LOG_TYPE_CD AS logTypeCd
+				, lcwh.AC_DEVICE_CD AS acDeviceCd
+				, lc.CHNL_NM AS chnlNm
+				, lc.CHNL_NO AS chnlNo
+				, lcwh.DEVICE_UUID AS deviceUuid
+				, com.TO_CHAR(lcwh.REG_DATE, 'YYYY-MM-DD hh24:mi:ss') AS regDate
+				, ${strColumn}
+	FROM loy.LOY_CUST_WEB_HIST lcwh
+	LEFT JOIN loy.LOY_CHNL lc ON lcwh.RID_CHNL = lc.RID AND lc.FLAG =1
+	LEFT JOIN com.COMM_CODE cc ON cc.CODE_NAME = lcwh.AC_DEVICE_CD AND cc.LANG =#{lang} AND cc.GROUP_CODE ='LOY_ACCESS_DEVICE_CD' AND cc.FLAG =1
+	WHERE ${strWhere}
+	AND lcwh.RID_CUST = #{rid}
+	ORDER BY  ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id ="selectCafe24MemList" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" 
+	resultType ="com.icignal.loyalty.customer.dto.response.LoyCafe24MbrResDto">
+	/* LoyCustomerMapper.selectCafe24MemList */
+		
+	select rid 			as rid 
+		 , mall 		as mall 
+		 , mbr_nm 		as name
+		 , cell_ph  	as cellPh
+		 , email 		as email 
+		 , sms_yn 		as smsYn
+		 , email_yn 	as emailYn
+		 , com.TO_CHAR(com.TO_DATE(REG_DT,'YYYYMMDD') ,'YYYY-MM-DD') 	as regDate 
+		 , user_id	as userId
+		 , ${strColumn}
+	from loy.LOY_CF24_MBR llcm
+	WHERE ${strCondWhere} 
+		and ${strWhere}
+		and flag = 1
+	ORDER BY 
+    		${strOrderby}
+    		${strEndPaging}
+	
+	
+	</select>
+	
+	
+	<select id ="selectCafe24MemListExcel" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" 
+	resultType ="com.icignal.loyalty.customer.dto.response.LoyCafe24MbrDtlResDto">
+	/* LoyCustomerMapper.selectCafe24MemList */
+		
+	select rid 			as rid 
+		 , mall 		as mall 
+		 , mbr_nm 		as name
+		 , cell_ph  	as cellPh
+		 , email 		as email 
+		 , sms_yn 		as smsYn
+		 , email_yn 	as emailYn
+		 , com.TO_CHAR(com.TO_DATE(reg_dt,'YY/MM/DD'),'YYYY-MM-DD') 	as regDate 
+		 , user_id	as userId
+		 , ${strColumn}
+	from loy.LOY_CF24_MBR llcm
+	WHERE ${strCondWhere} 
+		and ${strWhere}
+		and flag = 1
+	ORDER BY 
+    		${strOrderby}
+    		${strEndPaging}
+	
+	
+	</select>
+	
+		<select id ="selectCafe24MemDetail" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" 
+	resultType ="com.icignal.loyalty.customer.dto.response.LoyCafe24MbrDtlResDto">
+	/* LoyCustomerMapper.selectCafe24MemDetail */
+	select rid 			as rid 
+		 , mall 		as mall 
+		 , mbr_nm 		as name
+		 , cell_ph  	as cellPh
+		 , email 		as email 
+		 , sms_yn 		as smsYn
+		 , email_yn 	as emailYn
+		 , com.TO_CHAR(com.TO_DATE(reg_dt,'YY/MM/DD'),'YYYY-MM-DD') 		as regDate 
+		 , user_id	as userId
+	from loy.LOY_CF24_MBR llcm
+	WHERE  flag = 1 and rid = #{rid}
+	
+	</select>
+	
+	<select id = "selectCafe24MbrCamHist" parameterType ="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto" 
+	resultType="com.icignal.loyalty.customer.dto.response.LoyCafe24CamHistResDto">
+	/* LoyCustomerMapper.selectCafe24MbrCamHist */
+    SELECT T2.DISP_NO 		AS dispNO
+         , T2.CAM_NM        AS camNm
+         , com.TO_CHAR(T2.CAM_START_DD,'yyyy-mm-dd')  AS camStartDt
+         , com.TO_CHAR(T2.CAM_END_DD,'yyyy-mm-dd')    AS camEndDt
+         , T2.CAM_TYPE_CD   AS camTypeCd --캠페인 구분
+         , T4.CHNL_NM  		AS chnlNM 	 --발송채널
+        -- , T1.SEND_SUCES_DT AS SEND_DT
+         , T1.SEND_SUCES_YN AS sendStatus --발송결과
+         , ${strColumn}
+    FROM MKT.MKT_EMAIL_SEND_LOG T1 
+    LEFT OUTER JOIN MKT.MKT_CAM_MST T2 ON T1.CAM_ID = T2.ID
+    LEFT OUTER JOIN com.MKT_CONTS_CHNL_REL T3 ON T2.ID = T3.CAM_ID 
+    LEFT OUTER JOIN MKT.MKT_CHNL T4 ON T4.ID = T3.MKT_CHNL_ID 
+    WHERE  T2.CAM_TYPE_CD !='MULTISTAGE' AND T2.FLAG =1 AND T4.CHNL_TYPE_CD ='EMAIL'
+    AND ${strWhere}
+	ORDER BY 
+    		${strOrderby}
+    		${strEndPaging}
+    AND T1.RECV_MEM_ID = #{userId}
+	UNION ALL
+    SELECT T2.DISP_NO 		AS dispNO
+         , T2.CAM_NM        AS camNm
+         , com.TO_CHAR(T2.CAM_START_DD,'yyyy-mm-dd')  AS camStartDt
+         , com.TO_CHAR(T2.CAM_END_DD,'yyyy-mm-dd')    AS camEndDt
+         , T2.CAM_TYPE_CD   AS camTypeCd --캠페인 구분
+         , T4.CHNL_NM  		AS chnlNM 	 --발송채널
+        -- , T1.SEND_SUCES_DT AS SEND_DT
+         , T1.SEND_SUCES_YN AS sendStatus --발송결과
+         , ${strColumn}
+    FROM MKT.MKT_MSG_SEND_LOG T1 
+    LEFT OUTER JOIN MKT.MKT_CAM_MST T2 ON T1.CAM_ID = T2.ID
+    LEFT OUTER JOIN com.MKT_CONTS_CHNL_REL T3 ON T2.ID = T3.CAM_ID 
+    LEFT OUTER JOIN MKT.MKT_CHNL T4 ON T4.ID = T3.MKT_CHNL_ID 
+    WHERE  T2.CAM_TYPE_CD !='MULTISTAGE' AND T2.FLAG =1 AND T4.CHNL_TYPE_CD ='SMS'
+    AND T1.RECV_MEM_ID = #{userId}
+    AND ${strWhere}
+	ORDER BY 
+    		${strOrderby}
+    		${strEndPaging}
+	</select>
+	
+	<select id = "selectClearMaskCf24" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustNewReqDto"
+	resultType="com.icignal.loyalty.customer.dto.response.LoyCafe24MbrResDto">
+	
+	select rid 			as rid 
+		 , mall 		as mall 
+		 , mbr_nm 		as unmaskName
+		 , cell_ph  	as unmaskCellPh
+		 , email 		as unmaskEmail 
+		 , sms_yn 		as smsYn
+		 , email_yn 	as emailYn
+		 , com.TO_CHAR(com.TO_DATE(reg_dt,'YY/MM/DD'),'YYYY-MM-DD') 	as regDate 
+		 , user_id	as unMaskUserId
+	from loy.LOY_CF24_MBR llcm
+	WHERE rid = #{rid}
+		and flag = 1
+	
+	</select>
+	
+	   <select id="selectMobileCustLoginInfo" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustDetailMbrReqDto"
+                                                            resultType="com.icignal.loyalty.customer.dto.response.LoyCustLoginInfoListResDto">
+        /* LoyCustomerMapper.selectMobileCustLoginInfo */
+       SELECT  lcat.RID AS rid 
+       			,lcat.DEVICE_UUID 																		AS deviceUuid  		-- 디바이스 아이디
+       			,lcat.DEVICE_AGRE_YN 																AS deviceAgreYn 	-- 기기 동의 여부
+       			,com.TO_CHAR(lcat.DEVICE_AGRE_DATE, 'YYYY-MM-DD HH24:Mi:SS')     AS deviceArgeDate   -- 기기 동의 변경 일자
+       			,lcat.DEVICE_TYPE_CD 																AS deviceTypeCd
+               	,lcat.VER_NO 																				AS verNo
+                ,lcat.TOKEN 																				AS token
+                ,com.TO_CHAR(lcat.REG_DATE,'YYYY-MM-DD HH24:Mi:SS') 					AS regDate
+                ,com.TO_CHAR(lcat.CREATE_DATE,'YYYY-MM-DD HH24:Mi:SS') 				AS createDate
+                , ${strColumn}
+        FROM  loy.LOY_CUST_APP_TOKEN lcat 
+        WHERE ${strWhere}
+        AND lcat.FLAG = 1
+        AND lcat.RID_CUST = #{rid}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+	<select id="selectMbrMobileLoginPopGrid" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustDetailMbrReqDto"
+                                                            resultType="com.icignal.loyalty.customer.dto.response.LoyCustLoginInfoListResDto">
+        /* LoyCustomerMapper.selectMbrMobileLoginPopGrid */
+       SELECT lmah.MOBILE_DEVICE_CD AS mobileDeviceCd
+                ,lmah.VER_NO AS verNo 
+                ,lmah.TOKEN_VAL AS tokenVal 
+                ,lmah.DEVICE_AGRE_YN AS deviceAgreYn 
+                ,com.TO_CHAR(lmah.REG_DATE,'YYYY-MM-DD HH24:Mi:SS') AS regDate
+                , ${strColumn}
+        FROM  loy.LOY_MOBILE_APP_HIST lmah 
+        WHERE ${strWhere}
+        AND lmah.FLAG = 1
+        AND lmah.RID_CUST = #{rid}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="updateLoginFailCnt" parameterType="com.icignal.loyalty.customer.dto.request.LoyCustDetailMbrReqDto"
+															resultType="com.icignal.loyalty.customer.dto.response.LoyCustLoginInfoListResDto">
+	UPDATE 
+		LOY.LOY_CUST_LOGIN_INF 
+	SET
+		MODIFY_DATE = GETDATE(),
+		MODIFY_BY = #{modifyBy},
+		FAIL_CNT = 0
+	WHERE 1 = 1
+		AND RID = #{rid}
+	</select>
+</mapper>

@@ -1,0 +1,61 @@
+.qt_logo_area{
+	padding:10px 0;
+	border-width: 0;
+	box-shadow: none;
+	color:white;
+}
+
+.qt_logo_area>span{border-bottom:none; color:white;}
+#qt_logoimg{margin-top:16px; margin-left:9px; display: inline-block; }
+
+.login-info a{color:white; cursor:default;}
+.login-info a:hover{color:white;}
+.searchbtn_r{text-align:right;}
+
+.qt_body_area{padding-left:0px;}
+
+.qt_clear{clear:both;}
+.qt_fr{ padding-right:0px; text-align:right;}
+.qt_ft{margin-top:0px;}
+.qt_th{width:120px; padding-left:0px; text-align:left;}
+.qt_pd{margin-left:13px; margin-right:13px;}
+.qt_tpd{margin-top:20px;}
+.qribbon{min-height:40px; background:#827b71  }
+.qt_tab{ height:50px;  }
+.qt_border{clear:both; padding-bottom:15px ;}
+
+.input-group-addon{padding:0; width:30px;}
+.input-group-addon > a{height:30px; line-height:25px; display:block;}
+
+#qt_header {
+display: block;
+height: 60px;
+position: relative;
+margin: 0;
+padding: 0 13px 0 0;
+background-color: #f3f3f3;
+background-image: -moz-linear-gradient(top,#f3f3f3,#e2e2e2);
+background-image: -webkit-gradient(linear,0 0,0 100%,from(#f3f3f3),to(#e2e2e2));
+background-image: -webkit-linear-gradient(top,#f3f3f3,#e2e2e2);
+background-image: -o-linear-gradient(top,#f3f3f3,#e2e2e2);
+background-image: linear-gradient(to bottom,#f3f3f3,#e2e2e2);
+background-repeat: repeat-x;
+clear:both;
+}
+
+.asterisk{color:#ff0000; margin-right: 3px;}
+
+.two_line{margin-top:-10px;}
+
+
+/* 간격수정 2015.02.04 */
+.form-control{height:27px; padding: 2px 8px;}
+.input-group-addon > a{height: 25px;line-height: 20px;}
+.content_box .row>label{line-height:25px;}
+.form-horizontal .control-label, .form-horizontal .radio, .form-horizontal .checkbox, .form-horizontal .radio-inline, .form-horizontal .checkbox-inline{padding-top: 5px;}
+
+.ui-jqgrid .ui-jqgrid-htable th{padding: 5px 2px;}
+.modal-header{padding:7px 15px; min-height:37px; background:#f3f3f3;}
+.smart-form .input input, .smart-form .select select, .smart-form .textarea textarea{height:27px;}
+.smart-form .icon-append, .smart-form .icon-prepend{top:3px;}
+.ui-spinner-input{padding: 6px 24px 6px 12px;}

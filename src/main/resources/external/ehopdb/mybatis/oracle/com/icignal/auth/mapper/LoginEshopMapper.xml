@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.auth.mapper.LoginEshopMapper">
+
+    <insert id="insertSendSmsInitPassword" parameterType="com.icignal.auth.dto.request.InitPasswordReqDto">
+        insert into ESHOPUSER.MSG_QUEUE(mseq,msg_type,dstaddr,callback,stat,text,subject,request_time,OPT_CMP)
+        values (msg_queue_seq.nextval,'3',#{receiveMobileNo},#{callbackNo},'0',#{message},#{subject},sysdate,'LOY')
+    </insert>
+
+</mapper>

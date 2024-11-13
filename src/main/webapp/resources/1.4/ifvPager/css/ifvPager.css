@@ -1,0 +1,72 @@
+/* 페이징 */
+.page_navi{
+   text-align:right; padding-top:10px;
+}
+.page_navi .page_wrap{
+    display:inline-block; overflow:hidden; text-align:left; vertical-align:middle; border-right:1px solid #ddd;
+}
+.page_navi .con{
+    display:inline-block;
+    -webkit-transition: margin 0.1s ease-in-out;
+    -moz-transition: margin 0.1s ease-in-out;
+    transition: margin 0.1s ease-in-out;
+}
+.page_navi a{
+    display:inline-block;
+    border-left:1px solid #ddd; border-top:1px solid #ddd; border-bottom:1px solid #ddd;
+    width:30px; height:30px;  text-align:center; vertical-align: top;
+    font-size:11px; line-height:28px; color:#717171; 
+    -webkit-box-shadow: inset 0 -2px 0 rgba(0,0,0,.05);text-decoration:none;
+}
+
+.page_navi a:hover{text-decoration:none;}
+
+.page_navi a.disabled{color:#aaa; background-color:#f6f6f6; cursor:default;}
+
+.page_navi a.rl{border-right:1px solid #ddd;}
+.page_navi a.nll{border-left:none;}
+
+.page_navi a.on{background-color:#ff0000; border:1px solid #ff0000; color:#fff;}
+
+
+.pace-activity{margin-top:-1000px\9;}
+
+
+/*ifv_simple_pager*/
+/* .ifv_simple_pager{}
+.ifv_simple_pager > ul{text-align:center;}
+.ifv_simple_pager > ul > li{display:inline;}
+.ifv_simple_pager > ul > li .on{color:red;}
+.ifv_simple_pager > ul > li .disabled{color:#bbb;}
+.ifv_simple_pager > ul > li a{padding:5px; color:#666;}
+
+ */
+.ifv_simple_pager > ul{padding-top: 15px; text-align:center;}
+.ifv_simple_pager > ul > li{display: inline-block;}
+.ifv_simple_pager > ul > li .on{font-weight:bold; border:1px solid #ff0000;}
+.ifv_simple_pager > ul > li a{margin-right:3px; padding:0; display: inline-block; width:28px; height:28px; line-height:28px; border:1px solid #dcdcdc;}
+.ifv_simple_pager > ul > li a:last-child{margin-right:12px;}
+.ifv_simple_pager > ul > li a.first_btn{background:url(../images/page_btn_first.png) no-repeat 50% 50%;}
+.ifv_simple_pager > ul > li a.prev_btn{background:url(../images/page_btn_prev.png) no-repeat 50% 50%;}
+.ifv_simple_pager > ul > li a.next_btn{background:url(../images/page_btn_next.png) no-repeat 50% 50%;}
+.ifv_simple_pager > ul > li a.last_btn{background:url(../images/page_btn_last.png) no-repeat 50% 50%; margin:0;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

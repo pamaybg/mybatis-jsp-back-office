@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:14:08 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.externalRequest.mapper.KprExternalRequestMapper">
+	
+	
+	<select id="selectExternalAnalysisDetail" parameterType="java.lang.String" 
+	resultType="com.icignal.kepler.externalRequest.dto.response.KprExternalRequestDashboardResDto">
+		SELECT	ID					AS analysisId
+				, RPT_NM			AS analysisName
+				, CREATE_BY			AS empId
+		FROM	anl.anl_rpt_mst
+		WHERE	FLAG	= 1
+		AND		ID		= #{paramValue}
+	</select>
+
+	<select id="selectExternalDashboardDetail" parameterType="java.lang.String" 
+	resultType="com.icignal.kepler.externalRequest.dto.response.KprExternalRequestDashboardResDto">
+		SELECT	ID					AS dashboardId
+				, CREATE_BY			AS empId
+		FROM	anl.anl_dashbrd_mst
+		WHERE	FLAG	= 1
+		AND		ID		= #{paramValue}
+	</select>
+</mapper>

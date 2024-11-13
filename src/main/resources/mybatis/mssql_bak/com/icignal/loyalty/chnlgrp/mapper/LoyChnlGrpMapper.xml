@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.chnlgrp.mapper.LoyChnlGrpMapper">
+
+	<select id="selectChnlGrpList" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="com.icignal.loyalty.chnlgrp.dto.response.LoyChnlGrpListResDto">
+    	/* LoyProdGrpMapper.selectChnlGrpList */
+    	SELECT
+    		  lcg.TGT_GRP_NO			AS tgtGrpNo
+    		, lcg.TGT_GRP_NM			AS tgtGrpNm
+    		, lcg.TGT_TYPE_CD			AS tgtTypeCd
+    		, lcg.GRP_CNT				AS grpCnt
+    		, lcg.STAT_CD				AS statCd
+    		, em.name					AS name
+    		, CONVERT(VARCHAR,lcg.CREATE_DATE,120)			AS createDate
+    		, lcg.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_CHNL_GRP lcg WITH (NOLOCK) 
+    	LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) on lcg.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em WITH (NOLOCK) on us.id_employee = em.id AND em.FLAG = 1
+    	WHERE lcg.FLAG = 1
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+
+
+	<select id="selectChnlGrpDetail" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="com.icignal.loyalty.chnlgrp.dto.response.LoyChnlGrpDetailResDto">
+    	/* LoyProdGrpMapper.selectChnlGrpDetail */
+    	SELECT
+    		  lcg.TGT_GRP_NO			AS tgtGrpNo
+    		, lcg.TGT_GRP_NM			AS tgtGrpNm
+    		, lcg.DESC_TEXT				AS descText
+    		, lcg.TGT_TYPE_CD			AS tgtTypeCd
+    		, lcg.STAT_CD				AS statCd
+    		, lcg.CON_FLD				AS conFld
+    		, lcg.CON_VAL				AS conVal
+    		, ld.DS_NM					AS dsNm
+    		, lcg.RID_DS				AS dsRid
+    		, lcg.RID					AS rid
+    	FROM  LOY.LOY_CHNL_GRP lcg WITH (NOLOCK) 
+    	LEFT  OUTER JOIN LOY.LOY_DATASET ld WITH (NOLOCK) ON lcg.RID_DS = ld.RID AND ld.FLAG = 1
+    	WHERE lcg.FLAG = 1
+    	AND   lcg.RID = #{rid}
+    </select>
+    
+    <insert id="insertChnlGrpDetail" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpDetailReqDto">
+    	/* LoyProdGrpMapper.insertChnlGrpDetail */
+    	INSERT INTO LOY.LOY_CHNL_GRP
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, TGT_GRP_NO
+    		, TGT_GRP_NM
+    		, DESC_TEXT
+    		, TGT_TYPE_CD
+    		, STAT_CD
+    		, CON_FLD
+    		, CON_VAL
+    		, RID_DS
+    	)
+ 		VALUES
+ 		(
+ 			  #{rid}
+ 			, #{createBy}
+ 			, #{modifyBy}
+ 			, LOY.FN_GET_CHNLGRP_NO()
+ 			, #{tgtGrpNm}
+ 			, #{descText}
+ 			, #{tgtTypeCd}
+ 			, #{statCd}
+ 			, #{conFld}
+ 			, #{conVal}
+ 			, #{dsRid}
+ 		)
+    </insert>
+    
+    <update id="updateChnlGrpDetail" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpDetailReqDto">
+    	/* LoyProdGrpMapper.updateChnlGrpDetail */
+    	UPDATE LOY.LOY_CHNL_GRP
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, TGT_GRP_NM		= #{tgtGrpNm}
+    		, DESC_TEXT			= #{descText}
+    		, TGT_TYPE_Cd		= #{tgtTypeCd}
+    		, STAT_CD			= #{statCd}
+    		, CON_FLD			= #{conFld}
+    		, CON_VAL			= #{conVal}
+    		, RID_DS			= #{dsRid}
+		WHERE rid = #{rid}
+    </update>
+    
+    <select id="selectChnlItemList" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="com.icignal.loyalty.chnlgrp.dto.response.LoyChnlGrpItemListResDto">
+    	/* LoyProdGrpMapper.selectChnlItemList */
+    	SELECT
+    		  lcgx.LVL_CD				AS lvlCd
+    		, lc.CHNL_NM				AS chnlNm
+    		, lc.CHNL_NO				AS chnlNo
+    		, em.name					AS name
+    		, CONVERT(VARCHAR,lcgx.CREATE_DATE,120) AS createDate
+    		, lcgx.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_CHNL_GRP_XM lcgx WITH (NOLOCK) 
+    	JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lcgx.RID_CHNL = lc.RID AND lc.FLAG = 1
+    	LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) on lcgx.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em WITH (NOLOCK) on us.id_employee = em.id AND em.FLAG = 1
+    	WHERE lcgx.FLAG = 1
+    	AND   lcgx.RID_CHNL_GRP = #{chnlGrpRid}
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <update id="deleteChnlItem" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteChnlItem */
+    	UPDATE LOY.LOY_CHNL_GRP_XM
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+		WHERE rid = #{rid}
+    </update>
+    
+    <update id="deleteAllTChnlItem" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteAllTChnlItem */
+    	UPDATE LOY.LOY_CHNL_GRP_XM
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+    	WHERE RID_CHNL_GRP = #{chnlGrpRid}
+    </update>
+    
+    <select id="selectChnlIdCheck" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="java.lang.Integer">
+    	/* LoyProdGrpMapper.selectChnlIdCheck */
+    	SELECT   count(1)
+    	FROM LOY.LOY_CHNL_GRP_XM lcgx WITH (NOLOCK) 
+    	WHERE lcgx.RID_CHNL_GRP = #{chnlGrpRid}
+    	AND   lcgx.RID_CHNL     = #{chnlRid}
+    	AND   lcgx.FLAG = 1
+    </select>
+    
+    <select id="selectChnlExcIdCheck" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="java.lang.Integer">
+    	/* LoyProdGrpMapper.selectChnlExcIdCheck */
+    	SELECT   count(1)
+    	FROM  LOY.LOY_CHNL_GRP_EXC_XM lcge WITH (NOLOCK) 
+    	WHERE lcge.RID_CHNL_GRP = #{chnlGrpRid}
+    	AND   lcge.RID_CHNL     = #{chnlRid}
+    	AND   lcge.FLAG = 1
+    </select>
+    
+    
+    <insert id="insertChnlItem" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.insertChnlItem */
+    	INSERT INTO LOY.LOY_CHNL_GRP_XM
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, RID_CHNL_GRP
+    		, RID_CHNL
+    		, DESC_TEXT
+    		, LVL_CD
+    	)
+ 		VALUES
+ 		(
+ 			  #{rid}
+ 			, #{createBy}
+ 			, #{modifyBy}
+			, #{chnlGrpRid}
+			, #{chnlRid}
+			, #{descText}
+			, #{lvlCd}
+ 		)
+    </insert>
+    
+    <insert id="insertChnlExc" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.insertChnlExc */
+    	INSERT INTO LOY.LOY_CHNL_GRP_EXC_XM
+    	(
+    		  RID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, RID_CHNL_GRP
+    		, RID_CHNL
+    		, DESC_TEXT
+    	)
+ 		VALUES
+ 		(
+ 			  #{rid}
+ 			, #{createBy}
+ 			, #{modifyBy}
+			, #{chnlGrpRid}
+			, #{chnlRid}
+			, #{descText}
+ 		)
+    </insert>
+    
+    <select id="selectChnlRidCheck" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.selectChnlRidCheck */
+    	SELECT   lc.RID 		AS rid
+    			,lc.LVL_CD      AS lvlCd
+    	FROM LOY.LOY_CHNL lc WITH (NOLOCK) 
+    	WHERE lc.CHNL_NO = #{chnlNo}
+    	AND lc.FLAG = 1
+    </select>
+    
+    <update id="deleteChnlGrp" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteChnlGrp */
+    	UPDATE LOY.LOY_CHNL_GRP
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+    	WHERE RID = #{rid}
+    </update>
+    
+    <update id="deleteChnlExc" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteChnlExc */
+    	UPDATE LOY.LOY_CHNL_GRP_EXC_XM
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+		WHERE rid = #{rid}
+    </update>
+    
+    <update id="deleteAllTChnlExc" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto">
+    	/* LoyProdGrpMapper.deleteAllTChnlExc */
+    	UPDATE LOY.LOY_CHNL_GRP_EXC_XM
+    	SET   MODIFY_DATE		= getdate()
+    		, MODIFY_BY			= #{modifyBy}
+    		, FLAG 				= 0
+    	WHERE RID_CHNL_GRP = #{chnlGrpRid}
+    </update>
+    
+    <select id="selectChnlExcList" parameterType="com.icignal.loyalty.chnlgrp.dto.request.LoyChnlGrpListReqDto" resultType="com.icignal.loyalty.chnlgrp.dto.response.LoyChnlGrpItemListResDto">
+    	/* LoyProdGrpMapper.selectChnlExcList */
+    	SELECT
+    		  lc.CHNL_NM				AS chnlNm
+    		, lc.CHNL_NO				AS chnlNo
+    		, em.name					AS name
+    		, CONVERT(VARCHAR,lcge.CREATE_DATE,120) AS createDate
+    		, lcge.RID					AS rid
+    		, ${strColumn}
+    	FROM LOY.LOY_CHNL_GRP_EXC_XM lcge WITH (NOLOCK) 
+    	JOIN LOY.LOY_CHNL lc WITH (NOLOCK) ON lcge.RID_CHNL = lc.RID AND lc.FLAG = 1
+    	LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) on lcge.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em WITH (NOLOCK) on us.id_employee = em.id AND em.FLAG = 1
+    	WHERE lcge.FLAG = 1
+    	AND   lcge.RID_CHNL_GRP = #{chnlGrpRid}
+    	AND ${strCondWhere}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+  
+    
+</mapper>

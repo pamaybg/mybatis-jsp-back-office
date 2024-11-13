@@ -1,0 +1,1529 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.benefit.point.mapper.LoyTransMapper">
+
+    <select id="selectMbrTotAcrlAmt" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyMbrPtnTxnHistReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyMbrPtnTxnHistResDto">
+        /* LoyTransMapper.selectMbrTotAcrlAmt */
+        SELECT /*+ index(lpt loy_pnt_txn_ix03)*/
+        CASE
+        WHEN SUM(lpt.PNT_AMT)IS NOT NULL THEN SUM(lpt.PNT_AMT)
+        ELSE 0
+        END AS acrlAmt
+        FROM loy.loy_pnt_txn lpt
+        join loy.loy_mbr lm on lpt.RID_MBR = lm.RID
+        where lm.rid = #{rid}
+        AND lpt.FLAG = 1
+        <if test="searchType == &quot;DATE&quot;">
+            and lpt.TXN_DT BETWEEN com.TO_DATE(#{startDt},'YYYY-MM-DD') AND com.TO_DATE(#{endDt},'YYYY-MM-DD')
+        </if>
+        AND lpt.TXN_STAT_CD ='A'
+        AND lpt.pnt_txn_type_1_cd = '100'
+        AND lpt.pnt_txn_type_2_cd NOT IN ('130' , '131')
+    </select>
+
+    <select id="selectMbrTotRdmAmt" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyMbrPtnTxnHistReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyMbrPtnTxnHistResDto">
+        /* LoyTransMapper.selectMbrTotRdmAmt */
+        SELECT /*+ index(lpt loy_pnt_txn_ix03)*/
+        CASE
+        WHEN SUM(lpt.PNT_AMT) IS NOT NULL THEN SUM(lpt.PNT_AMT)
+        ELSE 0
+        END AS rdmAmt
+        FROM loy.loy_pnt_txn lpt
+        join loy.loy_mbr lm on lpt.RID_MBR = lm.RID
+        where lm.rid = #{rid}
+        AND lpt.FLAG = 1
+        <if test="searchType == &quot;DATE&quot;">
+            and lpt.TXN_DT BETWEEN com.TO_DATE(#{startDt},'YYYY-MM-DD') AND com.TO_DATE(#{endDt},'YYYY-MM-DD')
+        </if>
+        AND lpt.TXN_STAT_CD ='A'
+        AND lpt.pnt_txn_type_1_cd = '200'
+        AND lpt.pnt_txn_type_2_cd NOT IN ('210' , '211')
+    </select>
+
+    <!-- 멤버십 회원의 포인트 거래내역 목록 조회 -->
+    <select id="selectMbrPtnTxnHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyMbrPtnTxnHistReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyMbrPtnTxnHistResDto">
+        /* LoyTransMapper.selectMbrPtnTxnHistList */
+        SELECT /*+ index(lpt loy_pnt_txn_ix03)*/
+        lpt.txn_uniq_no AS txnUniqNo
+        , com.TO_CHAR(lpt.TXN_DT,'YYYY-MM-DD HH24:MI:SS') AS txnDt
+        , com.TO_CHAR(lpt.APPR_DT,'YYYY-MM-DD HH24:MI:SS') AS apprDate
+        , com.TRUNC(lpt.TOTAL_PNT_AVL,0) AS totalPntAvl
+        , cc.MARK_NAME AS pntTxnType1Cd
+        , cc1.MARK_NAME AS pntTxnType2Cd
+        , lm.MBR_NO AS mbrNo
+        , lct.CUST_NM AS custNm
+        , lpt.MEM_GRADE AS memGradeCd
+        , case when lpt.pnt_txn_type_1_cd = '200' then '-' + com.TRUNC(lpt.PNT_AMT,0) else com.TO_CHAR(com.TRUNC(lpt.PNT_AMT,0)) end AS pntAmt <!-- 거래유형 '사용'인 경우 '-' prefix -->
+        , com.TRUNC(lpt.USE_PNT,0) AS usePnt
+        , com.TRUNC(lpt.GIFT_PNT,0) AS giftPnt
+        , com.nvl(lpt.TXN_AMT,0) AS txnAmt
+        , lc.rid AS ridChnl
+        , lc.CHNL_NO AS chnlNo
+        , lc.CHNL_NM AS chnlNm
+        , lpt.rid AS rid
+        , lm.rid AS ridMbr
+        , lck.card_type AS mbrType
+        , lmc.cprt_card_cd AS cprtCardCd
+        , lpt.CARD_TYPE_CD AS cardKndCd
+        , d.mark_name AS cprtCard
+        , com.nvl((SELECT com.TRUNC(sum(acrl_amt),0) FROM loy.loy_pnt_acrl WHERE RID_PNT_TXN = lpt.rid AND FLAG = 1 group by rid_pnt_txn),0) AS promoCnt
+        , lpt.APPR_NO AS dtlApprNo
+        , lpt.rcpt_no AS rcptNo
+        , lpt.txn_type_dtl_desc AS txnTypeDtlDesc
+        , liv.voc_desc AS acrlDesc
+        ,lpt.orgn_appr_no AS orgnApprNo
+        ,case when lpt.orgn_appr_date is not null then com.TO_CHAR(com.TO_DATE(lpt.orgn_appr_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') else '' end as orgnApprDate <!-- 원 승인번호 -->
+        ,lpt.TXN_STAT_CD as txnStatCd
+        ,lpt.APPR_DATE AS apprDateYYYYMMDD
+        ,lpt.PNT_TXN_TYPE_1_CD as pntTxnType1code
+        ,lpt.PNT_TXN_TYPE_2_CD as pntTxnType2code
+        , ${strColumn}
+        FROM
+        <if test="pntTxnDateType == &quot;A&quot;">loy.loy_pnt_txn</if>
+        <if test="pntTxnDateType != &quot;A&quot;">loy.loy_pnt_txn_archive</if>
+        lpt
+        join loy.loy_mbr lm on lpt.RID_MBR = lm.RID and lm.flag = 1
+        JOIN loy.loy_cust lct on lct.rid= lm.RID_CUST and lct.flag = 1
+        left outer join LOY.LOY_CHNL lc on lc.rid= lpt.rid_chnl and lc.flag = 1
+        LEFT OUTER JOIN loy.loy_mbr_card lmc on lmc.card_no = lpt.card_num and lmc.flag = 1
+        LEFT OUTER JOIN loy.loy_card_kind lck on lck.rid = lmc.RID_CARD_KIND and lck.flag = 1
+        left outer join com.comm_code d on lmc.cprt_card_cd = d.code_name and d.group_code = 'CARD_CORP_TYPE' and d.flag = 1 and d.lang=#{lang} <!-- and d.country = #{country} -->
+        inner join com.comm_code cc on cc.CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND cc.lang = #{lang} AND cc.GROUP_CODE ='PNT_TXN_TYPE' and cc.flag = 1
+        inner join com.comm_code cc1 on cc1.CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND cc1.lang = #{lang} AND cc1.GROUP_CODE ='PNT_TXN_DTL_TYPE' and cc1.flag = 1
+        LEFT OUTER JOIN loy.loy_intact_voc liv on liv.flag = 1 and liv.rid = lpt.rid_intact_data
+        where ${strWhere}
+        and lpt.flag = 1
+        and lm.rid = #{rid}
+        <if test="searchType == &quot;DATE&quot;">
+            and lpt.TXN_DT BETWEEN com.TO_DATE(#{startDt},'YYYY-MM-DD') AND com.TO_DATE(#{endDt},'YYYY-MM-DD')
+        </if>
+        <if test="searchType == &quot;ACRL&quot;">
+            and lpt.PNT_TXN_TYPE_1_CD = '100'
+        </if>
+        <if test="searchType == &quot;RDM&quot;">
+            and lpt.PNT_TXN_TYPE_1_CD ='200'
+        </if>
+        <if test="searchType == &quot;PARTNER&quot;">
+            and lmc.cprt_card_cd is not null and lmc.cprt_card_cd !=''
+        </if>
+        <if test="searchType == &quot;BUTANE&quot;">
+            and lpt.RID_PROD ='1-VGCR'
+        </if>
+        order by ${strOrderby}, lpt.rowid DESC
+        ${strEndPaging}
+    </select>
+
+    <!-- B2C 포인트 정보 조회 -->
+    <!-- 소멸 예정월은 조회하는 달 -1월료 화면에 표시 바랍니다. 예시) 2018년 11월 -->
+    <select id="selectPontBalanceB2c" parameterType="com.icignal.loyalty.membership.dto.request.LoyPontBalanceB2cReqDto" statementType="CALLABLE">
+        /* LoyTransMapper.selectPontBalanceB2c */
+        { call loy.PROC_POINT_BALANCE_B2C(
+                #{rid},
+                #{p_Rst,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_RstCd,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_RstMsg,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_UsePnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_AccrualPnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_Expr1MonthPnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT},
+                #{p_PreAcrlPnt,javaType=java.lang.String,jdbcType=VARCHAR,mode=OUT})
+            }
+    </select>
+
+    <!-- 회원상세 포인트거래이력 엑셀다운로드 -->
+    <select id="excelMbrPointTxnList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyMbrPtnTxnHistReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyMbrPtnTxnHistResDto">
+        /* LoyTransMapper.excelMbrPointTxnList */
+        SELECT /*+ index(lpt loy_pnt_txn_ix03)*/
+        lpt.txn_uniq_no AS txnUniqNo
+        , com.TO_CHAR(lpt.TXN_DT,'YYYY-MM-DD HH24:MI:SS') AS txnDt
+        , com.TO_CHAR(lpt.APPR_DT,'YYYY-MM-DD HH24:MI:SS') AS apprDate
+        , com.TRUNC(lpt.TOTAL_PNT_AVL,0) AS totalPntAvl
+        , cc.MARK_NAME AS pntTxnType1Cd
+        , cc1.MARK_NAME AS pntTxnType2Cd
+        , lm.MBR_NO AS mbrNo
+        , lct.CUST_NM AS custNm
+        , case when lpt.pnt_txn_type_1_cd = '200' then '-' + com.TRUNC(lpt.PNT_AMT,0) else com.TO_CHAR(com.TRUNC(lpt.PNT_AMT,0)) end AS pntAmt <!-- 거래유형 '사용'인 경우 '-' prefix -->
+        , com.TRUNC(lpt.USE_PNT,0) AS usePnt
+        , com.TRUNC(lpt.GIFT_PNT,0) AS giftPnt
+        , com.nvl(lpt.TXN_AMT,0) AS txnAmt
+        , lc.rid AS ridChnl
+        , lc.CHNL_NO AS chnlNo
+        , lc.CHNL_NM AS chnlNm
+        , lpt.rid AS rid
+        , lm.rid AS ridMbr
+        , lck.card_type AS mbrType
+        , lmc.cprt_card_cd AS cprtCardCd
+        , d.mark_name AS cprtCard
+        , com.nvl((SELECT com.TRUNC(sum(acrl_amt),0) FROM loy.loy_pnt_acrl WHERE RID_PNT_TXN = lpt.rid AND FLAG = 1 group by rid_pnt_txn),0) AS promoCnt
+        , lpt.APPR_NO AS dtlApprNo
+        , lpt.rcpt_no AS rcptNo
+        , lpt.txn_type_dtl_desc AS txnTypeDtlDesc
+        , liv.voc_desc AS acrlDesc
+        ,lpt.orgn_appr_no AS orgnApprNo
+        ,case when lpt.orgn_appr_date is not null then com.TO_CHAR(com.TO_DATE(lpt.orgn_appr_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') else '' end as orgnApprDate <!-- 원 승인번호 -->
+        ,lpt.TXN_STAT_CD as txnStatCd
+        ,lpt.APPR_DATE AS apprDateYYYYMMDD
+        ,lpt.PNT_TXN_TYPE_1_CD as pntTxnType1code
+        ,lpt.PNT_TXN_TYPE_2_CD as pntTxnType2code
+        , ${strColumn}
+        FROM
+        <if test="pntTxnDateType == &quot;A&quot;">loy.loy_pnt_txn</if>
+        <if test="pntTxnDateType != &quot;A&quot;">loy.loy_pnt_txn_archive</if>
+        lpt
+        join loy.loy_mbr lm on lpt.RID_MBR = lm.RID and lm.flag = 1
+        JOIN loy.loy_cust lct on lct.rid= lm.RID_CUST and lct.flag = 1
+        left outer join LOY.LOY_CHNL lc on lc.rid= lpt.rid_chnl and lc.flag = 1
+        LEFT OUTER JOIN loy.loy_mbr_card lmc on lmc.card_no = lpt.card_num and lmc.flag = 1
+        LEFT OUTER JOIN loy.loy_card_kind lck on lck.rid = lmc.RID_CARD_KIND and lck.flag = 1
+        left outer join com.comm_code d on lmc.cprt_card_cd = d.code_name and d.group_code = 'CARD_CORP_TYPE' and d.flag = 1 and d.lang=#{lang} <!-- and d.country = #{country} -->
+        inner join com.comm_code cc on cc.CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND cc.lang = #{lang} AND cc.GROUP_CODE ='PNT_TXN_TYPE' and cc.flag = 1
+        inner join com.comm_code cc1 on cc1.CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND cc1.lang = #{lang} AND cc1.GROUP_CODE ='PNT_TXN_DTL_TYPE' and cc1.flag = 1
+        LEFT OUTER JOIN loy.loy_intact_voc liv on liv.flag = 1 and liv.rid = lpt.rid_intact_data
+        where ${strWhere}
+        and lpt.flag = 1
+        and lm.rid = #{rid}
+        <if test="searchType == &quot;DATE&quot;">
+            and lpt.TXN_DT BETWEEN com.TO_DATE(#{startDt},'YYYY-MM-DD') AND com.TO_DATE(#{endDt},'YYYY-MM-DD')
+        </if>
+        <if test="searchType == &quot;ACRL&quot;">
+            and lpt.PNT_TXN_TYPE_1_CD = '100'
+        </if>
+        <if test="searchType == &quot;RDM&quot;">
+            and lpt.PNT_TXN_TYPE_1_CD ='200'
+        </if>
+        <if test="searchType == &quot;PARTNER&quot;">
+            and lmc.cprt_card_cd is not null and lmc.cprt_card_cd !=''
+        </if>
+        <if test="searchType == &quot;BUTANE&quot;">
+            and lpt.RID_PROD ='1-VGCR'
+        </if>
+        order by ${strOrderby}, lpt.rowid DESC
+        ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+     -   관련 파일             : LOYTransDAO.java
+     ============================================
+     -   제목                  : 프로모션 항목 목록
+     -   설명                  : 프로모션 항목 목록 조회
+     -   결과형태              : 목록
+     ============================================
+     -   입력
+     ============================================
+     -   작성자                : 김준기
+     -   작성일                : 2017.10.13
+     ***************************************/ -->
+    <select id="selectTransPromoList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransPromoListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransPromoListResDto">
+        /*LoyTransMapper.selectTransPromoList */
+        SELECT
+        lo.OFR_NO AS ofrNo
+        , lo.OFR_NM AS ofrNm
+        , trim(com.TO_CHAR(lpa.acrl_amt,'999,999,999,999')) AS tabAcrlAmt       <!-- 적립포인트 -->
+        , lpa.valid_end_date AS validEndDate     <!-- 유효종료일 -->
+        , lpa.acrl_date AS acrlDate            <!-- 적립일 -->
+        , lpt.PNT_TXN_TYPE_1_CD AS pntTxnType1Cd    <!-- 거래유형 -->
+        , cc3.MARK_NAME AS pntTxnType1CdNm
+        , lpt.PNT_TXN_TYPE_2_CD AS pntTxnType2Cd    <!-- 거래유형상세 -->
+        , cc4.MARK_NAME AS pntTxnType2CdNm
+        , com.TO_CHAR(lpt.txn_dt, 'YYYY-MM-DD HH24:MI:SS') AS txnDate          <!-- 거래일시 -->
+        , CASE WHEN e.NAME IS NULL THEN '시스템'    <!-- 처리자명 -->
+        ELSE e.NAME
+        END AS createByNm
+        , CASE WHEN com.nvl(lpa.VALID_START_DATE,'') IS not null THEN com.TO_CHAR(lpa.VALID_START_DATE, 'YYYY-MM-DD') + ' ~ ' + com.TO_CHAR(lpa.VALID_END_DATE, 'YYYY-MM-DD') ELSE ''
+        end as validDate
+        , lpa.ACRL_DESC AS acrlDesc
+        ,e2.name AS modifyBy
+        , ${strColumn}
+        FROM
+        <if test="defaultArchive == &quot;Y&quot;">loy.loy_pnt_acrl_archive</if>
+        <if test="defaultArchive != &quot;Y&quot;">loy.loy_pnt_acrl</if>
+        lpa
+        LEFT JOIN loy.loy_pnt_txn lpt ON lpa.RID_PNT_TXN = lpt.rid AND lpt.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_OFR lo ON lpa.OFFER_NO = lo.OFR_NO AND lo.FLAG = 1
+        inner join com.comm_code cc3 on cc3.CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND cc3.flag = 1 AND cc3.lang = #{lang} AND cc3.GROUP_CODE = 'PNT_TXN_TYPE'
+        inner JOIN com.comm_code cc4 on cc4.CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND cc4.flag = 1 AND cc4.lang = #{lang} AND cc4.GROUP_CODE = 'PNT_TXN_DTL_TYPE'
+        LEFT OUTER JOIN com.CRM_USER cu ON lpt.CREATE_BY = cu.RID
+        LEFT OUTER JOIN com.EMPLOYEE e ON cu.ID_EMPLOYEE = e.id
+        LEFT OUTER JOIN com.CRM_USER cu2 ON lpa.MODIFY_BY = cu2.RID
+        LEFT OUTER JOIN com.EMPLOYEE e2 ON cu2.ID_EMPLOYEE = e2.id
+        where 1=1
+        and lpt.flag = 1
+        and lpa.FLAG = 1
+        and lpa.RID_PNT_TXN = #{rid}
+        and ${strWhere}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <!-- 회원 별 소멸된 포인트 목록 조회 -->
+    <select id="selectDormancyPntListByMbr" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrDormancyPntListReqDto"
+            resultType="com.icignal.loyalty.membership.dto.response.LoyMbrDormancyPntListResDto">
+        /* LoyTransMapper.selectDormancyPntListByMbr */
+        select lpt.rid as rid
+        , lpt.modify_date as modifyDate
+        , com.TO_CHAR(lpt.txn_dt, 'yyyy-mm-dd hh24:mi:ss') as txnDt
+        , com.trunc(lpt.txn_amt, 0) as txnAmt
+        , com.TO_CHAR(lpt.appr_dt, 'yyyy-mm-dd hh24:mi:ss') as apprDt
+        , com.trunc(lpt.pnt_amt, 0) as pntAmt
+        , CASE WHEN com.nvl(lpa.VALID_START_DATE,'') IS not null THEN com.TO_CHAR(lpa.VALID_START_DATE, 'YYYY-MM-DD') + ' ~ ' + com.TO_CHAR(lpa.VALID_END_DATE, 'YYYY-MM-DD') ELSE ''
+        end as validDate
+        , mcm.cam_nm as camNm
+        , lc.chnl_nm as chnlNm
+        , ${strColumn}
+        from loy.loy_pnt_txn lpt
+        left join loy.loy_pnt_acrl lpa on lpt.rid = lpa.rid_pnt_txn and lpa.flag = 1
+        left join mkt.mkt_cam_mst mcm on mcm.disp_no = lpa.cam_no
+        left join LOY.LOY_CHNL lc on lc.rid = lpt.rid_chnl
+        where lpt.rid_mbr = #{ridMbr}
+        and lpt.flag = 1
+        and lpt.pnt_txn_type_1_cd = '200' <!-- 사용 -->
+        and lpt.pnt_txn_type_2_cd in ('220', '263') <!-- 소멸 -->
+        and ${strSVCType}
+        and ${strWhere}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectTransListCnt" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto" resultType="java.lang.Integer">
+        /*LoyTransMapper.selectTransListCnt */
+        SELECT COUNT(*) as Cnt
+        FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_txn</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_txn_archive</if>
+        lpt
+
+        <if test="isProdYn == &quot;Y&quot;">
+            inner join loy.loy_prod lp on lp.rid= lpt.RID_PROD
+        </if>
+        <if test="isChnlYn == &quot;Y&quot;">
+            inner join LOY.LOY_CHNL lc on lc.rid= lpt.RID_CHNL
+        </if>
+
+        <if test="isMbrYn == &quot;Y&quot;">
+            left outer join loy.loy_mbr lm on lm.RID = lpt.RID_MBR
+            join loy.loy_cust lc2 on lc.RID = lm.RID_CUST
+            LEFT OUTER JOIN LOY.LOY_TIERS lt ON lm.RID_TIER = lt.RID
+        </if>
+
+
+        <if test="batchTransIsYn != null and batchTransIsYn != ''">
+            INNER JOIN loy.loy_mem_sbsc_rqt lmsr ON CARD_NUM_ENC = lpt.card_num
+        </if>
+        where ${strCondWhere}
+        AND lpt.FLAG = 1
+        <if test="defaultMbrRid != null and defaultMbrRid != ''">and lpt.rid_mbr = #{defaultMbrRid}</if>
+        <if test="defaultChnlRid != null and defaultChnlRid != ''">and lpt.rid_chnl = #{defaultChnlRid}</if>
+        <if test="batchTransIsYn != null and batchTransIsYn != ''">and lmsr.card_num =#{batchCardNum}</if>
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LoyTransMapper.java
+    ============================================
+    -   제목                  : 포인트 거래리스트 목록
+    -   설명                  : 포인트 거래리스트 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.10.13
+    -   변경이력             : 2020-02-19 T10 변경 작업 .  by yj.choi
+    ***************************************/ -->
+    <select id="selectTransList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransListResDto">
+        /*LoyTransMapper.selectTransList */
+        SELECT T1.*
+        FROM ( SELECT lpt.appr_no AS apprNo
+        ,lpt.TXN_UNIQ_NO AS txnUniqNo
+        ,com.nvl(lpt.SALES_AMT,0) AS salesAmt --판매가
+        ,com.TO_CHAR(lpt.TXN_DT,'YYYY-MM-DD hh24:mi') AS txnDt
+        ,com.TO_CHAR(lpt.APPR_DT,'YYYY-MM-DD hh24:mi:ss') AS apprDate
+        ,lpt.APPR_DATE AS apprDateYYYYMMDD
+        ,lpt.PNT_TXN_TYPE_1_CD as pntTxnType1code
+        ,lpt.PNT_TXN_TYPE_2_CD as pntTxnType2code
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_TYPE' AND flag = 1) as pntTxnType1Cd
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_DTL_TYPE' AND flag = 1) as pntTxnType2Cd
+        ,lm.MBR_NO AS mbrNo
+        ,lc2.CUST_NM AS custNm
+        ,lc2.hhp AS hhp
+        <!-- ,TRUNC(lpt.PNT_AMT,0) AS pntAmt -->
+        ,com.nvl(com.TO_CHAR(com.TRUNC(lpt.PNT_AMT,0),'FM999,999,999,999'),0) AS pntAmt
+        <!-- ,TRUNC(lpt.TXN_AMT,0) as txnAmt -->
+        ,com.nvl(com.TO_CHAR(com.TRUNC(lpt.TXN_AMT,0),'FM999,999,999,999'),0) AS txnAmt
+        ,lc.CHNL_NO as chnlNo
+        ,lc.CHNL_NM AS chnlNm
+        <!-- ,lpt.GROUP_PNT as groupPnt -->
+        ,lpt.rid as rid
+        ,lm.rid as ridMbr
+        ,com.TRUNC(com.nvl((SELECT sum(acrl_amt) FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_acrl</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_acrl_archive</if>
+        WHERE RID_PNT_TXN = lpt.rid AND FLAG = 1 group by rid_pnt_txn),0),0) AS promoCnt
+        <!-- ,lmc.CPRT_CARD_CD as cprtCardCd -->
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.TXN_STAT_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_STAT_CD' AND flag = 1) as txnStatNm
+        ,com.nvl(lpt.orgn_appr_no,'') as orgnApprNo <!-- 원 승인번호 -->
+        ,case when lpt.orgn_appr_date is not null then com.TO_CHAR(com.TO_DATE(lpt.orgn_appr_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') else '' end as orgnApprDate <!-- 원 승인번호 -->
+        ,lpt.rcpt_no as rcptno
+        <!-- ,lm.web_id as webId -->
+        ,lpt.TXN_STAT_CD as txnStatCd
+        ,lc2.CUST_TYPE_CD AS custTypeCd
+        , com.TO_CHAR(com.TO_DATE(lc2.BIRTH_DATE),'YYYY-MM-DD') AS birthDt
+        ,lc2.GEN_CD AS genCd
+        ,lt.TIER_NM AS tierNm
+        , lm.MBR_STAT_CD AS mbrStatCd
+        , loy.pkg_loy_fn.FN_GET_PNT_TXN_DESC(lpt.rid) AS txnDesc --거래명
+        ,${strColumn}
+        FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_txn</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_txn_archive</if>
+        lpt
+        left outer join loy.loy_mbr lm on lm.RID = lpt.RID_MBR
+        LEFT JOIN loy.loy_cust lc2 on lc2.rid = lm.RID_CUST
+        LEFT JOIN loy.LOY_TIERS lt ON lt.RID = lm.RID_TIER AND lt.FLAG = 1
+        LEFT OUTER JOIN loy.loy_mbr_card lmc on lmc.card_no = lpt.card_num
+        <!-- left outer JOIN loy.loy_cust lct on lct.rid= lm.RID_CUST  -->
+        <!-- 포인트 선물과 같은 거래의 경우 상품이 없을 수도 있다 -->
+        <!-- inner join loy.loy_prod lp on lp.rid= lpt.RID_PROD -->
+        inner join LOY.LOY_CHNL lc on lc.rid= lpt.RID_CHNL
+        <if test="batchTransIsYn != null and batchTransIsYn != ''">
+            INNER JOIN
+            loy.loy_mem_sbsc_rqt lmsr ON CARD_NUM_ENC = lpt.card_num
+        </if>
+        where ${strCondWhere}
+        and ${strWhere}
+        and lpt.flag = 1
+        <if test="defaultMbrRid != null and defaultMbrRid != ''">and lpt.rid_mbr = #{defaultMbrRid}</if>
+        <if test="defaultChnlRid != null and defaultChnlRid != ''">and lpt.rid_chnl = #{defaultChnlRid}</if>
+        <if test="batchTransIsYn != null and batchTransIsYn != ''">and lmsr.card_num =#{batchCardNum}</if>
+        <if test="mbrRidFlag != null and mbrRidFlag != ''">and 1 = 2</if>
+        ORDER BY ${strOrderby}
+        ${strEndPaging} ) T1
+    </select>
+
+    <!-- /**************************************
+   -   관련 파일             : LoyTransMapper.java
+   ============================================
+   -   제목                  : 포인트 거래 상세 팝업
+   -   설명                  : 포인트 거래 상세 팝업 조회
+   -   결과형태              : 목록
+   ============================================
+   -   입력			   : rid
+   ============================================
+   -   작성자                : 김준기
+   -   작성일                : 2017.10.13
+   ***************************************/ -->
+    <select id="selectPointDtlPop" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransListResDto">
+        /*LoyTransMapper.selectPointDtlPop */
+        SELECT STRAIGHT_JOIN lpt.TXN_NUM  AS txnUniqNo
+				,lpt.APPR_DT AS apprDate
+             , lpt.PNT_TXN_TYPE_2_CD AS pntTxnType2Cd
+             , lm.MBR_NO             AS mbrNo
+             , lct.CUST_NM           AS custNm
+             , lm.MEM_DIV            AS memDiv
+             , lpt.PNT_AMT           AS pntAmt
+             , lpt.USE_PNT           as usePnt
+             , lpt.GIFT_PNT          as giftPnt
+             , lp.PROD_NM            as prodNm
+             , lpt.TXN_AMT           as txnAmt
+             , lc.CHNL_NO            as chnlNo
+             , lc.CHNL_NM            AS chnlNm
+             , lpt.GROUP_PNT         as groupPnt
+             , lpt.rid               as rid
+        FROM loy.loy_pnt_txn lpt
+                 INNER JOIN loy.loy_mbr lm on lm.RID = lpt.RID_MBR
+                 INNER JOIN loy.loy_cust lct on lct.rid = lm.RID_CUST
+                 left outer join loy.loy_prod lp on lp.rid = lpt.RID_PROD
+                 inner join LOY.LOY_CHNL lc on lc.rid = lpt.RID_CHNL
+        where lpt.rid = #{rid}
+          and lpt.flag = 1
+    </select>
+
+    <!-- /**************************************
+   -   관련 파일             : LoyTransMapper.java
+   ============================================
+   -   제목                  : 포인트 거래 상세
+   -   설명                  : 포인트 거래 상세 조회
+   -   결과형태              : 단일
+   ============================================
+   -   입력			   : rid
+   ============================================
+   -   작성자                : 김준기
+   -   작성일                : 2017.10.13
+   ***************************************/ -->
+    <select id="selectTransDtl" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransDetailReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransDetailResDto">
+        /*LoyTransMapper.selectTransDtl */
+        SELECT lpt.APPR_DT as dtlApprDate
+        ,lpt.APPR_NO as dtlApprNo
+        ,lpt.PNT_TXN_TYPE_1_CD as dtlPntTxnType1Cd
+        ,lpt.PNT_TXN_TYPE_2_CD as dtlPntTxnType2Cd
+        ,lm.MBR_NO as dtlMbrNo
+        ,lct.CUST_NM as dtlCustNm
+        ,lpt.MEM_DIV as dtlMemDiv
+        ,lpt.MEM_GRADE as dtlMemGrade
+        ,lm.RID_TIER_CUR as dtlRidTierCur
+        ,lpt.PNT_AMT as dtlPntAmt
+        ,lpt.USE_PNT as dtlUsePnt
+        <!-- 		       ,lpt.CARD_NUM as dtlCardNum -->
+        ,case
+        <!--   when lpt.CARD_NUM ='' or lpt.CARD_NUM = null then lpt.CARD_NUM -->
+        when lpt.CARD_TYPE_CD in ('10','30')
+        then lpt.CARD_NUM
+        else
+        lpt.CARD_NUM
+        end as dtlCardNum
+        ,lc.CHNL_NO as dtlChnlNo
+        ,lc.CHNL_NM as dtlChnlNm
+        ,lpt.BIZNO as dtlBizno
+        ,lpt.TOTAL_PNT_AVL as dtlTotalPntAvl
+        ,lpt.GIFT_PNT as dtlGiftPnt
+        ,lmc.CPRT_CARD_CD as dtlCprtCardCd
+        ,lpt.CARD_TYPE_CD as dtlCardTypeCd
+        FROM loy.loy_pnt_txn lpt
+        LEFT OUTER JOIN loy.loy_mbr lm on lm.rid = lpt.RID_MBR
+        LEFT OUTER JOIN loy.loy_cust lct on lct.rid = lm.RID_CUST
+        LEFT OUTER JOIN LOY.LOY_CHNL lc on lc.rid = lpt.RID_CHNL
+        LEFT OUTER JOIN loy.loy_mbr_card lmc on lmc.RID_MBR = lm.rid
+
+        LEFT OUTER JOIN com.comm_code cc on cc.CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND cc.lang=#{lang} AND cc.GROUP_CODE='TXN_TYPE_CD'  <!-- and cc.country = #{country} --> and cc.flag=1
+        LEFT OUTER JOIN com.comm_code cc1 on cc1.CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND cc1.lang=#{lang} AND cc1.GROUP_CODE='TXN_SUB_TYPE_CD'  <!-- and cc1.country = #{country} --> and
+        cc1.flag=1
+        LEFT OUTER JOIN com.comm_code cc2 on cc2.CODE_NAME = lpt.MEM_DIV AND cc2.lang=#{lang} AND cc2.GROUP_CODE='MEMBER_TYPE'  <!-- and cc2.country = #{country} --> and cc2.flag=1
+        LEFT OUTER JOIN com.comm_code cc3 on cc3.CODE_NAME = lpt.MEM_GRADE AND cc3.lang=#{lang} AND cc3.GROUP_CODE='MEMBER_GRADE'   <!-- and cc3.country = #{country} --> and cc3.flag=1
+        WHERE lpt.rid=#{rid}
+        and lpt.flag = 1
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LoyTransMapper.java
+    ============================================
+    -   제목                  : 포인트 거래 상세
+    -   설명                  : 과거 포인트 거래 상세 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.10.13
+    ***************************************/ -->
+    <select id="selectTransArchiveDtl" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransDetailReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransDetailResDto">
+        /*LoyTransMapper.selectTransArchiveDtl */
+        SELECT lpt.APPR_DT as dtlApprDate
+        ,lpt.APPR_NO as dtlApprNo
+        ,lpt.PNT_TXN_TYPE_1_CD as dtlPntTxnType1Cd
+        ,lpt.PNT_TXN_TYPE_2_CD as dtlPntTxnType2Cd
+        ,lm.MBR_NO as dtlMbrNo
+        ,lct.CUST_NM as dtlCustNm
+        ,lpt.MEM_DIV as dtlMemDiv
+        ,lpt.MEM_GRADE as dtlMemGrade
+        ,lm.RID_TIER_CUR as dtlRidTierCur
+        ,lpt.PNT_AMT as dtlPntAmt
+        ,lpt.USE_PNT as dtlUsePnt
+        <!-- 		       ,lpt.CARD_NUM as dtlCardNum -->
+        ,case
+        <!--   when lpt.CARD_NUM ='' or lpt.CARD_NUM = null then lpt.CARD_NUM -->
+        when lpt.CARD_TYPE_CD in ('10','30')
+        then lpt.CARD_NUM
+        else
+        lpt.CARD_NUM
+        end as dtlCardNum
+        ,lc.CHNL_NO as dtlChnlNo
+        ,lc.CHNL_NM as dtlChnlNm
+        ,lpt.BIZNO as dtlBizno
+        ,lpt.TOTAL_PNT_AVL as dtlTotalPntAvl
+        ,lpt.GIFT_PNT as dtlGiftPnt
+        ,lmc.CPRT_CARD_CD as dtlCprtCardCd
+        ,lpt.CARD_TYPE_CD as dtlCardTypeCd
+        FROM loy.loy_pnt_txn_archive lpt
+        LEFT OUTER JOIN loy.loy_mbr lm on lm.rid = lpt.RID_MBR
+        LEFT OUTER JOIN loy.loy_cust lct on lct.rid = lm.RID_CUST
+        LEFT OUTER JOIN LOY.LOY_CHNL lc on lc.rid = lpt.RID_CHNL
+        LEFT OUTER JOIN loy.loy_mbr_card lmc on lmc.RID_MBR = lm.rid
+
+        LEFT OUTER JOIN com.comm_code cc on cc.CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND cc.lang=#{lang} AND cc.GROUP_CODE='TXN_TYPE_CD'  <!-- and cc.country = #{country} --> and cc.flag=1
+        LEFT OUTER JOIN com.comm_code cc1 on cc1.CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND cc1.lang=#{lang} AND cc1.GROUP_CODE='TXN_SUB_TYPE_CD'  <!-- and cc1.country = #{country} --> and
+        cc1.flag=1
+        LEFT OUTER JOIN com.comm_code cc2 on cc2.CODE_NAME = lpt.MEM_DIV AND cc2.lang=#{lang} AND cc2.GROUP_CODE='MEMBER_TYPE'  <!-- and cc2.country = #{country} --> and cc2.flag=1
+        LEFT OUTER JOIN com.comm_code cc3 on cc3.CODE_NAME = lpt.MEM_GRADE AND cc3.lang=#{lang} AND cc3.GROUP_CODE='MEMBER_GRADE'   <!-- and cc3.country = #{country} --> and cc3.flag=1
+        WHERE lpt.rid=#{rid}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LoyTransMapper.java
+    ============================================
+    -   제목                  : 추가 정보 탭
+    -   설명                  : 추가 정보 탭 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기
+    -   작성일                : 2017.10.13
+    ***************************************/ -->
+    <select id="selectTransAddInfo" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransListResDto">
+        /*LoyTransMapper.selectTransAddInfo */
+        SELECT lpt.SND_DT as tabSndDate
+        ,lpt.TXN_UNIQ_NO as tabRefNo
+        ,lpt.TERMINAL_CD as tabTerminalCd
+        ,lpt.TXN_DT as tabTxnDate
+        ,lpt.TXN_UNIQ_NO as tabRefNo
+        ,lpt.REQ_TYPE_CD as tabReqTypeCd
+        ,lpt.AMT_TYPE_CD as tabAmtTypeCd
+        ,lpt.PAYMENT_CD as tabPaymentCd
+        ,lp.PROD_ID as tabProdId
+        ,lp.PROD_NM as tabProdNm
+        ,lpt.PROD_UNIT_COST as tabProdUnitCost
+        ,lpt.PROD_QTY as tabProdQty
+        ,lpt.TXN_AMT as tabTxnAmt
+        ,lc2.CHNL_NO as tabChnlNo
+        ,lc2.CHNL_NM as tabChnlNm
+        ,lpt.GROUP_PNT as tabGroupPnt
+        ,lm2.MBR_NO as tabRidMbrTransfer
+        ,lct2.CUST_NM as tabCustNm
+        ,lpt.CARD_DRCT_DDCT_PNT as tabCardDrctDdctPnt
+        ,lpt.AUTO_DEDUCT_YN as tabAutoDeductYn
+        ,lpt.CNCL_YN as tabCnclYn
+        ,lpt.CNCL_RSN_CD as tabCnclTypeCd
+        ,DATE_FORMAT(lpt.CNCL_DT,'%Y-%m-%d %H:%i:%S') as tabCnclDt
+        ,lpt.ORGN_APPR_DATE as tabOrgnApprDate
+        ,lpt.ORGN_APPR_NO as tabOrgnApprNo
+        ,lpt.EXPIRE_MONTHS as tabExpireMonths
+        ,lpt.COUPN_NO as tabCouponNo
+        ,lpt.TICKET_NUM as tabTicketNum
+        FROM
+        <if test="defaultArchive == &quot;Y&quot;">
+            loy.loy_pnt_txn_archive lpt
+        </if>
+        <if test="defaultArchive != &quot;Y&quot;">loy.loy_pnt_txn lpt</if>
+
+        LEFT OUTER JOIN loy.loy_mbr lm on lm.rid = lpt.RID_MBR
+        LEFT OUTER JOIN loy.loy_cust lct on lct.rid = lm.RID_CUST
+        LEFT OUTER JOIN LOY.LOY_CHNL lc on lc.rid = lpt.RID_CHNL
+        LEFT OUTER JOIN loy.loy_prod lp on lp.rid = lpt.RID_PROD
+        LEFT OUTER JOIN loy.loy_mbr lm2 on lm2.rid = lpt.RID_MBR_TRANSFER
+        LEFT OUTER JOIN loy.loy_cust lct2 on lct2.rid = lm2.RID_CUST
+        LEFT OUTER join loy.loy_mbr lm3 ON lc.rid = lpt.RID_GROUP_MEM
+        LEFT OUTER JOIN LOY.LOY_CHNL lc2 ON lm3.RID_ORG = lc2.RID
+        LEFT OUTER JOIN com.comm_code cc on cc.CODE_NAME = lpt.REQ_TYPE_CD AND cc.lang=#{lang} AND cc.GROUP_CODE='TXN_REQ_TYPE'  <!-- and cc.country = #{country} --> and cc.flag=1
+        LEFT OUTER JOIN com.comm_code cc1 on cc1.CODE_NAME = lpt.AMT_TYPE_CD AND cc1.lang=#{lang} AND cc1.GROUP_CODE='TXN_AMT_TYPE'  <!-- and cc1.country = #{country} --> and cc1.flag=1
+        LEFT OUTER JOIN com.comm_code cc2 on cc2.CODE_NAME = lpt.PAYMENT_CD AND cc2.lang=#{lang} AND cc2.GROUP_CODE='TXN_PAYMENT'  <!-- and cc2.country = #{country} --> and cc2.flag=1
+        <!-- left outer JOIN com.comm_code cc3 on cc3.CODE_NAME = lpt.CNCL_RSN_CD AND cc3.lang=#{lang}  AND cc3.GROUP_CODE='CANCEL_REASON' -->
+        LEFT OUTER JOIN com.comm_code cc4 on cc4.CODE_NAME = lpt.TERMINAL_CD AND cc4.lang=#{lang} AND cc4.GROUP_CODE='TXN_TERMINAL'  <!-- and cc4.country = #{country} --> and cc4.flag=1
+        LEFT OUTER JOIN com.comm_code cc5 on cc5.CODE_NAME = lpt.CNCL_RSN_CD AND cc5.lang=#{lang} AND cc5.GROUP_CODE='CANCEL_REASON'  <!-- and cc5.country = #{country} --> and
+        cc5.flag=1
+        WHERE lpt.rid = #{rid}
+        and lpt.flag = 1
+    </select>
+
+    <!-- 엑셀 마스킹 풀기 -->
+    <select id="selectTransListExcelDown" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransListResDto">
+        /*LoyTransMapper.excelDownTransaction */
+        SELECT T1.*
+        FROM ( SELECT lpt.appr_no AS apprNo
+        ,lpt.TXN_UNIQ_NO AS txnUniqNo
+        ,com.nvl(lpt.SALES_AMT,0) AS salesAmt --판매가
+        ,com.TO_CHAR(lpt.TXN_DT,'YYYY-MM-DD hh24:mi:ss') AS txnDt
+        ,com.TO_CHAR(lpt.APPR_DT,'YYYY-MM-DD hh24:mi:ss') AS apprDate
+        ,lpt.APPR_DATE AS apprDateYYYYMMDD
+        ,lpt.PNT_TXN_TYPE_1_CD as pntTxnType1code
+        ,lpt.PNT_TXN_TYPE_2_CD as pntTxnType2code
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_TYPE' AND flag = 1) as pntTxnType1Cd
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_DTL_TYPE' AND flag = 1) as pntTxnType2Cd
+        ,lm.MBR_NO AS mbrNo
+        ,lc2.CUST_NM AS custNm
+        ,lc2.hhp AS hhp
+        <!-- ,TRUNC(lpt.PNT_AMT,0) AS pntAmt -->
+        ,com.nvl(com.TO_CHAR(com.TRUNC(lpt.PNT_AMT,0),'FM999,999,999,999'),0) AS pntAmt
+        <!-- ,TRUNC(lpt.TXN_AMT,0) as txnAmt -->
+        ,CASE WHEN PNT_TXN_TYPE_1_CD='100' then com.nvl(com.TO_CHAR(com.TRUNC(lpt.TXN_AMT,0),'FM999,999,999,999'),0) ELSE '0' end AS txnAmt
+        ,lc.CHNL_NO as chnlNo
+        ,lc.CHNL_NM AS chnlNm
+        <!-- ,lpt.GROUP_PNT as groupPnt -->
+        ,lpt.rid as rid
+        ,lm.rid as ridMbr
+        ,com.TRUNC(com.nvl((SELECT sum(acrl_amt) FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_acrl</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_acrl_archive</if>
+        WHERE RID_PNT_TXN = lpt.rid AND FLAG = 1 group by rid_pnt_txn),0),0) AS promoCnt
+        <!-- ,lmc.CPRT_CARD_CD as cprtCardCd -->
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.TXN_STAT_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_STAT_CD' AND flag = 1) as txnStatNm
+        ,com.nvl(lpt.orgn_appr_no,'') as orgnApprNo <!-- 원 승인번호 -->
+        ,case when lpt.orgn_appr_date is not null then com.TO_CHAR(com.TO_DATE(lpt.orgn_appr_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') else '' end as orgnApprDate <!-- 원 승인번호 -->
+        ,lpt.rcpt_no as rcptno
+        <!-- ,lm.web_id as webId -->
+        ,lpt.TXN_STAT_CD as txnStatCd
+        ,lc2.CUST_TYPE_CD AS custTypeCd
+        , com.TO_CHAR(com.TO_DATE(lc2.BIRTH_DATE),'YYYY-MM-DD') AS birthDt
+        ,lc2.GEN_CD AS genCd
+        ,lt.TIER_NM AS tierNm
+        ,${strColumn}
+        FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_txn</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_txn_archive</if>
+        lpt
+        left outer join loy.loy_mbr lm on lm.RID = lpt.RID_MBR
+        LEFT JOIN loy.loy_cust lc2 on lc2.rid = lm.RID_CUST
+        LEFT JOIN loy.LOY_TIERS lt ON lt.RID = lm.RID_TIER AND lt.FLAG = 1
+        LEFT OUTER JOIN loy.loy_mbr_card lmc on lmc.card_no = lpt.card_num
+        <!-- left outer JOIN loy.loy_cust lct on lct.rid= lm.RID_CUST  -->
+        <!-- 포인트 선물과 같은 거래의 경우 상품이 없을 수도 있다 -->
+        <!-- inner join loy.loy_prod lp on lp.rid= lpt.RID_PROD -->
+        inner join LOY.LOY_CHNL lc on lc.rid= lpt.RID_CHNL
+        <if test="batchTransIsYn != null and batchTransIsYn != ''">
+            INNER JOIN
+            loy.loy_mem_sbsc_rqt lmsr ON CARD_NUM_ENC = lpt.card_num
+        </if>
+        where ${strCondWhere}
+        and ${strWhere}
+        and lpt.flag = 1
+        <if test="defaultMbrRid != null and defaultMbrRid != ''">and lpt.rid_mbr = #{defaultMbrRid}</if>
+        <if test="defaultChnlRid != null and defaultChnlRid != ''">and lpt.rid_chnl = #{defaultChnlRid}</if>
+        <if test="batchTransIsYn != null and batchTransIsYn != ''">and lmsr.card_num =#{batchCardNum}</if>
+        <if test="mbrRidFlag != null and mbrRidFlag != ''">and 1 = 2</if>
+        ORDER BY ${strOrderby}
+        ${strEndPaging}) T1
+    </select>
+
+    <!-- 마스킹 해제 -->
+    <select id="clearMaskTrans" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransListResDto">
+        /*LoyTransMapper.clearMaskTrans */
+        SELECT T1.*
+        ,T1.maskCustNm AS unMaskCustNm
+        FROM (SELECT lpt.appr_no AS apprNo
+        ,lpt.TXN_UNIQ_NO AS txnUniqNo
+        ,com.TO_CHAR(lpt.TXN_DT,'YYYY-MM-DD hh24:mi:ss') AS txnDt
+        ,com.TO_CHAR(lpt.APPR_DT,'YYYY-MM-DD hh24:mi:ss') AS apprDate
+        ,lpt.APPR_DATE AS apprDateYYYYMMDD
+        ,d.mark_name as cprtCard
+        ,com.TRUNC(lpt.TOTAL_PNT_AVL,0) as totalPntAvl
+        ,cc4.mark_name as cardKndNm
+        ,lpt.PNT_TXN_TYPE_1_CD as pntTxnType1code
+        ,lpt.PNT_TXN_TYPE_2_CD as pntTxnType2code
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.PNT_TXN_TYPE_1_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_TYPE' AND flag = 1) as pntTxnType1Cd
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.PNT_TXN_TYPE_2_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_DTL_TYPE' AND flag = 1) as pntTxnType2Cd
+        ,lm.MBR_NO AS mbrNo
+        ,lc2.CUST_NM AS maskCustNm
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.MEM_DIV AND lang = 'ko' AND GROUP_CODE = 'MEMBER_TYPE' AND flag = 1) as memDiv
+        , lpt.mem_div as memDivCd
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.MEM_GRADE AND lang = 'ko' AND GROUP_CODE = 'MEMBER_GRADE' AND flag = 1) as memGrade
+        ,case
+        when lpt.CARD_NUM = '' or lpt.CARD_NUM = NULL
+        then lpt.CARD_NUM
+        when lpt.CARD_TYPE_CD in ('10','30')
+        then lpt.CARD_NUM
+        else
+        lpt.CARD_NUM
+        end as cardNoDecoding
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.CARD_TYPE_CD AND lang = 'ko' AND GROUP_CODE = 'MEMBER_CARD_CD' AND flag = 1) as cardTypeCd
+        ,(select lcc.mark_name from loy.loy_mbr_card lmc left outer join com.comm_code lcc on lcc.code_name = lmc.CPRT_CARD_CD and lcc.GROUP_CODE = 'CARD_CORP_TYPE' AND lcc.lang = 'ko'
+        AND lcc.flag = 1 where lmc.RID_MBR = lpt.RID_MBR AND CARD_NO = lpt.CARD_NUM ) as cprtCardCdName
+        ,lpt.CARD_TYPE_CD as cardTypeCdCode
+        ,com.TO_CHAR(com.TRUNC(lpt.PNT_AMT,0),'FM999,999,999,999') AS pntAmt
+        ,com.TRUNC(lpt.USE_PNT,0) as usePnt
+        ,com.TRUNC(lpt.GIFT_PNT,0) as giftPnt
+        ,lp.PROD_NM as prodNm
+        ,com.TO_CHAR(com.TRUNC(lpt.TXN_AMT,0),'FM999,999,999,999') AS txnAmt
+        ,lc.CHNL_NO as chnlNo
+        ,lc.CHNL_NM AS chnlNm
+        ,lpt.rid as rid
+        ,lm.rid as ridMbr
+        ,lpt.RID_PROD as ridProd
+        ,com.TRUNC(com.nvl((SELECT sum(acrl_amt) FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_acrl</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_acrl_archive</if>
+        WHERE RID_PNT_TXN = lpt.rid AND FLAG = 1 group by rid_pnt_txn),0),0) AS promoCnt
+        ,(select CPRT_CARD_CD from loy.loy_mbr_card where RID_MBR = lpt.RID_MBR AND CARD_NO = lpt.CARD_NUM ) as cprtCardCd
+        ,(select MARK_NAME from com.comm_code where CODE_NAME = lpt.TXN_STAT_CD AND lang = 'ko' AND GROUP_CODE = 'PNT_TXN_STAT_CD' AND flag = 1) as txnStatNm
+        ,com.nvl(lpt.orgn_appr_no,'') as orgnApprNo <!-- 원 승인번호 -->
+        ,case when lpt.orgn_appr_date is not null then com.TO_CHAR(com.TO_DATE(lpt.orgn_appr_date, 'YYYY-MM-DD'), 'YYYY-MM-DD') else '' end as orgnApprDate <!-- 원 승인번호 -->
+        ,lpt.rcpt_no as rcptno
+        ,lm.web_id as webId
+        FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_txn</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_txn_archive</if>
+        lpt
+        left outer join loy.loy_mbr lm on lm.RID = lpt.RID_MBR
+        LEFT JOIN loy.loy_cust lc2 on lc2.rid = lm.RID_CUST
+        LEFT OUTER JOIN loy.loy_mbr_card lmc on lmc.card_no = lpt.card_num
+        left outer join com.comm_code d on lmc.cprt_card_cd = d.code_name and d.group_code = 'CARD_CORP_TYPE' and d.flag = 1 and d.lang=#{lang}
+        left outer join com.comm_code cc4 on cc4.CODE_NAME = lpt.CARD_TYPE_CD AND cc4.lang=#{lang} AND cc4.GROUP_CODE='MEMBER_CARD_CD'
+        left join loy.loy_prod lp on lp.rid= lpt.RID_PROD
+        inner join LOY.LOY_CHNL lc on lc.rid= lpt.RID_CHNL
+        <if test="batchTransIsYn != null and batchTransIsYn != ''">
+            INNER JOIN
+            loy.loy_mem_sbsc_rqt lmsr ON CARD_NUM_ENC = lpt.card_num
+        </if>
+        where 1 = 1
+        and lpt.flag = 1
+        AND lpt.rid=#{rid} ) T1
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : LOYTransDAO.java
+    ============================================
+    -   제목                  : 조회 테스트 조회
+    -   설명                  : 포인트 조회 테스트 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 김민준
+    -   작성일                : 2018.07.20
+    ***************************************/ -->
+    <select id="selectTransSearchTestList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransSearchTestInfoReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransSearchTestInfoResDto">
+        /*LoyTransMapper.selectTransSearchTestList */
+        select acrl.ACRL_DATE   as acrlDate
+             , acrl_txn.appr_no as apprNo
+             , acrl.ACRL_AMT    as acrlAmt
+             , rdm.RDM_AMT      as rdmAmt
+             , acrl.OFFER_NO    as offerNo
+             , offer.OFFER_NM   as offeerNm
+        from loy.loy_pnt_rdm rdm
+                 left join loy.loy_pnt_acrl acrl on acrl.rid = rdm.RID_PNT_ACRL and acrl.flag = 1
+                 left join loy.loy_pnt_txn acrl_txn on acrl_txn.rid = acrl.RID_PNT_TXN and acrl_txn.flag = 1
+                 left join mkt.mkt_offer_mst offer on offer.OFFER_NO = acrl.offer_no
+        where rdm.RID_PNT_TXN = #{rid}
+          and rdm.flag = 1
+        order by ${strOrderby}
+    </select>
+
+    <!-- /**************************************
+   -   관련 파일             : LOYTransDAO.java
+   ============================================
+   -   제목                  : 유외상품 조회
+   -   설명                  : 유외상품 조회
+   -   결과형태              : 목록
+   ============================================
+   -   입력
+   ============================================
+   -   작성자                : 이성원
+   -   작성일                : 2018.01.08
+   ***************************************/ -->
+    <select id="selectPntTxnItemList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransPntItemListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransPntItemListResDto">
+        /*LoyTransMapper.selectPntTxnItemList */
+        SELECT b.prod_nm  as prodNm
+             , a.prod_qty as prodQty
+             , a.prod_pnt as prodPnt
+             , ${strColumn}
+        FROM loy.loy_pnt_txn_item a
+                 INNER JOIN loy.loy_prod b on a.prod_id = b.prod_id
+        WHERE a.rid_txn = #{pntTxnRid}
+    </select>
+
+    <select id="clearPutTxnMbr" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto">
+        /* LoyTransMapper.clearPutTxnMbr */
+        SELECT lc.CUST_NM AS unMaskCustNm
+             , lc.HHP     AS unMaskHhp
+        FROM LOY.LOY_ORD lph
+                 JOIN LOY.LOY_MBR lm ON lph.RID_MBR = lm.RID AND lm.FLAG = 1
+                 JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lm.FLAG = 1
+        WHERE lph.FLAG = 1
+          AND lph.rid = #{rid}
+    </select>
+
+
+    <select id="selectMbrTxnHistListCnt" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto" fetchSize="1000">
+        /* LoyTransMapper.selectMbrTxnHistListCnt */
+        SELECT count(*) totalCount
+        FROM loy.LOY_ORD lo
+                 LEFT OUTER JOIN LOY.LOY_MBR lm ON lo.RID_MBR = lm.RID AND lm.FLAG = 1
+                 LEFT OUTER JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lm.FLAG = 1
+                 LEFT OUTER JOIN loy.LOY_CHNL lcl ON lcl.RID = lo.RID_CHNL AND lcl.FLAG = 1
+                 LEFT OUTER JOIN (SELECT ltmh.RID_MBR
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'S' THEN  lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierDST
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'U' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierUMB
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'Q' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierLCS
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'D' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierDSG
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'G' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierLCG
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'M' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierMSW
+                                  FROM LOY.LOY_TIERS_MBR_HIST ltmh
+                                           INNER JOIN LOY.LOY_TIERS_GRP ltg ON ltg.RID = ltmh.RID_TG AND ltg.FLAG =1
+                                           INNER JOIN LOY.LOY_TIERS lt ON lt.RID_TG = ltg.RID AND lt.FLAG =1 AND ltmh.RID_TIER = lt.rid
+                                           INNER join LOY.LOY_BRD_CATEGORY lbc ON lbc.RID = ltg.X_BRD_RID AND lbc.FLAG = 1
+                                  WHERE ltmh.FLAG = 1
+                                    AND ltmh.VALID_HIST_YN = 'Y'
+                                  GROUP BY ltmh.RID_MBR ) a ON lm.RID = a.RID_MBR
+                 JOIN LOY.LOY_BRD_CATEGORY lbc2 ON lbc2.RID = lo.RID_BRD AND lbc2.FLAG = 1
+        WHERE lo.FLAG = 1
+          AND lm.rid IS NOT null
+          AND ${strCondWhere}
+          AND ${strWhere}
+    </select>
+
+    <select id="selectMbrTxnHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto" fetchSize="1000">
+        /* LoyTransMapper.selectMbrTxnHistList */
+        SELECT lo.RID           AS RID
+             , lo.BSAL_CLS_CD   AS bsalClsCd --영업구분코드
+             , lbc2.BRD_NM         AS brdNm
+             , convert(varchar, lo.SALE_DATE, 23)     AS saleDate --판매일자
+             , lo.ORD_NO        AS ordNo --거래(주문)번호
+             , lo.SALE_PROD_NM  AS saleProdNm --거래명
+             , lcl.CHNL_NM      AS chnlNm
+             , lm.MBR_NO        AS mbrNo
+             , lc.CUST_NM       AS custNm
+             , lc.CUST_TYPE_CD  AS custTypeCd
+             , lm.MBR_TYPE_CD   AS mbrTypeCd
+             /*, lt.TIER_NM       AS tierNm*/
+             , lc.CUST_STAT_CD  AS custStatCd
+             , convert(varchar, lm.SBSC_DATE, 120)     AS sbscDate
+             , convert(varchar, lc.BIRTH_DATE, 23)     AS birthDt
+             , lo.SLRT_CLS_CD   AS slrtClsCd --거래유형(판매,취소) sell_type_cd 공통코드
+             , lo.TOT_AMT       AS totAmt --정상가총액
+             , lo.ACT_AMT       AS actAmt --실결제금액
+             , lo.DISC_AMT      AS discAmt--할인금액
+             , lo.DLV_AMT       AS dlvAmt--배송비
+             , lm.RID           AS ridMbr
+             , a.tierDST AS tierDST
+             , a.tierUMB AS tierUMB
+             , a.tierLCS AS tierLCS
+             , a.tierDSG AS tierDSG
+             , a.tierLCG AS tierLCG
+             , a.tierMSW AS tierMSW
+        FROM loy.LOY_ORD lo
+        LEFT OUTER JOIN LOY.LOY_MBR lm ON lo.RID_MBR = lm.RID AND lm.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lm.FLAG = 1
+        LEFT OUTER JOIN loy.LOY_CHNL lcl ON lcl.RID = lo.RID_CHNL AND lcl.FLAG = 1
+        LEFT OUTER JOIN (SELECT ltmh.RID_MBR
+                              , MAX(CASE  WHEN lbc.BRD_ID = 'S' THEN  lt.TIER_TYPE_CD
+                                          ELSE NULL END) AS tierDST
+                              , MAX(CASE  WHEN lbc.BRD_ID = 'U' THEN lt.TIER_TYPE_CD
+                                          ELSE NULL END) AS tierUMB
+                              , MAX(CASE  WHEN lbc.BRD_ID = 'Q' THEN lt.TIER_TYPE_CD
+                                          ELSE NULL END) AS tierLCS
+                              , MAX(CASE  WHEN lbc.BRD_ID = 'D' THEN lt.TIER_TYPE_CD
+                                          ELSE NULL END) AS tierDSG
+                              , MAX(CASE  WHEN lbc.BRD_ID = 'G' THEN lt.TIER_TYPE_CD
+                                          ELSE NULL END) AS tierLCG
+                              , MAX(CASE  WHEN lbc.BRD_ID = 'M' THEN lt.TIER_TYPE_CD
+                                          ELSE NULL END) AS tierMSW
+                        FROM LOY.LOY_TIERS_MBR_HIST ltmh
+                        INNER JOIN LOY.LOY_TIERS_GRP ltg ON ltg.RID = ltmh.RID_TG AND ltg.FLAG =1
+                        INNER JOIN LOY.LOY_TIERS lt ON lt.RID_TG = ltg.RID AND lt.FLAG =1 AND ltmh.RID_TIER = lt.rid
+                        INNER join LOY.LOY_BRD_CATEGORY lbc ON lbc.RID = ltg.X_BRD_RID AND lbc.FLAG = 1
+                        WHERE ltmh.FLAG = 1
+                        AND ltmh.VALID_HIST_YN = 'Y'
+                        GROUP BY ltmh.RID_MBR ) a ON lm.RID = a.RID_MBR
+        JOIN LOY.LOY_BRD_CATEGORY lbc2 ON lbc2.RID = lo.RID_BRD AND lbc2.FLAG = 1
+        WHERE lo.FLAG = 1
+        AND lm.rid IS NOT null
+        AND ${strCondWhere}
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+            ${strEndPaging}
+    </select>
+
+    <select id="selectMbrTxnHistListExcel" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto" fetchSize="1000">
+        /* LoyTransMapper.selectMbrTxnHistListExcel */
+        SELECT com.TO_CHAR(llo.SELL_DATE, 'YYYY-MM-DD HH24:MI:SS')                                                                                              AS sellDate
+             , llo.SRC_TYPE                                                                                                                                     AS srcType
+             , llo.RID                                                                                                                                          AS lloRid
+             , lcl.CHNL_NM                                                                                                                                      AS chnlNm
+             , llopn.PROD_NM                                                                                                                                    as txnDesc
+             , lc.CUST_STAT_CD                                                                                                                                  AS custStatCd
+             , lc.CUST_TYPE_CD                                                                                                                                  AS custTypeCd
+             , lc.CUST_NO                                                                                                                                       AS custNo
+             , lt.TIER_NM                                                                                                                                       AS tierNm
+             , llo.SRC_IDX                                                                                                                                      AS billNo
+             , llo.SELL_TYPE_CD                                                                                                                                 AS sellTypeCd
+             , ISNULL(llo.SELL_AMT, 0) - ISNULL(ordm.SHIPPING_COST, 0)                                                                                        AS sellAmt
+             , ISNULL(ordm.SHIPPING_COST, 0)                                                                                                                   AS shippingCost
+             , llo.DISCNT_AMT                                                                                                                                   AS discntAmt
+             , CASE WHEN llo.SELL_TYPE_CD = '02' THEN convert(varchar, '-' + llo.SETTLE_AMT)ELSE convert(varchar, isnull(com.TO_CHAR(com.TRUNC(llo.SETTLE_AMT, 0), 'FM999,999,999,999'), 0)) END AS settleAmt
+             , lm.RID                                                                                                                                           AS ridMbr
+             , llo.RID                                                                                                                                          AS rid
+             , lc.RID                                                                                                                                           AS ridCus
+             , lm.MBR_NO                                                                                                                                        AS mbrNo
+             , com.TO_CHAR(lc.BIRTH_DATE, 'YYYY-MM-DD')                                                                                                         AS birthDt
+             , com.TO_CHAR(lm.SBSC_DATE, 'YYYY-MM-DD HH24:MI:SS')                                                                                               AS sbscDate
+             , com.TO_CHAR(llo.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS')                                                                                            AS createDate
+             , lm.MBR_TYPE_CD                                                                                                                                   AS mbrTypeCd
+             , ${strColumn}
+        FROM LOY.LOY_ORD llo
+                 LEFT OUTER JOIN LOY.LOY_MBR lm ON llo.RID_MBR = lm.RID AND lm.FLAG = 1
+                 LEFT OUTER JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lm.FLAG = 1
+                 LEFT OUTER JOIN loy.LOY_TIERS lt ON lt.RID = lm.RID_TIER AND lt.FLAG = 1
+                 LEFT OUTER JOIN loy.LOY_CHNL lcl ON lcl.RID = llo.RID_CHNL AND lcl.FLAG = 1
+                 LEFT OUTER JOIN com.B_CODE bc ON bc.CODE = lc.B_CODE AND bc.FLAG = 1
+                 LEFT OUTER JOIN loy.LOY_ORD_PROD_NM llopn on llo.rid = llopn.rid_ord
+                 LEFT JOIN loy.LOY_ORDM ordm ON ordm.RID_ORD = llo.RID AND ordm.FLAG = 1
+        WHERE llo.FLAG = 1
+          AND lm.rid IS NOT null
+          and llo.CONFIRM_DATE is not null
+          AND ${strCondWhere}
+          AND ${strWhere}
+        ORDER BY ${strOrderby} ${strEndPaging}
+    </select>
+
+    <select id="selectPurNotMbrTxnHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto" fetchSize="1000">
+        /* LoyTransMapper.selectPurNotMbrTxnHistList */
+        SELECT sellDate
+        ,srcType
+        <!-- 				    ,FN_GET_ORD_PROD_NM(lloRid,srcType) AS txnDesc  -->
+        ,chnlNm
+        ,custStatCd
+        ,custTypeCd
+        ,mbrNo
+        ,custNm
+        ,tierNm
+        ,birthDt
+        ,genCd
+        ,hhp
+        ,billNo
+        ,sellTypeCd
+        ,sellAmt
+        ,discntAmt
+        ,settleAmt
+        ,ridMbr
+        ,rid
+        ,ridCus
+        ,createDate
+        ,totalCount
+        FROM (
+        SELECT com.TO_CHAR(llo.SELL_DATE, 'YYYY-MM-DD HH24:MI:SS') AS sellDate
+        , llo.SRC_TYPE AS srcType
+        , llo.RID AS lloRid
+        , lcl.CHNL_NM AS chnlNm
+        , lc.CUST_STAT_CD AS custStatCd
+        , lc.CUST_TYPE_CD AS custTypeCd
+        , lc.CUST_NO AS custNo
+        , lc.CUST_NM AS custNm
+        , lt.TIER_NM AS tierNm
+        , com.TO_CHAR(lc.BIRTH_DATE, 'YYYY-MM-DD') AS birthDt
+        , lc.GEN_CD AS genCd
+        , lc.HHP AS hhp
+        , llo.SRC_IDX AS billNo
+        , llo.SELL_TYPE_CD AS sellTypeCd
+        , llo.SELL_AMT AS sellAmt
+        , llo.DISCNT_AMT AS discntAmt
+        , llo.SETTLE_AMT AS settleAmt
+        , lm.RID AS ridMbr
+        , llo.RID AS rid
+        , lc.RID AS ridCus
+        , lm.MBR_NO AS mbrNo
+        , com.TO_CHAR(llo.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') AS createDate
+        , ${strColumn}
+        FROM LOY.LOY_ORD llo
+        LEFT OUTER JOIN LOY.LOY_MBR lm ON llo.RID_MBR = lm.RID AND lm.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lm.FLAG = 1
+        LEFT OUTER JOIN loy.LOY_TIERS lt ON lt.RID = lm.RID_TIER AND lt.FLAG = 1
+        LEFT OUTER JOIN loy.LOY_CHNL lcl ON lcl.RID = llo.RID_CHNL AND lcl.FLAG = 1
+        WHERE llo.FLAG = 1
+        AND lm.rid IS NULL
+        AND ${strCondWhere}
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+        ) x
+
+    </select>
+
+
+    <select id="selectClearMaskTrans" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransListResDto">
+        /*LoyTransMapper.selectClearMaskTrans */
+        SELECT T1.*
+        FROM ( SELECT
+        lc2.CUST_NM AS UnMaskCustNm
+        ,lc2.hhp AS unMaskHhp
+        FROM
+        <if test="defaultArchive == null or defaultArchive == ''">loy.loy_pnt_txn</if>
+        <if test="defaultArchive != null and defaultArchive != ''">loy.loy_pnt_txn_archive</if>
+        lpt
+        left outer join loy.loy_mbr lm on lm.RID = lpt.RID_MBR
+        LEFT JOIN loy.loy_cust lc2 on lc2.rid = lm.RID_CUST
+        WHERE lpt.rid = #{rid}
+        and lpt.flag = 1 ) T1
+    </select>
+
+    <select id="getloyCouponList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransCpnListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransCpnListResDto">
+        /* LoyTransMapper.getloyCouponList */
+        SELECT
+        lo.OFR_NM AS ofrNm,
+        CASE
+        WHEN lc.OFF_YN = 'N' THEN '통합'
+        WHEN lc.OFF_YN = 'Y' THEN '오프라인'
+        END AS srcType,
+        lcm.CPN_NO AS cpnNo,
+        lm.mbr_no AS mbrNo,
+        lc.CUST_NM AS custNm,
+        lc.CUST_STAT_CD AS custStatCd,
+        cc.MARK_NAME AS custStatCdNm,
+        lcm.RID_MBR AS ridMbr,
+        lo.OFR_TYPE AS ofrType,
+        lo.OFR_SUB_TYPE AS ofrsubType,
+        com.TO_CHAR(lcm.CPN_ISSUE_DT,'YYYY-MM-DD HH24:MI:SS') as cpnIssueDt,
+        lo.OFR_VAL_TYPE AS ofrValType,
+        lo.OFR_VAL_AMT AS ofrValAmt,
+        lcm.CPN_STATE_CD AS cpnStateCd,
+        com.TO_CHAR(lcm.CPN_LST_USED_DT,'YYYY-MM-DD HH24:MI:SS') as cpnLstUsedDt,
+        com.TO_CHAR(lcm.CREATE_DATE,'YYYY-MM-DD') as createDate,
+        ${strColumn}
+        FROM
+        loy.LOY_CPN_MBR lcm
+        INNER JOIN loy.loy_cpn lc ON lcm.RID_CPN_M= lc.RID
+        INNER JOIN loy.loy_ofr lo ON lc.RID_OFR = lo.RID
+        INNER JOIN loy.loy_Mbr lm ON lcm.RID_MBR = lm.RID
+        INNER JOIN loy.LOY_CUST lc ON lm.RID_CUST = lc.RID AND lc.FLAG = 1
+        LEFT OUTER JOIN com.COMM_CODE cc ON lc.CUST_STAT_CD = cc.CODE_NAME AND cc.GROUP_CODE = 'LOY_CUST_STAT_CD' AND cc.FLAG = 1
+        WHERE
+        ${strCondWhere}
+        <if test="ofrYn != null">
+            and lc.OFF_YN =#{ofrYn}
+        </if>
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+    <!--
+        CASE
+           WHEN (lo.USE_CHNL_LIMIT_YN = 'N' AND lc.OFF_YN = 'N') THEN '통합'
+           WHEN (lo.USE_CHNL_LIMIT_YN = 'Y' AND lc.OFF_YN = 'Y') THEN '오프라인'
+            END                                                      AS srcType,
+     -->
+
+
+    <select id="selectMonthOfPoint" parameterType="com.icignal.kepler.report.dto.request.KprReportPntReqDto"
+            resultType="com.icignal.kepler.report.dto.response.KprReportPointOfMonthResDto">
+        SELECT '온라인'                            AS chnlType /* 온오프라인 구분 */
+             , SUM(BASE)                        AS basePnt /* 기초포인트 */
+             , SUM(ACRL)                        AS acrlPnt /* 적립포인트 */
+             , SUM(RDM)                         AS rdmPnt /* 사용포인트 */
+             , SUM(EXP)                         AS extPnt /* 소멸포인트 */
+             , SUM(EXT)                         AS extOutPnt /* 탈회소멸포인트 */
+             , SUM(BASE) + SUM(ACRL) - SUM(RDM) AS totPnt /* 기말포인트 */
+        FROM (
+                 SELECT com.nvl(SUM(CASE WHEN T3.VALID_START_DATE <![CDATA[<=]]> GETDATE() AND T3.VALID_END_DATE <![CDATA[>=]]> com.TRUNC_DATE(GETDATE() + 1) THEN T3.BALNC ELSE 0 END), 0) AS BASE
+                      , 0                                                                                                                                                 AS ACRL
+                      , 0                                                                                                                                                 AS RDM
+                      , 0                                                                                                                                                 AS EXP
+                      , 0                                                                                                                                                 AS EXT
+                 FROM LOY.LOY_CHNL T1
+                          INNER JOIN LOY.LOY_PNT_TXN T2 ON T1.RID = T2.RID_CHNL and T2.FLAG = 1
+                          LEFT OUTER JOIN LOY.LOY_PNT_ACRL T3 ON T2.RID = T3.RID_PNT_TXN AND T3.OFFER_TYPE_CD = 'P' AND T3.BALNC <![CDATA[>]]> 0 AND T3.FLAG = 1
+                 WHERE 1 = 1
+                   AND T1.CHNL_TYPE_CD = 'S'
+                   AND T1.CHNL_SUB_TYPE_CD IN ('S4')
+                   AND T2.APPR_DATE    <![CDATA[<]]> #{startDt}
+                 UNION ALL
+                 SELECT 0 AS                                                                                                                  BASE
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '100' AND T2.PNT_TXN_TYPE_2_CD NOT IN ('210', '211') THEN T2.PNT_AMT ELSE 0 END) ACRL
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '200' AND T2.PNT_TXN_TYPE_2_CD NOT IN ('130', '131') THEN T2.PNT_AMT ELSE 0 END) RDM
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '200' AND T2.PNT_TXN_TYPE_2_CD IN ('220') THEN T2.PNT_AMT ELSE 0 END)            EXP
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '200' AND T2.PNT_TXN_TYPE_2_CD IN ('270') THEN T2.PNT_AMT ELSE 0 END)            EXT
+                 FROM LOY.LOY_CHNL T1
+                          INNER JOIN LOY.LOY_PNT_TXN T2 ON T1.RID = T2.RID_CHNL AND T2.FLAG = 1
+                 WHERE 1 = 1
+                   AND T1.CHNL_TYPE_CD = 'S'
+                   AND T1.CHNL_SUB_TYPE_CD IN ('S4')
+                   AND T2.TXN_STAT_CD = 'A'
+                   AND T2.APPR_DATE BETWEEN #{startDt} AND #{endDt}
+             )
+        UNION ALL
+        SELECT '오프라인'                           AS CHNL_TYPE
+             , SUM(BASE)                        AS BASE
+             , SUM(ACRL)                        AS ACRL
+             , SUM(RDM)                         AS RDM
+             , SUM(EXP)                         AS EXP
+             , SUM(EXT)                         AS EXT
+             , SUM(BASE) + SUM(ACRL) - SUM(RDM) AS TOT
+        FROM (
+                 SELECT com.nvl(SUM(CASE WHEN T3.VALID_START_DATE <![CDATA[<=]]> GETDATE() AND T3.VALID_END_DATE <![CDATA[>=]]> com.TRUNC_DATE(GETDATE() + 1) THEN T3.BALNC ELSE 0 END), 0) AS BASE
+                      , 0                                                                                                                                                 AS ACRL
+                      , 0                                                                                                                                                 AS RDM
+                      , 0                                                                                                                                                 AS EXP
+                      , 0                                                                                                                                                 AS EXT
+                 FROM LOY.LOY_CHNL T1
+                          INNER JOIN LOY.LOY_PNT_TXN T2 ON T1.RID = T2.RID_CHNL AND T2.FLAG = 1
+                          LEFT OUTER JOIN LOY.LOY_PNT_ACRL T3 ON T2.RID = T3.RID_PNT_TXN AND T3.OFFER_TYPE_CD = 'P' AND T3.BALNC <![CDATA[>]]> 0 AND T3.FLAG = 1
+                 WHERE 1 = 1
+                   AND ((T1.CHNL_TYPE_CD = 'S' AND T1.CHNL_SUB_TYPE_CD IN ('S1', 'S2', 'S3')) OR T1.CHNL_NO = 'NC1370')
+                   AND T2.APPR_DATE  <![CDATA[<]]> #{startDt}
+                 UNION ALL
+                 SELECT 0 AS                                                                                                                  BASE
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '100' AND T2.PNT_TXN_TYPE_2_CD NOT IN ('210', '211') THEN T2.PNT_AMT ELSE 0 END) ACRL
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '200' AND T2.PNT_TXN_TYPE_2_CD NOT IN ('130', '131') THEN T2.PNT_AMT ELSE 0 END) RDM
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '200' AND T2.PNT_TXN_TYPE_2_CD IN ('220') THEN T2.PNT_AMT ELSE 0 END)            EXP
+                      , SUM(CASE WHEN T2.PNT_TXN_TYPE_1_CD = '200' AND T2.PNT_TXN_TYPE_2_CD IN ('270') THEN T2.PNT_AMT ELSE 0 END)            EXT
+                 FROM LOY.LOY_CHNL T1
+                          INNER JOIN LOY.LOY_PNT_TXN T2 ON T1.RID = T2.RID_CHNL AND T2.FLAG = 1
+                 WHERE 1 = 1
+                   AND ((T1.CHNL_TYPE_CD = 'S' AND T1.CHNL_SUB_TYPE_CD IN ('S1', 'S2', 'S3')) OR T1.CHNL_NO = 'NC1370')
+                   AND T2.TXN_STAT_CD = 'A'
+                   AND T2.APPR_DATE BETWEEN #{startDt} AND #{endDt}
+             )
+    </select>
+
+
+    <select id="selectPointUseTxnList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransPromoListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyTransPromoListResDto">
+        /*LoyTransMapper.selectPointUseTxnList */
+        SELECT T2.OFFER_NO                                          as ofrNo  -- 오퍼번호
+             , T3.OFR_NM                                            as ofrNm-- 오퍼명
+             , T1.RDM_AMT                                           as rdmAmt -- 차감포인트
+             , T1.MNS_PNT_STAT_CD                                   as mnsPntStatCd
+             , com.TO_CHAR(T1.CREATE_DATE, 'YYYY-MM-DD HH24:MI:SS') as txnDate
+             , ${strColumn}
+        FROM LOY.LOY_PNT_RDM T1
+                 LEFT JOIN LOY.LOY_PNT_ACRL T2 ON T1.RID_PNT_ACRL = T2.RID AND T2.FLAG = 1
+                 LEFT JOIN LOY.LOY_OFR T3 ON T2.OFFER_NO = T3.OFR_NO
+        WHERE 1 = 1
+          and T1.FLAG = 1
+          and T1.RID_PNT_TXN = #{rid}
+          and ${strWhere}
+        order by ${strOrderby} ${strEndPaging}
+    </select>
+
+    <select id="selectPurTxnOptionHistListCnt" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto" fetchSize="1000">
+        /* LoyTransMapper.selectPurTxnOptionHistListCnt */
+        SELECT count(*) totalCount
+        FROM LOY.LOY_ORD_DTL lod
+                 JOIN LOY.LOY_ORD lo ON lod.RID_ORD = lo.RID and lo.FLAG = 1
+                 JOIN LOY.LOY_MBR lm ON lo.RID_MBR = lm.RID and lm.FLAG =1
+                 JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST and lc.FLAG =1
+                 LEFT JOIN loy.LOY_PROD lp ON lod.RID_PROD = lp.RID and lp.FLAG =1
+                 LEFT OUTER JOIN (SELECT ltmh.RID_MBR
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'S' THEN  lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierDST
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'U' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierUMB
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'Q' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierLCS
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'D' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierDSG
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'G' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierLCG
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'M' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierMSW
+                                  FROM LOY.LOY_TIERS_MBR_HIST ltmh
+                                           INNER JOIN LOY.LOY_TIERS_GRP ltg ON ltg.RID = ltmh.RID_TG AND ltg.FLAG =1
+                                           INNER JOIN LOY.LOY_TIERS lt ON lt.RID_TG = ltg.RID AND lt.FLAG =1 AND ltmh.RID_TIER = lt.rid
+                                           INNER join LOY.LOY_BRD_CATEGORY lbc ON lbc.RID = ltg.X_BRD_RID AND lbc.FLAG = 1
+                                  WHERE ltmh.FLAG = 1
+                                    AND ltmh.VALID_HIST_YN = 'Y'
+                                  GROUP BY ltmh.RID_MBR  ) a ON lm.RID = a.RID_MBR
+                 LEFT JOIN LOY.LOY_CHNL llc ON llc.RID = lo.RID_CHNL and llc.FLAG =1
+                 LEFT JOIN LOY.LOY_BRD_CATEGORY lbc2 ON lbc2.RID = lo.RID_BRD AND lbc2.FLAG = 1
+        WHERE 1=1
+          AND ${strCondWhere}
+          AND ${strWhere}
+    </select>
+
+    <select id="selectPurTxnOptionHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto" fetchSize="1000">
+        /* LoyTransMapper.selectPurTxnOptionHistList */
+        SELECT lp.PROD_ID AS prodId --상품코드
+             , lp.PROD_NM AS prodNm --상품명
+             , lod.COLOR_CD AS colorCd --컬러
+             , lod.SIZE_CD AS sizeCd --사이즈
+             , lod.CSM_PRC AS csmPrc --정상가
+             , lod.SALE_QTY AS saleQty --수량
+             , lod.CSM_PRC*SALE_QTY AS totAmt --정상가총액
+             , lod.SALE_AMT - lod.MIL_USE_AMT AS actAmt --실결제금액
+             , ( lod.CSM_PRC * lod.SALE_QTY ) - lod.SALE_AMT AS discAmt --총할인금액
+             , lod.MIL_USE_AMT AS milUseAmt --사용적립금
+             , llc.CHNL_NM AS chnlNm --채널명
+             , lm.MBR_NO AS mbrNo --회원번호
+             , lc.CUST_NM AS custNm --회원명
+             , lc.CUST_TYPE_CD AS custTypeCd --회원유형
+             , lm.MBR_TYPE_CD AS mbrTypeCd --상세유형
+             , lm.MBR_STAT_CD AS mbrStatCd--회원상태
+             , CONVERT(VARCHAR,lm.SBSC_DATE,120) AS sbscDate --가입일시
+             , CONVERT(VARCHAR,lc.BIRTH_DATE,23) AS birthDt --생년월일
+             , a.tierDST AS tierDST --회원등급
+             , a.tierUMB AS tierUMB
+             , a.tierLCS AS tierLCS
+             , a.tierDSG AS tierDSG
+             , a.tierLCG AS tierLCG
+             , a.tierMSW AS tierMSW
+             , lm.RID AS ridMbr
+             , lo.RID AS ridOrd
+        FROM LOY.LOY_ORD_DTL lod
+                 JOIN LOY.LOY_ORD lo ON lod.RID_ORD = lo.RID and lo.FLAG = 1
+                 JOIN LOY.LOY_MBR lm ON lo.RID_MBR = lm.RID and lm.FLAG =1
+                 JOIN LOY.LOY_CUST lc ON lc.RID = lm.RID_CUST and lc.FLAG =1
+                 LEFT JOIN loy.LOY_PROD lp ON lod.RID_PROD = lp.RID and lp.FLAG =1
+                 LEFT OUTER JOIN (SELECT ltmh.RID_MBR
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'S' THEN  lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierDST
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'U' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierUMB
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'Q' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierLCS
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'D' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierDSG
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'G' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierLCG
+                                       , MAX(CASE  WHEN lbc.BRD_ID = 'M' THEN lt.TIER_TYPE_CD
+                                                   ELSE NULL END) AS tierMSW
+                                  FROM LOY.LOY_TIERS_MBR_HIST ltmh
+                                           INNER JOIN LOY.LOY_TIERS_GRP ltg ON ltg.RID = ltmh.RID_TG AND ltg.FLAG =1
+                                           INNER JOIN LOY.LOY_TIERS lt ON lt.RID_TG = ltg.RID AND lt.FLAG =1 AND ltmh.RID_TIER = lt.rid
+                                           INNER join LOY.LOY_BRD_CATEGORY lbc ON lbc.RID = ltg.X_BRD_RID AND lbc.FLAG = 1
+                                  WHERE ltmh.FLAG = 1
+                                    AND ltmh.VALID_HIST_YN = 'Y'
+                                  GROUP BY ltmh.RID_MBR  ) a ON lm.RID = a.RID_MBR
+                 LEFT JOIN LOY.LOY_CHNL llc ON llc.RID = lo.RID_CHNL and llc.FLAG =1
+                 LEFT JOIN LOY.LOY_BRD_CATEGORY lbc2 ON lbc2.RID = lo.RID_BRD AND lbc2.FLAG = 1
+        WHERE 1=1
+        AND ${strCondWhere}
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+            ${strEndPaging}
+    </select>
+
+    <select id="selectPurTxnOptionHistExcelList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyPurTxnHistListResDto" fetchSize="1000">
+        /* LoyTransMapper.selectPurTxnOptionHistExcelList */
+        SELECT T.sellDate
+        , T.srcType
+        , T.mbrNo
+        , T.mbrTypeCd
+        , T.mbrStatCd
+        , T.custTypeCd
+        , T.tierNm
+        , T.sbscDate
+        , T.birthDt
+        , T.srcIdx
+        , T.goodNm
+        , T.chnlNm
+        , T.uPrice
+        , T.saleQty
+        , T.saleTot
+        , T.settleAmt
+        , T.discntAmt
+        , T.offlineDC
+        , T.mbrSale
+        , T.eventSale
+        , T.couponSale
+        , T.pointAmt
+        , T.salePoint
+        , T.prodId
+        , T.mmZzItemCd
+        , T.goodsCd
+        , T.ridMbr
+        , T.ridOrd
+        , T.mmGroup
+        , CEILING(COUNT(1) OVER()) totalCount
+        FROM (SELECT
+        com.TO_CHAR(T3.SALE_DATE, 'YYYY-MM-DD HH24:MI') AS sellDate --판매일자
+        , T3.SRC_TYPE AS srcType --온/오프라인 구분
+        , T4.MBR_NO AS mbrNo -- 회원번호
+        , T4.MBR_TYPE_CD AS mbrTypeCd --회원유형
+        , T4.MBR_STAT_CD AS mbrStatCd
+        , T5.CUST_TYPE_CD AS custTypeCd --회원유형
+        , lt.TIER_NM AS tierNm
+        , com.TO_CHAR(T4.SBSC_DATE,'YYYY-MM-DD') AS sbscDate --가입일시
+        , com.TO_CHAR(T5.BIRTH_DATE,'YYYY-MM-DD') AS birthDt --생년월일
+        , T3.SRC_IDX AS srcIdx -- 주문번호
+        , T1.GOODS_NAME AS goodNm -- 상품명
+        , T8.CHNL_NM AS chnlNm -- 채널명
+        , T2.PRICE AS uPrice -- 정상가
+        , T2.EA AS saleQty -- 수량
+        , T2.PRICE * T2.EA AS saleTot -- 정상가총액
+        , COM.fn_GREATEST((T2.PRICE * T2.EA) - ( (T2.MEMBER_SALE * T2.EA) + T2.MEMBER_SALE_REST + T2.EVENT_SALE + (T2.COUPON_SALE_UNIT * T2.EA) + T2.COUPON_SALE_REST+(T2.EMONEY_SALE_UNIT *
+        T2.EA) + T2.EMONEY_SALE_REST),0) AS settleAmt -- 실결제금액
+        , (T2.MEMBER_SALE * T2.EA) + T2.MEMBER_SALE_REST + T2.EVENT_SALE + (T2.COUPON_SALE_UNIT * T2.EA) + T2.COUPON_SALE_REST+(T2.EMONEY_SALE_UNIT * T2.EA) + T2.EMONEY_SALE_REST AS
+        discntAmt -- 총할인금액
+        , 0 AS offlineDC -- 오프라인할인
+        , T2.MEMBER_SALE * EA AS mbrSale -- 온라인회원할인
+        , T2.EVENT_SALE AS eventSale -- 온라인이벤트할인
+        , (T2.COUPON_SALE_UNIT * T2.EA) + T2.COUPON_SALE_REST AS couponSale -- 온라인쿠폰할인
+        , (T2.EMONEY_SALE_UNIT * T2.EA) + T2.EMONEY_SALE_REST AS pointAmt -- 사용적립금
+        , (T2.RESERVE * EA) + RESERVE_REST AS salePoint -- 발생적립금
+        , T9.PROD_ID AS prodId -- 자재코드
+        , T7.MM_ZZITEMCD AS mmZzItemCd -- 아이템코드
+        , T1.GOODS_CODE AS goodsCd -- 상품코드
+        , T7.MM_GROUP AS mmGroup
+        , T4.RID AS ridMbr
+        , T3.RID AS ridOrd
+        FROM LOY.LOY_ORDM_DTL T1
+        JOIN LOY.LOY_ORDM_OPT T2 ON T1.RID = T2.RID_ORD_DTL
+        JOIN LOY.LOY_ORD T3 ON T1.RID_ORD = T3.RID
+        JOIN LOY.LOY_MBR T4 ON T3.RID_MBR = T4.RID
+        JOIN LOY.LOY_CUST T5 ON T5.RID = T4.RID_CUST
+        LEFT JOIN loy.LOY_PROD T9 ON T2.RID_PROD = T9.RID
+        LEFT JOIN loy.LOY_PROD_X T7 ON T9.RID = T7.RID_PROD
+        LEFT JOIN LOY.LOY_CHNL T8 ON T8.RID = T1.RID_CHNL
+        <!-- LEFT JOIN loy.LOY_PROD_XM lpx ON lpx.PRODID = T6.PROD_ID -->
+        LEFT OUTER JOIN loy.LOY_TIERS lt ON lt.RID = T4.RID_TIER AND lt.FLAG = 1
+        WHERE 1=1
+        AND T2.SELL_TYPE_CD ='01'
+        AND T3.SELL_TYPE_CD ='01'
+        AND T3.CONFIRM_DATE is not null
+        AND ${strCondWhere}
+        AND ${strWhere}
+        UNION ALL
+        SELECT com.TO_CHAR(T3.SALE_DATE, 'YYYY-MM-DD HH24:MI') AS sellDate --판매일자
+        , T3.SRC_TYPE AS srcType --온/오프라인 구분
+        , T4.MBR_NO AS mbrNo -- 회원번호
+        , T4.MBR_TYPE_CD AS mbrTypeCd --회원유형
+        , T4.MBR_STAT_CD AS mbrStatCd --회원상태
+        , T5.CUST_TYPE_CD AS custTypeCd --회원유형
+        , lt.TIER_NM AS tierNm
+        , com.TO_CHAR(T4.SBSC_DATE,'YYYY-MM-DD') AS sbscDate --가입일시
+        , com.TO_CHAR(T5.BIRTH_DATE,'YYYY-MM-DD') AS birthDt --생년월일
+        , T3.SRC_IDX AS srcIdx -- 주문번호
+        , T6.PROD_NM AS goodNm
+        , T7.CHNL_NM AS chnlNm -- 채널명
+        , T1.UPRICE AS uPrice -- 정상가
+        , T1.SALE_QTY AS saleQty -- 수량
+        , T1.SALE_TOT AS saleTot -- 정상가총액
+        , T1.SALE_TOT - T1.DC_AMT - com.nvl(T1.POINT_AMT,0) AS settleAmt -- 실결제금액
+        , T1.DC_AMT + com.nvl(T1.POINT_AMT,0) AS discntAmt -- 총할인금액
+        , T1.DC_AMT AS offlineDC -- 오프라인할인
+        , 0 AS mbrSale -- 온라인회원할인
+        , 0 AS eventSale -- 온라인이벤트할인
+        , 0 AS couponSale -- 온라인쿠폰할인
+        , com.nvl(T1.POINT_AMT,0) AS pointAmt -- 사용적립금
+        , com.nvl(T1.SALE_POINT,0) AS salePoint -- 발생적립금
+        , T9.PROD_ID AS prodId --자재코드
+        , T8.MM_ZZITEMCD AS mmZzItemCd -- 아이템코드
+        , T1.GOODS_CD AS goodsCd -- 상품코드
+        , T8.MM_GROUP AS mmGroup
+        , T4.RID AS ridMbr
+        , T3.RID AS ridOrd
+        FROM LOY.LOY_ORDP_DTL T1
+        LEFT JOIN loy.LOY_PROD T9 ON T1.RID_PROD = T9.RID
+        JOIN LOY.LOY_ORD T3 ON T1.RID_ORD = T3.RID
+        JOIN LOY.LOY_MBR T4 ON T3.RID_MBR = T4.RID
+        JOIN LOY.LOY_CUST T5 ON T5.RID = T4.RID_CUST
+        LEFT JOIN LOY.LOY_PROD_POS_X T6 ON T6.PROD_ID = T1.GOODS_CD
+        LEFT JOIN LOY.LOY_CHNL T7 ON T7.RID = T1.RID_CHNL
+        LEFT JOIN loy.LOY_PROD_X T8 ON T9.RID = T8.RID_PROD
+        <!-- LEFT JOIN loy.LOY_PROD_XM lpx ON lpx.PRODID = T2.PROD_ID -->
+        LEFT OUTER JOIN loy.LOY_TIERS lt ON lt.RID = T4.RID_TIER AND lt.FLAG = 1
+        WHERE 1=1
+        AND T3.SELL_TYPE_CD = '01'
+        AND ${strCondWhere}
+        AND ${strWhere}
+        ) T
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectProdRevwTxnHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyProdRevwHistListResDto">
+        /*LoyTransMapper.selectProdRevwTxnHistList */
+        SELECT
+        com.TO_CHAR(T1.R_DATE,'YYYY-MM-DD HH24:MI') AS rDate
+        , T1.MSEQ AS mbrNo
+        , CASE WHEN T5.MBR_STAT_CD ='C' THEN '' ELSE T6.CUST_NM END AS custNm
+        , CASE WHEN T5.MBR_STAT_CD ='C' THEN '' ELSE T6.HHP END AS hhp
+        , T5.MBR_TYPE_CD AS mbrTypeCd
+        , T5.SBSC_TYPE_CD AS sbscTypeCd
+        , T6.CUST_STAT_CD AS custStatCd
+        , T1.REVIEW_TYPE_CD AS reviewTypeCd
+        , CASE WHEN lpx.GOODS_CODE IS NOT NULL THEN '' ELSE T1.PROD_NO END AS prodNo
+        , T7.CAT_NM AS catNm
+        , T8.CAT_NM AS parCatNm
+        , lpx.GOODS_CODE AS goodsCode
+        , CASE WHEN T2.PROD_NM IS NOT NULL THEN T2.PROD_NM
+        WHEN lpx.GOODS_NAME IS NOT NULL THEN lpx.GOODS_NAME END AS prodNm
+        , T1.SUBJECT AS subject
+        , T1.SCORE AS score
+        , CASE WHEN T1.UPLOAD_IMG_PATH IS NOT NULL THEN 'Y' ELSE 'N' END AS uploadImgPathYn
+        , T5.RID AS ridMbr
+        , T6.RID AS ridCus
+        , T1.RID AS rid
+        , T4.MM_GROUP as mmGroup
+        , CEILING(COUNT(1) OVER()) totalCount
+        FROM LOY.LOY_PROD_REVW T1
+        LEFT OUTER JOIN LOY.LOY_PROD T2 ON T1.PROD_NO = T2.PROD_ID -- 자재코드
+        LEFT OUTER JOIN LOY.LOY_PROD_MALL lpx ON lpx.GOODS_SEQ = T1.GOODS_SEQ -- 굿즈코드
+        LEFT OUTER JOIN LOY.LOY_PROD_X T4 ON T2.RID = T4.RID_PROD AND T4.FLAG = 1 -- 아이템코드
+        LEFT OUTER JOIN LOY.LOY_MBR T5 ON T5.RID = T1.RID_MBR
+        LEFT OUTER JOIN LOY.LOY_CUST T6 ON T6.RID = T5.RID_CUST
+        LEFT OUTER JOIN LOY.LOY_PROD_CATEGORY T7 ON T7.RID = T2.RID_PROD_CAT
+        LEFT OUTER JOIN LOY.LOY_PROD_CATEGORY T8 ON T8.RID = T7.PAR_RID
+        LEFT OUTER JOIN LOY.LOY_MBR_MGT_ATTR T9 ON T9.RID_MBR = T5.RID
+        <!-- LEFT JOIN loy.LOY_PROD_XM lpxm ON lpxm.PRODID = T2.PROD_ID -->
+        WHERE 1=1
+        AND 1=1
+        AND T1.FLAG =1
+        AND ${strWhere}
+        AND ${strCondWhere}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectProdRevwExcelHistList" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyProdRevwHistExcelListResDto">
+        /*LoyTransMapper.selectProdRevwTxnHistList */
+        SELECT
+        com.TO_CHAR(T1.R_DATE,'YYYY-MM-DD HH24:MI:SS') AS rDate
+        , T1.MSEQ AS mbrNo
+        , CASE WHEN T5.MBR_STAT_CD ='C' THEN '' ELSE SECU.FN_GETdeCRYPT(#{cipherKey}, T6.CUST_NM,null) END AS custNm
+        , CASE WHEN T5.MBR_STAT_CD ='C' THEN '' ELSE SECU.FN_GETdeCRYPT(#{cipherKey}, T6.HHP,null) END AS hhp
+        , T5.MBR_TYPE_CD AS mbrTypeCd
+        , T5.SBSC_TYPE_CD AS sbscTypeCd
+        , T6.CUST_STAT_CD AS custStatCd
+        , T1.REVIEW_TYPE_CD AS reviewTypeCd
+        , CASE WHEN lpx.GOODS_CODE IS NOT NULL THEN '' ELSE T1.PROD_NO END AS prodNo
+        , T7.CAT_NM AS catNm
+        , T8.CAT_NM AS parCatNm
+        , lpx.GOODS_CODE AS goodsCode
+        , CASE WHEN T2.PROD_NM IS NOT NULL THEN T2.PROD_NM
+        WHEN lpx.GOODS_NAME IS NOT NULL THEN lpx.GOODS_NAME END AS prodNm
+        , T1.SUBJECT AS subject
+        , T1.CONTENTS AS content
+        , T1.SCORE AS score
+        , CASE WHEN T1.UPLOAD_IMG_PATH IS NOT NULL THEN 'Y' ELSE 'N' END AS uploadImgPathYn
+        , T5.RID AS ridMbr
+        , T6.RID AS ridCus
+        , CEILING(COUNT(1) OVER()) totalCount
+        , T4.MM_GROUP as mmGroup
+        FROM LOY.LOY_PROD_REVW T1
+        LEFT OUTER JOIN LOY.LOY_PROD T2 ON T1.PROD_NO = T2.PROD_ID -- 자재코드
+        LEFT OUTER JOIN LOY.LOY_PROD_MALL lpx ON lpx.GOODS_SEQ = T1.GOODS_SEQ -- 굿즈코드
+        LEFT OUTER JOIN LOY.LOY_PROD_X T4 ON T2.RID = T4.RID_PROD AND T4.FLAG = 1 -- 아이템코드
+        LEFT OUTER JOIN LOY.LOY_MBR T5 ON T5.RID = T1.RID_MBR
+        LEFT OUTER JOIN LOY.LOY_CUST T6 ON T6.RID = T5.RID_CUST
+        LEFT OUTER JOIN LOY.LOY_PROD_CATEGORY T7 ON T7.RID = T2.RID_PROD_CAT
+        LEFT OUTER JOIN LOY.LOY_PROD_CATEGORY T8 ON T8.RID = T7.PAR_RID
+        LEFT OUTER JOIN LOY.LOY_MBR_MGT_ATTR T9 ON T9.RID_MBR = T5.RID
+        <!-- LEFT JOIN loy.LOY_PROD_XM lpxm ON lpxm.PRODID = T2.PROD_ID -->
+        WHERE 1=1
+        AND 1=1
+        AND T1.FLAG =1
+        AND ${strWhere}
+        AND ${strCondWhere}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectProdRevwDetail" parameterType="com.icignal.loyalty.benefit.point.dto.request.LoyTransListReqDto"
+            resultType="com.icignal.loyalty.benefit.point.dto.response.LoyProdRevwHistListResDto">
+        /* LoyTransMapper.selectProdRevwDetail */
+        SELECT lnpr.SUBJECT  AS subject
+             , lnpr.CONTENTS AS content
+        FROM LOY.LOY_PROD_REVW lnpr
+        WHERE lnpr.FLAG = 1
+          AND lnpr.rid = #{rid}
+    </select>
+
+</mapper>

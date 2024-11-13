@@ -1,0 +1,319 @@
+server:
+  port: 8000
+  servlet: 
+    session:
+      timeout: 120m 
+    context-path: /
+    jsp:
+      init-parameters:
+        development: false
+  shutdown: graceful        
+  error:
+    include-exception: true
+
+spring:  
+  mvc:
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  devtools:
+    livereload:
+      enabled: false
+    restart:
+      enabled: false
+  messages:
+    basename: Messages
+    encoding: UTF-8
+  h2:
+    console:
+      enabled: false  
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  main:
+    allow-circular-references: true
+      
+#logback logging 설정
+logging:
+  level:
+    root: INFO
+#    com:
+#      icignal: DEBUG
+#  file: ./log
+  
+#loyalty.commCode.languge=ko
+icignal:
+  server-type: Dev #Real, Dev, QA, Local
+  application-name: iCIGNAL-BO
+  auth:
+    program-check: true  #프로그램 권한체크 여부
+  context:
+    rootUrl: http://localhost:9080
+    rootPath: /app/admin/webapps/ROOT/
+    imageServerUrl: https://images.descentekorea.co.kr/crm/UploadFile/
+    imageSendUrl: /usr/local/msg/MessagingAgent/mmsfile/
+    cdnServerUrl: https://dev.icignal.lnl
+    server:      
+      appServiceId: 13e28abc1cf39fdb62b00005
+      country: KR
+      lang: ko
+      currency: KRW
+    resource:
+      excelFileUploadFullPath: /app/icignal/UploadFile/
+      excelFileUploadExcelPath: /app/icignal/UploadFile/excel/ 
+      excelFileUploadImgPath: /app/icignal/UploadFile/img/
+      menu-icon-path: ../../../images/t10/common/leftmenu/
+      file-sample-path: resources/file/sample/
+      imageUploadPath: resources/UploadImages/
+      mmsimageUploadPath: resources/UploadImages/CAMPAIGN/content/
+      cmsImageUploadPath: resources/UploadImages/CONTENT_MANAGER/
+      tempImageUploadUrl: resources/Temp/
+      file-upload-path: resources/UploadFile/
+      excelFileUploadPath: resources/UploadFile/membership/해당업무/
+      #fileUpload-sqlloader-external: C:/data/app/UploadFile/sqlloader/해당업무/
+      #excelFileDownSample: resources/UploadFile/membership/excelTemplate/
+      #excelFileDownPathExternal: C:/data/app/UploadFile/membership/해당업무/
+  push:
+    enable: false
+  api-server:
+    host: 15.165.80.77
+    port: 28081
+    service:
+      getAddressXY: xxxx 
+  async:
+    thread-pool:
+      init: 10
+      max: 100
+      queue: 100
+  marketing:
+    realtime-api-url:
+    batch-api-url: http://localhost:22020
+    
+  batch:
+    host: http://localhost:19081
+
+  login:
+    password:
+      limit-day: 90 # 로그인 패스워드 만료일 (단위: 일)
+      check-cnt: 5 # 패스워드 체크 횟수
+    dupl-login-limit: true  #중복 로그인 제한 여부  true: 중복로그인 불가, flase: 중복로그인 허용
+    view:
+      selectLang: Y
+    auth-type: single  # 로그인 인증 방법 ( single: pwd 검증만, double : pwd and 본인인증 ) 
+    double:
+      auth-method: sms #이중 인증 수단 (email, sms)
+      auth-pass-users: mktmaster@quintet.co.kr,crmmanager@quintet.co.kr  #
+      email:  # 이메일 인증 수단 속성
+        api-method: thundermail      
+        automailId: 60c16e29d64c97ac1f64abecb23d0826
+        auth-limit-time: 10         #인증 제한 시간 . 단위: 분
+        auth-login-limit-time: 10    #로그인 인증 제한 시간 ( 이메일 인증 후 ). 단위 : 분        
+        check: false
+      sms:
+        check: false   
+      
+    sso: 
+      check: false
+    lock:
+      cnt: 6
+      date: 30      
+      admin-alert:      
+        check: false
+        method: thundermail  # thundermail
+        mail:
+          automail-id: c778d5fcdd5b3e66c75324943e3e0c25
+          mail-addr: loymaster@quintet.co.kr
+          mail-name: 로열티관리자
+      
+  security:
+     #암호화키 key 관리 방법 : db-local, db-awskms, file-local, file-awskms 
+    data-encryption:
+      database:
+        key-managemnet-type: db-local  # db-awskms, db-local
+        key-file: security/encryption_key/db_key_dev.dat
+      file:
+        key-managemnet-type: file-local  # file-awskms, file-local  
+        key-file: security/encryption_key/file_key_dev.dat
+    properties-data-encryption:
+      password: 9pwc3dke
+    endecrytped:
+      endecrypted: DB #Java, DB             
+    
+  #db 연결 정보 관리 방법 : LocalLoyaltyMaster, LocalLoyaltySlave, AwsLoyalty
+  db-connection-info:    
+#    management-type: LocalLoyaltyMaster, LocalLoyaltySlave, LocalMart, AwsLoyalty 
+#    management-type: AwsLoyalty
+    management-type: LocalLoyaltyMaster
+    management-typeMart: LocalMart
+    management-typeEshop: LocalEshop
+    management-typeApi: LocalApi
+    management-typeMartBo: LocalBoMart
+    local:
+        loy-db:
+          master:
+            db-type: mssql # mysql,mssql
+            driver-class-name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+            data-source-class-Name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+            #jdbc:log4jdbc:sqlserver://172.21.102.10:1433;DatabaseName=dkl
+            jdbc-url: oVqFF3eAZ481WKCpl3P7YEU6fMcxvbdWyb4f84ZlH74DYDWB8cA18DbYrdmsLz+t962M9OgvYC1/GRV3zlvD2ZnNf2skeLBg
+            #dklmuser
+            username: gsdB56bVpj05PMuuThsU8g==
+            password: RMtduxWKbzrumdsmVr6mgenLY2vgNS9Y
+#          slave:
+#            db-type: oracle # mysql,mssql
+#            driver-class-name: k1nDUeU55SLZt+I0Dm945j/+aHVdOgmN7hk/OBnXn1f/ttu1XEYYWg==
+#            jdbc-url: SgMN06dzkRMlyTNI6iRfcFbjyAXBPIqpO29AfzYEWhndMbTBsvz1z/Po+Ttckv4cU25+dcC1B+w=
+#            username: Z/8AVJ5K0p1gYbFrQPtsvA==
+#            password: 7ldbVoNDBEkWOBBdsXAohA==
+        mart-db:
+          db-type: mssql # mysql,mssql
+          driver-class-name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+          data-source-class-Name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+          jdbc-url: w6aIUsinHziN+SaVaKYUv4XSwn9LX7/D8ZGmzsjki7rnjSMAn8INxAiDpP6SXShwyjwuMIOCBPtuyD0H8ujipX07VV9cUHvOEaq0UExtctSRnw+Lg47ccw==
+          username: Wp67LvkYkJs/4UhWJD2A8A==
+          password: FmkUdff+zEDtCZl8fPPLyiUBW2H5wqys
+        eshop-db:
+          db-type: oracle # mysql,mssql
+          driver-class-name: KnNLh6woirWd/4b1In2HnStCM7Catbm14DCXiU/TundSjQsxnTW5yncx8vXhCHHi
+          data-source-class-Name: urgwfygeP1ayPEbbO2fXGqDJoS35o09kkkt00IxumrjhuJO9Z7AnXqNwiCHAkmQ3
+          jdbc-url: KM5+1KYkYkw/n9RKY0JGYYS5R5PGodw4xL0oo38jkfxk46gUekdJ0k7EuUWVcyjMLDfnKIrO/ShbS0DrjQo41A==
+          username: loN5N9HtXGEFEd51XNWERA==
+          password: lsEZP/AWI4Y0XMqMLvQTAIhcXgGXMAV/OcU1yti2vWY=
+        api-db:
+          db-type: mssql # mysql,mssql
+          driver-class-name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+          data-source-class-Name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+          #jdbc:log4jdbc:sqlserver://172.21.102.10:1433;DatabaseName=dkl
+          jdbc-url: oVqFF3eAZ481WKCpl3P7YEU6fMcxvbdWyb4f84ZlH74DYDWB8cA18DbYrdmsLz+t962M9OgvYC1/GRV3zlvD2ZnNf2skeLBg
+          #dklmuser
+          username: gsdB56bVpj05PMuuThsU8g==
+          password: RMtduxWKbzrumdsmVr6mgenLY2vgNS9Y
+        boMart-db:
+          db-type: mssql # mysql,mssql
+          driver-class-name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+          data-source-class-Name: KH6qSKYYUkeA3zJuZeP7DJbnUwl9Incg8Mk5oFHFkHb+Kz20MDLqQpBofITTAs8avrguv/mhENA=
+          #jdbc:log4jdbc:sqlserver://172.21.102.10:1433;DatabaseName=dkl
+          jdbc-url: oVqFF3eAZ481WKCpl3P7YEU6fMcxvbdWyb4f84ZlH74DYDWB8cA18DbYrdmsLz+t962M9OgvYC1/GRV3zlvD2ZnNf2skeLBg
+          #dklmuser
+          username: gsdB56bVpj05PMuuThsU8g==
+          password: RMtduxWKbzrumdsmVr6mgenLY2vgNS9Y
+
+
+          
+  mail-connection-info: #메일서버 연결정보
+    management-type: Local  #Local, Aws
+    local:
+      smtp:
+        host: 2BnuSGzOMm315HCUhDstkZX1JW75b4gHy6Q151Wg+kM=
+        port: 3EJo+/UUYZ1ynREaGbUVig==
+        username: aSJkOHlvaX9Aj7QM1+OLikcYTF0jNiC+S6Y9ePip9w0=
+        password: A5rFE7R9med5jrG7i/mkRiy3VjXVvBTd
+
+  sftp:
+    username: 3SJ/qzUNllo6SWYoRKfapw== #crmuser
+    password: lvlAs+OfvEDe+ge0xnvDZpF3UAHz+rCF
+    base-uri: Y+BiFUUyD6gsf/Msxrp4J1M9QenOXKHw #117.52.163.173
+    base-port: 22
+
+  jdbc-batch:
+    splitSize: 10000
+
+aws:
+  region: ap-northeast-2
+  credentials:
+    access-key: dR4CEiVfje76RWomepIHo2xYFgDJopbBpXTogsqtqsY=
+    secret-key: q5vu9LqQN4fmSIkFjF4/N9vigJcv3mVbpZJzvd3yJ2qtCdn2IteSL8PRVitDKHW3TATaHaYjNws=
+  service:
+    key-management-service:      
+      master-key: vWUr05SQRRAnGiUQ6KRHbIIHWHdb155+pxDQdbVUDfaWze2MZeymoRzTF1jjT7tpxry6TiyvmJbOEUWUf7W/x21WXZeZMmREA091GwOnvUxBON/PgMzjEqciBAUZ8Q1k 
+    secret-manager:           
+      secret-name:
+        loyalty-database: tva5Tcl+k5Tw9VPRfxIBzUT52dV0+m02fJCFFRbxsbsGz6Awx0QGemZ4e0s3FVbX
+#        mart-database: tva5Tcl+k5Tw9VPRfxIBzUT52dV0+m02fJCFFRbxsbsGz6Awx0QGemZ4e0s3FVbX
+        file-encryption-key: 2+gUXa6le78Ywj8gt/AO1UYn8Wk00LXDkMBWscZFAyE=   #서버상에 업로드된 파일(개인정보가 담긴 파일들) 암복화시 사용할 키   
+        mail-smtp-info: #mail stmp 정보 (host;port;username)
+  s3:
+    bucket-name: dev.icignal.t10 #자격증명정보는 Secret Manager 와 같이 사용한다. ("aws.credentials" 프리픽스 서블릿값 참고.)
+  ses:
+    smtp:  #단건시 사용
+      host: email-smtp.ap-northeast-2.amazonaws.com   #생성한 지역
+      port: 587
+      username: e/8rrPZSSzG/Qfci+kaLwzJ3OrVI5UFxH1a0oTOIZN4= #SMTP Setting시 받은 userName값 복호화후 사용
+      smtpPwd: qXzS2rTADZ5BWOxjs2baiD7qSaYBJZSWaL19elh1tSxqaFj9deK5bQ6MasusoTxqW7RVUVXjPys=   #SMTP Setting시 받은 userPwd값 복호화후 사용
+      configSet: ses-smtp-user  #Configuration Set Name
+    mkt:
+      sesWatch:
+        configSet: lnl-mkt-cloud-watch-config #ses configuration set name    
+    loy:
+      sesWatch:
+        configSet: lnl-loy-cloud-watch-config #ses configuration set name
+
+#push.uracle.api=
+#push.uracle.priority=3
+#push.uracle.badgeno=1
+#push.uracle.reservedate=
+#push.uracle.servicecode=ALL
+#push.uracle.soundfile=default
+#push.uracle.sendercode=admin
+#push.uracle.app_id=
+#push.uracle.reservetime=100000
+
+uracle:
+  push:
+    api-url: https://umsapi.morpheus.kr/api/umsSendPushApi.ums
+    api-key: d8c6ecaeb1824a8697d45092e723f305
+    cloud-project-id: 93fe3b90b6ab45a98ffbf878c60870e9
+    priority: 3
+    badgeno: 1
+    reservedate:
+    servicecode: ALL
+    soundfile: default
+    sendercode: admin
+    app_id:
+    reservetime: 100000
+    default-msg: ▶ 자세한 내용은 포인트 적립/사용 내역 확인 (클릭시 이동)
+  csvPush:
+    api:
+    type: C
+    priority: 3
+    badgeno: 0
+    serviceCode: ALL
+    senderCode: MKT
+    appId: 
+    dbIn: Y
+    splitMsgCnt: 10000
+    delaySecond: 120
+    pushFailSmsSend: N
+    soundFile: default
+
+
+thundermail:
+  api-url: http://54.180.18.123/tm6/app/api/automail/send      
+
+
+kakao:
+  api:
+    key: 1330333808d1a34c7e6615d740d7c024
+    url: https://dapi.kakao.com/v2/local/search/address.json?query=
+qpid:
+  ftp:
+    ip: 14.63.173.15
+
+#Descente File Server
+common:
+  base-uri: 'https://images.descentekorea.co.kr/crm'
+#base-uri: 'https://stg-apis.descentekorea.co.kr'
+#'http://localhost:30000'
+#'http://172.21.102.4:8000'
+  survey-uri: '/survey/dev/index.html'
+#'/dev/index.html'
+cross:
+  domain: "https://stg-apis.descentekorea.co.kr"
+#"https://stg-apis.descentekorea.co.kr"  
+#'http://172.21.102.4:8000'
+descente:
+  api:
+    hmac:
+      check: N
+      key: h9OOis3XO5MBEM2AdCdavlQzQjJ20jGS

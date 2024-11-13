@@ -1,0 +1,62 @@
+@charset "UTF-8";
+
+.btn {
+    min-width: 70px;
+    min-height: 25px;
+    margin: 0;
+    padding: 0 12px;
+    background-color: #7486a4;
+    border: 0 none;
+    font-weight: 300;
+    font-size: 12px;
+    line-height: unset;
+    border-radius: 2px;
+}
+
+.btn:active, .btn:focus, .btn:hover, .store_manage .right_panel .btn:active, .store_manage .right_panel .btn:focus, .store_manage .right_panel .btn:hover {
+    background: #7486a4;
+    border-color: #7486a4;
+}
+
+.btn .fa {
+	margin-right: 3px;
+}
+
+.btn_searchitem_add_remove {
+	width: 25px;
+	height: 25px;
+}
+
+.selectbox_type1 .select_btn {
+	height: 23px;
+	background-position: 50% 9px;
+}
+
+.selectbox_type1 .select_btn:hover, .selectbox_type1:hover .select_btn {
+	height: 23px;
+	background-position: 50% 9px;
+}
+
+.ifv_search_box_search_btn, .inner_btn, .btn.btn_blueLight, .ifv_search_box_search_btn.search_fl {
+    min-width: 70px;
+    height: 25px;
+    margin-right: 5px;
+    padding: 0;
+    background-color: #7486a4;
+    font-weight: 400;
+    border-radius: 2px;
+    border: 0 none;
+    line-height: 25px;
+    font-size: 13px;
+}
+
+.ifv_search_box_search_btn:hover,
+.ifv_search_box_search_btn.search_fl:hover,
+.inner_btn:hover,
+.btn.btn_blueLight:hover {
+	background-color: #7486a4;
+}
+
+.tab-contents .page_btn_area .btn.disabled, .tab-contents .page_btn_area .btn[disabled] {
+	display: none;
+}

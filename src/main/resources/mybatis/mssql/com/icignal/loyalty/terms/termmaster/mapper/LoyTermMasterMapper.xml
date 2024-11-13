@@ -1,0 +1,873 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.terms.termmaster.mapper.LoyTermMasterMapper">
+    <select id="selectTermsGrp" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+                                        resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+     /* LoyTermMasterMapper.selectTermsGrp */
+         SELECT max(grpTm.TERMS_GRP_CD) OVER(PARTITION BY grpTm.TERMS_GRP_CD ORDER BY grpTm.TERMS_GRP_CD DESC) AS termsGrpCd
+                ,com.TO_CHAR(max(grpTm.CREATE_DATE), 'YYYY-MM-DD hh24:mi:ss') AS createDate
+                ,max(e.NAME) AS createBy
+                ,com.TO_CHAR(max(grpTm.MODIFY_DATE) , 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+                ,max(e2.NAME) AS modifyBy
+                , ${strColumn}
+         FROM LOY.LOY_TERMS_GRP grpTm
+         LEFT OUTER JOIN COM.CRM_USER u ON grpTm.CREATE_BY = u.RID AND u.FLAG = 1
+         LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+         LEFT OUTER JOIN COM.CRM_USER u2 ON grpTm.MODIFY_BY = u2.RID AND u2.FLAG = 1
+         LEFT OUTER JOIN COM.EMPLOYEE e2 ON u2.ID_EMPLOYEE = e2.ID AND e2.FLAG = 1
+         LEFT OUTER JOIN LOY.LOY_TERMS tm ON grpTm.RID_TERMS = tm.RID AND tm.FLAG =1
+         WHERE ${strCondWhere}
+         AND  ${strWhere}
+         AND   grpTm.FLAG = 1
+         GROUP BY grpTm.TERMS_GRP_CD
+         ORDER BY    ${strOrderby}
+         ${strEndPaging} 
+    </select>
+    <insert id="insertTermsGrp" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" >
+     /* LoyTermMasterMapper.insertTermsGrp */
+	     INSERT INTO LOY.LOY_TERMS_GRP
+			(  RID
+			   , CREATE_BY
+			   , MODIFY_BY
+			   , CREATE_DATE
+			   , MODIFY_DATE
+			   , FLAG
+			   , TERMS_GRP_CD
+			   , RID_TERMS
+			   , SEQ_NO
+		   ) VALUES ( 
+                com.getnewid('A')
+                , #{createBy}
+                , #{modifyBy}
+                , GETDATE()
+                , GETDATE()
+                , 1
+			    , #{termsGrpCd}
+			    , #{ridTerms}
+			    , #{seqNo}
+		)
+    </insert>
+        <select id="selectTermsGrpTermsPop" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+                                        resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+            /* LoyTermMasterMapper.selectTermsGrpTermsPop */
+                  SELECT tm.TERMS_TYPE_CD     AS termsTypeCd
+                             , tm.TERMS_TYPE_SUB_CD AS termsTypeSubCd
+                             , tm.STAT_CD               AS statCd
+                             , com.TO_CHAR(tm.CREATE_DATE , 'YYYY-MM-DD hh24:mi:ss') AS createDate
+                             , e.NAME           AS createBy
+                             , com.TO_CHAR(tm.MODIFY_DATE , 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+                             , e2.NAME          AS modifyBy
+                             , tm.RID                       as rid
+                             , ${strColumn}
+                 FROM LOY.LOY_TERMS tm
+                 LEFT OUTER JOIN COM.CRM_USER u ON tm.CREATE_BY = u.RID AND u.FLAG = 1
+                 LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+                 LEFT OUTER JOIN COM.CRM_USER u2 ON tm.MODIFY_BY = u2.RID AND u2.FLAG = 1
+                 LEFT OUTER JOIN COM.EMPLOYEE e2 ON u2.ID_EMPLOYEE = e2.ID AND e2.FLAG = 1
+         WHERE ${strCondWhere}
+                   AND  ${strWhere}
+                   AND  tm.FLAG = 1
+                   AND  tm.TERMS_TYPE_CD ='AT'
+                   AND  tm.STAT_CD ='A'
+         ORDER BY    ${strOrderby}
+                        ${strEndPaging}
+    </select>
+    <select id="selectAlreadyTermsGrp" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+                                        resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+     /* LoyTermMasterMapper.selectAlreadyTermsGrp */
+                  SELECT 
+                     DISTINCT grpTm.TERMS_GRP_CD AS termsGrpCd
+         FROM LOY.LOY_TERMS_GRP grpTm
+         WHERE 1=1
+         AND  grpTm.FLAG = 1
+         AND grpTm.TERMS_GRP_CD = #{termsGrpCdChangeVal} 
+    </select>
+    
+    <update  id="updateTermsGrp" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" >
+         /* LoyTermMasterMapper.updateTermsGrp */
+	    UPDATE LOY.LOY_TERMS_GRP
+	    SET MODIFY_BY = #{createBy}
+	           , MODIFY_DATE = GETDATE()
+	           , TERMS_GRP_CD = #{termsGrpCdChangeVal}
+	    WHERE FLAG =1 AND TERMS_GRP_CD= #{termsGrpCd}    
+    
+    </update>
+    
+    <update  id="deleteTermsGrp" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" >
+         /* LoyTermMasterMapper.deleteTermsGrp */
+         DELETE FROM LOY.LOY_TERMS_GRP
+         WHERE FLAG =1 AND TERMS_GRP_CD = #{termsGrpCd}  
+    </update>
+    
+    <select id="selectTermsGrpTermsList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+                                        resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+        /* LoyTermMasterMapper.selectTermsGrpTermsList */
+    SELECT 
+                    ltg.SEQ_NO AS termsNo
+                ,  tm.TERMS_TYPE_CD     AS termsTypeCd
+                 , tm.TERMS_TYPE_SUB_CD AS termsTypeSubCd
+                 , tm.STAT_CD               AS statCd
+                 , com.TO_CHAR(tm.CREATE_DATE , 'YYYY-MM-DD hh24:mi:ss') AS createDate
+                 , e.NAME           AS createBy
+                 , com.TO_CHAR(tm.MODIFY_DATE , 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+                 , e2.NAME          AS modifyBy
+                 , tm.RID                       as rid
+                 ,ltg.RID               as termRid
+                 , ${strColumn}
+     FROM LOY.LOY_TERMS tm
+     LEFT OUTER JOIN COM.CRM_USER u ON tm.CREATE_BY = u.RID AND u.FLAG = 1
+     LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+     LEFT OUTER JOIN COM.CRM_USER u2 ON tm.MODIFY_BY = u2.RID AND u2.FLAG = 1
+     LEFT OUTER JOIN COM.EMPLOYEE e2 ON u2.ID_EMPLOYEE = e2.ID AND e2.FLAG = 1
+     LEFT OUTER JOIN loy.LOY_TERMS_GRP ltg  ON tm.RID = ltg.RID_TERMS AND ltg.FLAG = 1
+     WHERE ${strCondWhere}
+               AND  ${strWhere}
+               AND  tm.FLAG = 1
+               AND ltg.TERMS_GRP_CD = #{termsGrpCd}
+    ORDER BY    ${strOrderby}
+                    ${strEndPaging}
+    </select>
+        <insert id="insertTermsGrpTerms" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" >
+     /* LoyTermMasterMapper.insertTermsGrp */
+         INSERT INTO LOY.LOY_TERMS_GRP
+            (  RID
+               , CREATE_BY
+               , MODIFY_BY
+               , CREATE_DATE
+               , MODIFY_DATE
+               , FLAG
+               , TERMS_GRP_CD
+               , RID_TERMS
+               , SEQ_NO
+           ) VALUES ( 
+                com.getnewid('A')
+                , #{createBy}
+                , #{modifyBy}
+                , GETDATE()
+                , GETDATE()
+                , 1
+                , #{termsGrpCd}
+                , #{ridTerms}
+                , #{seqNo}
+        )
+    </insert>
+    
+	<select id="selectAlreadyTermsListGrp" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+                                        resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+    /* LoyTermMasterMapper.selectAlreadyTermsListGrp */
+    SELECT RID_TERMS as ridTerms
+    FROM LOY.LOY_TERMS_GRP grpTm
+	WHERE 1=1
+	AND  grpTm.FLAG = 1
+	AND grpTm.TERMS_GRP_CD = #{termsGrpCd}
+	AND grpTm.SEQ_NO = #{seqNo}
+    </select>
+    
+    <select id="selectAlreadyTermsListGrpTermsName" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+                                        resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+	/* LoyTermMasterMapper.selectAlreadyTermsListGrpTermsName */
+	SELECT RID_TERMS as ridTerms
+	FROM LOY.LOY_TERMS_GRP grpTm
+	JOIN LOY.LOY_TERMS tm on tm.RID = grpTm.RID_TERMS and tm.FLAG = 1
+	WHERE 1=1
+	AND  grpTm.FLAG = 1
+	AND grpTm.TERMS_GRP_CD = #{termsGrpCd}
+	AND tm.TERMS_TYPE_SUB_CD  = #{termsTypeSubCd}
+	AND grpTm.RID_TERMS = #{ridTerms}
+    </select>
+    
+        <select id="selectAlreadyTermsGrpTerms" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+                                        resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+     /* LoyTermMasterMapper."selectAlreadyTermsGrpTerms" */
+         SELECT ltg.TERMS_GRP_CD AS termsGrpCd
+                ,ltg.RID_TERMS AS ridTerms
+                ,tm.TERMS_TYPE_SUB_CD as termsTypeSubCd
+                ,ltg.SEQ_NO AS termsNo
+         FROM LOY.LOY_TERMS tm
+         LEFT OUTER JOIN COM.CRM_USER u ON tm.CREATE_BY = u.RID AND u.FLAG = 1
+         LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+         LEFT OUTER JOIN COM.CRM_USER u2 ON tm.MODIFY_BY = u2.RID AND u2.FLAG = 1
+         LEFT OUTER JOIN COM.EMPLOYEE e2 ON u2.ID_EMPLOYEE = e2.ID AND e2.FLAG = 1
+         LEFT OUTER JOIN loy.LOY_TERMS_GRP ltg  ON tm.RID = ltg.RID_TERMS AND ltg.FLAG = 1
+         WHERE 1=1
+         AND ltg.rid  =#{rid}
+    </select>
+    
+	<update  id="updateTermsListGrp" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" >
+    /* LoyTermMasterMapper.updateTermsListGrp */
+        UPDATE LOY.LOY_TERMS_GRP
+        SET MODIFY_BY = #{createBy}
+               , MODIFY_DATE = GETDATE()
+               , SEQ_NO = #{seqNo} 
+         WHERE 1=1
+        AND rid = #{ridTerms}
+    </update>
+    
+        <update  id="deleteGrpTerms" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" >
+         /* LoyTermMasterMapper.deleteTermsGrp */
+         DELETE FROM LOY.LOY_TERMS_GRP
+         WHERE FLAG =1 AND TERMS_GRP_CD = #{termsGrpCd}  AND RID_TERMS = #{ridTerms}    
+    </update>
+    
+	<select id="selectTermsList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+										resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+		/* LoyTermMasterMapper.selectTermsList */
+	SELECT 	  
+				  tm.SEQ_NO   AS termsNo
+	 			, tm.TERMS_TYPE_CD 	AS termsTypeCd
+				 , tm.TERMS_TYPE_SUB_CD AS termsTypeSubCd
+				 , tm.STAT_CD 				AS statCd
+				 , com.TO_CHAR(tm.CREATE_DATE , 'YYYY-MM-DD hh24:mi:ss') AS createDate
+		 		 , e.NAME			AS createBy
+		 		 , com.TO_CHAR(tm.MODIFY_DATE , 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+		 		 , e2.NAME			AS modifyBy
+				 , tm.RID 						as rid
+				 , ${strColumn}
+	 FROM LOY.LOY_TERMS tm
+	 LEFT OUTER JOIN COM.CRM_USER u ON tm.CREATE_BY = u.RID AND u.FLAG = 1
+	 LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	 LEFT OUTER JOIN COM.CRM_USER u2 ON tm.MODIFY_BY = u2.RID AND u2.FLAG = 1
+	 LEFT OUTER JOIN COM.EMPLOYEE e2 ON u2.ID_EMPLOYEE = e2.ID AND e2.FLAG = 1
+	 WHERE ${strCondWhere}
+			   AND  ${strWhere}
+			   AND  tm.FLAG = 1
+	ORDER BY 	${strOrderby}
+		  			${strEndPaging}
+	</select>
+	
+	<insert id="insertTermsList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.insertTermsList */
+	INSERT INTO LOY.LOY_TERMS (
+					RID
+					,CREATE_BY
+					,MODIFY_BY
+					,CREATE_DATE
+					,MODIFY_DATE
+					,FLAG
+					,TERMS_TYPE_CD 
+					,TERMS_TYPE_SUB_CD
+					,STAT_CD 
+				    ,SEQ_NO
+				)
+	VALUES(
+					 #{rid}
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, #{termsType}
+					, #{termsTypeSub}
+					, #{statCd}
+					, #{termsNo}
+				)
+	</insert>
+	
+	<select id="selectTermsDetail" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+										resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsDetailListResDto">
+	/* LoyTermMasterMapper.selectTermsDetail */
+	SELECT tm.TERMS_TYPE_CD 	AS termsType
+				 , tm.TERMS_TYPE_SUB_CD AS termsTypeSub
+				 , tm.STAT_CD 				AS statCd
+				 , tm.CREATE_DATE 		AS createDate
+                 , tm.SEQ_NO            AS termsNo
+	  FROM LOY.LOY_TERMS tm 
+	WHERE tm.rid = #{rid}
+		AND  tm.FLAG = 1
+	</select>
+	
+	<update id="updateTermsList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/*  LoyTermMasterMapper.updateTermsList */
+	UPDATE LOY.LOY_TERMS
+	SET
+			MODIFY_BY 					= #{empId}
+			,MODIFY_DATE 				= GETDATE()
+			,TERMS_TYPE_CD 			= #{termsType}
+			,TERMS_TYPE_SUB_CD 	= #{termsTypeSub}
+			,STAT_CD	 					= #{statCd}
+			,SEQ_NO 	 					= #{termsNo}
+	 WHERE RID=#{rid}
+	</update>
+	
+	<select id="selectTermsVerList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+													resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsListResDto">
+	/* LoyTermMasterMapper.selectTermsVerList */
+	SELECT tv.VER as ver,
+	    		tv.REQUIRED_YN AS requiredYn,
+				 com.TO_CHAR(tv.START_DATE ,'YYYY-MM-DD hh24:mi:ss') as startDate,
+				 com.TO_CHAR(tv.CREATE_DATE ,'YYYY-MM-DD hh24:mi:ss') as createDate,
+				 e.NAME			AS createBy,
+				 tv.RID as verRid,
+				 ${strColumn}
+	FROM LOY.LOY_TERMS_VER tv
+	LEFT OUTER JOIN COM.CRM_USER u ON tv.CREATE_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	WHERE ${strWhere}
+   			   AND ${strSVCType}
+			   AND tv.RID_TERMS = #{rid}
+			   AND tv.FLAG = 1
+	ORDER BY ${strOrderby}
+	  			${strEndPaging}
+	</select>
+	
+	<select id="selectTermsRcvChnl" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+													resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsRcvChnlListResDto">
+	/* LoyTermMasterMapper.selectTermsRcvChnl */
+	SELECT trc.RID as rid,
+				trc.SEQ_NO as seqNo,
+				trc.MKT_RCV_CHNL_CD as mktRcvChnlCd,
+				 com.TO_CHAR(trc.START_DATE,'YYYY-MM-DD') as startDate,
+				 trc.USE_YN as useYnCd,
+				 e.NAME AS createBy,
+				 com.TO_CHAR(trc.CREATE_DATE,'YYYY-MM-DD hh24:mi:ss') as createDate,
+				 ${strColumn}
+  	FROM LOY.LOY_TERMS_RCV_CHNL trc
+  	LEFT OUTER JOIN COM.CRM_USER u ON trc.CREATE_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+  	WHERE ${strWhere}
+			   AND  trc.flag = 1
+			   AND RID_TERMS =#{rid}
+	ORDER BY ${strOrderby}
+	  			${strEndPaging}
+	</select>
+
+	<insert id="insertTermsVersion" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.insertTermsVersion */
+	INSERT INTO LOY.LOY_TERMS_VER (
+						RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_TERMS
+					, VER
+					, START_DATE
+					, TERMS_SUMRY
+					, TERMS_CONTS
+					, REQUIRED_YN
+					, EDIT_MODE
+				)
+	VALUES(
+					 #{rid}
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, #{parRid}
+					, #{ver}
+					<if test="startDate == null">
+					, GETDATE()
+					</if>
+					<if test="startDate != null">
+					, #{startDate}
+					</if>
+					, #{termsSumry:CLOB}
+					, #{termsConts:CLOB}
+					, #{requiredYn}
+					, #{editMode}
+				)
+	</insert>
+	
+	<select id="selectInsertPgmList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto"
+															resultType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.selectInsertPgmList */
+	SELECT  ltp.RID_PGM AS pgmRid
+			<!-- , ltp.RID_TERMS_VER AS verRid -->
+			, ltp.USE_YN AS useYn
+	FROM LOY.LOY_TERMS_PGM ltp 
+	WHERE ltp.FLAG = 1
+	 AND ltp.RID_TERMS_VER = (
+								SELECT TOP 1 ltv.RID
+								FROM loy.LOY_TERMS_VER ltv
+								WHERE ltv.FLAG = 1
+								AND ltv.RID_TERMS = #{parRid}
+								ORDER BY ltv.VER DESC
+							 	)
+	</select>
+	
+	<!-- 상위 약관에 있던 로열티 프로그램 넣어주기 -->
+	<insert id="insertNewTermsLoyPgm" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.insertNewTermsLoyPgm */
+	INSERT INTO LOY.LOY_TERMS_PGM(
+						RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_TERMS_VER
+					, RID_PGM
+					, USE_YN
+				)
+	VALUES(
+					com.getNewID('')
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, #{verRid}
+					, #{pgmRid}
+					, #{useYn}
+				)
+	</insert>
+	
+	<insert id="insertParVerPgmList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+		<foreach collection="">
+		INSERT INTO LOY.LOY_TERMS_PGM(
+						RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_TERMS_VER
+					, RID_PGM
+					, USE_YN
+					)
+		VALUES(
+					com.getNewID('')
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, #{verRid}
+					, #{pgmRid}
+					, #{useYn}
+					)
+		</foreach>
+	</insert>
+	
+	<update id="deleteTermsVersion" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.deleteTermsVersion */
+	UPDATE LOY.LOY_TERMS_VER
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,flag = flag + 1
+	WHERE RID=#{rid}
+	</update>
+	
+	<update id="modifyTermsVersion" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.modifyTermsVersion */
+	UPDATE LOY.LOY_TERMS_VER
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,VER = #{ver}
+			,START_DATE = com.TO_DATE(#{startDate},'YYYY-MM-DD HH24:MI:SS')
+			,TERMS_SUMRY = #{termsSumry:CLOB}
+			,TERMS_CONTS = #{termsConts:CLOB}
+			,REQUIRED_YN = #{requiredYn}
+			,EDIT_MODE = #{editMode}
+	WHERE RID=#{rid}
+	</update>
+	
+	<select id="selectTermsVerDetail" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+													resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsDetailListResDto">
+	/* LoyTermMasterMapper.selectTermsVerDetail */
+	SELECT tv.VER as ver,
+				 tv.START_DATE as startDate,
+				 tv.CREATE_DATE as createDate,
+				 tv.TERMS_SUMRY AS termsSumry,
+				 tv.TERMS_CONTS AS termsConts,
+				 tv.RID_TERMS AS ridTermsM,
+				 tv.REQUIRED_YN AS requiredYn,
+				 tv.EDIT_MODE 	AS editMode
+	 FROM LOY.LOY_TERMS_VER tv
+	 WHERE tv.RID = #{rid}
+	 AND tv.flag = 1
+	</select>
+	
+	<update id="deleteTermsList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto">
+	/* LoyTermMasterMapper.deleteTermsList */
+	UPDATE LOY.LOY_TERMS
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,flag = flag + 1
+	WHERE RID=#{rid}
+	</update>
+	
+	<!-- <update id="deleteTermsVerList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto">
+	/* LoyTermMasterMapper.deleteTermsVerList */
+	UPDATE LOY.LOY_TERMS_VER
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,flag = flag + 1
+	WHERE RID_TERMS=#{rid}
+	</update>
+	
+	<update id="deleteTermsRcvList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto">
+	/* LoyTermMasterMapper.deleteTermsRcvList */
+	UPDATE LOY.LOY_TERMS_RCV_CHNL
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,flag = flag + 1
+	WHERE RID_TERMS = #{rid}
+	</update>
+	
+	<update id="deleteLoyPgmList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto">
+	/* LoyTermMasterMapper.deleteLoyPgmList */
+	UPDATE LOY.LOY_TERMS_PGM
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,flag = flag + 1
+	WHERE RID_TERMS = #{rid}
+	</update> -->
+	
+	<select id="selectTermsContent" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+													resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsDetailListResDto">
+	/* LoyTermMasterMapper.selectTermsContent */
+	SELECT tv.VER as ver
+				 , tv.TERMS_SUMRY AS termsSumry
+				 , tv.TERMS_CONTS AS termsConts
+	FROM LOY.LOY_TERMS_VER tv
+	WHERE tv.RID = #{rid}
+	</select>
+	
+	<select id="validChekVer" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto" 
+											resultType="java.lang.Integer">
+    /* LoyTermMasterMapper.validChekVer */
+    SELECT count(*)
+      FROM LOY.LOY_TERMS_VER
+    WHERE VER = #{ver}
+     	AND RID_TERMS = #{parRid}
+     	AND FLAG = 1
+   	<if test="rid != null">
+   	 AND NOT RID = #{rid}
+   	</if>
+    </select>
+    
+    <select id="validCheckTermsTypeSub" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto" 
+    														  resultType="java.lang.Integer">
+    /* LoyTermMasterMapper.validCheckTermsTypeSub */
+     SELECT count(*)
+	   FROM LOY.LOY_TERMS
+	 WHERE TERMS_TYPE_CD = #{termsType}
+	     AND TERMS_TYPE_SUB_CD = #{termsTypeSub}
+      	 AND FLAG = 1
+    </select>
+    
+   <insert id="insertTermsRcvChnl" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+    /* LoyTermMasterMapper.insertTermsRcvChnl */
+    INSERT INTO LOY.LOY_TERMS_RCV_CHNL(
+						RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_TERMS
+					, START_DATE
+					, USE_YN
+					, MKT_RCV_CHNL_CD
+					, SEQ_NO
+				)
+	VALUES(
+					#{rid}
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, #{ridTermsM}
+					, com.TO_DATE(#{startDate}, 'YYYY-MM-DD hh24:mi:ss')
+					, #{useYn}
+					, #{mktRcvChnlCd}
+					, #{seqNo}
+				)
+    </insert>
+    
+    <update id="updateTermsRcvChnl" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.updateTermsRcvChnl */
+	UPDATE LOY.LOY_TERMS_RCV_CHNL
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,USE_YN = #{useYn}
+			,START_DATE = com.TO_DATE(#{startDate}, 'YYYY-MM-DD hh24:mi:ss')
+			,MKT_RCV_CHNL_CD = #{mktRcvChnlCd}
+			,SEQ_NO = #{seqNo}
+	WHERE RID_TERMS = #{ridTermsM}
+	    AND RID = #{rid}
+	</update>
+	
+	<select id="selectTermsLoyPgmList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+															resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsLoyPgmListResDto">
+	/* LoyTermMasterMapper.selectTermsLoyPgmList */
+	SELECT  lp.PGM_NO AS pgmNo
+				, lp.PGM_NM AS pgmNm
+				, ltp.USE_YN AS useYnCd
+				, com.TO_CHAR(ltp.CREATE_DATE , 'YYYY-MM-DD hh24:mi:ss') AS createDate
+		 		, e.NAME			AS createBy
+		 		, com.TO_CHAR(ltp.MODIFY_DATE , 'YYYY-MM-DD hh24:mi:ss') AS modifyDate
+		 		, e2.NAME			AS modifyBy
+				, ltp.RID AS rid
+				, ${strColumn}
+	FROM LOY.LOY_TERMS_PGM ltp 
+	  JOIN loy.LOY_PGM lp ON ltp.RID_PGM = lp.RID AND lp.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER u ON ltp.CREATE_BY = u.RID AND u.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e ON u.ID_EMPLOYEE = e.ID AND e.FLAG = 1
+	LEFT OUTER JOIN COM.CRM_USER u2 ON ltp.MODIFY_BY = u2.RID AND u2.FLAG = 1
+	LEFT OUTER JOIN COM.EMPLOYEE e2 ON u2.ID_EMPLOYEE = e2.ID AND e2.FLAG = 1
+	WHERE ltp.FLAG = 1
+	  AND  ${strWhere}
+	  AND ltp.RID_TERMS_VER = #{rid}	
+	ORDER BY ${strOrderby}
+  				${strEndPaging}
+	</select>
+	
+	<select id="selectRcvChnlDetail" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+															resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsDetailListResDto">
+	/* LoyTermMasterMapper.selectRcvChnlDetail */
+	SELECT trc.SEQ_NO AS seqNo,
+				trc.MKT_RCV_CHNL_CD as mktRcvChnlCd,
+				 com.TO_CHAR(trc.START_DATE,'YYYY-MM-DD') as startDate,
+				 trc.USE_YN useYn,
+				 com.TO_CHAR(trc.CREATE_DATE,'YYYY-MM-DD') as createDate,
+				 trc.RID_TERMS as ridTermsM
+  	FROM LOY.LOY_TERMS_RCV_CHNL trc
+  	WHERE trc.flag = 1
+  	AND RID_TERMS =#{parRid}
+  	AND RID = #{rid}
+	</select>	
+	
+	<select id="selectLoyPgmTList" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+													resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsLoyPgmListResDto">
+	/* LoyTermMasterMapper.selectLoyPgmTList */
+	SELECT lp.RID AS rid,
+				lp.PGM_NM AS pgmNm,
+				lp.PGM_NO AS pgmNo,
+				lp.STAT_CD AS statCd,
+				com.TO_CHAR(lp.CREATE_DATE, 'YYYY-MM-DD hh24:mi:ss')AS createDate,
+				${strColumn}
+	FROM loy.LOY_PGM lp
+	WHERE 	${strCondWhere}
+		AND  ${strWhere}
+		AND  lp.FLAG = 1
+	ORDER BY ${strOrderby}
+	  			${strEndPaging}
+	</select>
+	
+	<select id="selectLoyPgmDetail" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto"
+													resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsLoyPgmListResDto">
+	/* LoyTermMasterMapper.selectLoyPgmDetail */
+	SELECT lp.PGM_NM AS pgmNm,
+				lp.PGM_NO AS pgmNo,
+				ltp.USE_YN AS useYn,
+				ltp.RID_PGM  as rid
+	FROM LOY.LOY_TERMS_PGM ltp
+	JOIN LOY.LOY_PGM lp ON ltp.RID_PGM = lp.RID AND lp.FLAG = 1
+	WHERE ltp.RID_TERMS_VER = #{verRid}
+	AND ltp.rid = #{rid}
+	AND ltp.flag = 1
+	</select>
+	
+	<insert id="insertTermsLoyPgm" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.insertTermsLoyPgm */
+	INSERT INTO LOY.LOY_TERMS_PGM(
+						RID
+					, CREATE_BY
+					, MODIFY_BY
+					, CREATE_DATE
+					, MODIFY_DATE
+					, FLAG
+					, RID_TERMS_VER
+					, RID_PGM
+					, USE_YN
+				)
+	VALUES(
+					#{rid}
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, #{verRid}
+					, #{pgmRid}
+					, #{useYn}
+				)
+	</insert>
+	
+	<update id="updateTermsLoyPgm" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto">
+	/* LoyTermMasterMapper.updateTermsLoyPgm */
+	UPDATE LOY.LOY_TERMS_PGM
+	SET
+			MODIFY_BY = #{empId}
+			,MODIFY_DATE = GETDATE()
+			,RID_PGM = #{pgmRid}
+			,USE_YN = #{useYn}
+	WHERE RID_TERMS_VER = #{verRid}
+	    AND RID = #{rid}
+	</update>
+	
+	<select id="selectTermsInfoDetail" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+														resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsDetailListResDto">
+	/* LoyTermMasterMapper.selectTermsInfoDetail */
+	SELECT termsSumry
+				, termsConts
+			    , editMode
+ 	FROM
+  				( SELECT ltv.TERMS_SUMRY AS termsSumry
+								, ltv.TERMS_CONTS AS termsConts
+                                , ltv.EDIT_MODE    AS editMode
+								, ltv.START_DATE
+								, ROW_NUMBER () OVER (PARTITION BY RID_TERMS ORDER BY START_DATE DESC) AS RN
+					FROM LOY.LOY_TERMS_VER ltv
+				  WHERE ltv.FLAG = 1
+				  <if test="rid != null and rid != ''">
+				  	 AND ltv.RID_TERMS = #{rid}
+				  </if>
+				  
+				  <if test="termVerRid != null and termVerRid != ''">
+				  	 AND ltv.RID = #{termVerRid}
+				  </if>
+				  AND ltv.START_DATE <![CDATA[ <= ]]> GETDATE() 
+   				) t
+	WHERE t.RN = 1
+	</select>
+	
+	<select id="validLoyaltyPgm" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto" 
+												resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsValidChekResDto">
+	/* LoyTermMasterMapper.validLoyaltyPgm */
+	SELECT VER
+	     		, SUM(CASE WHEN FLAG = 1 AND USE_YN = 'Y' THEN 1 ELSE 0 END) OVER () AS CNT
+	  FROM
+	  ( SELECT ltv.VER        AS VER
+			         , ltp.FLAG       AS FLAG
+			         , ltp.USE_YN       AS USE_YN
+			         , ROW_NUMBER () OVER (PARTITION BY ltv.RID_TERMS ORDER BY ltv.VER DESC, ltp.RID_PGM) AS RN
+	      FROM LOY.LOY_TERMS_VER ltv
+	    LEFT JOIN LOY.LOY_TERMS_PGM ltp ON ltv.RID  =ltp.RID_TERMS_VER
+	    WHERE ltv.FLAG = 1
+	      	AND ltv.RID_TERMS = #{rid}
+	   ) a
+	WHERE RN = 1
+	</select>
+	
+	<select id="validLoyaltyPgmCnt" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto" 
+												resultType="java.lang.Integer">
+	/* LoyTermMasterMapper.validLoyaltyPgmCnt */
+	SELECT COUNT(*)
+	  FROM
+	  ( SELECT ltv.VER        AS VER
+			         , ltp.FLAG       AS FLAG
+			         , ltp.USE_YN       AS USE_YN
+			         , ROW_NUMBER () OVER (PARTITION BY ltv.RID_TERMS ORDER BY ltv.VER DESC) AS RN
+	      FROM LOY.LOY_TERMS_VER ltv
+	    LEFT JOIN LOY.LOY_TERMS_PGM ltp ON ltv.RID  =ltp.RID_TERMS_VER
+	    WHERE ltv.FLAG = 1
+	    AND ltp.USE_YN = 'Y'
+	      	AND ltv.RID_TERMS = #{rid}
+	   ) a
+	WHERE RN = 1
+	</select>
+	
+	<select id="vaildCheckRcvChnl"  parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto" 
+													 resultType="java.lang.Integer">
+	/* LoyTermMasterMapper.vaildCheckRcvChnl */
+    SELECT count(*)
+      FROM LOY.LOY_TERMS_RCV_CHNL
+    WHERE RID_TERMS = #{ridTermsM}
+     	AND MKT_RCV_CHNL_CD = #{mktRcvChnlCd}
+     	AND FLAG = 1
+     <if test="rid !=null">
+      	AND MKT_RCV_CHNL_CD NOT IN (SELECT MKT_RCV_CHNL_CD FROM LOY.LOY_TERMS_RCV_CHNL WHERE RID = #{rid})
+     </if>
+	</select>
+	
+	<select id="checkTermInfoCnt" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+														resultType="java.lang.Integer">
+	/* LoyTermMasterMapper.checkTermInfoCnt */
+	SELECT count(*)
+ 	FROM
+  				( SELECT ltv.TERMS_SUMRY AS termsSumry
+								, ltv.TERMS_CONTS AS termsConts
+								, ROW_NUMBER () OVER (PARTITION BY RID_TERMS ORDER BY VER DESC) AS RN
+					FROM LOY.LOY_TERMS_VER ltv
+				  WHERE ltv.FLAG = 1
+				  <if test="rid != null and rid != ''">
+				  	  AND ltv.RID_TERMS = #{rid}
+				  </if>
+				  <if test="termVerRid != null and termVerRid != ''">
+				  	  AND ltv.RID = #{termVerRid}
+				  </if>
+   				) t
+	WHERE t.RN = 1
+	</select>
+	
+	<select id="validTermsStatCheck" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto"
+														resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsValidChekResDto">
+	/* LoyTermMasterMapper.validTermsStatCheck */
+	SELECT STAT_CD AS statCd
+	FROM LOY.LOY_TERMS
+	WHERE FLAG = 1
+	AND RID = #{rid}
+	</select>
+	
+	<select id="validTermLoyPgmCnt" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto"
+														resultType="java.lang.Integer">
+	/* LoyTermMasterMapper.validTermLoyPgmCnt */
+	SELECT count(*)
+	FROM loy.LOY_TERMS_PGM
+	WHERE RID_PGM = #{pgmRid}
+	AND RID_TERMS_VER = #{verRid}
+	AND FLAG = 1
+	<if test="rid !=null">
+      	AND RID_PGM NOT IN (SELECT RID_PGM FROM LOY.LOY_TERMS_PGM WHERE RID = #{rid})
+     </if>
+	</select>
+	
+	<update id="deleteTermsLoyPgm" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto">
+	/* LoyTermMasterMapper.deleteTermsLoyPgm */
+	DELETE FROM LOY.LOY_TERMS_PGM
+	WHERE RID = #{rid}
+	AND RID_TERMS_VER = #{verRid}
+	</update>
+	
+	<update id="deleteTermsRcvChn" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto">
+	/* LoyTermMasterMapper.deleteTermsRcvChn */
+	DELETE FROM LOY.LOY_TERMS_RCV_CHNL
+	WHERE RID = #{rid}
+	AND RID_TERMS = #{parRid}
+	</update>
+	
+	<!-- 약관 - 마켓팅 수신도으이 항목 신규 마지막순번 채우기 -->
+	<select id="rcvChnlMaxSeq" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsListReqDto" 
+												resultType="java.lang.Integer">
+	/* LoyTermMasterMapper.rcvChnlMaxSeq */
+	SELECT MAX(trc.SEQ_NO)
+  	FROM LOY.LOY_TERMS_RCV_CHNL
+  	WHERE FLAG = 1
+		AND RID_TERMS = #{rid}
+	</select>
+
+	<select id="selectTermsSeqNoChk" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto"
+															resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsDetailListResDto">
+		/* LoyTermMasterMapper.selectTermsSeqNoChk */
+		SELECT tm.rid 				AS rid
+		FROM LOY.LOY_TERMS tm
+		WHERE tm.TERMS_TYPE_CD = #{termsType}
+		AND tm.SEQ_NO = #{termsNo}
+		AND tm.flag=1
+	</select>
+
+	<select id="selectNowSeqNo" parameterType="com.icignal.loyalty.terms.termmaster.dto.request.LoyTermsDetailListReqDto"
+															resultType="com.icignal.loyalty.terms.termmaster.dto.response.LoyTermsDetailListResDto">
+		/* LoyTermMasterMapper.selectNowSeqNo */
+		SELECT 	  
+ 			  tm.seq_no 		AS seqNo
+		FROM 
+			  LOY.LOY_TERMS tm
+		WHERE 
+			tm.rid=	#{rid} 
+	</select>	
+</mapper>

@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.operationpolicymgt.mapper.OperationPolicyMgtMapper">
+
+<!-- /**************************************
+	-	관련 파일				: OperationPolicyMgtService.java(getOperationPolicyList)
+	============================================
+	-	제목					: getOperationPolicyList
+	-	설명					: 운영정책들을 조회해 리스트로 가져온다
+	-	결과형태				: 복수
+	============================================
+	-	입력					: 
+	============================================
+	-	작성자				: jb.kim	
+	-	작성일				: 2020.12.18
+	***************************************/ -->
+
+	
+	<select id="getOperationPolicyList" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyReqDto"
+			resultType="com.icignal.loyalty.operationpolicymgt.dto.response.OperationPolicyResDto">
+			/*OperationPolicyMgtMapper.getOperationPolicyList*/
+		SELECT   LOP.RID											AS rid			
+				,EM.NAME											AS createBy
+				,EM2.NAME											AS modifyBy
+				,com.TO_CHAR(LOP.CREATE_DATE,'yyyy-mm-dd')				AS createDate
+				,com.TO_CHAR(LOP.MODIFY_DATE,'yyyy-mm-dd')				AS modifyDate
+				,LOP.FLAG											AS flag
+				,LOP.RID_PGM										AS ridPgm
+				,LP.PGM_NM											AS pgmNm
+				,LOP.CTG_1_CD										AS ctg1Cd
+				,CC.MARK_NAME										AS ctg1CdNm
+				,LOP.CTG_2_CD										AS ctg2Cd
+				,CC2.MARK_NAME										AS ctg2CdNm
+				,LOP.PLCY_CD										AS plcyCd
+				,CC3.MARK_NAME										AS plcyCdNm
+				,LOP.CONTENTS										AS contents
+				,LOP.USE_YN											AS useYn
+				,${strColumn}
+		FROM LOY.LOY_OPR_PLCY LOP LEFT OUTER JOIN COM.CRM_USER US ON LOP.CREATE_BY = US.RID AND US.FLAG = 1
+								  LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+								  LEFT OUTER JOIN COM.CRM_USER US2 ON LOP.MODIFY_BY = US2.RID AND US2.FLAG = 1
+								  LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+								  LEFT OUTER JOIN LOY.LOY_PGM LP ON LOP.RID_PGM = LP.RID AND LP.FLAG = 1
+								  LEFT OUTER JOIN COM.COMM_CODE CC ON LOP.CTG_1_CD = CC.CODE_NAME AND CC.GROUP_CODE = 'LOY_OPR_PLCY_CTG_1_CD' AND CC.FLAG = 1
+								  LEFT OUTER JOIN COM.COMM_CODE CC2 ON LOP.CTG_2_CD = CC2.CODE_NAME AND CC2.GROUP_CODE = 'LOY_OPR_PLCY_CTG_2_CD' AND CC2.FLAG = 1
+								  LEFT OUTER JOIN COM.COMM_CODE CC3 ON LOP.PLCY_CD = CC3.CODE_NAME AND CC3.GROUP_CODE = 'LOY_OPR_PLCY_CD' AND CC3.FLAG = 1
+		WHERE 1=1
+		  AND LOP.FLAG = 1
+		  AND ${strCondWhere}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+
+	<!-- /**************************************
+	-	관련 파일				: OperationPolicyMgtService.java(getOperationPolicyDetailList)
+	============================================
+	-	제목					: getOperationPolicyDetail1
+	-	설명					: 운영정책들의 상세내용(detail) 에서 서브그리드1 에 해당하는 레코드들을 조회해 리스트로 가져온다
+	-	결과형태				: 복수
+	============================================
+	-	입력					: 
+	============================================
+	-	작성자				: jb.kim
+	-	작성일				: 2020.12.18.
+	***************************************/ -->
+	<select id="getOperationPolicyDetail1" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+			resultType="com.icignal.loyalty.operationpolicymgt.dto.response.OperationPolicyDetailResDto">
+			/*OperationPolicyMgtMapper.getOperationPolicyDetail1*/
+			SELECT   T.rid                 AS rid           
+					,T.create_By           AS createBy     
+					,T.modify_By           AS modifyBy     
+					,T.create_Date         AS createDate   
+					,T.modify_Date         AS modifyDate   
+					,T.flag                AS flag          
+					,T.rid_Opr             AS ridOpr       
+					,T.par_Rid             AS parRid       
+					,T.attr_Cd             AS attrCd       
+					,T.attr_Cd_Nm          AS attrCdNm    
+					,T.data_Type           AS dataType     
+					,T.data_Type_Nm        AS dataTypeNm  
+					,T.data_Val            AS dataVal      
+					,T.data_Val_Mark_Nm    AS dataValMarkNm      
+					,T.contents            AS contents
+					,T.use_Yn              AS useYn
+					,T.single_Val_Yn       AS singleValYn   
+					,${strColumn}     
+			FROM ( 
+					SELECT   LOPD.RID											AS rid
+							,EM.NAME											AS create_By
+							,EM2.NAME 											AS modify_By
+							,com.TO_CHAR(LOPD.CREATE_DATE,'yyyy-mm-dd')				AS create_Date
+							,com.TO_CHAR(LOPD.MODIFY_DATE,'yyyy-mm-dd')				AS modify_Date
+							,LOPD.FLAG											AS flag
+							,LOPD.RID_OPR										AS rid_Opr
+							,LOPD.PAR_RID										AS par_Rid
+							,LOPD.ATTR_CD										AS attr_Cd
+							,CC2.MARK_NAME										AS attr_Cd_Nm
+							,LOPD.DATA_TYPE										AS data_Type
+							,CC3.MARK_NAME										AS data_Type_Nm
+							,LOPD.DATA_VAL	 									AS data_Val
+							,CASE WHEN LOPD.DATA_TYPE = 'CODE' THEN CC.MARK_NAME
+							      WHEN LOPD.DATA_TYPE = 'TEXT' THEN LOPD.DATA_VAL
+                                  WHEN LOPD.DATA_TYPE = 'CALEN' THEN LOPD.DATA_VAL
+																			END AS data_Val_Mark_Nm
+							,LOPD.CONTENTS										AS contents
+							,LOPD.USE_YN										AS use_Yn
+							,LOPD.SINGLE_VAL_YN									AS single_Val_Yn
+					FROM LOY.LOY_OPR_PLCY_DTL LOPD LEFT OUTER JOIN COM.CRM_USER US ON LOPD.CREATE_BY = US.RID AND US.FLAG = 1
+												   LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+												   LEFT OUTER JOIN COM.CRM_USER US2 ON LOPD.MODIFY_BY = US2.RID AND US2.FLAG = 1
+												   LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+												   LEFT OUTER JOIN COM.COMM_CODE CC ON LOPD.DATA_VAL = CC.CODE_NAME AND CC.FLAG = 1 AND LOPD.GROUP_CODE = CC.GROUP_CODE
+												   LEFT OUTER JOIN COM.COMM_CODE CC2 ON LOPD.ATTR_CD = CC2.CODE_NAME AND CC2.GROUP_CODE = 'LOY_OPR_PLCY_ATTR_CD' AND CC2.FLAG = 1
+												   LEFT OUTER JOIN COM.COMM_CODE CC3 ON LOPD.DATA_TYPE = CC3.CODE_NAME AND CC3.GROUP_CODE = 'LOY_OPR_PLCY_DATA_TYPE_CD' AND CC3.FLAG = 1
+					WHERE 1 = 1
+					  <if test="ridOpr == null">
+						AND LOPD.RID_OPR IS NULL
+					  </if>
+					  <if test="ridOpr != null">
+						AND LOPD.RID_OPR = #{ridOpr}
+					  </if>
+					  AND LOPD.PAR_RID IS NULL
+					  AND LOPD.FLAG = 1
+			) T
+		  	WHERE    ${strCondWhere}
+		 		 AND ${strWhere}
+			ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	<!-- /*OperationPolicyMgtMapper.getOperationPolicyDetail1*/
+		SELECT   LOPD.RID											AS rid
+				,EM.NAME											AS createBy
+				,EM2.NAME 											AS modifyBy
+				,com.TO_CHAR(LOPD.CREATE_DATE,'yyyy-mm-dd')				AS createDate
+				,com.TO_CHAR(LOPD.MODIFY_DATE,'yyyy-mm-dd')				AS modifyDate
+				,LOPD.FLAG											AS flag
+				,LOPD.RID_OPR										AS ridOpr
+				,LOPD.PAR_RID										AS parRid
+				,LOPD.ATTR_CD										AS attrCd
+				,CC2.MARK_NAME										AS attrCdNm
+				,LOPD.DATA_TYPE										AS dataType
+				,CC3.MARK_NAME										AS dataTypeNm
+				,LOPD.DATA_VAL	 									AS dataVal
+				,CASE WHEN LOPD.DATA_TYPE = 'CODE' THEN CC.MARK_NAME
+				      WHEN LOPD.DATA_TYPE = 'TEXT' THEN LOPD.DATA_VAL
+																END AS dataValMarkNm
+				,LOPD.CONTENTS										AS contents
+				,LOPD.USE_YN										AS useYn
+				,LOPD.SINGLE_VAL_YN									AS singleValYn
+				,${strColumn}
+		FROM LOY.LOY_OPR_PLCY_DTL LOPD LEFT OUTER JOIN COM.CRM_USER US ON LOPD.CREATE_BY = US.RID AND US.FLAG = 1
+									   LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+									   LEFT OUTER JOIN COM.CRM_USER US2 ON LOPD.MODIFY_BY = US2.RID AND US2.FLAG = 1
+									   LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+									   LEFT OUTER JOIN COM.COMM_CODE CC ON LOPD.DATA_VAL = CC.CODE_NAME AND CC.FLAG = 1 AND LOPD.GROUP_CODE = CC.GROUP_CODE AND CC.LANG = 'ko'
+									   LEFT OUTER JOIN COM.COMM_CODE CC2 ON LOPD.ATTR_CD = CC2.CODE_NAME AND CC2.GROUP_CODE = 'LOY_OPR_PLCY_ATTR_CD' AND CC2.FLAG = 1
+									   LEFT OUTER JOIN COM.COMM_CODE CC3 ON LOPD.DATA_TYPE = CC3.CODE_NAME AND CC3.GROUP_CODE = 'LOY_OPR_PLCY_DATA_TYPE_CD' AND CC3.FLAG = 1
+		WHERE 1 = 1
+		  <if test="ridOpr == null">
+			AND LOPD.RID_OPR IS NULL
+		  </if>
+		  <if test="ridOpr != null">
+			AND LOPD.RID_OPR = #{ridOpr}
+		  </if>
+		  AND LOPD.PAR_RID IS NULL
+		  AND LOPD.FLAG = 1
+		  AND ${strCondWhere}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging} -->
+	
+	
+	
+	<select id="getOperationPolicyDetail2" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+			resultType="com.icignal.loyalty.operationpolicymgt.dto.response.OperationPolicyDetailResDto">
+			/*OperationPolicyMgtMapper.getOperationPolicyDetail2*/
+			SELECT   T.rid                 AS rid           
+					,T.create_By           AS createBy     
+					,T.modify_By           AS modifyBy     
+					,T.create_Date         AS createDate   
+					,T.modify_Date         AS modifyDate   
+					,T.flag                AS flag          
+					,T.rid_Opr             AS ridOpr       
+					,T.par_Rid             AS parRid       
+					,T.attr_Cd             AS attrCd       
+					,T.attr_Cd_Nm          AS attrCdNm    
+					,T.data_Type           AS dataType     
+					,T.data_Type_Nm        AS dataTypeNm  
+					,T.data_Val            AS dataVal      
+					,T.data_Val_Mark_Nm    AS dataValMarkNm      
+					,T.contents            AS contents
+					,T.use_Yn              AS useYn
+					,T.single_Val_Yn       AS singleValYn
+					,${strColumn}         
+			FROM ( 
+					SELECT   LOPD.RID											AS rid
+							,EM.NAME											AS create_By
+							,EM2.NAME 											AS modify_By
+							,com.TO_CHAR(LOPD.CREATE_DATE,'yyyy-mm-dd')				AS create_Date
+							,com.TO_CHAR(LOPD.MODIFY_DATE,'yyyy-mm-dd')				AS modify_Date
+							,LOPD.FLAG											AS flag
+							,LOPD.RID_OPR										AS rid_Opr
+							,LOPD.PAR_RID										AS par_Rid
+							,LOPD.ATTR_CD										AS attr_Cd
+							,CC2.MARK_NAME										AS attr_Cd_Nm
+							,LOPD.DATA_TYPE										AS data_Type
+							,CC3.MARK_NAME										AS data_Type_Nm
+							,LOPD.DATA_VAL	 									AS data_Val
+							,CASE WHEN LOPD.DATA_TYPE = 'CODE' THEN CC.MARK_NAME
+							      WHEN LOPD.DATA_TYPE = 'TEXT' THEN LOPD.DATA_VAL
+							      WHEN LOPD.DATA_TYPE = 'CONTS' THEN LOPD.DATA_VAL
+							      WHEN LOPD.DATA_TYPE = 'CALEN' THEN LOPD.DATA_VAL
+																			END AS data_Val_Mark_Nm
+							,LOPD.CONTENTS										AS contents
+							,LOPD.USE_YN										AS use_Yn
+							,LOPD.SINGLE_VAL_YN									AS single_Val_Yn
+					FROM LOY.LOY_OPR_PLCY_DTL LOPD LEFT OUTER JOIN COM.CRM_USER US ON LOPD.CREATE_BY = US.RID AND US.FLAG = 1
+												   LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+												   LEFT OUTER JOIN COM.CRM_USER US2 ON LOPD.MODIFY_BY = US2.RID AND US2.FLAG = 1
+												   LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+												   LEFT OUTER JOIN COM.COMM_CODE CC ON LOPD.DATA_VAL = CC.CODE_NAME AND CC.FLAG = 1 AND LOPD.GROUP_CODE = CC.GROUP_CODE
+												   LEFT OUTER JOIN COM.COMM_CODE CC2 ON LOPD.ATTR_CD = CC2.CODE_NAME AND CC2.GROUP_CODE = 'LOY_OPR_PLCY_ATTR_CD' AND CC2.FLAG = 1
+												   LEFT OUTER JOIN COM.COMM_CODE CC3 ON LOPD.DATA_TYPE = CC3.CODE_NAME AND CC3.GROUP_CODE = 'LOY_OPR_PLCY_DATA_TYPE_CD' AND CC3.FLAG = 1
+												   LEFT OUTER JOIN COM.MKT_CONTS_MST MCM ON LOPD.DATA_VAL = MCM.CONTS_NO AND MCM.FLAG = 1
+					WHERE 1 = 1 
+					  <if test="parRid == null or ridOpr == null">
+						AND LOPD.PAR_RID IS NULL
+						AND LOPD.RID_OPR IS NULL
+					  </if>
+					  <if test="parRid != null and ridOpr != null">
+						AND LOPD.PAR_RID = #{parRid}
+						AND LOPD.RID_OPR = #{ridOpr}
+					  </if>
+					  AND LOPD.FLAG = 1
+			) T
+		  	WHERE    ${strCondWhere}
+		 		 AND ${strWhere}
+			ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	<!-- 
+		WHEN LOPD.DATA_TYPE = 'CONTS' THEN MCM.CONTS_NM
+	 -->
+	 <!-- 
+	 /*OperationPolicyMgtMapper.getOperationPolicyDetail2*/
+		SELECT   LOPD.RID											AS rid
+				,EM.NAME											AS createBy
+				,EM2.NAME 											AS modifyBy
+				,com.TO_CHAR(LOPD.CREATE_DATE,'yyyy-mm-dd')				AS createDate
+				,com.TO_CHAR(LOPD.MODIFY_DATE,'yyyy-mm-dd')				AS modifyDate
+				,LOPD.FLAG											AS flag
+				,LOPD.RID_OPR										AS ridOpr
+				,LOPD.PAR_RID										AS parRid
+				,LOPD.ATTR_CD										AS attrCd
+				,LOPD.DATA_TYPE										AS dataType
+				,LOPD.DATA_VAL										AS dataVal
+				,CASE WHEN LOPD.DATA_TYPE = 'CODE' THEN CC.MARK_NAME
+				      WHEN LOPD.DATA_TYPE = 'TEXT' THEN LOPD.DATA_VAL
+				      WHEN LOPD.DATA_TYPE = 'CONTS' THEN LOPD.DATA_VAL
+																END AS dataValMarkNm
+				,LOPD.CONTENTS										AS contents
+				,LOPD.USE_YN										AS useYn
+				,LOPD.SINGLE_VAL_YN									AS singleValYn
+				,${strColumn}
+		FROM LOY.LOY_OPR_PLCY_DTL LOPD LEFT OUTER JOIN COM.CRM_USER US ON LOPD.CREATE_BY = US.RID AND US.FLAG = 1
+									   LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+									   LEFT OUTER JOIN COM.CRM_USER US2 ON LOPD.MODIFY_BY = US2.RID AND US2.FLAG = 1
+									   LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+					   				   LEFT OUTER JOIN COM.COMM_CODE CC ON LOPD.DATA_VAL = CC.CODE_NAME AND CC.LANG = 'ko'
+									   									   AND CC.FLAG = 1 AND LOPD.GROUP_CODE = CC.GROUP_CODE
+		WHERE 1 = 1 
+		  <if test="parRid == null or ridOpr == null">
+		  	AND LOPD.PAR_RID IS NULL
+			AND LOPD.RID_OPR IS NULL
+		  </if>
+		  <if test="parRid != null and ridOpr != null">
+			AND LOPD.PAR_RID = #{parRid}
+			AND LOPD.RID_OPR = #{ridOpr}
+		  </if>
+		  AND LOPD.FLAG = 1
+		  AND ${strCondWhere}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	  -->
+	 
+	
+	<!-- 운영정책 생성  -->
+	<insert id="addOperationPolicy" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyReqDto">
+	/*OperationPolicyMgtMapper.addOperationPolicy*/
+		INSERT INTO LOY.LOY_OPR_PLCY (
+				 RID
+				,CREATE_BY
+				,MODIFY_BY
+				,RID_PGM
+				,CTG_1_CD
+				,CTG_2_CD
+				,PLCY_CD
+				,CONTENTS
+				,USE_YN   )
+		VALUES (
+				 #{rid}
+				,#{createBy}
+				,#{modifyBy}
+				,#{ridPgm}
+				,#{ctg1Cd}
+				,#{ctg2Cd}
+				,#{plcyCd}
+				,#{contents}
+				,#{useYn}   )
+	</insert>
+	<!-- loyProgramId: 로열티프로그램아이디 멤버변수 -->
+	
+	
+	<!-- 운영정책 팝업창에서 보여줄 데이터 조회 -->
+	<select id="getOperationPolicyPop" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyReqDto"
+			resultType="com.icignal.loyalty.operationpolicymgt.dto.response.OperationPolicyResDto">
+			/*OperationPolicyMgtMapper.getOperationPolicyPop*/
+		SELECT   LOP.RID											AS rid			
+				,EM.NAME											AS createBy
+				,EM2.NAME											AS modifyBy
+				,com.TO_CHAR(LOP.CREATE_DATE,'yyyy-mm-dd hh24:mi:ss')	AS createDate
+				,com.TO_CHAR(LOP.MODIFY_DATE,'yyyy-mm-dd hh24:mi:ss')	AS modifyDate
+				,LOP.FLAG											AS flag
+				,LOP.RID_PGM										AS ridPgm
+				,LP.PGM_NM											AS pgmNm
+				,LOP.CTG_1_CD										AS ctg1Cd
+				,LOP.CTG_2_CD										AS ctg2Cd
+				,LOP.PLCY_CD										AS plcyCd
+				,LOP.CONTENTS										AS contents
+				,LOP.USE_YN											AS useYn
+		FROM LOY.LOY_OPR_PLCY LOP LEFT OUTER JOIN COM.CRM_USER US ON LOP.CREATE_BY = US.RID AND US.FLAG = 1
+								  LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+								  LEFT OUTER JOIN COM.CRM_USER US2 ON LOP.MODIFY_BY = US2.RID AND US2.FLAG = 1
+								  LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+								  LEFT OUTER JOIN LOY.LOY_PGM LP ON LOP.RID_PGM = LP.RID AND LP.FLAG = 1
+		WHERE 1=1
+		  AND LOP.RID = #{rid}
+		  AND LOP.FLAG = 1
+	</select>
+	
+	
+	<!-- 운영정책 수정  -->
+	<update id="updateOperationPolicy" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyReqDto">
+	/*OperationPolicyMgtMapper.updateOperationPolicy*/
+		UPDATE LOY.LOY_OPR_PLCY
+		SET  MODIFY_BY = #{modifyBy}
+			,MODIFY_DATE = GETDATE()
+			,RID_PGM = #{ridPgm}
+			,CTG_1_CD = #{ctg1Cd}
+			,CTG_2_CD = #{ctg2Cd}
+			,PLCY_CD = #{plcyCd}
+			,CONTENTS = #{contents}
+			,USE_YN = #{useYn}
+		WHERE RID = #{rid}
+	</update>
+	
+	
+	<!-- 운영정책 삭제 -->
+	<insert id="deleteOperationPolicy" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyReqDto">
+		/*OperationPolicyMgtMapper.deleteOperationPolicy*/
+			UPDATE LOY.LOY_OPR_PLCY
+			SET flag = flag + 1
+			WHERE RID = #{rid}
+	</insert>
+	
+	<select id="checkOperationPolicyDtl" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyReqDto" resultType="java.lang.Integer">
+		/*OperationPolicyMgtMapper.checkOperationPolicyDtl*/
+			SELECT count(1) FROM loy.LOY_OPR_PLCY_DTL lopd
+			WHERE 1=1 
+			AND FLAG =1
+			AND RID_OPR =#{rid}
+	</select>
+	
+	<update id ="deleteOperationPolicyDtl" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyReqDto">
+		/*OperationPolicyMgtMapper.deleteOperationPolicyDtl*/
+			UPDATE LOY.LOY_OPR_PLCY_DTL
+			SET flag = flag + 1
+			WHERE RID_OPR =#{rid}			
+	</update>
+	
+	
+	<!-- 디테일 그리드들의 히스토리 조회 -->
+	<select id="selectOprDtlHist" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+			resultType="com.icignal.loyalty.operationpolicymgt.dto.response.OperationPolicyDetailResDto">
+			/* OperationPolicyMgtMapper.selectOprDtlHist */
+		SELECT   LOPD.RID											AS rid
+				,EM.NAME											AS createBy
+				,EM2.NAME 											AS modifyBy
+				,com.TO_CHAR(LOPD.CREATE_DATE,'yyyy-mm-dd')				AS createDate
+				,com.TO_CHAR(LOPD.MODIFY_DATE,'yyyy-mm-dd')				AS modifyDate
+				,LOPD.FLAG											AS flag
+				,LOPD.RID_OPR										AS ridOpr
+				,LOPD.PAR_RID										AS parRid
+				,LOPD.ATTR_CD										AS attrCd
+				,CC.MARK_NAME										AS attrCdNm
+				,LOPD.DATA_TYPE										AS dataType
+				,CC2.MARK_NAME										AS dataTypeNm
+				,LOPD.DATA_VAL										AS dataVal
+				,LOPD.CONTENTS										AS contents
+				,LOPD.USE_YN										AS useYn
+				,LOPD.SINGLE_VAL_YN									AS singleValYn
+				,${strColumn}
+		FROM LOY.LOY_OPR_PLCY_DTL_HIST LOPD LEFT OUTER JOIN COM.CRM_USER US ON LOPD.CREATE_BY = US.RID AND US.FLAG = 1
+										    LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+										    LEFT OUTER JOIN COM.CRM_USER US2 ON LOPD.MODIFY_BY = US2.RID AND US2.FLAG = 1
+										    LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+										    LEFT OUTER JOIN COM.COMM_CODE CC ON LOPD.ATTR_CD = CC.CODE_NAME AND CC.GROUP_CODE = 'LOY_OPR_PLCY_ATTR_CD' AND CC.FLAG = 1
+										    LEFT OUTER JOIN COM.COMM_CODE CC2 ON LOPD.DATA_TYPE = CC2.CODE_NAME AND CC2.GROUP_CODE = 'LOY_OPR_PLCY_DATA_TYPE_CD' AND CC2.FLAG = 1
+		WHERE 1 = 1
+		  AND LOPD.FLAG = 1
+		  AND LOPD.RID_OPR_DTL = #{oprDtlRid}
+		  AND ${strCondWhere}
+		  AND ${strWhere}
+		ORDER BY ${strOrderby}
+		
+		${strEndPaging}
+	</select>
+	<!-- 
+			,CC.MARK_NAME										AS attrCdNm
+		LEFT OUTER JOIN COM.COMM_CODE CC ON LOPD.ATTR_CD = CC.CODE_NAME AND CC.FLAG = 1
+	 -->	
+	
+	<!-- 정책속성값 데이터 / 세부속성 데이터 등을 insert하는 쿼리 -->
+	<insert id="addOperationPolicyDetail" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto">
+	/* OperationPolicyMgtMapper.addOperationPolicyDetail */
+		INSERT INTO LOY.LOY_OPR_PLCY_DTL (
+				 RID
+				,CREATE_BY
+				,MODIFY_BY
+				,RID_OPR
+				,PAR_RID
+				,ATTR_CD
+				,DATA_TYPE
+				,DATA_VAL
+				,CONTENTS
+				,USE_YN
+				,GROUP_CODE
+				,SINGLE_VAL_YN		   )
+		VALUES (
+				 #{rid}
+				,#{createBy}
+				,#{modifyBy}
+				,#{ridOpr}
+				,#{parRid}
+				,#{attrCd}
+				,#{dataType}
+				,#{dataVal}			
+				,#{contents}
+				,#{useYn}
+				,#{groupCd}
+				,#{singleValYn}		   )
+	</insert>
+	<!-- ,SINGLE_VAL_YN / ,#{singleValYn} -->
+	
+	
+	<!-- 정책속성값 데이터 / 세부속성 데이터 등에 insert 시, 해당 건에 대한 history 저장 쿼리  -->
+	<insert id="addOperationPolicyDetailHist" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto">
+	/*OperationPolicyMgtMapper.addOperationPolicyDetailHist*/
+		INSERT INTO LOY.LOY_OPR_PLCY_DTL_HIST (
+				 RID
+				,CREATE_BY
+				,MODIFY_BY
+				,RID_OPR
+				,PAR_RID
+				,ATTR_CD
+				,DATA_TYPE
+				,DATA_VAL
+				,CONTENTS
+				,USE_YN
+				,GROUP_CODE
+				,SINGLE_VAL_YN
+				,RID_OPR_DTL   )
+		VALUES (
+				 #{rid}
+				,#{createBy}
+				,#{modifyBy}
+				,#{ridOpr}
+				,#{parRid}
+				,#{attrCd}
+				,#{dataType}
+				,#{dataVal}			
+				,#{contents}
+				,#{useYn}
+				,#{groupCd}
+				,#{singleValYn}
+				,#{oprDtlRid}   )
+	</insert>
+	<!-- ,SINGLE_VAL_YN / ,#{singleValYn} -->
+	
+	
+	<!-- 디테일그리드(정책속성값/세부사항 그리드)에서 수정 전 내용 로드해오는 쿼리 -->
+	<select id="getOprPlcyDetailBeforeUpdate" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+			resultType="com.icignal.loyalty.operationpolicymgt.dto.response.OperationPolicyDetailResDto">
+		/* OperationPolicyMgtMapper.getOprPlcyDetailBeforeUpdate */ 
+		SELECT   t.rid					AS rid
+				,t.createBy				AS createBy
+				,t.modifyBy				AS modifyBy
+				,t.createDate			AS createDate
+				,t.modifyDate			AS modifyDate
+				,t.flag					AS flag
+				,t.ridOpr				AS ridOpr
+				,t.parRid				AS parRid
+				,t.attrCd				AS attrCd
+				,t.dataType				AS dataType
+				,t.dataVal				AS dataVal
+				,CASE WHEN t.dataType = 'CONTS' THEN MC.CONTS_NM
+												ELSE cc.MARK_NAME
+												END AS dataValMarkNm
+				,t.contents				AS contents	
+				,t.useYn				AS useYn
+				,t.groupCd				AS groupCd
+				,t.singleValYn			AS singleValYn
+		FROM (
+				SELECT   LOPD.RID											AS rid
+						,EM.NAME											AS createBy
+						,EM2.NAME 											AS modifyBy
+						,com.TO_CHAR(LOPD.CREATE_DATE,'yyyy-mm-dd')				AS createDate
+						,com.TO_CHAR(LOPD.MODIFY_DATE,'yyyy-mm-dd')				AS modifyDate
+						,LOPD.FLAG											AS flag
+						,LOPD.RID_OPR										AS ridOpr
+						,LOPD.PAR_RID										AS parRid
+						,LOPD.ATTR_CD										AS attrCd
+						,LOPD.DATA_TYPE										AS dataType
+						,LOPD.DATA_VAL										AS dataVal
+						,LOPD.CONTENTS										AS contents
+						,LOPD.USE_YN										AS useYn
+						,LOPD.GROUP_CODE									AS groupCd
+						,LOPD.SINGLE_VAL_YN									AS singleValYn
+				FROM LOY.LOY_OPR_PLCY_DTL LOPD LEFT OUTER JOIN COM.CRM_USER US ON LOPD.CREATE_BY = US.RID AND US.FLAG = 1
+											   LEFT OUTER JOIN COM.EMPLOYEE EM ON US.ID_EMPLOYEE = EM.ID AND EM.FLAG = 1
+											   LEFT OUTER JOIN COM.CRM_USER US2 ON LOPD.MODIFY_BY = US2.RID AND US2.FLAG = 1
+											   LEFT OUTER JOIN COM.EMPLOYEE EM2 ON US2.ID_EMPLOYEE = EM2.ID AND EM2.FLAG = 1
+				WHERE 1 = 1
+				  AND LOPD.RID = #{rid}
+				  AND LOPD.FLAG = 1
+			  ) t
+			LEFT OUTER JOIN COM.COMM_CODE cc ON t.dataVal = cc.CODE_NAME AND t.groupCd = cc.GROUP_CODE AND cc.FLAG = 1
+			LEFT OUTER JOIN COM.MKT_CONTS_MST MC ON t.dataVal = MC.CONTS_NO AND MC.FLAG = 1
+	</select>
+	
+	<!-- 정책속성값 항목  수정 / 또는 세부속성 항목 수정  -->
+	<update id="updateOperationPolicyDetail" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto">
+		/* OperationPolicyMgtMapper.updateOperationPolicyDetail */
+		UPDATE LOY.LOY_OPR_PLCY_DTL
+		SET  DATA_TYPE = #{dataType}
+			,DATA_VAL = #{dataVal} 
+			,ATTR_CD = #{attrCd}
+			,USE_YN = #{useYn}
+			,CONTENTS = #{contents}
+			,GROUP_CODE = #{groupCd}
+			,SINGLE_VAL_YN = #{singleValYn}
+		WHERE RID = #{rid}
+	</update>
+	
+	<!-- 정책속성값 항목 삭제 / 또는 세부속성 항목 삭제(논리삭졔)-->
+	<insert id="deleteOperationPolicyDetail" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto">
+			/* OperationPolicyMgtMapper.deleteOperationPolicyDetail */
+		UPDATE LOY.LOY_OPR_PLCY_DTL
+		SET flag = flag + 1
+		WHERE RID = #{rid}
+	</insert>
+	
+	<!-- 정책속성값/세부속성(LOY_OPR_PLCY_DTL) 에 insert/update 시, 사전에 단일값여부 부분을 체크해서 알려주는 쿼리  -->
+	<select id="checkAttrCdSingleValYn" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+		    resultType="int">
+		/* OperationPolicyMgtMapper.checkAttrCdSingleValYn */
+		SELECT COUNT(*)
+		FROM (
+				SELECT *
+				FROM LOY.LOY_OPR_PLCY_DTL LOPD
+				WHERE   1 = 1
+				<if test="parRid == null">
+					AND LOPD.PAR_RID IS NULL
+				</if>
+				<if test="parRid != null">
+					AND LOPD.PAR_RID = #{parRid}
+				</if>
+					AND LOPD.RID_OPR = #{ridOpr}
+					AND LOPD.ATTR_CD = #{attrCd}
+					AND LOPD.SINGLE_VAL_YN = 'Y'
+					AND LOPD.FLAG = 1
+		)
+	</select>
+	  
+	<!-- [INSERT 전 검사] 1단계: 동일한 ATTR_CD값이 존재하고 있는가 검사하는 쿼리 --> 
+	<select id="countSameAttrCd" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+			 					resultType="int">
+	/* OperationPolicyMgtMapper.countSameAttrCd */
+	SELECT COUNT(*)
+	FROM LOY.LOY_OPR_PLCY_DTL LOPD
+	WHERE   1 = 1
+	AND LOPD.FLAG = 1
+	AND LOPD.RID_OPR = #{ridOpr}
+	<if test="parRid == null">
+	AND LOPD.PAR_RID IS NULL
+	</if>
+	<if test="parRid != null">
+	AND LOPD.PAR_RID = #{parRid}
+	</if>
+	AND LOPD.ATTR_CD = #{attrCd}
+	</select>
+	
+	<!-- [INSERT 전 검사] 2단계: 동일한 ATTR_CD값이 있는 레코드들 중에서, 단일값여부가 Y인게 있는가 검사하는 쿼리 -->
+	<select id="countSameAttrCdYes" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+		    						resultType="int">
+	/* OperationPolicyMgtMapper.countSameAttrCdYes */
+	SELECT COUNT(*)
+	FROM LOY.LOY_OPR_PLCY_DTL LOPD
+	WHERE   1 = 1
+	AND LOPD.FLAG = 1
+	AND LOPD.RID_OPR = #{ridOpr}
+	<if test="parRid == null">
+	AND LOPD.PAR_RID IS NULL
+	</if>
+	<if test="parRid != null">
+	AND LOPD.PAR_RID = #{parRid}
+	</if>
+	AND LOPD.ATTR_CD = #{attrCd}
+	AND LOPD.SINGLE_VAL_YN = 'Y'
+	</select>
+	
+	<!-- 그 레코드의 rid값을 알아내는 쿼리 -->
+	<select id="getTheRecordRid" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+		    resultType="String">
+		 /* OperationPolicyMgtMapper.getTheRecordRid */
+		SELECT LOPD.RID
+		FROM LOY.LOY_OPR_PLCY_DTL LOPD
+		WHERE   1 = 1
+			AND LOPD.FLAG = 1
+			AND LOPD.RID_OPR = #{ridOpr}
+				<if test="parRid == null">
+					AND LOPD.PAR_RID IS NULL
+				</if>
+				<if test="parRid != null">
+					AND LOPD.PAR_RID = #{parRid}
+				</if>
+			AND LOPD.ATTR_CD = #{attrCd}
+	</select>
+	
+	<!-- LOY_OPR_PLCY_DTL안에서, 현재 곧 저장될 내용의 attrCd와 동일한 ATTR_CD값의 레코드가 존재하고 있는가 검사하는 쿼리
+	<select id="countSameAttrCdRecord" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto"
+		    resultType="int">
+		/* OperationPolicyMgtMapper.countSameAttrCdRecord */
+		 SELECT COUNT(*)
+		 FROM (
+				SELECT *
+				FROM LOY.LOY_OPR_PLCY_DTL LOPD
+				WHERE 1=1
+				AND LOPD.FLAG = 1
+				AND LOPD.ATTR_CD = #{attrCd}
+				AND LOPD.RID_OPR = #{ridOpr}
+				<if test="parRid == null">
+					AND LOPD.PAR_RID IS NULL
+				</if>
+				<if test="parRid != null">
+					AND LOPD.PAR_RID = #{parRid}
+				</if>
+		 )
+	</select> -->
+	
+	<!-- 해당 건과 동일한 attrCd를 가진 레코드들의 SINGLE_VAL_YN들울 모두 'N'으로 수정해주는 쿼리 
+	<update id="updateAllSingleValYnToN" parameterType="com.icignal.loyalty.operationpolicymgt.dto.request.OperationPolicyDetailReqDto">
+		/* OperationPolicyMgtMapper.updateAllSingleValYnToN */ 
+		UPDATE LOY.LOY_OPR_PLCY_DTL LOPD
+		SET LOPD.SINGLE_VAL_YN = 'N'
+		WHERE 1=1
+		AND LOPD.ATTR_CD = #{attrCd}
+		AND LOPD.RID_OPR = #{ridOpr}
+		<if test="parRid == null">
+			AND LOPD.PAR_RID IS NULL
+		</if>
+		<if test="parRid != null">
+			AND LOPD.PAR_RID = #{parRid}
+		</if>
+	</update> -->
+
+
+
+</mapper>

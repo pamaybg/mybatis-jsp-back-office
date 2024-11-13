@@ -1,0 +1,1327 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.employee.mapper.SystemEmployeeMapper">
+    
+    <update id="deleteEmployee" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeDeleteReqDto">
+    /* SystemEmployeeMapper.deleteEmployee */
+        update com.employee
+        set
+            flag = flag + 1
+            , modify_by = #{modifyBy}
+            , modify_date = GETDATE()
+        where
+            id in
+         <foreach collection="listEmployeeId" item="item" separator="," close=")" open="(">
+                #{item}
+        </foreach>
+    </update>
+    
+    	<update id="deleteEmpId" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeDeleteReqDto">
+		/* SystemEmployeeMapper.deleteEmpId */
+		update com.employee
+		set
+			flag = flag + 1
+			, modify_by = #{modifyBy}
+			, modify_date = GETDATE()
+		where
+			id in
+		 <foreach collection="listEmployeeId" item="item" separator="," close=")" open="(">
+				#{item}
+		</foreach>
+	</update>
+	
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 직원과 매장 관계 삭제
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	***************************************/ -->
+	<delete id="deleteEmpAccRel" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeDeleteReqDto">
+	/* SystemEmployeeMapper.deleteEmpAccRel */
+		DELETE FROM com.emp_acc_rel
+		WHERE ${strSVCType}
+		<if test="listEmployeeId.size() != 0">
+		AND
+			 <foreach collection="listEmployeeId" item="item" separator="," close=")" open="emp_id in (">
+					#{item}
+			</foreach>
+		</if>
+	</delete>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getAuthGroupListByEmpIdAndRidUser)
+	============================================
+	- 제목 : 로그인 사용자 소유 권한그룹 조회 리스트 출력
+	- 설명 : 로그인 사용자 소유 권한그룹 조회 리스트 출력
+	- 결과형태 :
+	============================================
+	- 입력 : rid, empId
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<select id="getAuthGroupListByEmpIdAndRidUser" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemGetAuthGroupListByEIRUReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemGetAuthGroupListByEIRUResDto">
+		/* SystemEmployeeMapper.getAuthGroupListByEmpIdAndRidUser */
+		select
+		aur.id as id
+		, ag.aut_group_nm as authGroupName
+		, ag.AUTH_DATA_GROUP_TYPE as authGroupType
+		, ag.AUT_GROUP_DESC as authGroupDesc
+		, CONVERT(VARCHAR, aur.MODIFY_DATE, 120) as modifyDate
+		, aur.aut_group_id as autGroupId
+		, ${strColumn}
+		from com.auth_user_rel aur
+		join com.auth_group ag on aur.AUT_GROUP_ID = ag.id and ag.flag = 1
+		join com.crm_user cu on aur.rid_user = cu.rid and cu.flag = 1
+		join com.employee e on cu.ID_EMPLOYEE = e.id and e.flag = 1
+		where
+		aur.rid_user = #{rid}
+		<!-- and aur.emp_id = #{empId} -->
+		and aur.flag = 1
+		and ${strSVCType}
+		and ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getUserListByEmpId)
+	============================================
+	- 제목 : 로그인 사용자 정보 조회 리스트 출력
+	- 설명 : 로그인 사용자 정보 조회 리스트 출력
+	- 결과형태 :
+	============================================
+	- 입력 : empId
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<select id="getUserListByEmpId" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemGetUserListByEIRequestDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemGetUserListByEIResDto">
+		/* SystemEmployeeMapper.getUserListByEmpId*/
+		select 
+		cu.rid as rid
+		, cu.user_id as userId
+		, cu.PW_EXPIR_DATE as pwExpireDate
+		, lp.pgm_nm as pgmNm
+		, cu.USER_PW_CNT as userPwCnt
+		, com.TO_CHAR( cu.ACES_START_DATE,'yyyy-mm-dd') AS acesStartDate
+		, com.TO_CHAR(cu.ACES_END_DATE,'yyyy-mm-dd') AS acesEndDate
+		, ${strColumn}
+		from com.crm_user cu
+		join com.employee e on cu.id_employee = e.id
+		left outer join loy.loy_pgm lp on cu.rid_loy_pgm = lp.rid and lp.flag = 1
+		where e.id = #{empId}
+		and cu.flag = 1
+		and ${strSVCType}
+		and ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 직원 리스트 조회
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	***************************************/ -->
+	<select id="selectEmployeeList" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemEmployeeItemDto">
+		/* SystemEmployeeMapper.selectEmployeeList */
+	SELECT ${strColumn}  
+		  , T.id
+ 		  , T.employeeNo	
+ 		  , T.employeeName
+ 		  , T.position
+ 		  , T.responsibility
+ 		  , T.storeName
+ 		  , T.workStatus
+ 		  , T.adminUser
+ 		  , T.storeId
+ 		  , T.storeType
+		  , T.employeeType
+		  , T.xAuthType
+ 		FROM 
+		(
+		SELECT 
+			  e.id as id
+			, e.emp_no as employeeNo
+			, e.name as employeeName
+			, e.position as position
+			, e.responsibility as responsibility
+			, cd.div_nm as storeName
+			, e.work_status as workStatus
+			, e.admin_user as adminUser
+			, cd.rid as storeId
+			, cd.div_type_cd as storeType
+			, e.TYPE AS employeeType
+			, e.X_AUTH_TYPE AS xAuthType
+		FROM com.employee e
+		LEFT OUTER JOIN com.crm_division cd ON e.rid_division = cd.rid
+		WHERE ${strCondWhere} AND e.FLAG = 1
+		<if test="storeId != null">
+		AND cd.RID = #{storeId}
+		</if>
+	UNION
+		SELECT
+			  e.id as id
+			, e.emp_no as employeeNo
+			, e.name as employeeName
+			, e.position as position
+			, e.responsibility as responsibility
+			, cd.div_nm as storeName
+			, e.work_status as workStatus
+			, e.admin_user as adminUser
+			, cd.rid as storeId
+			, cd.div_type_cd as storeType
+			, e.TYPE AS employeeType
+			, e.X_AUTH_TYPE AS xAuthType
+		FROM com.employee e
+		LEFT OUTER JOIN com.crm_division cd ON e.rid_division = cd.rid
+		WHERE ${strCondWhere} AND e.FLAG = 1
+		<if test="storeId != null">
+		AND cd.RID_PAR_DIV = #{storeId}
+		</if>
+	    ) T
+		WHERE ${strWhere}
+	    ORDER BY ${strOrderby}
+		${strEndPaging} 
+
+<!--   본사 직원(최상위 명)만 나오기하는 쿼리
+		<if test="storeId != null and storeId != ''">
+			and cd.rid = #{storeId}
+		</if> -->
+
+<!-- 		<if test="divisionList != null and divisionList != ''"> -->
+<!-- 			 <foreach collection="divisionList" item="item" separator=", " close=")" open=" AND (cd.rid IN ("> -->
+<!-- 				#{item} -->
+<!-- 			</foreach> -->
+<!-- 			OR cd.rid = #{storeId}) -->
+<!-- 		</if> -->
+<!-- 		<choose> -->
+<!-- 			<when test="(divisionList != null and divisionList != '') and (storeId != null and storeId != '')"> -->
+<!-- 				 <foreach collection="divisionList" item="item" separator=", " close=")" open=" AND (cd.rid IN ("> -->
+<!-- 					#{item} -->
+<!-- 				</foreach> -->
+<!-- 				OR cd.rid = #{storeId}) -->
+<!-- 			</when> -->
+<!-- 			<when test=""></when> -->
+<!-- 		</choose> -->
+		<!--
+		<isEmpty property="divisionList">
+			AND cd.rid = #{storeId}
+		</isEmpty>
+		  -->
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getIpAccessControlList)
+	============================================
+	- 제목 : 로그인 사용자 IP접근제어 리스트 조회
+	- 설명 : 로그인 사용자 IP접근제어 리스트 조회
+	- 결과형태 :
+	============================================
+	- 입력 : rid
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<select id="selectIpAccessControlList" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemGetIpAccessControlListReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemGetIpAccessControlListResDto">
+		/* SystemEmployeeMapper.selectIpAccessControlList */
+		SELECT 
+		a.rid AS rid
+		<!-- , a.modify_by AS modifyBy -->
+		<!-- , a.modify_date AS modifyDate -->
+		, a.access_ip_addr AS accessIpAddr
+		<!-- , b.mark_name AS aclType -->
+		, a.acl_type AS aclTypeCd
+		<!-- , c.mark_name AS useYn -->
+		, a.use_yn AS useYnCd
+		, u.user_id AS userId
+		, ${strColumn}
+		FROM com.user_acl a
+		INNER JOIN com.crm_user u ON a.RID_CRM_USER = u.rid AND a.flag = '1'
+		<!-- LEFT OUTER JOIN com.comm_code b ON a.acl_type = b.code_name AND
+		b.group_code = 'ACL_TYPE' AND b.country = #{country} -->
+		<!-- LEFT OUTER JOIN com.comm_code c ON a.use_yn = c.code_name AND c.group_code
+		= 'YES_NO_FLAG' AND c.country = #{country} -->
+		WHERE
+		u.rid = #{rid}
+		AND a.flag = '1'
+		AND ${strSVCType}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (setIpAccessControlHist)
+	============================================
+	- 제목 : 로그인 사용자 IP접근제어 이력 신규
+	- 설명 : 로그인 사용자 IP접근제어 이력 신규
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<insert id="insertIpAccessControlHist" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemSetIpAccessControlReqDto" useGeneratedKeys="false">
+		/* SystemEmployeeMapper.insertIpAccessControlHist */
+		INSERT INTO com.user_acl_hist
+		(
+			RID,
+			CREATE_BY,
+			MODIFY_BY,
+			CREATE_DATE,
+			MODIFY_DATE,
+			FLAG,
+		<!-- 	COUNTRY, -->
+			CURRENCY,
+		<!-- 	APP_SERVICE_TYPE, -->
+		<!-- 	ACCNT_ID, -->
+			<if test="ridCrmuser != null and ridCrmuser != ''">
+				RID_CRM_USER,
+			</if>
+			ACL_TYPE,
+			ACCESS_IP_ADDR,
+			USE_YN,
+			CREATOR_IP_ADDR
+		)
+		VALUES
+		(
+			com.getNewID('A'),
+			#{empId},
+			#{empId},
+			GETDATE(),
+			GETDATE(),
+			'1',
+		<!-- 	#{country}, -->
+			'KRW',
+		<!-- 	#{appServiceId}, -->
+		<!-- 	#{accountId}, -->
+			<if test="ridCrmuser != null and ridCrmuser != ''">
+				#{ridCrmuser},
+			</if>
+			#{aclType},
+			#{accessIpAddr},
+			#{useYn},
+			#{creatorIpAddr}
+		)
+	</insert>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (removeIpAccessControl)
+	============================================
+	- 제목 : 로그인 사용자 IP접근제어 삭제
+	- 설명 : 로그인 사용자 IP접근제어 삭제
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<update id="deleteIpAccessControl" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemSetIpAccessControlReqDto">
+		/* SystemEmployeeMapper.deleteIpAccessControl */
+		UPDATE com.user_acl
+		SET
+		modify_by = #{empId}
+		, modify_date = GETDATE()
+		, flag = flag + 1
+		, CREATOR_IP_ADDR = #{creatorIpAddr}
+		WHERE
+		RID = #{ridUserAcl}
+	</update>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (deleteAuthGroupByRid)
+	============================================
+	- 제목 : 로그인 사용자 소유 권한그룹 삭제
+	- 설명 : 로그인 사용자 소유 권한그룹 삭제
+	- 결과형태 :
+	============================================
+	- 입력 : empId, id
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<update id="deleteAuthGroupByRid" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemDeleteAuthGroupByRidReqDto">
+		/* SystemEmployeeMapper.deleteAuthGroupByRid */
+		update com.auth_user_rel
+		set flag = flag + 1
+		, modify_by = #{empId}
+		, modify_date = GETDATE()
+		where
+		id = #{id}
+	</update>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (deleteUserDetail)
+	============================================
+	- 제목 : 로그인 사용자 정보 삭제
+	- 설명 : 로그인 사용자 정보 삭제
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<update id="deleteUserDetail" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto">
+		/* SystemEmployeeMapper.deleteUserDetail */
+		update com.crm_user
+		set
+		flag = flag + 1
+		, modify_date = GETDATE()
+		, modify_by = #{empId}
+		where
+		rid = #{rid}
+	</update>
+
+	<update id="deleteUserByEmpId" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeDeleteReqDto">
+		/* SystemEmployeeMapper.deleteUserByEmpId */
+		update com.crm_user
+		set
+			flag = flag + 1
+		  , modify_date = GETDATE()
+		  , modify_by = #{modifyBy}
+		where
+			id_employee in
+		<foreach collection="listEmployeeId" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</update>
+	
+	<update id="deleteAuthUserDetailByEmpId" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeDeleteReqDto">
+		/* SystemEmployeeMapper.deleteAuthUserDetailByEmpId */
+		update com.auth_user_rel
+		set
+		flag = flag + 1
+		, modify_date = GETDATE()
+		, modify_by = #{modifyBy}
+		where
+		emp_id in
+		<foreach collection="listEmployeeId" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+	</update>
+
+	<update id="deleteAuthUserDetailByRid" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto">
+		/* SystemEmployeeMapper.deleteAuthUserDetailByRid */
+		update com.auth_user_rel
+		set
+			flag = flag + 1
+		  , modify_date = GETDATE()
+		  , modify_by = #{empId}
+		where
+			rid_user = #{rid}
+	</update>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	===============================================
+	-	제목					: 직원 상세 조회
+	===============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	===============================================
+	-   수정자					: jk.kim
+	-   수정일					: 2018.02.05
+	-   수정내용					: 전화번호 모바일 필드 변경
+	*******************************************/ -->
+	<select id="selectEmployeeDetail" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeDetailReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemEmployeeResDto">
+	/* SystemEmployeeMapper.selectEmployeeDetail */
+			SELECT e.id as id
+				, e.emp_no as employeeNo
+			    , e.name as employeeName
+			    , e.position as position
+			    , e.responsibility as responsibility
+			    , cd.div_nm as storeName
+			    , e.TYPE AS employeeType
+			    , e.work_status as workStatus
+			    , e.MOBILE_NO as mobileNo
+			    , e.PHONE_NO as phoneNo
+			    , e.extention as extention
+			    , e.accnt_id as storeId
+				, e.email as email
+				, e.password as password
+				, e.rid_division as ridDivision
+				, e.X_AUTH_TYPE AS xAuthType
+			FROM com.employee e
+			left outer JOIN com.crm_division cd
+			ON e.rid_division = cd.rid
+			WHERE ${strSVCType}
+			AND e.id = #{id}
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 신규 직원 등록 시, email값 중복 체크
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	***************************************/ -->
+	<select id="isEmpEmailExist" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto" resultType="java.lang.Integer">
+			/* SystemEmployeeMapper.isEmpEmailExist */
+			
+			SELECT COUNT(*)
+			FROM com.employee e
+			WHERE e.flag = 1
+		<!-- 	and e.accnt_id = #{accountId} -->
+			AND e.email = #{email}
+			AND e.id != COALESCE(#{id}, '')
+	</select>
+	
+			<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 신규 직원 등록 시, email값 중복 체크
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	***************************************/ -->
+	<select id="isEmpNoExist" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto" resultType="java.lang.Integer">
+			/* SystemEmployeeMapper.isEmpNoExist */
+			SELECT COUNT(*)
+			FROM com.employee e
+			WHERE e.flag = 1
+			<!-- and e.accnt_id = #{accountId} -->
+			AND e.emp_no = #{employeeNo}
+			AND e.id != COALESCE(#{id}, '')
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 신규 직원 추가
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	***************************************/ -->
+    <insert id="insertEmployee" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto" useGeneratedKeys="false">
+		/* SystemEmployeeMapper.insertEmployee */
+		INSERT INTO com.employee
+		(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, enter_date
+			, TYPE
+			, work_status
+			<!-- , mobile1
+			, mobile2
+			, mobile3 -->
+			, mobile_no
+			<!-- , phone1
+			, phone2
+			, phone3 -->
+			, phone_no
+			, emp_no
+			, name
+			, position
+			, flag
+			, extention
+			, emp_type
+			, deactive_code
+			, deactive_date
+			, email
+			, responsibility
+			, authority
+			, admin_user
+			<!-- , app_service_type -->
+			<!-- , country -->
+			, lang
+			<!-- , accnt_id -->
+			, rid_division
+			, X_AUTH_TYPE
+		)
+		VALUES
+		(
+			#{id}
+			, #{empId}
+			, #{empId}
+			, GETDATE()
+			, GETDATE()
+			, GETDATE()
+			, #{employeeType}
+			, #{workStatus}
+			<!-- , #{mobile1}
+			, #{mobile2}
+			, #{mobile3} -->
+			, #{mobileNo}
+			<!-- , #{phone1}
+			, #{phone2}
+			, #{phone3} -->
+			, #{phoneNo}
+			, #{employeeNo}
+			, #{employeeName}
+			, #{position}
+			, 1
+			, #{extention}
+			, #{empType}
+			, 'NA'
+			, com.getMaxDate()
+			, #{email}
+			, #{responsibility}
+			, null
+			, '1'
+	<!-- 		, #{appServiceId} -->
+	<!-- 		, #{country} -->
+			, #{lang}
+		<!-- 	, #{accountId} -->
+			, #{ridDivision}
+			, #{xAuthType}
+		)
+	</insert>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 신규 직원이 소속된 매장 등록
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	***************************************/ -->
+    <insert id="insertEmpAccRel" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto" useGeneratedKeys="false">
+		/* SystemEmployeeMapper.insertEmpAccRel */
+		INSERT INTO com.emp_acc_rel
+		(
+			id
+			, account_id
+			, emp_id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, authority
+		<!-- 	, app_service_type -->
+		<!-- 	, country -->
+			, lang
+		)
+		VALUES
+		(
+			#{id}
+			, #{storeId}
+			, #{employeeId}
+			, #{empId}
+			, #{empId}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, null
+	<!-- 		, #{appServiceId} -->
+	<!-- 		, #{country} -->
+			, #{lang}
+		)
+	</insert>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 직원 상세 정보 변경
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.20
+	***************************************/ -->
+	<update id="updateEmployee" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto">
+		/* SystemEmployeeMapper.updateEmployee */
+		UPDATE com.employee
+		SET modify_by = #{memId}
+			, modify_date = GETDATE()
+			, work_status = #{workStatus}
+			<!-- , e.mobile1 = #{mobile1}
+			, e.mobile2 = #{mobile2}
+			, e.mobile3 = #{mobile3} -->
+			, mobile_no = #{mobileNo}
+			<!-- , e.phone1 = #{phone1}
+			, e.phone2 = #{phone2}
+			, e.phone3 = #{phone3} -->
+			, phone_no = #{phoneNo}
+			, emp_no = #{employeeNo}
+			, name = #{employeeName}
+			, position = #{position}
+			, extention = #{extention}
+			, responsibility = #{responsibility}
+			, email = #{email}
+			, rid_division = #{ridDivision}
+			, TYPE = #{employeeType}
+			, X_AUTH_TYPE = #{xAuthType}
+		WHERE ${strSVCType}
+		AND id = #{id}
+	</update>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (setIpAccessControlHist)
+	============================================
+	- 제목 : 로그인 사용자 IP접근제어 상세
+	- 설명 : 로그인 사용자 IP접근제어 상세
+	- 결과형태 :
+	============================================
+	- 입력 : ridUserAcl
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<select id="selectIpAccessControlDetail" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemSetIpAccessControlReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemGetIpAccessControlListResDto">
+		/* SystemEmployeeMapper.selectIpAccessControlDetail */
+		SELECT
+		a.rid AS rid
+		, a.access_ip_addr AS accessIpAddr
+		, a.acl_type AS aclType
+		, a.USE_YN AS useYn
+		, u.user_id AS userId
+		FROM com.user_acl a
+		INNER JOIN com.crm_user u ON a.RID_CRM_USER = u.rid AND a.flag = '1'
+		WHERE
+		a.rid = #{ridUserAcl}
+		AND a.flag = '1'
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (modifyIpAccessControl)
+	============================================
+	- 제목 : 로그인 사용자 IP접근제어 수정
+	- 설명 : 로그인 사용자 IP접근제어 수정
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<update id="updateIpAccessControl" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemSetIpAccessControlReqDto">
+		/* SystemEmployeeMapper.updateIpAccessControl */
+		UPDATE com.user_acl
+		SET
+		modify_by = #{empId}
+		, modify_date = GETDATE()
+		, ACL_TYPE = #{aclType}
+		, ACCESS_IP_ADDR = #{accessIpAddr}
+		, USE_YN = #{useYn}
+		, CREATOR_IP_ADDR = #{creatorIpAddr}
+		WHERE
+		RID = #{ridUserAcl}
+	</update>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getIpAccessControlHistList)
+	============================================
+	- 제목 : 로그인 사용자 IP접근제어 이력 리스트 조회
+	- 설명 : 로그인 사용자 IP접근제어 이력 리스트 조회
+	- 결과형태 :
+	============================================
+	- 입력 : rid
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<select id="selectIpAccessControlHistList" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemGetIpAccessControlListReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemGetIpAccessControlListResDto">
+		/* SystemEmployeeMapper.selectIpAccessControlHistList */
+		SELECT 
+		a.rid AS rid
+		, d.user_id AS modifyBy
+		, a.modify_date AS modifyDate
+		, a.access_ip_addr AS accessIpAddr
+		, a.acl_type AS aclTypeCd
+		<!-- , b.mark_name AS aclType -->
+		<!-- , c.mark_name AS useYn -->
+		, u.user_id AS userId
+		, a.use_yn  AS useCdYn
+		, ${strColumn}
+		FROM com.user_acl_hist a
+		INNER JOIN com.crm_user u ON a.RID_CRM_USER = u.rid AND a.flag = '1'
+		<!-- LEFT OUTER JOIN com.comm_code b ON a.acl_type = b.code_name AND
+		b.group_code = 'ACL_TYPE' AND b.country = #{country} -->
+		<!-- LEFT OUTER JOIN com.comm_code c ON a.use_yn = c.code_name AND c.group_code
+		= 'YES_NO_FLAG' AND c.country = #{country} -->
+		LEFT OUTER JOIN com.crm_user d ON a.modify_by = d.rid AND d.flag = '1'
+		WHERE
+		1=1
+		<!-- u.rid = #{rid} -->
+		AND a.flag = '1'
+		AND ${strSVCType}
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getAuthGroupListByRidUser)
+	============================================
+	- 제목 : 권한그룹 추가 팝업 리스트 출력
+	- 설명 : 권한그룹 추가 팝업 리스트 출력
+	- 결과형태 :
+	============================================
+	- 입력 : rid
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<select id="getAuthGroupListByRidUser" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemGetAuthGroupListByEIRUReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemGetAuthGroupListByEIRUResDto">
+		/* SystemEmployeeMapper.getAuthGroupListByRidUser */
+		select
+		ag.id as id
+		, ag.aut_group_nm as authGroupName
+		, ag.AUTH_DATA_GROUP_TYPE as authGroupType
+		, ag.AUT_GROUP_DESC as authGroupDesc
+		, CONVERT(VARCHAR, ag.MODIFY_DATE , 120) as modifyDate
+		, ${strColumn}
+		from com.auth_group ag
+		where
+		ag.id not in (select ISNULL(aur.aut_group_id,'') from com.auth_user_rel aur where
+		aur.rid_user = #{rid} and aur.flag = 1)
+		and ag.flag = 1
+		and ${strSVCType}
+		and ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (insertAuthGroupAndEmpId)
+	============================================
+	- 제목 : 로그인 사용자 소유 권한그룹 추가
+	- 설명 : 로그인 사용자 소유 권한그룹 추가
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<insert id="insertAuthGroupAndEmpId" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemInsertAuthGroupAndEmpIdReqDto" useGeneratedKeys="false">
+		/* SystemEmployeeMapper.insertAuthGroupAndEmpId */
+		insert into com.auth_user_rel
+		(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+	<!-- 		, country -->
+			, lang
+		<!-- 	, app_service_type -->
+		<!-- 	, accnt_id -->
+			, emp_id
+			, rid_user
+			, aut_group_id
+		)
+		values
+		(
+			com.getNewID('A')
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+		<!-- 	, #{country} -->
+			, #{lang}
+		<!-- 	, #{appServiceId} -->
+		<!-- 	, #{accountId} -->
+			, #{empId}
+			, #{ridUser}
+			, #{autGroupId}
+		)
+	</insert>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getUserDetail)
+	============================================
+	- 제목 : 로그인 사용자 정보 상세 팝업
+	- 설명 : 로그인 사용자 정보 상세 팝업
+	- 결과형태 :
+	============================================
+	- 입력 : rid
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<select id="getUserDetail" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemGetUserDetailRequestDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemGetUserDetailResDto">
+		/* SystemEmployeeMapper.getUserDetail */
+		select
+		e.emp_no as empNo
+		, cu.user_id as userId
+		, cu.user_pw as userPw
+		, cu.pw_expir_date as pwExpirDate
+		, cu.user_stat as userStat
+		, com.TO_CHAR( cu.ACES_START_DATE,'yyyy-mm-dd') AS acesStartDate
+		, com.TO_CHAR(cu.ACES_END_DATE,'yyyy-mm-dd') AS acesEndDate
+		from com.crm_user cu
+		left outer join com.employee e on cu.id_employee = e.id and e.flag = 1
+		where
+		cu.rid = #{rid}
+		and cu.flag = 1
+	</select>
+	
+		<!-- /**************************************
+	-	관련 파일				: MKTDeptDAO.java
+	============================================
+	-	제목					: 직원 소속 팝업 목록 조회
+	============================================
+	-	작성자					: kj.kang
+	-	작성일					: 2015.10.28
+	============================================
+	-	수정자					: jh.ye
+	-	수정일					: 2016.06.01
+	-   수정내역					: 1. 유형 값 출력을 위해 공통코드 조인
+								  2. 필터 및 헤더 정렬을 위해 공통 구문 추가
+	***************************************/ -->
+	<select id="selectEmployeePopUp" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeReqDto" 
+	resultType="com.icignal.systemmanagement.employee.dto.response.SystemEmployeePopUpResDto">
+		/*SystemEmployeeMapper.selectEmployeePopUp*/
+		select 
+			cd1.rid                                     as rid,       /* rid */
+			cd1.div_nm                                  as storeName,     /* 조직명 */
+			cd1.div_type_cd                               as markName, /* 조직유형 */
+			cd1.div_status                               as description/* 조직상태 */
+			,${strColumn}
+		from com.crm_division cd1
+			<!-- left outer join com.comm_code cc1 on cd1.div_type_cd = cc1.code_name and cc1.group_code = 'COM_DIVISION_TYPE_CD' and cc1.flag = '1' and cc1.lang = #{lang} -->
+		    left outer join com.crm_division cd2 on cd1.rid_par_div = cd2.rid  and cd2.flag = '1'
+			<!-- left outer join com.comm_code cc2 on cd1.div_status = cc2.code_name and cc2.group_code = 'ACCOUNT_STATUS' and cc2.code_name != 'NA' and cc2.flag = '1' and cc2.lang = #{lang} -->
+			left outer join com.crm_user cu on cu.rid = cd1.create_by and cu.flag = '1'
+			left outer join com.employee e on cu.id_employee = e.id
+		where ${strSVCType}
+		<!-- 	and cd1.accnt_id = #{accountId} -->
+			and ${strWhere}
+			and ${strCondWhere}
+		ORDER BY ${strOrderby}
+		    ${strEndPaging}
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (insertUserDetail)
+	============================================
+	- 제목 : 로그인 사용자 정보 추가
+	- 설명 : 로그인 사용자 정보 추가
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<insert id="insertUserDetail" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto" useGeneratedKeys="false">
+		/* SystemEmployeeMapper.insertUserDetail */
+		insert into com.crm_user
+		(
+			rid
+			, rid_loy_pgm
+			, id_employee
+			, user_id
+			, user_pw
+			, user_stat
+		<!-- 	, accnt_id
+			, app_service_type
+			, country -->
+			, flag
+			, create_date
+			, modify_date
+			, create_by
+			, modify_by
+			, PW_EXPIR_DATE
+			,ACES_START_DATE
+			,ACES_END_DATE
+	<!-- 		, currency -->
+		)
+		values
+		(
+			#{rid}
+			, #{loyProgramId}
+			, #{idEmployee}
+			, #{userId}
+			, #{userPw}
+			, #{userStat}
+		<!-- 	, #{accountId}
+			, #{appServiceId}
+			, #{country} -->
+			, 1
+			, GETDATE()
+			, GETDATE()
+			, #{empId}
+			, #{empId}
+			, (select DATEADD(DAY, CONVERT(INT, #{pwdChangeTerm}), GETDATE()))
+			, com.TO_DATE(#{acesStartDate},'yyyy-mm-dd hh24:mi:ss')
+			, com.TO_DATE(#{acesEndDate},'yyyy-mm-dd hh24:mi:ss')
+			<!-- , #{currency} -->
+		)
+	</insert>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (isUserIdExist)
+	============================================
+	- 제목 : 로그인 사용자 정보, 사용자 ID 중복 검사
+	- 설명 : 로그인 사용자 정보, 사용자 ID 중복 검사
+	- 결과형태 :
+	============================================
+	- 입력 : userId, rid
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<select id="isUserIdExist" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto" resultType="java.lang.Integer">
+		/* SystemEmployeeMapper.isUserIdExist */
+		SELECT
+		COUNT(*)
+		FROM com.crm_user cu
+		WHERE cu.flag = 1
+		<!-- and cu.country = #{country} -->
+		and cu.user_id = #{userId}
+		and cu.rid != COALESCE(#{ridCrmuser}, '')
+	</select>
+
+	<select id="selectOneCrmUserId" parameterType="java.lang.String" resultType="java.lang.String">
+	/* SystemEmployeeMapper.selectOneCrmUserId */
+	SELECT USER_ID
+	FROM COM.CRM_USER
+	WHERE RID = #{rid}
+	AND FLAG = 1
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getUserPwdInfo)
+	============================================
+	- 제목 : 로그인 사용자 아이디 정보로 비밀번호 정보 조회
+	- 설명 : 로그인 사용자 아이디 정보로 비밀번호 정보 조회
+	- 결과형태 :
+	============================================
+	- 입력 : id
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.23
+	***************************************/ -->
+	<select id="selectUserPwdInfo" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto" resultType="com.icignal.auth.dto.response.GetUserPwdInfoResDto">
+		/* SystemEmployeeMapper.selectUserPwdInfo */
+		SELECT
+		a.user_id AS userId
+		, a.USER_PW AS userPw
+		, a.USER_PW_BEF_1 AS userPwBef1
+		, a.USER_PW_BEF_2 AS userPwBef2
+		, b.EMP_NO as empNo
+		FROM com.crm_user a
+		LEFT OUTER JOIN com.employee b ON a.id_employee = b.id AND b.flag = '1'
+		WHERE 1=1
+		<if test="userId != null and userId != ''">and
+			a.user_id = #{userId}
+		</if>
+		<if test="ridCrmuser != null and ridCrmuser != ''">and
+			a.rid = #{ridCrmuser}
+		</if>
+		AND a.flag = '1'
+	</select>
+	
+	<select id="selectUserBePwd" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto" resultType="java.lang.String">
+		/* SystemEmployeeMapper.selectUserBePwd */
+		SELECT TOP ${pwdCheckCnt}
+		  a.USER_PW AS userPWd
+		FROM com.crm_user_PWD a
+		WHERE 1=1
+		AND a.RID_CRM_USER = #{ridCrmuser}
+		AND a.flag = '1'
+		ORDER BY CREATE_DATE desc
+	</select>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (modifyUserPwd)
+	============================================
+	- 제목 : 로그인 사용자 비밀번호 변경
+	- 설명 : 로그인 사용자 비밀번호 변경
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<update id="updateUserPwd" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto">
+		/* SystemEmployeeMapper.updateUserPwd */
+		UPDATE com.crm_user
+		SET
+		modify_by = #{empId}
+		, modify_date = GETDATE()
+		, USER_PW = #{userPw}
+		<!-- , USER_PW_BEF_1 = #{userPwBef1}
+		, USER_PW_BEF_2 = #{userPwBef2} -->
+		, PW_EXPIR_DATE = GETDATE()<!--  + #{pwdChangeTerm} -->
+		, USER_PW_CNT = 0
+		, first_login_flg = #{firstLoginFlg}
+		, USER_STAT		= #{userStat}
+		, ACES_START_DATE	= com.TO_DATE(#{acesStartDate},'YYYY-MM-DD')
+		, ACES_END_DATE		= com.TO_DATE(#{acesEndDate},'YYYY-MM-DD')
+		WHERE
+		rid = #{ridCrmuser}
+		AND user_pw = #{preUserPw}
+	</update>
+	
+		<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (updateUserDetail)
+	============================================
+	- 제목 : 로그인 사용자 정보 수정
+	- 설명 : 로그인 사용자 정보 수정
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<update id="updateUserDetail" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto">
+		/* SystemEmployeeMapper.updateUserDetail */
+		update com.crm_user
+		set user_id = #{userId}
+		<if test="ridLoyPgm != null">
+		, rid_loy_pgm = #{ridLoyPgm}
+		</if>
+		, user_stat = #{userStat}
+		, modify_date = GETDATE()
+		, modify_by = #{empId}
+		<if test="userStat == &quot;ACTIVE&quot;">
+		, USER_PW_CNT = 0
+		</if>
+		, ACES_START_DATE	= com.TO_DATE(#{acesStartDate},'yyyy-mm-dd hh24:mi:ss')
+		, ACES_END_DATE		= com.TO_DATE(#{acesEndDate},'yyyy-mm-dd hh24:mi:ss')
+		where
+		rid = #{rid}
+	</update>
+	
+	<insert id="insertActiveUserLoginHist" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto">
+	/* SystemEmployeeMapper.insertActiveUserLoginHist */
+	INSERT INTO COM.LOGIN_HISTORY(
+						  ID
+						, CREATE_BY
+						, MODIFY_BY
+						, CREATE_DATE
+						, MODIFY_DATE
+						, FLAG
+						, CHANNEL
+						, DEVICE
+						, SERVER
+						, TARGET_ID
+						, IP
+						, SESSN_ID
+						, LOGIN_SUCCESS_YN
+						, LOGIN_USER_ID
+						)
+	VALUES(
+						com.getNewID('')
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, 'PC'
+					, 'PC'
+					, #{server}
+					, (SELECT RID FROM COM.CRM_USER  WHERE USER_ID = #{userId})
+					, '0:0:0:0:0:0:0:1'
+					, '0C36940AB2F5B079D5FC8BA8FB8FE9DA'
+					, 'Y'
+					, #{userId}
+				)
+	</insert>
+	
+	<select id="checkDivision" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto" 
+												resultType="java.lang.String">
+	/* SystemEmployeeMapper.checkDivision*/
+	SELECT e.rid_division
+	FROM com.employee e
+	WHERE e.id = #{id}
+	</select>
+	
+	<!-- <select id="selectEmpAuthGroupList" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto" 
+															resultType="com.icignal.systemmanagement.employee.dto.response.SystemEmployeeResDto">
+	/* SystemEmployeeMapper.selectEmpAuthGroupList */
+	SELECT aur.AUT_GROUP_ID AS empAuthGroup
+	FROM COM.AUTH_USER_REL aur
+	JOIN com.CRM_USER cu ON cu.RID = aur.RID_USER AND cu.FLAG = 1
+	LEFT OUTER JOIN com.EMPLOYEE e ON e.ID = cu.ID_EMPLOYEE AND e.FLAG = 1
+	WHERE e.ID = #{id}
+	AND aur.FLAG = 1
+	</select> -->
+	
+	<update id="deleteEmpAuthGroupList" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto">
+	/* SystemEmployeeMapper.deleteEmpAuthGroupList */
+	UPDATE COM.AUTH_USER_REL
+		SET
+			MODIFY_BY = #{memId}
+			, MODIFY_DATE = GETDATE()
+			, flag = flag + 1
+		WHERE EMP_ID = #{id}
+	</update>
+	
+	<update id="insertEmpGuestGroup" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeInfoReqDto" >
+	/* SystemEmployeeMapper.insertEmpGuestGroup */
+	INSERT INTO COM.AUTH_USER_REL (
+			 ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, LANG
+			, AUT_GROUP_ID
+			, RID_USER
+			, EMP_ID
+		)
+		values
+		(
+			com.getNewID('A')
+			, #{memId}
+			, #{memId}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, #{lang}
+			, (SELECT ID FROM COM.AUTH_GROUP WHERE AUT_GROUP_NM = N'Guest 권한그룹' AND FLAG = 1)
+			, (SELECT RID FROM COM.CRM_USER  WHERE  ID_EMPLOYEE = #{id} AND FLAG = 1)
+			, #{id}
+		)
+	</update>
+	
+	<insert id="insertUserPwd" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemUserDetailReqDto">
+	/* SystemEmployeeMapper.insertUserPwd */
+	INSERT INTO COM.CRM_USER_PWD(
+						  RID
+						, CREATE_BY
+						, MODIFY_BY
+						, CREATE_DATE
+						, MODIFY_DATE
+						, FLAG
+						, RID_CRM_USER
+						, USER_PW
+						)
+	VALUES(
+					  #{rid}
+					, #{empId}
+					, #{empId}
+					, GETDATE()
+					, GETDATE()
+					, 1
+					, #{ridCrmuser}
+					, #{userPw}
+				)
+	</insert>
+
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (setIpAccessControlHist)
+	============================================
+	- 제목 : 로그인 사용자 IP접근제어 신규
+	- 설명 : 로그인 사용자 IP접근제어 신규
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : sj.jung
+	- 작성일 : 2021.12.14
+	***************************************/ -->
+	<insert id="insertIpAccessControl" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemSetIpAccessControlReqDto" useGeneratedKeys="false">
+		/* SystemEmployeeMapper.insertIpAccessControlHist */
+		INSERT INTO com.user_acl
+		(
+		RID,
+		CREATE_BY,
+		MODIFY_BY,
+		CREATE_DATE,
+		MODIFY_DATE,
+		FLAG,
+		<!-- 	COUNTRY, -->
+		CURRENCY,
+		<!-- 	APP_SERVICE_TYPE, -->
+		<!-- 	ACCNT_ID, -->
+		<if test="ridCrmuser != null and ridCrmuser != ''">
+			RID_CRM_USER,
+		</if>
+		ACL_TYPE,
+		ACCESS_IP_ADDR,
+		USE_YN,
+		CREATOR_IP_ADDR
+		)
+		VALUES
+		(
+		com.getNewID('A'),
+		#{empId},
+		#{empId},
+		GETDATE(),
+		GETDATE(),
+		'1',
+		<!-- 	#{country}, -->
+		'KRW',
+		<!-- 	#{appServiceId}, -->
+		<!-- 	#{accountId}, -->
+		<if test="ridCrmuser != null and ridCrmuser != ''">
+			#{ridCrmuser},
+		</if>
+		#{aclType},
+		#{accessIpAddr},
+		#{useYn},
+		#{creatorIpAddr}
+		)
+	</insert>
+
+
+	<select id="selectReportBrandStoreList" parameterType="com.icignal.systemmanagement.employee.dto.request.SystemEmployeeReqDto"
+			resultType="com.icignal.systemmanagement.employee.dto.response.SystemEmployeeItemDto">
+	/* SystemEmployeeMapper.selectReportBrandStoreList */
+	SELECT cc.ID as id,
+	       cc.CODE_NAME as brandCode,
+	       cc.MARK_NAME as brandName,
+	       cd.DIV_NM as storeName,
+		   e.EMP_NO as employeeNo,
+		   e.NAME as employeeName,
+		   ${strColumn}
+	FROM com.EMPLOYEE e with(nolock)
+	INNER JOIN com.CRM_DIVISION cd with(nolock) ON e.RID_DIVISION = cd.RID
+	INNER JOIN com.COMM_CODE cc with(nolock) ON cd.X_BRAND_CD = cc.CODE_NAME
+	INNER JOIN com.COMM_CODE cc2 with(nolock) ON cc2.CODE_NAME = e.[TYPE]
+	WHERE ${strSVCType}
+	<if	test="xBrandCd !=null and !xBrandCd.equals('')">
+	AND cd.X_BRAND_CD = #{xBrandCd}
+	</if>
+	AND cd.FLAG = 1 AND e.FLAG = 1 AND cc.FLAG = 1 AND cc2.FLAG = 1
+	AND cc.GROUP_CODE = 'DIVISION_BRAND_CD'
+	AND cc2.GROUP_CODE = 'EMPLOYEE_TYPE'
+	AND cc2.CODE_NAME = 'S'
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+
+</mapper>

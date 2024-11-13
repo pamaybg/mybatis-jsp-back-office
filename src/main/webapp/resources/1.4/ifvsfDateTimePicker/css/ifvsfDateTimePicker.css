@@ -1,0 +1,11 @@
+/* date time picker */
+.e-datetime-wrap {width: 100%; height: auto;}
+.e-datetime-wrap .e-in-wrap.e-box.e-padding {border: 1px solid #ccc; box-sizing: border-box; -webkit-box-sizing: border-box; -moz-box-sizing: border-box;}
+.e-datetime-wrap .e-select {background-color: #fcfcfc;border-left: 1px solid #ccc; color: #888;}
+.e-datetime-wrap .e-select .e-icon.e-datetime {font-size: 21px !important; height: 20px;}
+.e-datetime-wrap .e-datetimepicker.e-js.e-input {height: 22px; line-height: 22px; padding-top: 0; padding-bottom: 0; padding-right: 5px;}
+.e-datetime-wrap .e-input, .e-datetime-popup {font-family: inherit;}
+.e-datetime-popup.e-popup.e-widget.e-box {border: 1px solid #ccc;background-color: #fcfcfc;}
+.e-datetime-popup.e-popup.e-widget.e-box .e-header {border: 1px solid #c8c8c8;}
+.e-datetime-popup.e-popup.e-widget.e-box .e-dt-button {border: 1px solid #ccc;}
+.e-datetime-popup .e-button-container .e-dt-button.e-dt-now {display: none;}

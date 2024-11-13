@@ -1,0 +1,1035 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.common.workflow.mapper.WorkflowMapper">
+
+   <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowPaletteTypeList)
+    ============================================
+    -   제목                  : 워크플로우 팔레트 목록
+    -   설명                  : 워크플로우 팔레트 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+
+    <select id="selectWorkflowPaletteTypeList" parameterType="com.icignal.common.workflow.dto.request.WorkflowPaletteReqDto" 
+    resultType="com.icignal.common.workflow.dto.response.WorkflowPaletteListResDto">
+        /* Workflow.selectWorkflowPaletteList */
+     SELECT 	t1.id
+				, t1.paletteType
+				, t1.paletteTypeName
+				, t1.paletteTypeCode
+		FROM (
+	        select w.WF_PALT_TYPE_CD as id
+	               , w.WF_PALT_TYPE_CD as paletteType
+	               , c1.MARK_NAME as paletteTypeName
+	               , c1.CODE_NAME as paletteTypeCode
+	               , c1.seq AS seq
+	          from (
+	                select wn.WF_PALT_TYPE_CD
+	                       , wn.ID
+	                       , wn.CREATE_BY
+	                       , wn.MODIFY_BY
+	                       , wn.CREATE_DATE
+	                       , wn.MODIFY_DATE
+	                       , wn.FLAG
+	                    <!--    , wn.COUNTRY
+	                       , wn.CURRENCY
+	                       , wn.APP_SERVICE_TYPE -->
+	                       , wn.TYPE
+	                       , wn.SEQ
+	                       , wn.ACT_YN
+	                  from com.wf_node_mst wn
+	                 where 1=1
+	                   and wn.flag = 1
+		         <if test="type != null and type != ''">
+		               and wn.type = #{type}
+		         </if>
+	                union 
+	                select wc.WF_PALT_TYPE_CD
+	                       , wc.ID
+	                       , wc.CREATE_BY
+	                       , wc.MODIFY_BY
+	                       , wc.CREATE_DATE
+	                       , wc.MODIFY_DATE
+	                       , wc.FLAG
+	                     <!--   , wc.COUNTRY
+	                       , wc.CURRENCY
+	                       , wc.APP_SERVICE_TYPE -->
+	                       , wc.TYPE
+	                       , wc.SEQ
+	                       , wc.ACT_YN
+	                  from com.wf_cnctr_mst wc
+	                 where 1=1
+	                   and wc.flag = 1
+	               ) w
+	         inner join com.comm_code c1
+	            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = w.WF_PALT_TYPE_CD and c1.group_code = 'WF_PALETTE_TYPE'
+	         where ${strSVCType}
+	         <if test="actYn != null and actYn != ''">AND
+	               w.ACT_YN = #{actYn}
+	         </if>
+	         group by w.WF_PALT_TYPE_CD, c1.CODE_NAME, c1.MARK_NAME, c1.CODE_NAME, c1.seq
+         ) t1 ORDER BY seq
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowNodeList)
+    ============================================
+    -   제목                  : 워크플로우 노드 목록
+    -   설명                  : 워크플로우 노드 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowNodeList" parameterType="com.icignal.common.workflow.dto.request.WorkflowNodeReqDto" 
+    resultType="com.icignal.common.workflow.dto.response.WorkflowNodeListResDto">
+        /* WorkFlow.selectWorkflowNodeList */
+        select wn.ID as id
+               , wn.CREATE_BY as createBy
+               , wn.MODIFY_BY as modifyBy
+               , wn.CREATE_DATE as createDate
+               , wn.MODIFY_DATE as modifyDate
+               
+               , wn.WF_PALT_TYPE_CD as paletteType
+               , c1.MARK_NAME as paletteTypeName
+               , c1.CODE_NAME as paletteTypeCode
+               
+               , wn.SHAPE_TYPE_CD as shapeType
+               , c2.MARK_NAME as shapeTypeName
+               , c2.CODE_NAME as shapeTypeCode
+               
+               , wn.NODE_TYPE_CD as nodeType
+               , c3.MARK_NAME as nodeTypeName
+               , c3.CODE_NAME as nodeTypeCode
+               
+               , wn.NODE_NM as nodeName
+               
+               , wn.HTML_TEMP_ID as htmlTemplateId
+               , wn.IMG_SRC as imageSource
+               , wn.LBL_TXT as labelText
+               , wn.LBL_REOLY_YN as labelReadOnly
+               , wn.WIDTH as width
+               , wn.HEIGHT as height
+               , wn.BORDER_COLOR as borderColor
+               , wn.BORDER_WIDTH as borderWidth
+               , wn.FILL_COLOR as fillColor
+               , wn.IMG_PATH_DATA as imagePathData
+               , wn.POINTS as points
+               , wn.NODE_DESC as nodeDesc
+               , wn.SEQ as seq
+               , wn.CNCT_SEQ as connectSeq
+          from com.wf_node_mst wn
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = wn.WF_PALT_TYPE_CD and c1.group_code = 'WF_PALETTE_TYPE'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = wn.SHAPE_TYPE_CD and c2.group_code = 'WF_SHAPE_TYPE'
+          left outer join com.comm_code c3
+            on c3.flag = 1 and c3.lang = #{lang} and c3.code_name = wn.NODE_TYPE_CD and c3.group_code = 'MKT_WF_NODE_TYPE'
+         where ${strSVCType}
+           and wn.flag = 1
+           <if test="actYn != null and actYn != ''">AND
+               wn.ACT_YN = #{actYn}
+           </if>
+           <if test="paletteType != null and paletteType != ''">AND
+               wn.WF_PALT_TYPE_CD = #{paletteType}
+           </if>
+           <if test="type != null and type != ''">AND
+               wn.TYPE = #{type}
+           </if>
+         order by wn.SEQ
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowHandleList)
+    ============================================
+    -   제목                  : 워크플로우 핸들 목록
+    -   설명                  : 워크플로우 핸들 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowHandleList" parameterType="com.icignal.common.workflow.dto.request.WorkflowHandleReqDto" 
+    resultType="com.icignal.common.workflow.dto.response.WorkflowHandleListResDto">
+        /* WorkFlow.selectWorkflowHandleList */
+        select wh.ID as id
+               , wh.CREATE_BY as createBy
+               , wh.MODIFY_BY as modifyBy
+               , wh.CREATE_DATE as createDate
+               , wh.MODIFY_DATE as modifyDate
+               , wh.NODE_ID as nodeId
+               , wh.HANDLE_NM as handleName
+               , wh.PSTN_TYPE_CD as positionType
+               , c1.MARK_NAME as positionTypeName
+               , c1.CODE_NAME as positionTypeCode
+               , wh.SIZE_ as "size"
+               , wh.BKGD_COLOR as backgroundColor
+               , wh.MULT_SEL_YN as enableMultiSelection
+               , wh.IMG_PATH_DATA as imagePathData
+               , wh.METH as "method"
+               , wh.METH_TYPE_CD as methodType
+               , wh.METH_TYPE_CD as methodTypeName
+               , wh.METH_TYPE_CD as methodTypeCode
+               , c2.MARK_NAME as methodTypeName
+               , c2.CODE_NAME as methodTypeCode
+               , wh.HANDLE_DESC as handleDesc
+               , wh.SEQ as seq
+          from com.wf_handle_mst wh
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = wh.PSTN_TYPE_CD and c1.group_code = 'WF_HANDLE_POSITION_TYPE'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = wh.METH_TYPE_CD and c2.group_code = 'WF_METHOD_TYPE'
+         where ${strSVCType}
+           and wh.flag = 1
+           <if test="nodeId != null and nodeId != ''">AND
+               wh.NODE_ID = #{nodeId}
+           </if>
+         order by wh.SEQ
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowConnectorList)
+    ============================================
+    -   제목                  : 워크플로우 커넥터 목록
+    -   설명                  : 워크플로우 커넥터 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        parentId : 상위아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowConnectorList" parameterType="com.icignal.common.workflow.dto.request.WorkflowConnectorReqDto" 
+    resultType="com.icignal.common.workflow.dto.response.WorkflowConnectorListResDto">
+        /* WorkFlow.selectWorkflowConnectorList */
+        select wc.ID as id
+               , wc.CREATE_BY as createBy
+               , wc.MODIFY_BY as modifyBy
+               , wc.CREATE_DATE as createDate
+               , wc.MODIFY_DATE as modifyDate
+               
+               , wc.WF_PALT_TYPE_CD as paletteType
+               , c1.MARK_NAME as paletteTypeName
+               , c1.CODE_NAME as paletteTypeCode
+               
+               , wc.WF_SEG_TYPE_CD as segmentType
+               , c2.MARK_NAME as segmentTypeName
+               , c2.CODE_NAME as segmentTypeCode
+               
+               , wc.CNCTR_NM as connectorName
+               , wc.LBL_TXT as labelText
+               , wc.LBL_REOLY_YN as lebelReadOnly
+               , wc.LINE_COLOR as lineColor
+               , wc.LINE_WIDTH as lineWidth
+               , wc.LINE_DASH_ARRAY as lineDashArray
+               , wc.SEQ as seq
+               , wc.CNCTR_DESC as connectorDesc
+          from com.wf_cnctr_mst wc
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = wc.WF_PALT_TYPE_CD and c1.group_code = 'WF_PALETTE_TYPE'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = wc.WF_SEG_TYPE_CD and c2.group_code = 'WF_CNT_SEG_TYPE'
+          where ${strSVCType}
+           and wc.flag = 1
+           <if test="actYn != null and actYn != ''">AND
+               wc.ACT_YN = #{actYn}
+           </if>
+           <if test="paletteType != null and paletteType != ''">AND
+               wc.WF_PALT_TYPE_CD = #{paletteType}
+           </if>
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowTaskHeader)
+    ============================================
+    -   제목                  : 워크플로우 테스크 헤더
+    -   설명                  : 워크플로우 테스크 헤더
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->    
+    <select id="selectWorkflowTaskHeader" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskHeaderReqDto" 
+    resultType="com.icignal.common.workflow.dto.response.WorkflowTaskResDto">
+        /* WorkFlow.selectWorkflowTaskHeader */
+      select wth.ID as id
+               , wth.CREATE_BY as createBy
+               , wth.MODIFY_BY as modifyBy
+               , wth.CREATE_DATE as createDate
+               , wth.MODIFY_DATE as modifyDate
+               
+               <!-- , wth.ACCNT_ID as accountId -->
+               , wth.WF_DISP_NO as workflowDispNo
+               , wth.WF_NM as workflowName
+               , wth.WF_DESC as workflowDescText
+          from com.wf_task_had wth
+         where ${strSVCType}
+         <if test="id != null and id != ''">AND
+               wth.ID = #{id}
+         </if>
+         <if test="parentId != null and parentId != ''">AND
+               wth.PAR_ID = #{parentId}
+         </if>
+         ORDER BY wth.CREATE_DATE DESC
+         OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+     </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowTaskHeaderList)
+    ============================================
+    -   제목                  : 워크플로우 테스크 헤더 목록
+    -   설명                  : 워크플로우 테스크 헤더 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->    
+    <select id="selectWorkflowTaskHeaderList" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskHeaderReqDto"
+     resultType="com.icignal.common.workflow.dto.response.WorkflowTaskHeaderListResDto">
+        /* WorkFlow.selectWorkflowTaskHeaderList */
+        select wth.ID as id
+               , wth.CREATE_BY as createBy
+               , wth.MODIFY_BY as modifyBy
+               , wth.CREATE_DATE as createDate
+               , wth.MODIFY_DATE as createDate
+               
+               <!-- , wth.ACCNT_ID as accountId -->
+               , wth.WF_DISP_NO as workflowDispNo
+               , wth.WF_NM as workflowName
+               , wth.WF_DESC as workflowDescText
+          from com.wf_task_had wth
+         where ${strSVCType}
+           and wth.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowTaskNodeList)
+    ============================================
+    -   제목                  : 워크플로우 테스크 노드 목록
+    -   설명                  : 워크플로우 테스크 노드 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        parentId : 상위아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowTaskNodeList" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskNodeReqDto"
+     resultType="com.icignal.common.workflow.dto.response.WorkflowTaskNodeListResDto">
+        /* WorkFlow.selectWorkflowTaskNodeList */
+        select wtn.ID as id
+               , wtn.CREATE_BY as createBy
+               , wtn.MODIFY_BY as modifyBy
+               , wtn.CREATE_DATE as createDate
+               , wtn.MODIFY_DATE as createDate
+               
+               , wtn.TASK_HAD_ID as taskHeaderId
+               , wtn.TASK_NODE_NM as taskNodeName
+               , wtn.OFF_SET_X as offSetX
+               , wtn.OFF_SET_Y as offSetY
+               
+               , wtn.NODE_ID as nodeId
+               
+               , wn.WF_PALT_TYPE_CD as paletteType
+               , c1.MARK_NAME as paletteTypeName
+               , c1.CODE_NAME as paletteTypeCode
+               
+               , wn.SHAPE_TYPE_CD as shapeType
+               , c2.MARK_NAME as shapeTypeName
+               , c2.CODE_NAME as shapeTypeCode
+               
+               , wn.NODE_TYPE_CD as nodeType
+               , c3.MARK_NAME as nodeTypeName
+               , c3.CODE_NAME as nodeTypeCode
+               
+               , wn.NODE_NM as nodeName
+               , wn.HTML_TEMP_ID as htmlTemplateId
+               , wn.IMG_SRC as imageSource
+               , wn.LBL_TXT as labelText
+               , wn.LBL_REOLY_YN as labelReadOnly
+               , wn.WIDTH as width
+               , wn.HEIGHT as height
+               , wn.BORDER_COLOR as borderColor
+               , wn.BORDER_WIDTH as borderWidth
+               , wn.FILL_COLOR as fillColor
+               , wn.POINTS as points
+               , wn.IMG_PATH_DATA as imagePathData
+               , wn.NODE_DESC as nodeDesc
+               , wn.SEQ as seq
+               , wn.CNCT_SEQ as connectSeq
+          from com.wf_task_node wtn
+          left outer join com.wf_node_mst wn
+            on wtn.NODE_ID = wn.ID
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = wn.WF_PALT_TYPE_CD and c1.group_code = 'WF_PALETTE_TYPE'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = wn.SHAPE_TYPE_CD and c2.group_code = 'WF_SHAPE_TYPE'
+          left outer join com.comm_code c3
+            on c3.flag = 1 and c3.lang = #{lang} and c3.code_name = wn.NODE_TYPE_CD and c3.group_code = 'MKT_WF_NODE_TYPE'
+         where ${strSVCType}
+           and wtn.flag = 1
+           and wtn.TASK_HAD_ID = #{taskHeaderId}
+         order by wn.CNCT_SEQ
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowTaskConnectorList)
+    ============================================
+    -   제목                  : 워크플로우 테스크 커넥터 목록
+    -   설명                  : 워크플로우 테스크 커넥터 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        parentId : 상위아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowTaskConnectorList" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskConnectorReqDto"
+     resultType="com.icignal.common.workflow.dto.response.WorkflowTaskConnectorListResDto">
+        /* WorkFlow.selectWorkflowTaskConnectorList */
+        select wtc.ID as id
+               , wtc.CREATE_BY as createBy
+               , wtc.MODIFY_BY as modifyBy
+               , wtc.CREATE_DATE as createDate
+               , wtc.MODIFY_DATE as createDate
+               
+               , wtc.TASK_HAD_ID as taskHeaderId
+               , wtc.TASK_CNCTR_NM as taskConnectorName
+               
+               , wtc.SOURCE_NODE as sourceNode
+               , wtc.SOURCE_POINT_X as sourcePointX
+               , wtc.SOURCE_POINT_Y as sourcePointY
+               
+               , wtc.TARGET_NODE as targetNode
+               , wtc.TARGET_POINT_X as targetPointX
+               , wtc.TARGET_POINT_Y as targetPointY
+               
+               , wtc.CNCTR_ID as connectorId
+               
+               , wc.WF_PALT_TYPE_CD as paletteType
+               , c1.MARK_NAME as paletteTypeName
+               , c1.CODE_NAME as paletteTypeCode
+               
+               , wc.WF_SEG_TYPE_CD as segmentType
+               , c2.MARK_NAME as segmentTypeName
+               , c2.CODE_NAME as segmentTypeCode
+               
+               , wc.CNCTR_NM as connectorName
+               , wc.LBL_TXT as labelText
+               , wc.LBL_REOLY_YN as lebelReadOnly
+               , wc.LINE_COLOR as lineColor
+               , wc.LINE_WIDTH as lineWidth
+               , wc.LINE_DASH_ARRAY as lineDashArray
+               , wc.CNCTR_DESC as connectorDesc
+          from com.wf_task_cnctr wtc
+          left outer join com.wf_cnctr_mst wc
+            on wtc.CNCTR_ID = wc.ID
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = wc.WF_PALT_TYPE_CD and c1.group_code = 'WF_PALETTE_TYPE'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = wc.WF_SEG_TYPE_CD and c2.group_code = 'WF_CNT_SEG_TYPE'
+         where ${strSVCType}
+           and wtc.flag = 1
+           and wtc.TASK_HAD_ID = #{taskHeaderId}
+         order by wtc.CREATE_DATE  
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowDispNo)
+    ============================================
+    -   제목                  : 워크플로우 표시값
+    -   설명                  : 워크플로우 표시값
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowDispNo" resultType="java.lang.String">
+        /* WorkFlow.selectWorkflowDispNo */
+        sELECT CONCAT('WF', com.TO_CHAR( GETDATE(), 'YYYY' ), com.nvl( com.LPAD( MAX( SUBSTRING( wf_disp_no, 5, 0 )) + 1, 5, '0' ), '00001' )) AS dispNo
+        FROM com.wf_task_had
+        WHERE wf_disp_no LIKE ( CONCAT ('WF', REPLACE ( SUBSTRING( cast(GETDATE() as varchar), 0,8 ), '-', '' ), '%') )
+	
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(addWorkflowTaskHeader)
+    ============================================
+    -   제목                  : 워크플로우 테스크 노드 등록
+    -   설명                  : 워크플로우 테스크 노드 등록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <insert id="insertWorkflowTaskHeader" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskHeaderReqDto">
+        /* WorkFlow.insertWorkflowTaskHeader */
+     insert into com.wf_task_had 
+            ( ID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , FLAG
+            <!-- , COUNTRY -->
+            <!-- , APP_SERVICE_TYPE -->
+            <!-- , ACCNT_ID -->
+            
+            , WF_DISP_NO
+            , WF_NM
+            , WF_DESC
+            , PAR_ID
+            )
+        values 
+            ( #{id}
+            , #{createBy} 
+            , #{modifyBy} 
+            , GETDATE() 
+            , GETDATE() 
+            , 1 
+            <!-- , #{country} -->
+            <!-- , #{appServiceId} --> 
+            <!-- , #{accountId}  -->
+            
+            , #{workflowDispNo} 
+            , #{workflowName} 
+            , #{workflowDescText}
+            , #{parentId} 
+            )
+            
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from com.wf_task_had where id = #{id} offset 0 ROWS  FETCH NEXT 1 ROWS ONLY
+        </selectKey>
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowTaskNodeCheck)
+    ============================================
+    -   제목                  : 워크플로우 테스크 노드 확인
+    -   설명                  : 워크플로우 테스크 노드 확인
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        WorkflowTaskReqDtoDTO
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowTaskNodeCheck" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskNodeReqDto" 
+    resultType="java.lang.Integer">
+        /* WorkFlow.selectWorkflowTaskNodeCheck */
+        select count(1) from com.wf_task_node where TASK_HAD_ID = #{taskHeaderId} and ID = #{id}
+    </select>
+        
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(addWorkflowTaskNode)
+    ============================================
+    -   제목                  : 워크플로우 테스크 노드 등록
+    -   설명                  : 워크플로우 테스크 노드 등록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        WorkflowTaskReqDtoDTO
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <insert id="insertWorkflowTaskNode" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskNodeReqDto">
+        /* WorkFlow.insertWorkflowTaskNode */
+          insert into com.wf_task_node
+            ( ID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , FLAG
+            <!-- , COUNTRY -->
+            <!-- , APP_SERVICE_TYPE -->
+            <!-- , ACCNT_ID -->
+            
+            , TASK_HAD_ID
+            , NODE_ID
+            , TASK_NODE_NM
+            , OFF_SET_X
+            , OFF_SET_Y )
+        values 
+            ( #{id}
+            , #{createBy} 
+            , #{modifyBy} 
+            , GETDATE() 
+            , GETDATE() 
+            , 1
+            <!-- , #{country}  -->
+            <!-- , #{appServiceId}  -->
+            <!-- , #{accountId} -->
+            
+            , #{taskHeaderId} 
+            , #{nodeId} 
+            , #{taskNodeName} 
+            , #{offSetX} 
+            , #{offSetY} )
+
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from com.wf_task_node where id = #{id} offset 0 ROWS  FETCH NEXT 1 ROWS ONLY
+        </selectKey>
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(getWorkflowTaskConnectorCheck)
+    ============================================
+    -   제목                  : 워크플로우 테스크 커넥터 확인
+    -   설명                  : 워크플로우 테스크 커넥터 확인
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        WorkflowTaskReqDtoDTO
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <select id="selectWorkflowTaskConnectorCheck" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskConnectorReqDto" resultType="java.lang.Integer">
+        /* WorkFlow.selectWorkflowTaskConnectorCheck */
+        select count(1) from com.wf_task_cnctr where TASK_HAD_ID = #{taskHeaderId} and ID = #{id}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(addWorkflowTaskConnector)
+    ============================================
+    -   제목                  : 워크플로우 테스크 커넥터 등록
+    -   설명                  : 워크플로우 테스크 커넥터 등록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        WorkflowTaskReqDtoDTO
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <insert id="insertWorkflowTaskConnector" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskConnectorReqDto">
+        /* WorkFlow.insertWorkflowTaskConnector */
+           insert into com.wf_task_cnctr
+            ( ID
+            , CREATE_BY
+            , MODIFY_BY
+            , CREATE_DATE
+            , MODIFY_DATE
+            , FLAG
+            <!-- , COUNTRY -->
+            <!-- , APP_SERVICE_TYPE -->
+            <!-- , ACCNT_ID -->
+            , TASK_HAD_ID
+            , CNCTR_ID
+            , TASK_CNCTR_NM
+            , SOURCE_NODE
+            , SOURCE_POINT_X
+            , SOURCE_POINT_Y
+            , TARGET_NODE
+            , TARGET_POINT_X
+            , TARGET_POINT_Y )
+        values 
+            ( #{id}
+            , #{createBy} 
+            , #{modifyBy} 
+            , GETDATE() 
+            , GETDATE() 
+            , 1
+
+            <!-- , #{country} --> 
+            <!-- , #{appServiceId}  -->
+            <!-- , #{accountId} -->
+            
+            , #{taskHeaderId} 
+            , #{connectorId} 
+            , #{taskConnectorName} 
+            , #{sourceNode}
+            , #{sourcePointX} 
+            , #{sourcePointY} 
+            , #{targetNode}
+            
+            , #{targetPointX} 
+            , #{targetPointY} )
+
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from com.wf_task_cnctr where id = #{id} offset 0 ROWS  FETCH NEXT 1 ROWS ONLY
+        </selectKey>
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(editWorkflowTaskHeader)
+    ============================================
+    -   제목                  : 워크플로우 테스크 헤더 수정
+    -   설명                  : 워크플로우 테스크 헤더 수정
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="updateWorkflowTaskHeader" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskHeaderReqDto">
+        /* WorkFlow.updateWorkflowTaskHeader */
+      update com.wf_task_had
+           set 
+               ID = #{id}
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , FLAG = 1
+               , WF_NM = #{workflowName}
+               , WF_DESC = #{workflowDescText} 
+         where ID = #{id}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(editWorkflowTaskNode)
+    ============================================
+    -   제목                  : 워크플로우 테스크 노드 수정
+    -   설명                  : 워크플로우 테스크 노드 수정
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        WorkflowTaskReqDtoDTO
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="updateWorkflowTaskNode" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskNodeReqDto">
+        /* WorkFlow.updateWorkflowTaskNode */
+           update com.wf_task_node
+           set 
+                MODIFY_BY = #{modifyBy}
+                , MODIFY_DATE = GETDATE()
+                , FLAG = 1
+                , NODE_ID = #{nodeId}
+                , TASK_NODE_NM = #{taskNodeName}
+                , OFF_SET_X = #{offSetX}
+                , OFF_SET_Y = #{offSetY}
+        where ID = #{id}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(editWorkflowTaskConnector)
+    ============================================
+    -   제목                  : 워크플로우 테스크 노드 수정
+    -   설명                  : 워크플로우 테스크 노드 수정
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        WorkflowTaskReqDtoDTO
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="updateWorkflowTaskConnector" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskConnectorReqDto">
+        /* WorkFlow.updateWorkflowTaskConnector */
+             update com.wf_task_cnctr
+           set 
+                MODIFY_BY = #{modifyBy}
+                , MODIFY_DATE = GETDATE()
+                , FLAG = 1
+                , CNCTR_ID = #{connectorId}
+                , TASK_CNCTR_NM = #{taskConnectorName}
+                
+                <!-- , SOURCE_NODE = (select id from com.wf_task_node where task_node_nm = #{sourceNode} and task_had_id = #{taskHeaderId}) -->
+                , SOURCE_NODE = #{sourceNode}
+                
+                , SOURCE_POINT_X = #{sourcePointX}
+                , SOURCE_POINT_Y = #{sourcePointY}
+                
+                <!-- , TARGET_NODE = (select id from com.wf_task_node where task_node_nm = #{targetNode} and task_had_id = #{taskHeaderId}) -->
+                , TARGET_NODE = #{targetNode}
+                
+                , TARGET_POINT_X = #{targetPointX}
+                , TARGET_POINT_Y = #{targetPointY} 
+        where ID = #{id}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(removeWorkflowTaskHeader)
+    ============================================
+    -   제목                  : 워크플로우 테스크 헤더 삭제
+    -   설명                  : 워크플로우 테스크 헤더 삭제
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        id                    : 아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="deleteWorkflowTaskHeader" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskHeaderReqDto">
+        /* WorkFlow.deleteWorkflowTaskHeader */
+    update com.wf_task_had
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where id = #{id} 
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(removeWorkflowTaskNode)
+    ============================================
+    -   제목                  : 워크플로우 테스크 삭제
+    -   설명                  : 워크플로우 테스크 삭제
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        id                    : 아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="deleteWorkflowTaskNode" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskNodeReqDto">
+        /* WorkFlow.deleteWorkflowTaskNode */
+     update com.workflow_task_node
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where id = #{id} 
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(removeWorkflowTaskNodeByParentId)
+    ============================================
+    -   제목                  : 워크플로우 테스크 삭제 By parentId
+    -   설명                  : 워크플로우 테스크 삭제 By parentId
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        parentId              : 상위 아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="deleteWorkflowTaskNodeByParentId" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskNodeReqDto">
+        /* WorkFlow.deleteWorkflowTaskNodeByParentId */
+            update com.wf_task_node
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where TASK_HAD_ID = #{taskHeaderId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(removeWorkflowTaskConnector)
+    ============================================
+    -   제목                  : 워크플로우 테스크 커넥터 삭제
+    -   설명                  : 워크플로우 테스크 커넥터 삭제
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        id                    : 아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="deleteWorkflowTaskConnector" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskConnectorReqDto">
+        /* WorkFlow.deleteWorkflowTaskConnector */
+       update com.wf_task_cnctr
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where id = #{id} 
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : WorkflowService.java(removeWorkflowTaskConnectorByParentId)
+    ============================================
+    -   제목                  : 워크플로우 테스크 커넥터 삭제 By parentId
+    -   설명                  : 워크플로우 테스크 커넥터 삭제 By parentId
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+        parentId              : 상위 아이디
+    ============================================
+    -   작성자                : 류동균   
+    -   작성일                : 2015.10.02
+    ***************************************/ -->
+    <update id="deleteWorkflowTaskConnectorByParentId" parameterType="com.icignal.common.workflow.dto.request.WorkflowTaskConnectorReqDto">
+        /* WorkFlow.deleteWorkflowTaskConnectorByParentId */
+     update com.wf_task_cnctr
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where TASK_HAD_ID = #{taskHeaderId}
+    </update>
+    
+     <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(getResourceList)
+    ============================================
+    -   제목                  : 캠페인 리소스 목록
+    -   설명                  : 캠페인 리소스 목록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.27
+    ***************************************/ -->
+    <select id="selectCampaignResourceList" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignResourceReqDto" 
+    resultType="com.icignal.loyalty.promotion.campaign.dto.response.LoyCampaignResourceListResDto">
+        /* MKTCampaign.selectCampaignResourceList */
+        select
+               r.ID as id
+               , r.CREATE_BY as createBy
+               , r.MODIFY_BY as modifyBy
+               , r.CREATE_DATE as createDate
+               , r.MODIFY_DATE as modifyDate
+
+               , r.RESRC_ID as resourceId
+               , r.CAM_ID as campaignId
+               , r.RESRC_USE_AMT as resourceUseAmt
+
+               , c5.CODE_NAME as resourceUseUnitCode
+               , c5.MARK_NAME as resourceUseUnitCodeName
+
+               , r.RESRC_DTL_DESC as resourceDtlDesc
+
+               , rm.ACCNT_ID as accountId
+               , rm.ITEM_NO as resourceItemNo
+               , rm.ITEM_NM as resourceItemName
+               , rm.RESRC_DESC as resourceDesc
+
+               , c1.CODE_NAME as resourceStatusCode<!-- MKT_CAM_STAT -->
+               , c1.MARK_NAME as resourceStatusCodeName
+
+               , rm.RESRC_EFCT_START_DD as resourceEffectStartDate
+               , rm.RESRC_EFCT_END_DD as resourceEffectEndDate
+
+               , rm.RESRC_PLAN_ORG_CD as resourcePlannerOrgCode
+               , rm.RESRC_PLNER as resourcePlanner
+               , e.NAME as resourcePlannerName
+
+               , c2.CODE_NAME as resourceTypeCode<!-- MKT_RSRC_TYPE -->
+               , c2.MARK_NAME as resourceTypeCodeName
+
+               , c3.CODE_NAME as resourceTypeDtlCode<!-- MKT_RSRC_SUB_TYPE -->
+               , c3.MARK_NAME as resourceTypeDtlCodeName
+
+               , rm.RESRC_AMT as resourceAmt
+
+               , c4.CODE_NAME as resourceUnitCode
+               , c4.MARK_NAME as resourceUnitCodeName
+
+               , rm.ITEM_NO as itemNo
+               , rm.ITEM_NM as itemName
+
+          from mkt.mkt_cam_resrc_rel r
+          left outer join mkt.mkt_resrc_mst rm
+            on rm.ID = r.RESRC_ID
+          left outer join com.comm_code c1
+            on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = rm.RESRC_STATUS_CD and c1.group_code = 'MKT_CAM_STAT'
+          left outer join com.comm_code c2
+            on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = rm.RESRC_TYPE_CD and c2.group_code = 'MKT_RSRC_TYPE'
+          left outer join com.comm_code c3
+            on c3.flag = 1 and c3.lang = #{lang} and c3.code_name = rm.RESRC_TYPE_DTL_CD and c3.group_code = 'MKT_RSRC_SUB_TYPE'
+          left outer join com.comm_code c4
+            on c4.flag = 1 and c4.lang = #{lang} and c4.code_name = rm.RESRC_UNIT_CD and c4.group_code = 'MKT_UNIT_CD'
+          left outer join com.comm_code c5
+            on c5.flag = 1 and c5.lang = #{lang} and c5.code_name = r.RESRC_UNIT_CD and c5.group_code = 'MKT_UNIT_CD'
+          left outer join com.employee e
+            on e.id = rm.RESRC_PLNER
+         where 1=1
+           and r.flag = 1
+           and r.CAM_ID = #{campaignId}
+         order by r.MODIFY_DATE DESC
+    </select>
+    
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(editCampaignWorkflowTemplate)
+    ============================================
+    -   제목                  : 캠페인 워크플로우 템플릿 수정
+    -   설명                  : 캠페인 워크플로우 템플릿 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2016.01.05
+    ***************************************/ -->
+    <update id="updateCampaignWorkflowTemplate" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignWorkflowTemplateReqDto">
+        /* MKTCampaign.updateCampaignWorkflowTemplate */
+        update mkt.mkt_wf_template_mst
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , WF_ID = #{workflowId}
+         where 1=1
+           and CAM_ID = #{campaignId}
+           and flag = 1
+    </update>
+ 
+    <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(removeExecutionInfo)
+    ============================================
+    -   제목                  : 실행정보 삭제
+    -   설명                  : 실행정보 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 류동균
+    -   작성일                : 2015.10.29
+    ***************************************/ -->
+    <update id="deleteExecutionInfo" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignExecutionInfoReqDto">
+        /* MKTCampaign.selectCampaignTargetList */
+        update mkt.mkt_exe_info
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where ID = #{id}
+    </update>
+    
+      <!-- /**************************************
+    -   관련 파일             : MKTCampaignDAO.java(deleteOfferCoupon)
+    ============================================
+    -   제목                  : 캠페인 오퍼 쿠폰 삭제
+    -   설명                  : 캠페인 오퍼 쿠폰 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 금동우
+    -   작성일                : 2019.03.20
+    ***************************************/ -->
+    <update id="deleteOfferCoupon" parameterType="com.icignal.loyalty.promotion.campaign.dto.request.LoyCampaignOfferReqDto">
+        /* MKTCampaign.deleteOfferCoupon */
+        update loy.LOY_COUPN
+           set
+                 MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = GETDATE()
+               , flag = flag + 1
+         where RID_MKT_CAM_MST = #{campaignId}
+    </update>
+    
+     
+    
+</mapper>

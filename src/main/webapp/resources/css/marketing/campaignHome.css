@@ -1,0 +1,397 @@
+@charset "utf-8";
+
+/* 홈  */
+.home_wrap .dashboard_area {background:#f7f7f7}
+.home_row{
+	display:inline-block;
+	margin-bottom:15px;
+	margin-right:15px;
+	/*background:#ffffff;
+	border:1px solid #b9b9b9;
+	box-shadow:0 0 3px #b9b9b9;*/
+}
+.home_box{
+	background:#ffffff;
+	border:1px solid #b9b9b9;
+	box-shadow:0 0 3px #b9b9b9
+}
+.home_row.type_left{
+	width:43%;
+	width:calc(43% - 22.5px);
+	width:-webkit-calc(43% - 22.5px);
+	width:-moz-calc(43% - 22.5px);
+	height:350px;
+}
+.home_row.type_right{
+	width:57%;
+	width:calc(57% - 22.5px);
+	width:-webkit-calc(57% - 22.5px);
+	width:-moz-calc(57% - 22.5px);
+	height:350px;
+}
+.home_box{
+	margin-bottom:14px;
+}
+.homebox_btn_area{
+	display:block;
+	padding:9px 15px 8px;
+	background:#f9f9f9;
+	border-bottom:1px solid #bbbcbb;
+}
+.homebox_btn_area h4{
+	font-size:12px;
+	color:#777777;
+}
+.homebox_btn_area span{
+	display:inline-block;
+	margin-left:10px;
+	font-size:11px;
+	color:#999999;
+}
+
+.box_my_campaign{min-height:100px;}
+
+.box_my_campaign > .row > .col-md-12{
+	padding-left:0px;
+}
+.box_my_campaign .btn-group-justified{
+	border-bottom:1px solid #bbbcbb;
+}
+.box_my_campaign .btn-group-justified .btn,
+.box_my_campaign .btn-group-justified .btn.active{
+	font-weight:normal;
+	border:0;
+	height:34px;
+	border-radius:0;
+}
+.box_my_campaign .btn-group-justified .btn{
+	background:#f9f9f9;
+	color:#777777;
+}
+.box_my_campaign .btn-group-justified .btn.active{
+	background:#6e7886;
+	color:#ffffff;
+	box-shadow:none;
+}
+.box_my_campaign .btn-group-justified .btn:active{
+	top:0;
+	left:0;
+	box-shadow:none;
+}
+.cnt_campaign_current{
+	padding:0px 10px;
+}
+.cnt_type_list{
+	padding:5px 20px;
+}
+.cnt_type_txtlist{
+	padding:8px 20px 0px;
+	overflow-x:hidden;
+	overflow-y:auto;
+}
+.cnt_campaign_current > ul,
+.cnt_type_txtlist > ul {
+	overflow:hidden;
+	margin-bottom:0;
+}
+.cnt_campaign_current > ul > li {
+	display:inline-block;
+	float:left;
+	width:49.5%;
+	width:-webkit-calc(50% - 1px);
+	width:-moz-calc(50% - 1px);
+	width:calc(50% - 1px);
+
+}
+.cnt_campaign_current > ul > li:first-child {
+	border-right:1px dotted #dfdfdf;
+	border-bottom:1px dotted #dfdfdf;
+}
+.cnt_campaign_current > ul > li:nth-child(2){
+	border-bottom:1px dotted #dfdfdf;
+}
+.cnt_campaign_current > ul > li:nth-child(3){
+	border-right:1px dotted #dfdfdf;
+}
+.cnt_campaign_current > ul > li > div {
+	display:table;
+	width:90%;
+	height:120px;
+	margin:0 auto;
+	min-width:150px;
+	padding:10px 10px 20px;
+	text-align:left;
+}
+.icon_home_currentcp{
+	display:table-cell;
+	vertical-align:middle;
+}
+.txt_current_campagin {
+	display:table-cell;
+	text-align:left;
+	padding-left:10px;
+}
+.txt_current_campagin > var{
+	font-family:'Tahoma';
+	color:#4e5962;
+	font-size:36px;
+	line-height:42px;
+	height:42px;
+	vertical-align:middle;
+}
+.home_persondata .txt_current_campagin > var{
+	/* font-size:22px; */
+}
+.txt_current_campagin > p {
+	font-size:11px;
+	color:#999999;
+}
+.icon_home_currentcp {
+	width:62px;
+	text-align:center;
+	vertical-align:middle;
+	padding-top:4px;
+}
+.icon_home_currentcp > i {
+	display:inline-block;
+	width:55px;
+	height:55px;
+	background:#f3f3f3;
+	border-radius:28px;
+	text-indent:-5000px;
+}
+
+/**** 아래 url 변경해줘야함 *****/
+.cnt_campaign_current .all_campagin .icon_home {
+	background:#7cc5ee url(/resources/images/marketing/campaignHome/ico_group_home.png);
+	background-position:0 0;
+}
+.cnt_campaign_current .home_persondata .icon_home {
+	background:#e99c68 url(/resources/images/marketing/campaignHome/ico_group_home.png);
+	background-position:-167px 0;
+}
+.cnt_campaign_current .active_campagin .icon_home {
+	background:#7ed1a5 url(/resources/images/marketing/campaignHome/ico_group_home.png);
+	background-position:-57px 0;
+}
+.cnt_campaign_current .close_campagin .icon_home {
+	background:#b7b7b7 url(/resources/images/marketing/campaignHome/ico_group_home.png);
+	background-position:-57px 0;
+}
+.cnt_type_list > ul > li {
+	position:relative;
+	border-bottom:1px dotted #dfdfdf;
+}
+.cnt_type_list > ul > li:last-child {
+	border:none;
+}
+.box_response_rate .home_list_title,
+.box_response_rate .home_response_graph_group {
+	display:table-cell;
+	height:80px;
+	/* 2018-02-02 cursor pointer 제거 sjbaek */
+	/* cursor: pointer; */
+}
+.home_list_title > strong {
+	margin-bottom:3px;
+	color:#4e5962;
+	font-weight:normal;
+}
+.home_list_title > p,
+.home_list_title > p > span {
+	color:#999999;
+	font-size:12px;
+}
+.circle_graph {
+	position:relative;
+	display:inline-block;
+	width:96px;
+	height:80px;
+}
+.circle_graph > div {
+	position:relative;
+	display:inline-block;
+	font-size:0;
+	width:80px;
+	height:80px;
+}
+.circle_graph:after{
+	content:'%';
+	display:inline-block;
+	position:absolute;
+	top:50%;
+	margin:-10px -18px 0 0;
+	right:50%;
+	color:#999999;
+	font-family:'tahoma';
+	font-size:14px;
+}
+.cnt_type_list_inner {
+	position:relative;
+	width:100%;
+	padding:3px 0;
+	/* 2018-02-02 cursor pointer 제거 sjbaek */
+	/* cursor: pointer; */
+}
+.cnt_list_blank{
+	position:relative;
+	min-height:60px;
+	display:block;
+	color:#b1b1b1;
+	line-height:60px;
+	text-align:center;
+	margin-bottom:0;
+}
+.home_list_title {
+	padding:20px 210px 20px 0;
+}
+.box_my_campaign .home_list_title {
+	padding:21px 310px 21px 0;
+}
+.home_response_graph_group {
+	position:absolute;
+	top:7px;
+	right:0;
+}
+.cnt_list_theader {
+	position:relative;
+	height:17px;
+	margin:5px 0 -5px;
+}
+.cnt_list_theader > p {
+	position:absolute;
+	width:204px;
+	top:0;
+	right:0;
+}
+.cnt_list_theader > p  > span {
+	display:inline-block;
+	width:49.5%;
+	color:#999999;
+	font-size:11px;
+	text-align:center;
+}
+.home_active_campaign_group {
+	overflow:hidden;
+	position:absolute;
+	height:75px;
+	top:7px;
+	right:0;
+}
+.home_active_campaign_group > div {
+	float:left;
+	width:64px;
+	height:64px;
+	text-align:center;
+}
+.home_active_campaign_group > div > span{
+	display:block;
+	width:50px;
+	height:50px;
+	margin:0 auto;
+}
+.home_active_campaign_group > div > var{
+	display:block;
+	color:#1a8bc0;
+	font-size:11px;
+}
+.response_circle {
+	width:50px;
+	height:50px;
+	margin:15px auto 0;
+	border:3px solid #cad1db;
+	border-radius:25px;
+}
+.response_circle > span{
+	display:block;
+	color:#1a8bc0;
+	font-size:11px;
+	height:48px;
+	line-height:48px;
+}
+/**** 아래 url 변경해줘야함 *****/
+.icon_home_active {
+	background-image:url(/resources/images/marketing/campaignHome/ico_group_home.png);
+}
+.icon_home_active.icon_cp_person {background-position:11px -77px;}
+.icon_home_active.icon_cp_benefit {background-position:-64px -77px;}
+.icon_home_active.icon_channer_mms {background-position:12px -128px;}
+.icon_home_active.icon_channer_push {background-position:-30px -128px;}
+.icon_home_active.icon_channer_lms {background-position:-81px -126px;}
+.icon_home_active.icon_channer_sms {background-position:-128px -126px;}
+.icon_home_active.icon_channer_email {background-position:-173px -124px;}
+.icon_home_active.icon_channer_call {background-position:-219px -126px;}
+.icon_home_active.icon_channer_coupon {background-position:-262px -126px;}
+
+.txtlist_inner {
+	overflow:hidden;
+	display:block;
+	width:100%;
+	padding:6px 0;
+	vertical-align:middle;
+	/*text-align:right;*/
+	/* 2018-02-02 cursor pointer 제거 sjbaek */
+	/* cursor: pointer; */
+}
+.txtlist_inner .txtlist_subject,
+.txtlist_inner .txtlist_desc_info {
+	display:inline-block;
+	text-align:left;
+}
+.txtlist_inner .txtlist_subject{
+	overflow:hidden;
+	float:left;
+	width:65%;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+	word-wrap:normal;
+	color:#4e5962;
+}
+
+.txtlist_inner .txtlist_subject2{
+	overflow:hidden;
+	float:left;
+	width:50%;
+	text-overflow:ellipsis;
+	white-space:nowrap;
+	word-wrap:normal;
+	color:#4e5962;
+	display:inline-block;
+	text-align:left;
+}
+
+.txtlist_target {
+	display:inline-block;
+	width:92px;
+	color:#1a8bc0;
+	font-size:12px;
+}
+.txtlist_date{
+	font-size:'Tahoma';
+	color:#999999;
+}
+/* 161125 아래 전부 */
+.box_my_campaign .cnt_type_list {
+	height:450px;
+}
+.box_response_rate .cnt_type_list {
+	height:377px;
+	padding:3px 20px 0;
+}
+.cnt_type_list {
+	overflow-x:hidden;
+	overflow-y:auto;
+}
+.box_my_campaign .cnt_list_theader > p {
+	width:195px;
+}
+.box_my_campaign .cnt_list_theader {
+	margin:5px 0 -15px;
+}
+.box_my_campaign .cnt_list_theader > p  > span{
+	font-size:11px;
+}
+.box_home_segment .cnt_type_txtlist{
+	height:166px;
+}
+</style>

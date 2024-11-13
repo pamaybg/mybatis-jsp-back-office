@@ -1,0 +1,101 @@
+@charset "UTF-8";
+
+input[readonly] {
+    background-color: #fff !important;
+}
+
+input[type="text"], input[type="number"], input[type="password"], .control_content input[type="password"] {
+	height: 25px;
+	line-height: 25px;
+	border-color: #ddd;
+	font-size: 13px;
+	color: #000;
+	font-weight: 300;
+}
+
+.control_content input[type="checkbox"],
+.control_content input[type="radio"] {
+	margin-top: 6px;
+}
+
+.form-horizontal .radio-inline input[type="checkbox"] {
+	margin-top: 3px;
+	margin-left: 5px;
+}
+
+html .control_content input[disabled],
+.form-control[disabled], .form-control[readonly], 
+fieldset[disabled] .form-control {
+	background-color: #f9f9f9;
+	font-weight: 300;
+	color: #7c7c7c;
+}
+
+.ifv_search_box .searchbox_search_input {
+	border-color: #ddd;
+}
+
+select, .select select, .form-control {
+	height: 25px;
+	line-height: 25px;
+	background-color: #fff;
+	border-color: #ddd;
+	font-size: 13px;
+	color: #000;
+}
+
+.selectbox_type1 .combo_num_box {
+	height: 25px;
+	line-height: 25px;
+	background-color: #fff;
+	border-color: #ddd;
+	text-align: center;
+}
+
+.control-label, .row label, .underline .row .control-label {
+	text-align: right;
+	color: #000;
+	padding-top: 6px;
+	font-size: 13px;
+}
+
+.underline .qt_border.half_left,
+.half_left {
+	padding-right: 10px;
+}
+
+.underline .qt_border.half_right,
+.half_right {
+	padding-left: 10px;
+}
+
+.smart-form .input input, .smart-form {
+	height: 25px;
+	color: #000;
+}
+
+.smart-form .input, .smart-form .select, .smart-form .textarea, .smart-form .radio, .smart-form .checkbox, .smart-form .toggle, .smart-form .button {
+	height: 25px;
+}
+
+.smart-form .icon-append, .smart-form .icon-prepend {
+	top: 5px;
+}
+
+.swung_dash {
+	line-height: 25px;
+}
+
+/* date picker */
+.ui-datepicker .ui-datepicker-title {
+	margin: 0 1em;
+}
+
+.ui-datepicker select.ui-datepicker-month, 
+.ui-datepicker select.ui-datepicker-year {
+	width: 39%;
+}
+
+.ui-datepicker select.ui-datepicker-month {
+	margin-left: 5px;
+}

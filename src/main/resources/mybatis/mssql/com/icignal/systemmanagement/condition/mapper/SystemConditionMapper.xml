@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.condition.mapper.SystemConditionMapper">
+
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(getMenuList)
+	============================================
+	-	제목					: 메뉴 리스트 조회
+	-	설명					: 조회 조건을 조회하기 위한 메뉴 리스트를 조회
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		menuId				: 메뉴 아이디
+		menuName			: 메ㅠ 명
+		menuLevel			: 메뉴 레벨
+		menuSeq				: 메뉴 순서
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectMenuList" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemGetMenuListReqDto" resultType="com.icignal.systemmanagement.condition.dto.response.SystemgetMenuListResDto">
+        /* SystemConditionMapper.selectMenuList */
+        select  
+            p.pgm_no as menuId
+            , p.pgm_nm as menuName
+            , p.pgm_type_cd as menuTypeCd
+            , ${strColumn}
+        from com.program p
+            join com.comm_code cc on cc.flag = 1 and p.pgm_type_cd = cc.code_name and cc.lang = #{lang} and cc.group_code = 'ADMIN_PROG_TYPE'
+        where 
+            ${strSVCType} 
+            and p.flag = 1 
+            and ${strWhere}
+		ORDER BY ${strOrderby}		
+			${strEndPaging}	
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(getConditionList)
+	============================================
+	-	제목					: 메뉴 리스트 조회
+	-	설명					: 조회 조건을 조회하기 위한 메뉴 리스트를 조회
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		condId				: 조건 아이디
+		condName			: 조건 명
+		condType			: 조건 유형
+		defaultCond			: 조기 활성화 여부
+		tableName			: 테이블 명
+		tgtTable			: 대상 테이블
+		tgtClm				: 대상 컬럼
+		joinSrcClm			: 비교 소스 컬럼
+		joinTgtClm			: 비교 대상 컬럼
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectConditionList" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemGetConditionListReqDto" 
+													resultType="com.icignal.systemmanagement.condition.dto.response.SystemGetConditionResDto">
+		/* SystemConditionMapper.selectConditionList */
+		select  mcs.id as condId
+			, p.pgm_nm as menuName 
+		    , mcs.srch_cond_dp_val as condName
+		    , cc.mark_name as condType
+		    , cc2.mark_name as defaultCond
+		    , stl.tbl_eng_nm as tableName
+		    , stl2.tbl_eng_nm as tgtTable
+		    , scl.col_eng_nm as tgtClm
+		    , scl2.col_eng_nm as joinSrcClm
+		    , scl3.col_eng_nm as joinTgtClm
+		    , ${strColumn}
+		from COM.COM_SRCH mcs
+            join com.program p on p.flag = 1 and mcs.page_id = p.pgm_no <!-- and p.country = #{country} -->
+            join com.comm_code cc on cc.flag = 1 and cc.code_name = mcs.srch_cond_val_input_guide and cc.lang = #{lang} and cc.group_code = 'MKT_SEARCH_TYPE_CD'
+            left outer join COM.COM_SRCH_TBL_LIST stl on stl.id = mcs.base_tbl_nm
+            left outer join COM.COM_SRCH_TBL_LIST stl2 on stl2.id = mcs.compr_tgt_tbl_nm
+            left outer join COM.COM_SRCH_COL_LIST scl on scl.id = mcs.compr_tgt_col_nm
+            left outer join COM.COM_SRCH_COL_LIST scl2 on scl2.id = mcs.join_src_col
+            left outer join COM.COM_SRCH_COL_LIST scl3 on scl3.id = mcs.join_tgt_col
+            left outer join com.comm_code cc2 on cc2.flag = 1 and cc2.code_name = mcs.deflt_dp_yn and cc2.group_code = 'COMM_STATUS' and cc2.lang = #{lang}
+        where 
+            ${strSVCType} 
+            and ${strWhere}
+            and mcs.flag = 1 
+            and mcs.page_id = #{screenId} 
+            <!-- and mcs.accnt_id = #{accntId} -->
+		ORDER BY ${strOrderby}		
+			${strEndPaging}	
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(getDropDownList)
+	============================================
+	-	제목					: 메뉴 리스트 조회
+	-	설명					: 조회 조건을 조회하기 위한 메뉴 리스트를 조회
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		id					: 컴코드 아이디
+		groupName			: 그룹 명
+		groupCode			: 그룹 코드
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectDropDownList" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemGetDropDownListReqDto" resultType="com.icignal.systemmanagement.condition.dto.response.SystemGetDropDownListResDto">
+        /* SystemConditionMapper.selectDropDownList */
+        select  
+            id as id
+            , group_name as groupName
+            , group_code as groupCode
+            , ${strColumn}
+		from com.comm_code
+        where 
+            ${strSVCType} 
+            and flag = 1 
+            and ${strWhere}
+        group by 
+            id
+            , group_name
+            , group_code
+		ORDER BY ${strOrderby}		
+			${strEndPaging}	
+	</select>
+
+	 <!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(getBaseTableList)
+	============================================
+	-	제목					: 메뉴 리스트 조회
+	-	설명					: 조회 조건을 조회하기 위한 메뉴 리스트를 조회
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		id					: 컴코드 아이디
+		groupName			: 그룹 명
+		groupCode			: 그룹 코드
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectBaseTableList" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemGetBaseTableListReqDto" resultType="com.icignal.systemmanagement.condition.dto.response.SystemGetBaseTableListResDto">
+		 /* SystemConditionMapper.selectBaseTableList */
+		select  
+			id as id
+			, tbl_eng_nm as tableName
+		    , tbl_kor_nm as tableCode
+		    , tbl_desc as tableDesc
+		    , tbl_eng_nm as tblEngNm
+		    , tbl_kor_nm as tblKorNm
+		    , ${strColumn}
+		from COM.COM_SRCH_TBL_LIST
+        where 
+            ${strSVCType} 
+            and flag = 1 
+            and ${strWhere}
+		ORDER BY ${strOrderby}		
+			${strEndPaging}	
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(getSrcColumList)
+	============================================
+	-	제목					: 테이블 컬럼 목록 조회
+	-	설명					: 테이블 컬럼 목록 조회
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		id					: 컬럼 아이디
+		colName				: 컬럼 명
+		colCode				: 컬럼  코드
+		colDesc				: 컬럼 설명
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectSrcColumList" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemGetSrcColumListReqDto" resultType="com.icignal.systemmanagement.condition.dto.response.SystemGetSrcColumListResDto">
+         /* SystemConditionMapper.selectSrcColumList */
+        select  
+            id as id
+            , col_eng_nm as colName
+            , col_kor_nm as colCode
+            , srch_cond_desc as colDesc
+            , col_eng_nm as colEngNm
+            , col_kor_nm as colKorNm
+            , srch_cond_desc as srchCondDesc
+            , ${strColumn}
+		from COM.COM_SRCH_COL_LIST
+        where 
+            ${strSVCType} 
+            and flag = 1 
+            and srch_tbl_id = #{tableId} 
+            and ${strWhere}
+		ORDER BY ${strOrderby}		
+			${strEndPaging}	
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(setCondition)
+	============================================
+	-	제목					: 조건 저장
+	-	설명					: 조건 저장
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id					: 조건 아이디
+		country				: 국가 코드
+		lang				: 언어 코드
+		appServiceId		: 앱 서비스 아이디
+		pageId				: 화면 아이디
+		condName			: 조건 명
+		condType			: 조건 유형
+		defaultCond			: 초기 조건
+		dropDownCD			: 드랍 다운 코드
+		baseTable			: 기본 테이블
+		tgTable				: 대상 테이블
+		tgCol				: 대상 컬럼
+		srcCol				: 소스 컬럼
+		comTgCol			: 비교 대상 컬럼
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+    <insert id="insertCondition" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemSetConditionReqDto" useGeneratedKeys="false">
+		/* SystemConditionMapper.insertCondition */
+		insert into COM.COM_SRCH(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+            , page_id
+            , srch_cond_dp_val
+            , srch_cond_val_input_guide
+            , deflt_dp_yn
+            , DDL_TYPE_COMPOSI_VAL
+            , base_tbl_nm
+            , compr_tgt_tbl_nm
+            , compr_tgt_col_nm
+            , join_src_col
+            , join_tgt_col
+            , base_tbl_alias
+            , compr_tgt_tbl_alias
+            , DDL_VAL_TYPE_CD
+            , DDL_Vw_CN_COL
+            , DDL_Vw_MN_COL
+            , LANG
+		)
+		values(
+			#{id}
+			, #{empId}
+			, #{empId}
+			, GETDATE()	
+			, GETDATE()
+			, 1
+            , #{pageId}
+            , #{condName}
+            , #{condType}
+            , #{defaultCond}
+            , #{dropDownCD}
+            , #{baseTable}
+            , #{tgTable}
+            , #{tgCol}
+            , #{srcCol}
+            , #{comTgCol}
+            , #{baseTblAlias}
+            , #{comprTgtTblAlias}
+            , #{ddlValTypeCd}
+            , #{ddlVwCnCol}
+            , #{ddlVwMnCol}
+            , #{lang}
+		)
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(getConditionDetail)
+	============================================
+	-	제목					: 메뉴 리스트 조회
+	-	설명					: 조회 조건을 조회하기 위한 메뉴 리스트를 조회
+	-	결과형태				: 복수
+	============================================
+	-	출력
+		condId				: 조건 아이디
+		condName			: 조건 명
+		condType			: 조건 유형
+		defaultCond			: 조기 활성화 여부
+		tableName			: 테이블 명
+		tgtTable			: 대상 테이블
+		tgtClm				: 대상 컬럼
+		joinSrcClm			: 비교 소스 컬럼
+		joinTgtClm			: 비교 대상 컬럼
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectConditionDetail" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemGetConditionDetailReqDto" 
+												resultType="com.icignal.systemmanagement.condition.dto.response.SystemGetConditionDetailResDto">
+		/* SystemConditionMapper.selectConditionDetail */
+		select 
+			mcs.id as id
+		    , mcs.srch_cond_dp_val as condName
+		    , mcs.srch_cond_val_input_guide as condType
+		    , mcs.deflt_dp_yn as defaultCond
+		    , stl.tbl_eng_nm as baseTable
+		    , stl.id as baseTableId
+		    , stl2.tbl_eng_nm as tgTable
+		    , stl2.id as tgTableId
+		    , scl.col_eng_nm as tgCol
+		    , scl.id as tgColId
+		    , scl2.col_eng_nm as srcCol
+		    , scl2.id as srcColId
+		    , scl3.col_eng_nm as comTgCol
+		    , scl3.id as comTgColId
+		    , mcs.DDL_TYPE_COMPOSI_VAL as dropDownCD
+		    , mcs.base_tbl_alias as baseTblAlias
+		    , mcs.compr_tgt_tbl_alias as comprTgtTblAlias
+		    , mcs.DDL_VAL_TYPE_CD	as ddlValTypeCd
+		    , mcs.DDL_VW_CN_COL		as ddlVwCnCol
+		    , mcs.DDL_VW_MN_COL		as ddlVwMnCol
+		from COM.COM_SRCH mcs
+            left outer join COM.COM_SRCH_TBL_LIST stl on stl.id = mcs.base_tbl_nm
+            left outer join COM.COM_SRCH_TBL_LIST stl2 on stl2.id = mcs.compr_tgt_tbl_nm
+            left outer join COM.COM_SRCH_COL_LIST scl on scl.id = mcs.compr_tgt_col_nm
+            left outer join COM.COM_SRCH_COL_LIST scl2 on scl2.id = mcs.join_src_col
+            left outer join COM.COM_SRCH_COL_LIST scl3 on scl3.id = mcs.join_tgt_col
+        where 
+            ${strSVCType} 
+            and mcs.flag = 1 
+            and mcs.id = #{conditionId} 
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(setCondition)
+	============================================
+	-	제목					: 조건 저장
+	-	설명					: 조건 저장
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id					: 조건 아이디
+		country				: 국가 코드
+		lang				: 언어 코드
+		appServiceId		: 앱 서비스 아이디
+		condName			: 조건 명
+		condType			: 조건 유형
+		defaultCond			: 초기 조건
+		dropDownCD			: 드랍 다운 코드
+		baseTable			: 기본 테이블
+		tgTable				: 대상 테이블
+		tgCol				: 대상 컬럼
+		srcCol				: 소스 컬럼
+		comTgCol			: 비교 대상 컬럼
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="updateCondition" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemModifyConditionReqDto">
+		/* SystemConditionMapper.updateCondition */
+		update COM.COM_SRCH
+        set srch_cond_dp_val = #{condName}
+            , srch_cond_val_input_guide = #{condType}
+            , deflt_dp_yn = #{defaultCond}
+            , DDL_TYPE_COMPOSI_VAL = #{dropDownCD}
+            , base_tbl_nm = #{baseTable}
+            , compr_tgt_tbl_nm = #{tgTable}
+            , compr_tgt_col_nm = #{tgCol}
+            , join_src_col = #{srcCol}
+            , join_tgt_col = #{comTgCol}
+            , modify_date = GETDATE()
+            , modify_by = #{empId}
+            , base_tbl_alias = #{baseTblAlias}
+            , compr_tgt_tbl_alias = #{comprTgtTblAlias}
+            , DDL_VAL_TYPE_CD = #{ddlValTypeCd}
+            , DDL_VW_CN_COL = #{ddlVwCnCol}
+            , DDL_VW_MN_COL = #{ddlVwMnCol}
+        where 
+            ${strSVCType} 
+            and id = #{conditionId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTConditionDAO.java(removeCondition)
+	============================================
+	-	제목					: 조건 저장
+	-	설명					: 조건 저장
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id					: 조건 아이디
+		country				: 국가 코드
+		lang				: 언어 코드
+		appServiceId		: 앱 서비스 아이디
+		pageId				: 화면 아이디
+		condName			: 조건 명
+		condType			: 조건 유형
+		defaultCond			: 초기 조건
+		dropDownCD			: 드랍 다운 코드
+		baseTable			: 기본 테이블
+		tgTable				: 대상 테이블
+		tgCol				: 대상 컬럼
+		srcCol				: 소스 컬럼
+		comTgCol			: 비교 대상 컬럼
+	============================================
+	-	작성자					: 장용
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<update id="deleteCondition" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO">
+		/* SystemConditionMapper.deleteCondition */
+		update COM.COM_SRCH
+        set flag = flag + 1
+            , modify_date = GETDATE()
+            , modify_by = #{empId}
+        where 
+            ${strSVCType} 
+            and id = #{conditionId}
+	</update>
+	
+	<select id="selectGroupDetailList" parameterType="com.icignal.systemmanagement.commcode.dto.request.MKTCommonCodeRequestDTO" resultType="com.icignal.systemmanagement.commcode.dto.response.MKTCommonCodeResponseDTO">
+        /* SystemConditionMapper.selectGroupDetailList */
+        SELECT 
+            id as codeId,
+            code_name as codeName,
+            mark_name as markName,
+            ATTRIB01 as attrib01,
+            ATTRIB02 as attrib02,
+            ATTRIB03 as attrib03,
+            ATTRIB04 as attrib04,
+            ATTRIB05 as attrib05,
+            ${strColumn}
+        FROM
+            com.comm_code
+        WHERE ${strSVCType}
+          and flag = 1
+          <if test="groupCode != null and groupCode != ''">AND
+            group_code = #{groupCode}
+          </if>
+          <if test="parCodeId != null and parCodeId != ''">AND
+            par_code_id = #{parCodeId}
+          </if>
+          <if test="!enableNA">and 
+            
+                code_name != 'NA'
+          </if>
+          and ${strWhere}
+		  ORDER BY ${strOrderby}		
+		  ${strEndPaging}	
+    </select>
+    
+    <select id="selectDropDownListColumList" parameterType="com.icignal.systemmanagement.condition.dto.request.SystemGetSrcColumListReqDto" resultType="com.icignal.systemmanagement.condition.dto.response.SystemGetSrcColumListResDto">
+         /* SystemConditionMapper.selectDropDownListColumList */
+        select  
+            id as id
+            , col_eng_nm as colName
+            , col_kor_nm as colCode
+            , srch_cond_desc as colDesc
+            , col_eng_nm as colEngNm
+            , col_kor_nm as colKorNm
+            , srch_cond_desc as srchCondDesc
+            , ${strColumn}
+		from COM.COM_SRCH_COL_LIST
+        where 
+            ${strSVCType} 
+            and flag = 1 
+            and TBL_ENG_NM = #{tblEngNm} 
+            and ${strWhere}
+		ORDER BY ${strOrderby}		
+			${strEndPaging}	
+	</select>
+	
+	<select id="callTableList" parameterType="java.lang.String"
+		resultType="java.lang.String" statementType="CALLABLE">
+	   exec  LOY.PROC_SETSRCH_TBLCOL 'empty'
+	</select>
+
+</mapper>

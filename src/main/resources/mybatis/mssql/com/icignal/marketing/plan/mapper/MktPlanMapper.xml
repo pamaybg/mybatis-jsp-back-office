@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:29 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.marketing.plan.mapper.MktPlanMapper">
+
+    <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN 목록 전체 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.11
+    ***************************************/ -->
+    <select id="selectPlanList" parameterType="com.icignal.marketing.plan.dto.request.MktPlanListReqDto" 
+    							resultType="com.icignal.marketing.plan.dto.response.MktPlanListResDto">
+    	/* MktPlanMapper.selectPlanList */
+		SELECT T1.ID AS id
+			 , T1.PLAN_NO AS planNo
+    		 , T1.PLAN_NM AS planNm
+    		 , C1.MARK_NAME AS planPrps
+    		 , com.TO_CHAR(T1.PLAN_START_DT,'YYYY-MM-DD') AS planStart
+    		 , com.TO_CHAR(T1.PLAN_END_DT,'YYYY-MM-DD') AS planEnd  
+    		 , T1.PLAN_DESC AS planDesc
+    		 , T3.NAME AS name
+    		 , com.TO_CHAR(T1.CREATE_DATE,'YYYY-MM-DD') AS createDate
+    		 , ${strColumn}
+    	FROM MKT.MKT_PLAN T1 
+    	LEFT OUTER JOIN COM.CRM_USER T2 ON T2.RID = T1.CREATE_BY
+    	LEFT OUTER JOIN COM.EMPLOYEE T3 ON T3.ID = T2.ID_EMPLOYEE 
+    	LEFT OUTER JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = #{lang} AND C1.GROUP_CODE = 'MKT_PLAN_PRPS_CD' AND C1.CODE_NAME = T1.PLAN_PRPS_CD
+    	WHERE 1=1
+    	  AND ${strCondWhere}<!-- 공통조회조건 파라미터 -->
+          <!-- AND  ${strSVCType} --><!-- list 기본 파라미터 -->
+          AND  ${strWhere}<!-- 그리드 검색 파라미터 -->
+         <!--  AND  ${strDataAuthWhere} --><!-- 데이터 권한 파라미터 -->
+          AND  T1.FLAG =1 
+        ORDER  BY ${strOrderby}<!-- 그리드에서 파라미터를 받아서 order by를 함. -->
+        ${strEndPaging}<!-- 그리드 페이징1,2,3,... -->
+    </select>
+        <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============  ==============
+    -   제목                  : MKT.MKT_PLAN 목록 부분 삭제 및 모든 노드 삭제
+    -   설명                  : 
+    -   결과형태             :
+    ============================================ ==============
+    -   입력              :
+    -   출력              :
+    ============================================ ==============
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.11
+    ***************************************/ -->
+    <update id="removePlan" 
+    parameterType="com.icignal.marketing.plan.dto.request.MktPlanRemoveReqDto">
+        /* MktPlanMapper.removePlan */
+		UPDATE MKT.MKT_PLAN
+        SET
+        	  MODIFY_BY = #{modifyBy},
+        	  MODIFY_DATE = GETDATE(),
+              flag = flag + 1
+        where ID = #{id}
+    </update>
+                  <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN_CAM 모든 노드 삭제
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.16
+    ***************************************/ -->               
+    <update id="planAllNodeDelete" parameterType="com.icignal.marketing.plan.dto.request.MktPlanRemoveReqDto">
+        /* MktPlanMapper.planAllNodeDelete */
+		UPDATE MKT.MKT_PLAN_CAM 
+		SET
+			MODIFY_BY = #{modifyBy},
+			MODIFY_DATE = GETDATE(),
+			flag = flag + 1
+        where MKT_PLAN_ID = #{id}
+    </update> 
+        <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN 목록 삽입
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.11
+    ***************************************/ -->
+    <insert id="insertPlan" 
+    parameterType="com.icignal.marketing.plan.dto.request.MktPlanInsertReqDto">
+        /* MktPlanMapper.insertPlan */
+		INSERT INTO MKT.MKT_PLAN 
+        ( ID
+        , CREATE_BY
+        , MODIFY_BY
+        , PLAN_NO
+        , PLAN_NM
+        , CREATE_DATE
+        , MODIFY_DATE
+        , FLAG
+        , PLAN_START_DT
+        , PLAN_END_DT
+        , PLAN_PRPS_CD
+        , PLAN_DESC
+        )
+        VALUES
+        ( #{id}
+        , #{createBy}
+        , #{modifyBy}
+        , mkt.FN_GETPLANNO()<!-- 번호 자동생성 -->
+        , #{planNm}
+        , GETDATE()
+        , GETDATE()
+        , 1
+        , com.TO_DATE(#{planStart}, 'YYYY-MM-DD')
+        , com.TO_DATE(#{planEnd}, 'YYYY-MM-DD')
+        , #{planProps}
+        , #{planDesc}
+        )
+    </insert>
+    <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN 목록 선택 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.11
+    ***************************************/ -->
+    <select id="selectIdPlanList" parameterType="com.icignal.marketing.plan.dto.request.MktPlanIdListReqDto" 
+    							resultType="com.icignal.marketing.plan.dto.response.MktPlanIdListResDto">
+    	/* MktPlanMapper.selectIdPlanList */
+		SELECT T1.ID AS id
+    		 , T1.PLAN_NM AS planNm
+    		 , T1.PLAN_PRPS_CD AS planPrps
+    		 , com.TO_CHAR(T1.PLAN_START_DT,'YYYY-MM-DD') AS planStart
+    		 , com.TO_CHAR(T1.PLAN_END_DT,'YYYY-MM-DD') AS planEnd  
+    		 , T1.PLAN_DESC AS planDesc
+    	FROM MKT.MKT_PLAN T1 
+    	LEFT OUTER JOIN COM.CRM_USER T2 ON T2.RID = T1.CREATE_BY
+    	LEFT OUTER JOIN COM.EMPLOYEE T3 ON T3.ID = T2.ID_EMPLOYEE 
+    	LEFT OUTER JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = #{lang} AND C1.GROUP_CODE = 'MKT_PLAN_PRPS_CD' AND C1.CODE_NAME = T1.PLAN_PRPS_CD
+    	WHERE  T1.ID = #{id}
+          AND  T1.FLAG =1 
+    </select>
+        <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN 목록의 일부분 수정
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.11
+    ***************************************/ -->
+    <update id="updatePlan" 
+    parameterType="com.icignal.marketing.plan.dto.request.MktPlanUpdateListDto">
+        /* MktPlanMapper.updatePlan */
+		UPDATE MKT.MKT_PLAN 
+        SET
+           MODIFY_BY = #{modifyBy},
+           MODIFY_DATE = GETDATE(),
+           PLAN_NM = #{planNm},
+           PLAN_START_DT = com.TO_DATE(#{planStart}, 'YYYY-MM-DD'),
+           PLAN_END_DT = com.TO_DATE(#{planEnd}, 'YYYY-MM-DD'),
+           PLAN_PRPS_CD = #{planProps},
+           PLAN_DESC = #{planDesc} 
+              
+        where ID = #{id}
+    </update>        
+            <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_CAM_MST 목록 전체 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.11
+    ***************************************/ -->
+    <select id="selectCampaignPlanList" parameterType="com.icignal.marketing.plan.dto.request.MktPlanCampaignListReqDto" 
+    							resultType="com.icignal.marketing.plan.dto.response.MktPlanCampaignListResDto">
+    	/* MktPlanMapper.selectCampaignPlanList */
+		SELECT C.ID AS id
+			 , C.DISP_NO AS dispNo
+    		 , C.CAM_NM AS camNm
+    		 , C1.MARK_NAME AS camTypecd
+    		 , C.CAM_STATUS_CD AS camStatuscd
+    		 , com.TO_CHAR(C.CAM_START_DD,'YYYY-MM-DD') AS camStartdd 
+    		 , com.TO_CHAR(C.CAM_END_DD,'YYYY-MM-DD') AS camEnddd  
+    		 , T3.NAME AS name
+    		 , com.TO_CHAR(C.CREATE_DATE,'YYYY-MM-DD') AS createDate
+    		 , ${strColumn}
+    	FROM MKT.MKT_CAM_MST C
+    	LEFT OUTER JOIN COM.CRM_USER T2 ON T2.RID = C.CREATE_BY
+    	LEFT OUTER JOIN COM.EMPLOYEE T3 ON T3.ID = T2.ID_EMPLOYEE 
+    	LEFT OUTER JOIN COM.COMM_CODE C1 ON C1.FLAG = 1 AND C1.LANG = #{lang} AND C1.GROUP_CODE = 'MKT_CAM_TYPE_CD' AND C1.CODE_NAME = C.CAM_TYPE_CD
+    	WHERE 1=1
+    	  AND ${strCondWhere}<!-- 공통조회조건 파라미터 -->
+          <!-- AND  ${strSVCType} --><!-- list 기본 파라미터 -->
+          AND  ${strWhere}<!-- 그리드 검색 파라미터 -->
+         <!--  AND  ${strDataAuthWhere} --><!-- 데이터 권한 파라미터 -->
+          AND  C.FLAG =1 
+        ORDER  BY ${strOrderby}<!-- 그리드에서 파라미터를 받아서 order by를 함. -->
+        ${strEndPaging}<!-- 그리드 페이징1,2,3,... -->
+    </select>
+    <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN_CAM 목록 삽입
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.11
+    ***************************************/ -->
+    <insert id="planNodeInsert" 
+    parameterType="com.icignal.marketing.plan.dto.request.MktplanNodeInsertReqDto">
+        /* MktPlanMapper.planNodeInsert */
+		INSERT INTO MKT.MKT_PLAN_CAM 
+        ( ID
+        , CREATE_BY
+        , MODIFY_BY
+        , CREATE_DATE
+        , MODIFY_DATE
+        , FLAG
+        , MKT_PLAN_ID
+        , CAM_ID
+        , PAR_CAM_ID
+        , OFF_SET_X
+        , OFF_SET_Y
+        )
+        VALUES
+        ( #{id}
+        , #{createBy}
+        , #{modifyBy}
+        , GETDATE()
+        , GETDATE()
+        , 1
+        , #{mktPlanId}
+        , #{camId}
+        , #{parCamId}
+        , #{offSetX}
+        , #{offSetY}
+        )
+    </insert>
+        <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN_CAM 목록 조회
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.12
+    ***************************************/ -->
+    <select id="planNodeSelect" parameterType="com.icignal.marketing.plan.dto.request.MktWorkFlowPlanListReqDto" 
+    							resultType="com.icignal.marketing.plan.dto.response.MktWorkFlowPlanListResDto">
+    	/* MktPlanMapper.planNodeSelect */
+			SELECT T1.ID AS id
+        	 , T1.CREATE_BY AS createBy
+        	 , T1.MODIFY_BY AS modifyBy
+        	 , com.TO_CHAR(C.CAM_START_DD,'YYYY-MM-DD') AS camStartDd
+        	 , com.TO_CHAR(C.CAM_END_DD,'YYYY-MM-DD') AS camEndDd
+        	 , T1.MKT_PLAN_ID AS mktPlanId
+        	 , T1.CAM_ID AS camId
+        	 , T1.PAR_CAM_ID AS parCamId
+        	 , T1.OFF_SET_X AS offSetX
+        	 , T1.OFF_SET_Y AS offSetY
+        	 , C.CAM_NM AS name 
+     		FROM MKT.MKT_PLAN_CAM T1
+     		LEFT OUTER JOIN MKT.MKT_CAM_MST C ON T1.CAM_ID = C.ID
+     		LEFT OUTER JOIN MKT.MKT_PLAN T2 ON T1.MKT_PLAN_ID = T2.ID     			
+    		WHERE 1=1 
+    		AND T1.MKT_PLAN_ID = #{planId}  		
+     		AND T1.FLAG = 1
+    </select>
+    
+        <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN_CAM 노드 수정
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.16
+    ***************************************/ -->
+    
+    <update id="planNodeUpdate" parameterType="com.icignal.marketing.plan.dto.request.MktplanNodeUpdateReqDto">
+        /* MktPlanMapper.planNodeUpdate */
+		UPDATE MKT.MKT_PLAN_CAM 
+		SET
+			 MODIFY_BY = #{modifyBy},
+			 MODIFY_DATE = GETDATE(),
+             PAR_CAM_ID  = #{parCamId},
+             OFF_SET_Y	= #{offSetY}  
+        where CAM_ID = #{camId}
+    </update>  
+        <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN_CAM 노드 삭제
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.16
+    ***************************************/ -->
+    
+    <update id="planNodeDelete" parameterType="com.icignal.marketing.plan.dto.request.MktplanNodeDeleteReqDto">
+        /* MktPlanMapper.planNodeUpdate */
+		UPDATE MKT.MKT_PLAN_CAM 
+		SET
+			MODIFY_BY = #{modifyBy},
+			MODIFY_DATE = GETDATE(),
+			flag = flag + 1
+        where CAM_ID = #{camId}
+    </update>
+ 
+            <!-- /**************************************
+    -   관련 파일             : MktPlanMapper.java
+    ============================== ==============
+    -   제목                  : MKT.MKT_PLAN_CAM 모든 노드 수정
+    -   설명                  : 
+    -   결과형태             :
+    ============================================
+    -   입력              :
+    -   출력              :
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020.06.23
+    ***************************************/ -->               
+    <update id="planAllNodeUpdate" parameterType="com.icignal.marketing.plan.dto.request.MktplanAllNodeUpdateReqDto">
+        /* MktPlanMapper.planAllNodeUpdate */
+		UPDATE MKT.MKT_PLAN_CAM 
+		SET
+			MODIFY_BY = #{modifyBy},
+			MODIFY_DATE = GETDATE(),
+			OFF_SET_X = #{offSetX},
+			OFF_SET_Y = #{offSetY}
+        where CAM_ID = #{camId}
+    </update> 
+</mapper>

@@ -1,0 +1,1940 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:57:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.report.mapper.KprReportMapper">
+
+    <!-- /**************************************
+    -   관련 파일            : KPRReportDAO.java ()
+    ============================================
+    -   제목                   :  조회조건 매장 조회
+    -   설명                   :  조회조건 매장 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  :
+    -	출력			  :
+    ============================================
+    -   작성자                : mj.kim
+    -   작성일                : 2019.04.04
+    ***************************************/ -->
+	<select id="selectJoinMbr" parameterType="com.icignal.kepler.report.dto.request.KprReportIncreaseMbrReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprIncreaseMbrResDto">
+	/* KPRReport.selectJoinMbr*/
+	/*1-1*/
+			SELECT  
+					concat(substring(YYYYMMDD,1,4) , '-' , substring(YYYYMMDD,5,2) , '-' , substring(YYYYMMDD,7,2)) AS YYYYMMDD
+			        ,TOT_MEM_CNT    						AS	 totalMbr			 --총회원수
+			        ,NEW_MBR_CNT							AS   newMbrCnt			 --신규멤버십 회원수
+			        ,EAS_MEM_CNT            				AS   nowHisMbr		     --현재간편회원수
+			        ,WIP_MEM_CNT            				AS   nowWPMbr			 --현재위포인트회원수
+			        ,WII_MEM_CNT            				AS   newIbk			     --현재제휴회원수IBK
+			        ,FST_MEM_CNT   						AS	 newMbr			     --일별신규회원수
+			        ,NEW_APP_MEM_CNT    				AS	 newApp			     --신규-APP
+			        ,NEW_WEB_MEM_CNT        		AS   newWeb			     --신규-WEB
+			        ,NEW_IBK_MEM_CNT	    			AS 	 ptnrNewIbk 		 --신규(IBK)
+			        ,WITHD_MEM_CNT  					AS	 dropMbr			 --누적탈퇴회원수
+			        ,WITHD_MEM_CNT_DD				AS   dayDropMbr			 --당일탈회회원수
+			        ,TRNS_EAS               					AS   newStore			 --맴버십전환-간편
+			        ,TRNS_WIP               					AS   newWP			     --맴버십전환-위포인트
+			        ,NEW_IBK_WEBID 						AS   transNewIbk		 --멤버십전환 IBK
+			        ,FAM_CNT_DD             				AS   newFamMbr		     --일별패밀리수
+			        ,FAM_MEM_CNT_DD         			AS   newFamMbrCnt		 --일별패밀리회원수
+			        ,FAM_CNT_TOT            				AS   accrueFmaCnt		 --누적패밀리수
+			        ,FAM_MEM_CNT_TOT       	 		AS   accrueFmaCntMbr	 --누적패밀리회원수
+			        ,PUSH_AGRE_MEM_CNT      		AS   pushYn			     --PUSH동의회원수
+			        ,EMAIL_AGRE_MEM_CNT     		AS   eMailYn			 --EMAIL동의회원수
+			        ,SMS_AGRE_MEM_CNT       		AS   smsYn			     --SMS동의회원수
+			        ,ERECP_AGRE_MEM_CNT     		AS   webReceipt		     --전자영수증회원수
+			        ,ANVI_REG_MEM_CNT      	 		AS   anniverCnt		     --기념일등록회원수
+			        ,${strColumn}
+			FROM MRT.FT_MEM_CNT_D
+			WHERE YYYYMMDD BETWEEN concat(substring(#{yyyymm},1,6),'01') AND convert(char(8), com.fn_lastday(convert(date, #{yyyymmdd}, 112)), 112)
+			ORDER BY 1
+	</select>
+
+    <select id="selectStoreList" parameterType="com.icignal.kepler.report.dto.request.KprReportStoreReqDto" 
+    resultType="com.icignal.kepler.report.dto.response.KprReportStoreResDto">
+       	/* KPRReport.selectStoreList*/
+       	SELECT 
+       		CHNL_NM		AS storeNm,
+       		CHNL_NO		AS storeCd,
+       		   ${strColumn}
+          FROM LOY.LOY_CHNL
+         WHERE  ${strCondWhere}
+       		   	${strEndPaging}
+    </select>
+
+    <select id="selectAgeList" parameterType="com.icignal.kepler.report.dto.request.KprReportStoreReqDto" 
+    resultType="com.icignal.kepler.report.dto.response.KprReportAgeCdResDto">
+     SELECT 
+     		age_cd		AS ageCd
+		   ,age_NM			AS ageNm
+	   FROM MRT.D_AGE
+	</select>
+
+	  <select id="testList" parameterType="com.icignal.kepler.report.dto.request.KprReportStoreReqDto" 
+	  resultType="com.icignal.kepler.report.dto.response.KprReportAgeCdResDto">
+ 		 SELECT 
+ 		 		 STORE_CD				AS storeCd
+				,STORE_NM				AS storeNm
+				,${strColumn}
+		 FROM
+		  	 	mrt.D_STORE
+		  where 
+		  		STORE_CD=#{storeCd}
+       		   ${strEndPaging}
+	</select>
+
+
+	<select id="selectDaysSal" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto"
+	 resultType="com.icignal.kepler.report.dto.response.KprReportDaysSalseResDto">
+		/* KPRReport.selectDaysSal*/
+		/*2-1*/
+		SELECT concat(substring(YYYYMMDD,1,4) , '-' , substring(YYYYMMDD,5,2) , '-' , substring(YYYYMMDD,7,2) AS days
+		     ,TOT_MEM_CNT 	 							as     buyMbr						 --구매 회원수
+		     ,SALE_CNT       								as     buyCnt		                 --구매횟수
+		     ,RECP_CNT       								as     rciptCnt	                 --영수증건수
+		     ,RECP_AMT_CNT   							as     rciptAmt	                 --영수증건단가
+		     ,SALE_AMT       								as     salAmt	                     --매출금액
+		     ,MBR_MEM_CNT   	 							as     membership	                 --맴버십 구매회원수
+		     ,EAS_MEM_CNT    							as     sotreMbr	                 --간편가입 구매회원수
+		     ,WIP_MEM_CNT    							as     mbrWp		                 --위포인트 구매회원수
+		     ,WD_MEM_CNT									as 	 wdMemCnt					 --탈회 회원
+		     ,TOT_RDM_PNT    								as     usePnt		                 --사용포인트
+		     ,TOT_ACRL_PNT   								as     savePnt		                 --적립포인트
+		     ,BAS_ACRL_PNT   								as     basicPnt	                 --기본 적립포인트
+		     ,EVT_ACRL_PNT   								as     evtPnt		                 --이벤트 적립포인트
+		     ,${strColumn}
+		FROM MRT.FT_SALE_VOL_D
+		WHERE YYYYMMDD BETWEEN concat(substring(#{yyyymm},1,6) , '01') AND convert(char(8), com.fn_lastday(convert(date, #{yyyymmdd}, 112)), 112)
+<!-- 		<if test="qryType =='AAA'" > -->
+		 AND QRY_TYPE = #{qryType}
+
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+		 	AND STORE_CD =#{storeCd}
+		  </if>
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+		 	AND GEND_CD =#{genCd}
+		  </if>
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+		 	AND AGE_CD =#{ageCd}
+		  </if>
+		ORDER BY 1
+	</select>
+
+	<select id="selectMonthSal" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto"
+	 resultType="com.icignal.kepler.report.dto.response.KprReportMonthSalseResDto">
+		/* KPRReport.selectMonthSal*/
+		/*2-2*/
+		SELECT   
+				concat(SUBSTR(YYYYMM,1,4)  , '-' , SUBSTR(YYYYMM,5,2))		AS month
+		        ,TOT_MEM_CNT        																AS buyMbr  --구매회원수
+		        ,SALE_CNT           																	AS buyCnt	 --구매횟수
+		        ,RECP_CNT           																	AS rciptCnt --영수증건수
+		        ,RECP_AMT_CNT       																AS rciptAmt  --영수증건단가
+		        ,SALE_AMT           																	AS salAmt	--매출금액
+		        ,MBR_MEM_CNT        																AS membership	 --맴버십 구매회원수
+		        ,EAS_MEM_CNT        																AS sotreMbr   --간편가입 구매회원수
+		        ,WIP_MEM_CNT        																AS mbrWp	 --위포인트 구매회원수
+		        ,WD_MEM_CNT																		AS wdMemCnt --탈회 회원
+		        ,TOT_RDM_PNT       	 															AS usePnt		        --사용 포인트
+		        ,TOT_ACRL_PNT       																AS savePnt		        --적립 포인트
+		        ,TOT_DISA_PNT       																AS dropPnt		        --소멸 포인트
+		        ,BAS_ACRL_PNT       																AS basicPnt     --기본 적립포인트
+		        ,EVT_ACRL_PNT      			 													AS evtPnt    --이벤트 적립포인트
+		        ,${strColumn}
+		FROM MRT.FT_SALE_VOL_M
+		WHERE YYYYMM BETWEEN #{yyyymm} AND #{endyyyymm}
+		AND QRY_TYPE = #{qryType}
+
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+		 	AND STORE_CD =#{storeCd}
+		  </if>
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+		 	AND GEND_CD =#{genCd}
+		  </if>
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+		 	AND AGE_CD =#{ageCd}
+		  </if>
+		 ORDER BY 1
+	</select>
+
+	<select id="selectNoneBuyMbr" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportDoNotBuyMbrResDto">
+			/* KPRReport.selectNoneBuyMbr*/
+			SELECT 	
+					concat(SUBSTR(YYYYMM,1,4) , '-' , SUBSTR(YYYYMM,5,2))		  as yyyymm
+			        ,DOR_CNT          AS dorCnt			--휴면회원수
+			        ,NOPUR_23M_CNT    as mbr23m
+			        ,NOPUR_22M_CNT    as mbr22m
+			        ,NOPUR_21M_CNT    as mbr21m
+			        ,NOPUR_20M_CNT    as mbr20m
+			        ,NOPUR_19M_CNT    as mbr19m
+			        ,NOPUR_18M_CNT    as mbr18m
+			        ,NOPUR_17M_CNT    as mbr17m
+			        ,NOPUR_16M_CNT    as mbr16m
+			        ,NOPUR_15M_CNT    as mbr15m
+			        ,NOPUR_14M_CNT    as mbr14m
+			        ,NOPUR_13M_CNT    as mbr13m
+			        ,NOPUR_12M_CNT    as mbr12m
+			        ,NOPUR_11M_CNT    as mbr11m
+			        ,NOPUR_10M_CNT    as mbr10m
+			        ,NOPUR_9M_CNT     as mbr9m
+			        ,NOPUR_8M_CNT     as mbr8m
+			        ,NOPUR_7M_CNT     as mbr7m
+			        ,NOPUR_6M_CNT     as mbr6m
+			        ,NOPUR_5M_CNT     as mbr5m
+			        ,NOPUR_4M_CNT     as mbr4m
+			        ,NOPUR_3M_CNT     as mbr3m
+			        ,NOPUR_2M_CNT     as mbr2m
+			        ,NOPUR_1M_CNT     as mbr1m
+			        ,${strColumn}
+			FROM MRT.FT_NOSALE_VOL_M
+			WHERE YYYYMM BETWEEN #{yyyymm} AND #{endyyyymm}
+			AND QRY_TYPE = #{qryType}
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+		 	AND GEND_CD =#{genCd}
+		  	</if>
+		  	<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+		 	AND AGE_CD =#{ageCd}
+		 	</if>
+			ORDER BY YYYYMM
+	</select>
+
+	<select id="selectTimesSal" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportTimesSalResDto">
+			/* KPRReport.selectTimesSal*/
+			SELECT   
+					 A.HH_NM                    					AS  times
+			        ,isnull(B.TOT_PUR_MEM_CNT ,0)  	AS  buyMbr	           --구매회원수
+			        ,isnull(B.TOT_RECP_CNT    ,0)  		AS  rciptCnt	       --영수증건수
+			        ,isnull(B.TOT_RECP_AMT_CNT,0)  	AS  rciptAmt	       --영수증건단가
+			        ,isnull(B.TOT_PUR_AMT     ,0)  		AS  salAmt	           --매출금액
+			        ,isnull(B.TOT_RDM_PNT     ,0)  		AS  usePnt	           --사용포인트
+			        ,isnull(B.TOT_ACRL_PNT    ,0)  		AS  savePnt	           --적립포인트
+			        ,isnull(B.BAS_ACRL_PNT    ,0)  		AS  basicPnt	       --기본   적립포인트
+			        ,isnull(B.EVT_ACRL_PNT    ,0)  		AS  evtPnt	           --이벤트 적립포인트
+			        ,${strColumn}
+			FROM   MRT.D_HH A
+			     , MRT.FT_SALE_TIME_M B
+			WHERE B.YYYYMM (+)= SUBSTR(#{yyyymm},1,6)
+			AND B.QRY_TYPE (+)= #{qryType}
+			AND A.HH_CD = B.TIME_CD(+)
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+		 	AND STORE_CD =#{storeCd}
+		  </if>
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+		 	AND GEND_CD =#{genCd}
+		  </if>
+		  <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+		 	AND AGE_CD =#{ageCd}
+		  </if>
+			ORDER BY 1
+	</select>
+	<select id="selectAgoMonth" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportAgoMonthDateResDto">
+		SELECT /*+ index_desc(A D_DD_DATE_PK)*/ DD_CD as yyyymm
+		  FROM  MRT.D_DD_DATE	A
+		 WHERE  MM_CD =#{agoMonth}
+		   AND  ROWNUM =1
+	</select>
+	<select id="selectmbrCaseList" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto"
+	 resultType="com.icignal.kepler.report.dto.response.KprReportMbrCaseResDto">
+		/* KPRReport.selectmbrCaseList*/
+		<![CDATA[
+		SELECT LV AS SEQ
+		      ,CASE WHEN LV IN (1,2,3,4,5) THEN '맴버십 누적 회원수' WHEN LV IN (6,7,8,9) THEN '가입 채널별 신규 가입 회원수' WHEN LV = 10 THEN '탈회' WHEN LV IN (11,12) THEN '패밀리' END AS TYPEA
+		      ,CASE WHEN LV = 1 THEN '총회원수' WHEN LV = 2 THEN '신규 맴버십 회원수' WHEN LV = 3 THEN '현재 간편 회원수' WHEN LV = 4 THEN '현재 위포인트 회원수' WHEN LV = 5 THEN '현재 IBK 회원수'
+		            WHEN LV = 6 THEN '신규회원수' WHEN LV = 7 THEN 'APP' WHEN LV = 8 THEN 'WEB' WHEN LV = 9 THEN '제휴(IBK)' WHEN LV = 10 THEN '탈회' WHEN LV = 11 THEN '패밀리 가구수' WHEN LV = 12 THEN '패밀리 가입자수' END AS TYPEB
+		      ,DECODE(LV,1 ,TOT_MEM_CNT_0M  , 2,NEW_MBR_CNT_0M  , 3,EAS_MEM_CNT_0M  , 4,WIP_MEM_CNT_0M  , 5,WII_MEM_CNT_0M  , 6,FST_MEM_CNT_0M  , 7,NEW_APP_MEM_CNT_0M  , 8,NEW_WEB_MEM_CNT_0M  , 9,NEW_IBK_WEBID_0M     , 10,WITHD_MEM_CNT_0M    , 11,FAM_CNT_DD_0M    , 12,FAM_MEM_CNT_DD_0M    ) AS mon0m
+		      ,DECODE(LV,1 ,TOT_MEM_CNT_1M  , 2,NEW_MBR_CNT_1M  , 3,EAS_MEM_CNT_1M  , 4,WIP_MEM_CNT_1M  , 5,WII_MEM_CNT_1M  , 6,FST_MEM_CNT_1M  , 7,NEW_APP_MEM_CNT_1M  , 8,NEW_WEB_MEM_CNT_1M  , 9,NEW_IBK_WEBID_1M     , 10,WITHD_MEM_CNT_1M    , 11,FAM_CNT_DD_1M    , 12,FAM_MEM_CNT_DD_1M    ) AS mon1m
+		      ,DECODE(LV,1 ,TOT_MEM_1M_RT   , 2,NEW_MBR_1M_RT   , 3,EAS_MEM_1M_RT   , 4,WIP_MEM_1M_RT   , 5,WII_MEM_1M_RT   , 6,FST_MEM_1M_RT   , 7,NEW_APP_MEM_1M_RT   , 8,NEW_WEB_MEM_1M_RT   , 9,NEW_IBK_WEBID_1M_RT  , 10,WITHD_MEM_CNT_1M_RT , 11,FAM_CNT_DD_1M_RT , 12,FAM_MEM_CNT_DD_1M_RT ) AS mon1mRate
+		      ,DECODE(LV,1 ,TOT_MEM_CNT_12M , 2,NEW_MBR_CNT_12M , 3,EAS_MEM_CNT_12M , 4,WIP_MEM_CNT_12M , 5,WII_MEM_CNT_12M , 6,FST_MEM_CNT_12M , 7,NEW_APP_MEM_CNT_12M , 8,NEW_WEB_MEM_CNT_12M , 9,NEW_IBK_WEBID_12M    , 10,WITHD_MEM_CNT_12M   , 11,FAM_CNT_DD_12M   , 12,FAM_MEM_CNT_DD_12M   ) AS mon12m
+		      ,DECODE(LV,1 ,TOT_MEM_12M_RT  , 2,NEW_MBR_12M_RT  , 3,EAS_MEM_12M_RT  , 4,WIP_MEM_12M_RT  , 5,WII_MEM_12M_RT  , 6,FST_MEM_12M_RT  , 7,NEW_APP_MEM_12M_RT  , 8,NEW_WEB_MEM_12M_RT  , 9,NEW_IBK_WEBID_12M_RT , 10,WITHD_MEM_CNT_12M_RT, 11,FAM_CNT_DD_12M_RT, 12,FAM_MEM_CNT_DD_12M_RT) AS mon12mRate
+		FROM
+		    (
+		    SELECT
+		         SUM(TOT_MEM_CNT_0M     ) AS TOT_MEM_CNT_0M         --당월총회원수
+		        ,SUM(TOT_MEM_CNT_1M     ) AS TOT_MEM_CNT_1M         --전월총회원수
+		        ,SUM(TOT_MEM_CNT_12M    ) AS TOT_MEM_CNT_12M        --전년동월총회원수
+		        ,SUM(NEW_MBR_CNT_0M     ) AS NEW_MBR_CNT_0M         --당월신규맴버십회원수
+		        ,SUM(NEW_MBR_CNT_1M     ) AS NEW_MBR_CNT_1M         --전월신규맴버십회원수
+		        ,SUM(NEW_MBR_CNT_12M    ) AS NEW_MBR_CNT_12M        --전년동월맴버십회원수
+		        ,SUM(EAS_MEM_CNT_0M     ) AS EAS_MEM_CNT_0M         --당월간편가입회원수
+		        ,SUM(EAS_MEM_CNT_1M     ) AS EAS_MEM_CNT_1M         --전월간편가입회원수
+		        ,SUM(EAS_MEM_CNT_12M    ) AS EAS_MEM_CNT_12M        --전년동월간편가입회원수
+		        ,SUM(WIP_MEM_CNT_0M     ) AS WIP_MEM_CNT_0M         --당월위포인트가입회원수
+		        ,SUM(WIP_MEM_CNT_1M     ) AS WIP_MEM_CNT_1M         --전월위포인트가입회원수
+		        ,SUM(WIP_MEM_CNT_12M    ) AS WIP_MEM_CNT_12M        --전년동월위포인트가입회원수
+		        ,SUM(WII_MEM_CNT_0M     ) AS WII_MEM_CNT_0M         --당월IBK회원수
+		        ,SUM(WII_MEM_CNT_1M     ) AS WII_MEM_CNT_1M         --전월IBK회원수
+		        ,SUM(WII_MEM_CNT_12M    ) AS WII_MEM_CNT_12M        --전년동월IBK회원수
+		        ,SUM(FST_MEM_CNT_0M     ) AS FST_MEM_CNT_0M         --당월신규회원수
+		        ,SUM(FST_MEM_CNT_1M     ) AS FST_MEM_CNT_1M         --전월신규회원수
+		        ,SUM(FST_MEM_CNT_12M    ) AS FST_MEM_CNT_12M        --전년동월신규회원수
+		        ,SUM(NEW_APP_MEM_CNT_0M ) AS NEW_APP_MEM_CNT_0M     --당월신규APP회원수
+		        ,SUM(NEW_APP_MEM_CNT_1M ) AS NEW_APP_MEM_CNT_1M     --전월신규APP회원수
+		        ,SUM(NEW_APP_MEM_CNT_12M) AS NEW_APP_MEM_CNT_12M    --전년동월신규APP회원수
+		        ,SUM(NEW_WEB_MEM_CNT_0M ) AS NEW_WEB_MEM_CNT_0M     --당월신규WEB회원수
+		        ,SUM(NEW_WEB_MEM_CNT_1M ) AS NEW_WEB_MEM_CNT_1M     --전월신규WEB회원수
+		        ,SUM(NEW_WEB_MEM_CNT_12M) AS NEW_WEB_MEM_CNT_12M    --전년동월신규WEB회원수
+		        ,SUM(NEW_IBK_WEBID_0M   ) AS NEW_IBK_WEBID_0M       --당월신규IBK회원수
+		        ,SUM(NEW_IBK_WEBID_1M   ) AS NEW_IBK_WEBID_1M       --전월신규IBK회원수
+		        ,SUM(NEW_IBK_WEBID_12M  ) AS NEW_IBK_WEBID_12M      --전년동월신규IBK회원수
+		        ,SUM(WITHD_MEM_CNT_0M   ) AS WITHD_MEM_CNT_0M       --당월탈퇴회원수
+		        ,SUM(WITHD_MEM_CNT_1M   ) AS WITHD_MEM_CNT_1M       --전월탈퇴회원수
+		        ,SUM(WITHD_MEM_CNT_12M  ) AS WITHD_MEM_CNT_12M      --전년동월탈퇴회원수
+		        ,SUM(FAM_CNT_DD_0M      ) AS FAM_CNT_DD_0M          --당월가구화수
+		        ,SUM(FAM_CNT_DD_1M      ) AS FAM_CNT_DD_1M          --전월가구화수
+		        ,SUM(FAM_CNT_DD_12M     ) AS FAM_CNT_DD_12M         --전년동월가구화수
+		        ,SUM(FAM_MEM_CNT_DD_0M  ) AS FAM_MEM_CNT_DD_0M      --당월가구화구성회원수
+		        ,SUM(FAM_MEM_CNT_DD_1M  ) AS FAM_MEM_CNT_DD_1M      --전월가구화구성회원수
+		        ,SUM(FAM_MEM_CNT_DD_12M ) AS FAM_MEM_CNT_DD_12M     --전년동월가구화구성회원수
+		        ,CASE WHEN SUM(TOT_MEM_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(TOT_MEM_CNT_0M) / SUM(TOT_MEM_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(TOT_MEM_CNT_0M) / SUM(TOT_MEM_CNT_1M ) -1,2) END END AS TOT_MEM_1M_RT
+		        ,CASE WHEN SUM(TOT_MEM_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(TOT_MEM_CNT_0M) / SUM(TOT_MEM_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(TOT_MEM_CNT_0M) / SUM(TOT_MEM_CNT_12M) -1,2) END END AS TOT_MEM_12M_RT
+		        ,CASE WHEN SUM(NEW_MBR_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(NEW_MBR_CNT_0M) / SUM(NEW_MBR_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_MBR_CNT_0M) / SUM(NEW_MBR_CNT_1M ) -1,2) END END AS NEW_MBR_1M_RT
+		        ,CASE WHEN SUM(NEW_MBR_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(NEW_MBR_CNT_0M) / SUM(NEW_MBR_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_MBR_CNT_0M) / SUM(NEW_MBR_CNT_12M) -1,2) END END AS NEW_MBR_12M_RT
+		        ,CASE WHEN SUM(EAS_MEM_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(EAS_MEM_CNT_0M) / SUM(EAS_MEM_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(EAS_MEM_CNT_0M) / SUM(EAS_MEM_CNT_1M ) -1,2) END END AS EAS_MEM_1M_RT
+		        ,CASE WHEN SUM(EAS_MEM_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(EAS_MEM_CNT_0M) / SUM(EAS_MEM_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(EAS_MEM_CNT_0M) / SUM(EAS_MEM_CNT_12M) -1,2) END END AS EAS_MEM_12M_RT
+		        ,CASE WHEN SUM(WIP_MEM_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(WIP_MEM_CNT_0M) / SUM(WIP_MEM_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(WIP_MEM_CNT_0M) / SUM(WIP_MEM_CNT_1M ) -1,2) END END AS WIP_MEM_1M_RT
+		        ,CASE WHEN SUM(WIP_MEM_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(WIP_MEM_CNT_0M) / SUM(WIP_MEM_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(WIP_MEM_CNT_0M) / SUM(WIP_MEM_CNT_12M) -1,2) END END AS WIP_MEM_12M_RT
+		        ,CASE WHEN SUM(WII_MEM_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(WII_MEM_CNT_0M) / SUM(WII_MEM_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(WII_MEM_CNT_0M) / SUM(WII_MEM_CNT_1M ) -1,2) END END AS WII_MEM_1M_RT
+		        ,CASE WHEN SUM(WII_MEM_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(WII_MEM_CNT_0M) / SUM(WII_MEM_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(WII_MEM_CNT_0M) / SUM(WII_MEM_CNT_12M) -1,2) END END AS WII_MEM_12M_RT
+		        ,CASE WHEN SUM(FST_MEM_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(FST_MEM_CNT_0M) / SUM(FST_MEM_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(FST_MEM_CNT_0M) / SUM(FST_MEM_CNT_1M ) -1,2) END END AS FST_MEM_1M_RT
+		        ,CASE WHEN SUM(FST_MEM_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(FST_MEM_CNT_0M) / SUM(FST_MEM_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(FST_MEM_CNT_0M) / SUM(FST_MEM_CNT_12M) -1,2) END END AS FST_MEM_12M_RT
+		        ,CASE WHEN SUM(NEW_APP_MEM_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(NEW_APP_MEM_CNT_0M) / SUM(NEW_APP_MEM_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_APP_MEM_CNT_0M) / SUM(NEW_APP_MEM_CNT_1M ) -1,2) END END AS NEW_APP_MEM_1M_RT
+		        ,CASE WHEN SUM(NEW_APP_MEM_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(NEW_APP_MEM_CNT_0M) / SUM(NEW_APP_MEM_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_APP_MEM_CNT_0M) / SUM(NEW_APP_MEM_CNT_12M) -1,2) END END AS NEW_APP_MEM_12M_RT
+		        ,CASE WHEN SUM(NEW_WEB_MEM_CNT_1M)  = 0 THEN 0 ELSE CASE WHEN SUM(NEW_WEB_MEM_CNT_0M) / SUM(NEW_WEB_MEM_CNT_1M ) -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_WEB_MEM_CNT_0M) / SUM(NEW_WEB_MEM_CNT_1M ) -1,2) END END AS NEW_WEB_MEM_1M_RT
+		        ,CASE WHEN SUM(NEW_WEB_MEM_CNT_12M) = 0 THEN 0 ELSE CASE WHEN SUM(NEW_WEB_MEM_CNT_0M) / SUM(NEW_WEB_MEM_CNT_12M) -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_WEB_MEM_CNT_0M) / SUM(NEW_WEB_MEM_CNT_12M) -1,2) END END AS NEW_WEB_MEM_12M_RT
+		        ,CASE WHEN SUM(NEW_IBK_WEBID_1M)    = 0 THEN 0 ELSE CASE WHEN SUM(NEW_IBK_WEBID_0M)   / SUM(NEW_IBK_WEBID_1M )   -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_IBK_WEBID_0M)   / SUM(NEW_IBK_WEBID_1M )   -1,2) END END AS NEW_IBK_WEBID_1M_RT
+		        ,CASE WHEN SUM(NEW_IBK_WEBID_12M)   = 0 THEN 0 ELSE CASE WHEN SUM(NEW_IBK_WEBID_0M)   / SUM(NEW_IBK_WEBID_12M)   -1 >= 1 THEN 1 ELSE ROUND(SUM(NEW_IBK_WEBID_0M)   / SUM(NEW_IBK_WEBID_12M)   -1,2) END END AS NEW_IBK_WEBID_12M_RT
+		        ,CASE WHEN SUM(WITHD_MEM_CNT_1M)    = 0 THEN 0 ELSE CASE WHEN SUM(WITHD_MEM_CNT_0M)   / SUM(WITHD_MEM_CNT_1M )   -1 >= 1 THEN 1 ELSE ROUND(SUM(WITHD_MEM_CNT_0M)   / SUM(WITHD_MEM_CNT_1M )   -1,2) END END AS WITHD_MEM_CNT_1M_RT
+		        ,CASE WHEN SUM(WITHD_MEM_CNT_12M)   = 0 THEN 0 ELSE CASE WHEN SUM(WITHD_MEM_CNT_0M)   / SUM(WITHD_MEM_CNT_12M)   -1 >= 1 THEN 1 ELSE ROUND(SUM(WITHD_MEM_CNT_0M)   / SUM(WITHD_MEM_CNT_12M)   -1,2) END END AS WITHD_MEM_CNT_12M_RT
+		        ,CASE WHEN SUM(FAM_CNT_DD_1M)       = 0 THEN 0 ELSE CASE WHEN SUM(FAM_CNT_DD_0M)      / SUM(FAM_CNT_DD_1M )      -1 >= 1 THEN 1 ELSE ROUND(SUM(FAM_CNT_DD_0M)      / SUM(FAM_CNT_DD_1M )      -1,2) END END AS FAM_CNT_DD_1M_RT
+		        ,CASE WHEN SUM(FAM_CNT_DD_12M)      = 0 THEN 0 ELSE CASE WHEN SUM(FAM_CNT_DD_0M)      / SUM(FAM_CNT_DD_12M)      -1 >= 1 THEN 1 ELSE ROUND(SUM(FAM_CNT_DD_0M)      / SUM(FAM_CNT_DD_12M)      -1,2) END END AS FAM_CNT_DD_12M_RT
+		        ,CASE WHEN SUM(FAM_MEM_CNT_DD_1M)   = 0 THEN 0 ELSE CASE WHEN SUM(FAM_MEM_CNT_DD_0M)  / SUM(FAM_MEM_CNT_DD_1M )  -1 >= 1 THEN 1 ELSE ROUND(SUM(FAM_MEM_CNT_DD_0M)  / SUM(FAM_MEM_CNT_DD_1M )  -1,2) END END AS FAM_MEM_CNT_DD_1M_RT
+		        ,CASE WHEN SUM(FAM_MEM_CNT_DD_12M)  = 0 THEN 0 ELSE CASE WHEN SUM(FAM_MEM_CNT_DD_0M)  / SUM(FAM_MEM_CNT_DD_12M)  -1 >= 1 THEN 1 ELSE ROUND(SUM(FAM_MEM_CNT_DD_0M)  / SUM(FAM_MEM_CNT_DD_12M)  -1,2) END END AS FAM_MEM_CNT_DD_12M_RT
+		    FROM
+		        (
+		        SELECT CASE WHEN YYYYMMDD = #{yyyymm} THEN TOT_MEM_CNT ELSE 0 END                                                             AS TOT_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112) THEN TOT_MEM_CNT ELSE 0 END     AS TOT_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN TOT_MEM_CNT ELSE 0 END     AS TOT_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN NEW_MBR_CNT ELSE 0 END                                                             AS NEW_MBR_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN NEW_MBR_CNT ELSE 0 END     AS NEW_MBR_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN NEW_MBR_CNT ELSE 0 END     AS NEW_MBR_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN EAS_MEM_CNT ELSE 0 END                                                             AS EAS_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN EAS_MEM_CNT ELSE 0 END     AS EAS_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN EAS_MEM_CNT ELSE 0 END     AS EAS_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN WIP_MEM_CNT ELSE 0 END                                                             AS WIP_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN WIP_MEM_CNT ELSE 0 END     AS WIP_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN WIP_MEM_CNT ELSE 0 END     AS WIP_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN WII_MEM_CNT ELSE 0 END                                                             AS WII_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN WII_MEM_CNT ELSE 0 END     AS WII_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN WII_MEM_CNT ELSE 0 END     AS WII_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN FST_MEM_CNT ELSE 0 END                                                             AS FST_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN FST_MEM_CNT ELSE 0 END     AS FST_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN FST_MEM_CNT ELSE 0 END     AS FST_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN NEW_APP_MEM_CNT ELSE 0 END                                                         AS NEW_APP_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN NEW_APP_MEM_CNT ELSE 0 END AS NEW_APP_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN NEW_APP_MEM_CNT ELSE 0 END AS NEW_APP_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN NEW_WEB_MEM_CNT ELSE 0 END                                                         AS NEW_WEB_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN NEW_WEB_MEM_CNT ELSE 0 END AS NEW_WEB_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN NEW_WEB_MEM_CNT ELSE 0 END AS NEW_WEB_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN NEW_IBK_WEBID ELSE 0 END                                                           AS NEW_IBK_WEBID_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN NEW_IBK_WEBID ELSE 0 END   AS NEW_IBK_WEBID_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN NEW_IBK_WEBID ELSE 0 END   AS NEW_IBK_WEBID_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN WITHD_MEM_CNT_DD ELSE 0 END                                                        AS WITHD_MEM_CNT_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN WITHD_MEM_CNT_DD ELSE 0 END AS WITHD_MEM_CNT_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN WITHD_MEM_CNT_DD ELSE 0 END AS WITHD_MEM_CNT_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN FAM_CNT_DD ELSE 0 END                                                               AS FAM_CNT_DD_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112) THEN FAM_CNT_DD ELSE 0 END       AS FAM_CNT_DD_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN FAM_CNT_DD ELSE 0 END       AS FAM_CNT_DD_12M
+		              ,CASE WHEN YYYYMMDD = #{yyyymm} THEN FAM_MEM_CNT_DD ELSE 0 END                                                           AS FAM_MEM_CNT_DD_0M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112)  THEN FAM_MEM_CNT_DD ELSE 0 END   AS FAM_MEM_CNT_DD_1M
+		              ,CASE WHEN YYYYMMDD = CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112) THEN FAM_MEM_CNT_DD ELSE 0 END   AS FAM_MEM_CNT_DD_12M
+		        FROM MRT.FT_MEM_CNT_M
+		        WHERE YYYYMMDD IN ( CONVERT(VARCHAR(8),DATEADD(MONTH,-12,#{yyyymm}),112)), CONVERT(VARCHAR(8),DATEADD(MONTH,-1,#{yyyymm}),112),#{yyyymm})
+		        )
+		    )A,
+		    (
+		    SELECT LEVEL LV
+		    FROM DUAL
+		    CONNECT BY LEVEL <= 12
+		    ) B
+		UNION ALL
+		SELECT SEQ,TYPEA,TYPEB,mon0m,mon1m,mon1mRate,mon12m,mon12mRate
+		FROM
+		(
+		SELECT B.LV AS SEQ
+		     , CASE WHEN B.LV IN (13,14,15,16,17) THEN '개인등급' END AS TYPEA
+		     , CASE WHEN B.LV= 13 THEN 'VVIP' WHEN B.LV = 14 THEN 'VIP' WHEN B.LV = 15 THEN 'GOLD' WHEN B.LV= 16 THEN 'SILVER' WHEN B.LV = 17 THEN 'BRONZE' END AS TYPEB
+		     , DECODE(LV,13 ,GR_0M_1    ,14,GR_0M_2    ,15,GR_0M_3    ,16,GR_0M_4    ,17,GR_0M_5 )       AS mon0m
+		     , DECODE(LV,13 ,GR_1M_1    ,14,GR_1M_2    ,15,GR_1M_3    ,16,GR_1M_4    ,17,GR_1M_5 )       AS mon1m
+		     , DECODE(LV,13 ,GR_1M_1_RT ,14,GR_1M_2_RT ,15,GR_1M_3_RT ,16,GR_1M_4_RT ,17,GR_1M_1_RT)     AS mon1mRate
+		     , DECODE(LV,13 ,GR_12M_1   ,14,GR_12M_2   ,15,GR_12M_3   ,16,GR_12M_4   ,17,GR_12M_5)       AS mon12m
+		     , DECODE(LV,13 ,GR_12M_1_RT,14,GR_12M_2_RT,15,GR_12M_3_RT,16,GR_12M_4_RT,17,GR_12M_1_RT)    AS mon12mRate
+		FROM
+		    (
+		SELECT GR_0M_1,GR_0M_2,GR_0M_3,GR_0M_4,GR_0M_5,
+		       GR_1M_1,GR_1M_2,GR_1M_3,GR_1M_4,GR_1M_5,
+		       GR_12M_1,GR_12M_2,GR_12M_3,GR_12M_4,GR_12M_5,
+		       CASE WHEN GR_1M_1  = 0 THEN 0 ELSE CASE WHEN (GR_0M_1-GR_1M_1)/GR_1M_1*100   >= 100 THEN 100 ELSE ROUND((GR_0M_1-GR_1M_1)/GR_1M_1  *100,2) END END AS GR_1M_1_RT,
+		       CASE WHEN GR_1M_2  = 0 THEN 0 ELSE CASE WHEN (GR_0M_2-GR_1M_2)/GR_1M_2*100   >= 100 THEN 100 ELSE ROUND((GR_0M_2-GR_1M_2)/GR_1M_2  *100,2) END END AS GR_1M_2_RT,
+		       CASE WHEN GR_1M_3  = 0 THEN 0 ELSE CASE WHEN (GR_0M_3-GR_1M_3)/GR_1M_3*100   >= 100 THEN 100 ELSE ROUND((GR_0M_3-GR_1M_3)/GR_1M_3  *100,2) END END AS GR_1M_3_RT,
+		       CASE WHEN GR_1M_4  = 0 THEN 0 ELSE CASE WHEN (GR_0M_4-GR_1M_4)/GR_1M_4*100   >= 100 THEN 100 ELSE ROUND((GR_0M_4-GR_1M_4)/GR_1M_4  *100,2) END END AS GR_1M_4_RT,
+		       CASE WHEN GR_1M_5  = 0 THEN 0 ELSE CASE WHEN (GR_0M_5-GR_1M_5)/GR_1M_5*100   >= 100 THEN 100 ELSE ROUND((GR_0M_5-GR_1M_5)/GR_1M_5  *100,2) END END AS GR_1M_5_RT,
+		       CASE WHEN GR_12M_1 = 0 THEN 0 ELSE CASE WHEN (GR_0M_1-GR_12M_1)/GR_12M_1*100 >= 100 THEN 100 ELSE ROUND((GR_0M_1-GR_12M_1)/GR_12M_1*100,2) END END AS GR_12M_1_RT,
+		       CASE WHEN GR_12M_2 = 0 THEN 0 ELSE CASE WHEN (GR_0M_2-GR_12M_2)/GR_12M_2*100 >= 100 THEN 100 ELSE ROUND((GR_0M_2-GR_12M_2)/GR_12M_2*100,2) END END AS GR_12M_2_RT,
+		       CASE WHEN GR_12M_3 = 0 THEN 0 ELSE CASE WHEN (GR_0M_3-GR_12M_3)/GR_12M_3*100 >= 100 THEN 100 ELSE ROUND((GR_0M_3-GR_12M_3)/GR_12M_3*100,2) END END AS GR_12M_3_RT,
+		       CASE WHEN GR_12M_4 = 0 THEN 0 ELSE CASE WHEN (GR_0M_4-GR_12M_4)/GR_12M_4*100 >= 100 THEN 100 ELSE ROUND((GR_0M_4-GR_12M_4)/GR_12M_4*100,2) END END AS GR_12M_4_RT,
+		       CASE WHEN GR_12M_5 = 0 THEN 0 ELSE CASE WHEN (GR_0M_5-GR_12M_5)/GR_12M_5*100 >= 100 THEN 100 ELSE ROUND((GR_0M_5-GR_12M_5)/GR_12M_5*100,2) END END AS GR_12M_5_RT
+
+		FROM (
+		    SELECT SUM(CASE WHEN YYYYMM = SUBSTR(#{yyyymm},1,6) THEN PERS_1GR_MEM_CNT ELSE 0 END) AS GR_0M_1
+		          ,SUM(CASE WHEN YYYYMM = SUBSTR(#{yyyymm},1,6) THEN PERS_2GR_MEM_CNT ELSE 0 END) AS GR_0M_2
+		          ,SUM(CASE WHEN YYYYMM = SUBSTR(#{yyyymm},1,6) THEN PERS_3GR_MEM_CNT ELSE 0 END) AS GR_0M_3
+		          ,SUM(CASE WHEN YYYYMM = SUBSTR(#{yyyymm},1,6) THEN PERS_4GR_MEM_CNT ELSE 0 END) AS GR_0M_4
+		          ,SUM(CASE WHEN YYYYMM = SUBSTR(#{yyyymm},1,6) THEN PERS_5GR_MEM_CNT ELSE 0 END) AS GR_0M_5
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-1,#{yyyymm}),112) THEN PERS_1GR_MEM_CNT ELSE 0 END) AS GR_1M_1
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-1,#{yyyymm}),112) THEN PERS_2GR_MEM_CNT ELSE 0 END) AS GR_1M_2
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-1,#{yyyymm}),112) THEN PERS_3GR_MEM_CNT ELSE 0 END) AS GR_1M_3
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-1,#{yyyymm}),112) THEN PERS_4GR_MEM_CNT ELSE 0 END) AS GR_1M_4
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-1,#{yyyymm}),112),'YYYYMM') THEN PERS_5GR_MEM_CNT ELSE 0 END) AS GR_1M_5
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-12,#{yyyymm}),112),'YYYYMM') THEN PERS_1GR_MEM_CNT ELSE 0 END) AS GR_12M_1
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-12,#{yyyymm}),112),'YYYYMM') THEN PERS_2GR_MEM_CNT ELSE 0 END) AS GR_12M_2
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-12,#{yyyymm}),112),'YYYYMM') THEN PERS_3GR_MEM_CNT ELSE 0 END) AS GR_12M_3
+		          ,SUM(CASE WHEN YYYYMM = CONVERT(VARCHAR(6),DATEADD(MONTH,-12,#{yyyymm}),112),'YYYYMM') THEN PERS_4GR_MEM_CNT ELSE 0 END) AS GR_12M_4
+		          ,SUM(CASE WHEN YYYYMM =CONVERT(VARCHAR(6),DATEADD(MONTH,-12,#{yyyymm}),112),'YYYYMM') THEN PERS_5GR_MEM_CNT ELSE 0 END) AS GR_12M_5
+		    FROM MRT.FT_MEM_GRD_M
+		    WHERE YYYYMM IN (SUBSTR(#{yyyymm},1,6),TO_CHAR(ADD_MONTHS(TO_DATE(SUBSTR(#{yyyymm},1,6),'YYYYMM'),-1),'YYYYMM'),TO_CHAR(ADD_MONTHS(TO_DATE(SUBSTR(#{yyyymm},1,6),'YYYYMM'),-12),'YYYYMM'))
+		    )
+		    ) A,
+		(
+		    SELECT LEVEL LV
+		    FROM DUAL
+		    CONNECT BY LEVEL <= 17
+		    ) B
+		)
+		WHERE SEQ >= 13 AND SEQ <= 17
+		    ]]>
+
+	</select>
+
+	<select id="selectPntSaveUseList" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportPntUseSaveResDto">
+		SELECT   conct(substring(YYYYMMDD,1,4) , '-' , substring(YYYYMMDD,5,2) , '-' , substring(YYYYMMDD,7,2))			AS  yyyymm
+				,PNT_00000_MEM_CNT	as  pntAmt0
+		        ,PNT_00999_MEM_CNT	as  pntAmt1000
+		        ,PNT_01000_MEM_CNT  as  pntAmt2000
+		        ,PNT_02000_MEM_CNT  as  pntAmt3000
+		        ,PNT_03000_MEM_CNT  as  pntAmt4000
+		        ,PNT_04000_MEM_CNT  as  pntAmt5000
+		        ,PNT_05000_MEM_CNT  as  pntAmt6000
+		        ,PNT_06000_MEM_CNT  as  pntAmt7000
+		        ,PNT_07000_MEM_CNT  as  pntAmt8000
+		        ,PNT_08000_MEM_CNT  as  pntAmt9000
+		        ,PNT_09000_MEM_CNT  as  pntAmt10000
+		        ,PNT_10000_MEM_CNT  as  pntAmt11000
+		        ,PNT_11000_MEM_CNT  as  pntAmt12000
+		        ,PNT_12000_MEM_CNT  as  pntAmt13000
+		        ,PNT_13000_MEM_CNT  as  pntAmt14000
+		        ,PNT_14000_MEM_CNT  as  pntAmt15000
+		        ,PNT_15200_MEM_CNT  as  pntAmt15000u
+		        ,PNT_20000_MEM_CNT  as  pntAmt20000d
+		       --
+		       	,RDM_00000_MEM_CNT  as  pntUse0
+		        ,RDM_00999_MEM_CNT  as  pntUse1000
+		        ,RDM_01000_MEM_CNT  as  pntUse2000
+		        ,RDM_02000_MEM_CNT  as  pntUse3000
+		        ,RDM_03000_MEM_CNT  as  pntUse4000
+		        ,RDM_04000_MEM_CNT  as  pntUse5000
+		        ,RDM_05000_MEM_CNT  as  pntUse6000
+		        ,RDM_06000_MEM_CNT  as  pntUse7000
+		        ,RDM_07000_MEM_CNT  as  pntUse8000
+		        ,RDM_08000_MEM_CNT  as  pntUse9000
+		        ,RDM_09000_MEM_CNT  as  pntUse10000
+		        ,RDM_10000_MEM_CNT  as  pntUse11000
+		        ,RDM_11000_MEM_CNT  as  pntUse12000
+		        ,RDM_12000_MEM_CNT  as  pntUse13000
+		        ,RDM_13000_MEM_CNT  as  pntUse14000
+		        ,RDM_14000_MEM_CNT  as  pntUse15000
+		        ,RDM_15200_MEM_CNT  as  pntUse15000u
+		        ,RDM_20000_MEM_CNT  as  pntUse20000d
+		       --
+		        ,AMT_00000_MEM_CNT  as  pntBuyMbr0
+		        ,AMT_00999_MEM_CNT  as  pntBuyMbr1000
+		        ,AMT_01000_MEM_CNT  as  pntBuyMbr2000
+		        ,AMT_02000_MEM_CNT  as  pntBuyMbr3000
+		        ,AMT_03000_MEM_CNT  as  pntBuyMbr4000
+		        ,AMT_04000_MEM_CNT  as  pntBuyMbr5000
+		        ,AMT_05000_MEM_CNT  as  pntBuyMbr6000
+		        ,AMT_06000_MEM_CNT  as  pntBuyMbr7000
+		        ,AMT_07000_MEM_CNT  as  pntBuyMbr8000
+		        ,AMT_08000_MEM_CNT  as  pntBuyMbr9000
+		        ,AMT_09000_MEM_CNT  as  pntBuyMbr10000
+		        ,AMT_10000_MEM_CNT  as  pntBuyMbr11000
+		        ,AMT_11000_MEM_CNT  as  pntBuyMbr12000
+		        ,AMT_12000_MEM_CNT  as  pntBuyMbr13000
+		        ,AMT_13000_MEM_CNT  as  pntBuyMbr14000
+		        ,AMT_14000_MEM_CNT  as  pntBuyMbr15000
+		        ,AMT_15000_MEM_CNT  as  pntBuyMbr16000
+		        ,AMT_16000_MEM_CNT  as  pntBuyMbr17000
+		        ,AMT_17000_MEM_CNT  as  pntBuyMbr18000
+		        ,AMT_18000_MEM_CNT  as  pntBuyMbr19000
+		        ,AMT_19000_MEM_CNT  as  pntBuyMbr20000
+		        ,AMT_20000_MEM_CNT  as  pntBuyMbr21000
+		        ,AMT_21000_MEM_CNT  as  pntBuyMbr22000
+		        ,AMT_22000_MEM_CNT  as  pntBuyMbr23000
+		        ,AMT_23000_MEM_CNT  as  pntBuyMbr24000
+		        ,AMT_24000_MEM_CNT  as  pntBuyMbr25000
+		        ,AMT_25000_MEM_CNT  as  pntBuyMbr26000
+		        ,AMT_26000_MEM_CNT  as  pntBuyMbr27000
+		        ,AMT_27000_MEM_CNT  as  pntBuyMbr28000
+		        ,AMT_28000_MEM_CNT  as  pntBuyMbr29000
+		        ,AMT_29000_MEM_CNT  as  pntBuyMbr30000
+		        ,AMT_30000_MEM_CNT  as  pntBuyMbr30000u
+		        ,${strColumn}
+		FROM MRT.FT_PNT_BAND_D
+		WHERE YYYYMMDD BETWEEN concat(#{yyyymm},'01' AND convert(char(8), com.fn_lastday(convert(date, #{yyyymmdd}, 112)), 112)
+		AND QRY_TYPE = #{qryType}
+		<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+		 	AND STORE_CD =#{storeCd}
+		</if>
+		<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+		 	AND GEND_CD =#{genCd}
+		</if>
+		<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+		 	AND AGE_CD =#{ageCd}
+		</if>
+		ORDER BY 1
+	</select>
+
+	<select id="selectMbrMonthSalList" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto"
+	 resultType="com.icignal.kepler.report.dto.response.KprReportMbrMonthSalResDto">
+	<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(toMonth)">
+	<![CDATA[
+		SELECT
+	       LV AS seq
+	      ,CASE WHEN LV BETWEEN 1 AND 18 THEN '포인트 보유 금액별' WHEN LV BETWEEN 19 AND 36 THEN '포인트 사용 금액별' WHEN LV BETWEEN 37 AND 68 THEN '구매금액 기준 회원수' END AS typea
+	      ,CASE WHEN LV = 1 THEN '0'      WHEN LV = 2 THEN '~ 1000' WHEN LV = 3 THEN '~ 2000' WHEN LV = 4 THEN '~ 3000' WHEN LV = 5  THEN '~ 4000'  WHEN LV = 6 THEN '~ 5000'
+	            WHEN LV = 7 THEN '~ 6000' WHEN LV = 8 THEN '~ 7000' WHEN LV = 9 THEN '~ 8000' WHEN LV =10 THEN '~ 9000' WHEN LV = 11 THEN '~ 10000' WHEN LV = 12 THEN '~ 11000'
+	            WHEN LV = 13 THEN '~ 12000' WHEN LV = 14 THEN '~ 13000' WHEN LV = 15 THEN '~ 14000' WHEN LV = 16 THEN '~ 15000' WHEN LV = 17 THEN '15000 ~ 20000'  WHEN LV = 18 THEN ' 20000 이상'
+	            WHEN LV = 19 THEN '0'      WHEN LV = 20 THEN '~ 1000' WHEN LV = 21 THEN '~ 2000' WHEN LV = 22 THEN '~ 3000' WHEN LV = 23  THEN '~ 4000'  WHEN LV = 24 THEN '~ 5000'
+	            WHEN LV = 25 THEN '~ 6000' WHEN LV = 26 THEN '~ 7000' WHEN LV = 27 THEN '~ 8000' WHEN LV = 28 THEN '~ 9000' WHEN LV = 29 THEN '~ 10000' WHEN LV = 30 THEN '~ 11000'
+	            WHEN LV = 31 THEN '~ 12000' WHEN LV = 32 THEN '~ 13000' WHEN LV = 33 THEN '~ 14000' WHEN LV = 34 THEN '~ 15000' WHEN LV = 35 THEN '15000 ~ 20000'  WHEN LV = 36 THEN ' 20000 이상' END typeb
+	      ,DECODE(LV,1 ,PNT_00000_0M ,2 ,PNT_00999_0M ,3 ,PNT_01000_0M ,4 ,PNT_02000_0M ,5 ,PNT_03000_0M ,6 ,PNT_04000_0M ,7 ,PNT_05000_0M ,8 ,PNT_06000_0M ,9 ,PNT_07000_0M ,10,PNT_08000_0M ,11,PNT_09000_0M ,12,PNT_10000_0M ,13,PNT_11000_0M ,14,PNT_12000_0M ,15,PNT_13000_0M ,16,PNT_14000_0M ,17,PNT_15200_0M ,18,PNT_20000_0M
+	                ,19,RDM_00000_0M ,20,RDM_00999_0M ,21,RDM_01000_0M ,22,RDM_02000_0M ,23,RDM_03000_0M ,24,RDM_04000_0M ,25,RDM_05000_0M ,26,RDM_06000_0M ,27,RDM_07000_0M ,28,RDM_08000_0M ,29,RDM_09000_0M ,30,RDM_10000_0M ,31,RDM_11000_0M ,32,RDM_12000_0M ,33,RDM_13000_0M ,34,RDM_14000_0M ,35,RDM_15200_0M ,36,RDM_20000_0M ) AS month0m
+	      ,DECODE(LV,1 ,PNT_00000_1M ,2 ,PNT_00999_1M ,3 ,PNT_01000_1M ,4 ,PNT_02000_1M ,5 ,PNT_03000_1M ,6 ,PNT_04000_1M ,7 ,PNT_05000_1M ,8 ,PNT_06000_1M ,9 ,PNT_07000_1M ,10,PNT_08000_1M ,11,PNT_09000_1M ,12,PNT_10000_1M ,13,PNT_11000_1M ,14,PNT_12000_1M ,15,PNT_13000_1M ,16,PNT_14000_1M ,17,PNT_15200_1M ,18,PNT_20000_1M
+	                ,19,RDM_00000_1M ,20,RDM_00999_1M ,21,RDM_01000_1M ,22,RDM_02000_1M ,23,RDM_03000_1M ,24,RDM_04000_1M ,25,RDM_05000_1M ,26,RDM_06000_1M ,27,RDM_07000_1M ,28,RDM_08000_1M ,29,RDM_09000_1M ,30,RDM_10000_1M ,31,RDM_11000_1M ,32,RDM_12000_1M ,33,RDM_13000_1M ,34,RDM_14000_1M ,35,RDM_15200_1M ,36,RDM_20000_1M ) AS month1m
+	      ,DECODE(LV,1 ,PNT_00000_12M,2 ,PNT_00999_12M,3 ,PNT_01000_12M,4 ,PNT_02000_12M,5 ,PNT_03000_12M,6 ,PNT_04000_12M,7 ,PNT_05000_12M,8 ,PNT_06000_12M,9 ,PNT_07000_12M,10,PNT_08000_12M,11,PNT_09000_12M,12,PNT_10000_12M,13,PNT_11000_12M,14,PNT_12000_12M,15,PNT_13000_12M,16,PNT_14000_12M,17,PNT_15200_12M,18,PNT_20000_12M
+	                ,19,RDM_00000_12M,20,RDM_00999_12M,21,RDM_01000_12M,22,RDM_02000_12M,23,RDM_03000_12M,24,RDM_04000_12M,25,RDM_05000_12M,26,RDM_06000_12M,27,RDM_07000_12M,28,RDM_08000_12M,29,RDM_09000_12M,30,RDM_10000_12M,31,RDM_11000_12M,32,RDM_12000_12M,33,RDM_13000_12M,34,RDM_14000_12M,35,RDM_15200_12M,36,RDM_20000_12M ) AS month12m
+	      ,DECODE(LV,1 ,PNT_00000_1M_RATE ,2 ,PNT_00999_1M_RATE ,3 ,PNT_01000_1M_RATE ,4 ,PNT_02000_1M_RATE ,5 ,PNT_03000_1M_RATE ,6 ,PNT_04000_1M_RATE ,7 ,PNT_05000_1M_RATE ,8 ,PNT_06000_1M_RATE ,9 ,PNT_07000_1M_RATE ,10,PNT_08000_1M_RATE ,11,PNT_09000_1M_RATE ,12,PNT_10000_1M_RATE ,13,PNT_11000_1M_RATE ,14,PNT_12000_1M_RATE ,15,PNT_13000_1M_RATE ,16,PNT_14000_1M_RATE ,17,PNT_15200_1M_RATE ,18,PNT_20000_1M_RATE
+	                ,19,RDM_00000_1M_RATE ,20,RDM_00999_1M_RATE ,21,RDM_01000_1M_RATE ,22,RDM_02000_1M_RATE ,23,RDM_03000_1M_RATE ,24,RDM_04000_1M_RATE ,25,RDM_05000_1M_RATE ,26,RDM_06000_1M_RATE ,27,RDM_07000_1M_RATE ,28,RDM_08000_1M_RATE ,29,RDM_09000_1M_RATE ,30,RDM_10000_1M_RATE ,31,RDM_11000_1M_RATE ,32,RDM_12000_1M_RATE ,33,RDM_13000_1M_RATE ,34,RDM_14000_1M_RATE ,35,RDM_15200_1M_RATE ,36,RDM_20000_1M_RATE ) AS month1mRate
+	      ,DECODE(LV,1 ,PNT_00000_12M_RATE,2 ,PNT_00999_12M_RATE,3 ,PNT_01000_12M_RATE,4 ,PNT_02000_12M_RATE,5 ,PNT_03000_12M_RATE,6 ,PNT_04000_12M_RATE,7 ,PNT_05000_12M_RATE,8 ,PNT_06000_12M_RATE,9 ,PNT_07000_12M_RATE,10,PNT_08000_12M_RATE,11,PNT_09000_12M_RATE,12,PNT_10000_12M_RATE,13,PNT_11000_12M_RATE,14,PNT_12000_12M_RATE,15,PNT_13000_12M_RATE,16,PNT_14000_12M_RATE,17,PNT_15200_12M_RATE,18,PNT_20000_12M_RATE
+	                ,19,RDM_00000_12M_RATE,20,RDM_00999_12M_RATE,21,RDM_01000_12M_RATE,22,RDM_02000_12M_RATE,23,RDM_03000_12M_RATE,24,RDM_04000_12M_RATE,25,RDM_05000_12M_RATE,26,RDM_06000_12M_RATE,27,RDM_07000_12M_RATE,28,RDM_08000_12M_RATE,29,RDM_09000_12M_RATE,30,RDM_10000_12M_RATE,31,RDM_11000_12M_RATE,32,RDM_12000_12M_RATE,33,RDM_13000_12M_RATE,34,RDM_14000_12M_RATE,35,RDM_15200_12M_RATE,36,RDM_20000_12M_RATE ) AS month12mRate
+	FROM
+	    (
+	    SELECT   PNT_00000_0M,PNT_00999_0M,PNT_01000_0M,PNT_02000_0M,PNT_03000_0M,PNT_04000_0M,PNT_05000_0M,PNT_06000_0M,PNT_07000_0M,PNT_08000_0M,PNT_09000_0M,PNT_10000_0M
+	            ,PNT_11000_0M,PNT_12000_0M,PNT_13000_0M,PNT_14000_0M,PNT_15200_0M,PNT_20000_0M,RDM_00000_0M,RDM_00999_0M,RDM_01000_0M,RDM_02000_0M,RDM_03000_0M,RDM_04000_0M
+	            ,RDM_05000_0M,RDM_06000_0M,RDM_07000_0M,RDM_08000_0M,RDM_09000_0M,RDM_10000_0M,RDM_11000_0M,RDM_12000_0M,RDM_13000_0M,RDM_14000_0M,RDM_15200_0M,RDM_20000_0M
+	            ,PNT_00000_1M,PNT_00999_1M,PNT_01000_1M,PNT_02000_1M,PNT_03000_1M,PNT_04000_1M,PNT_05000_1M,PNT_06000_1M,PNT_07000_1M,PNT_08000_1M,PNT_09000_1M,PNT_10000_1M
+	            ,PNT_11000_1M,PNT_12000_1M,PNT_13000_1M,PNT_14000_1M,PNT_15200_1M,PNT_20000_1M,RDM_00000_1M,RDM_00999_1M,RDM_01000_1M,RDM_02000_1M,RDM_03000_1M,RDM_04000_1M
+	            ,RDM_05000_1M,RDM_06000_1M,RDM_07000_1M,RDM_08000_1M,RDM_09000_1M,RDM_10000_1M,RDM_11000_1M,RDM_12000_1M,RDM_13000_1M,RDM_14000_1M,RDM_15200_1M,RDM_20000_1M
+	            ,PNT_00000_12M,PNT_00999_12M,PNT_01000_12M,PNT_02000_12M,PNT_03000_12M,PNT_04000_12M,PNT_05000_12M,PNT_06000_12M,PNT_07000_12M,PNT_08000_12M,PNT_09000_12M,PNT_10000_12M
+	            ,PNT_11000_12M,PNT_12000_12M,PNT_13000_12M,PNT_14000_12M,PNT_15200_12M,PNT_20000_12M,RDM_00000_12M,RDM_00999_12M,RDM_01000_12M,RDM_02000_12M,RDM_03000_12M,RDM_04000_12M
+	            ,RDM_05000_12M,RDM_06000_12M,RDM_07000_12M,RDM_08000_12M,RDM_09000_12M,RDM_10000_12M,RDM_11000_12M,RDM_12000_12M,RDM_13000_12M,RDM_14000_12M,RDM_15200_12M,RDM_20000_12M
+	            ,CASE WHEN PNT_00000_1M  = 0 THEN 0 ELSE ROUND((PNT_00000_0M - PNT_00000_1M )/PNT_00000_1M*100,1 ) END AS PNT_00000_1M_RATE
+	            ,CASE WHEN PNT_00999_1M  = 0 THEN 0 ELSE ROUND((PNT_00999_0M - PNT_00999_1M )/PNT_00999_1M*100,1 ) END AS PNT_00999_1M_RATE
+	            ,CASE WHEN PNT_01000_1M  = 0 THEN 0 ELSE ROUND((PNT_01000_0M - PNT_01000_1M )/PNT_01000_1M*100,1 ) END AS PNT_01000_1M_RATE
+	            ,CASE WHEN PNT_02000_1M  = 0 THEN 0 ELSE ROUND((PNT_02000_0M - PNT_02000_1M )/PNT_02000_1M*100,1 ) END AS PNT_02000_1M_RATE
+	            ,CASE WHEN PNT_03000_1M  = 0 THEN 0 ELSE ROUND((PNT_03000_0M - PNT_03000_1M )/PNT_03000_1M*100,1 ) END AS PNT_03000_1M_RATE
+	            ,CASE WHEN PNT_04000_1M  = 0 THEN 0 ELSE ROUND((PNT_04000_0M - PNT_04000_1M )/PNT_04000_1M*100,1 ) END AS PNT_04000_1M_RATE
+	            ,CASE WHEN PNT_05000_1M  = 0 THEN 0 ELSE ROUND((PNT_05000_0M - PNT_05000_1M )/PNT_05000_1M*100,1 ) END AS PNT_05000_1M_RATE
+	            ,CASE WHEN PNT_06000_1M  = 0 THEN 0 ELSE ROUND((PNT_06000_0M - PNT_06000_1M )/PNT_06000_1M*100,1 ) END AS PNT_06000_1M_RATE
+	            ,CASE WHEN PNT_07000_1M  = 0 THEN 0 ELSE ROUND((PNT_07000_0M - PNT_07000_1M )/PNT_07000_1M*100,1 ) END AS PNT_07000_1M_RATE
+	            ,CASE WHEN PNT_08000_1M  = 0 THEN 0 ELSE ROUND((PNT_08000_0M - PNT_08000_1M )/PNT_08000_1M*100,1 ) END AS PNT_08000_1M_RATE
+	            ,CASE WHEN PNT_09000_1M  = 0 THEN 0 ELSE ROUND((PNT_09000_0M - PNT_09000_1M )/PNT_09000_1M*100,1 ) END AS PNT_09000_1M_RATE
+	            ,CASE WHEN PNT_10000_1M  = 0 THEN 0 ELSE ROUND((PNT_10000_0M - PNT_10000_1M )/PNT_10000_1M*100,1 ) END AS PNT_10000_1M_RATE
+	            ,CASE WHEN PNT_11000_1M  = 0 THEN 0 ELSE ROUND((PNT_11000_0M - PNT_11000_1M )/PNT_11000_1M*100,1 ) END AS PNT_11000_1M_RATE
+	            ,CASE WHEN PNT_12000_1M  = 0 THEN 0 ELSE ROUND((PNT_12000_0M - PNT_12000_1M )/PNT_12000_1M*100,1 ) END AS PNT_12000_1M_RATE
+	            ,CASE WHEN PNT_13000_1M  = 0 THEN 0 ELSE ROUND((PNT_13000_0M - PNT_13000_1M )/PNT_13000_1M*100,1 ) END AS PNT_13000_1M_RATE
+	            ,CASE WHEN PNT_14000_1M  = 0 THEN 0 ELSE ROUND((PNT_14000_0M - PNT_14000_1M )/PNT_14000_1M*100,1 ) END AS PNT_14000_1M_RATE
+	            ,CASE WHEN PNT_15200_1M  = 0 THEN 0 ELSE ROUND((PNT_15200_0M - PNT_15200_1M )/PNT_15200_1M*100,1 ) END AS PNT_15200_1M_RATE
+	            ,CASE WHEN PNT_20000_1M  = 0 THEN 0 ELSE ROUND((PNT_20000_0M - PNT_20000_1M )/PNT_20000_1M*100,1 ) END AS PNT_20000_1M_RATE
+	            ,CASE WHEN RDM_00000_1M  = 0 THEN 0 ELSE ROUND((RDM_00000_0M - RDM_00000_1M )/RDM_00000_1M*100,1 ) END AS RDM_00000_1M_RATE
+	            ,CASE WHEN RDM_00999_1M  = 0 THEN 0 ELSE ROUND((RDM_00999_0M - RDM_00999_1M )/RDM_00999_1M*100,1 ) END AS RDM_00999_1M_RATE
+	            ,CASE WHEN RDM_01000_1M  = 0 THEN 0 ELSE ROUND((RDM_01000_0M - RDM_01000_1M )/RDM_01000_1M*100,1 ) END AS RDM_01000_1M_RATE
+	            ,CASE WHEN RDM_02000_1M  = 0 THEN 0 ELSE ROUND((RDM_02000_0M - RDM_02000_1M )/RDM_02000_1M*100,1 ) END AS RDM_02000_1M_RATE
+	            ,CASE WHEN RDM_03000_1M  = 0 THEN 0 ELSE ROUND((RDM_03000_0M - RDM_03000_1M )/RDM_03000_1M*100,1 ) END AS RDM_03000_1M_RATE
+	            ,CASE WHEN RDM_04000_1M  = 0 THEN 0 ELSE ROUND((RDM_04000_0M - RDM_04000_1M )/RDM_04000_1M*100,1 ) END AS RDM_04000_1M_RATE
+	            ,CASE WHEN RDM_05000_1M  = 0 THEN 0 ELSE ROUND((RDM_05000_0M - RDM_05000_1M )/RDM_05000_1M*100,1 ) END AS RDM_05000_1M_RATE
+	            ,CASE WHEN RDM_06000_1M  = 0 THEN 0 ELSE ROUND((RDM_06000_0M - RDM_06000_1M )/RDM_06000_1M*100,1 ) END AS RDM_06000_1M_RATE
+	            ,CASE WHEN RDM_07000_1M  = 0 THEN 0 ELSE ROUND((RDM_07000_0M - RDM_07000_1M )/RDM_07000_1M*100,1 ) END AS RDM_07000_1M_RATE
+	            ,CASE WHEN RDM_08000_1M  = 0 THEN 0 ELSE ROUND((RDM_08000_0M - RDM_08000_1M )/RDM_08000_1M*100,1 ) END AS RDM_08000_1M_RATE
+	            ,CASE WHEN RDM_09000_1M  = 0 THEN 0 ELSE ROUND((RDM_09000_0M - RDM_09000_1M )/RDM_09000_1M*100,1 ) END AS RDM_09000_1M_RATE
+	            ,CASE WHEN RDM_10000_1M  = 0 THEN 0 ELSE ROUND((RDM_10000_0M - RDM_10000_1M )/RDM_10000_1M*100,1 ) END AS RDM_10000_1M_RATE
+	            ,CASE WHEN RDM_11000_1M  = 0 THEN 0 ELSE ROUND((RDM_11000_0M - RDM_11000_1M )/RDM_11000_1M*100,1 ) END AS RDM_11000_1M_RATE
+	            ,CASE WHEN RDM_12000_1M  = 0 THEN 0 ELSE ROUND((RDM_12000_0M - RDM_12000_1M )/RDM_12000_1M*100,1 ) END AS RDM_12000_1M_RATE
+	            ,CASE WHEN RDM_13000_1M  = 0 THEN 0 ELSE ROUND((RDM_13000_0M - RDM_13000_1M )/RDM_13000_1M*100,1 ) END AS RDM_13000_1M_RATE
+	            ,CASE WHEN RDM_14000_1M  = 0 THEN 0 ELSE ROUND((RDM_14000_0M - RDM_14000_1M )/RDM_14000_1M*100,1 ) END AS RDM_14000_1M_RATE
+	            ,CASE WHEN RDM_15200_1M  = 0 THEN 0 ELSE ROUND((RDM_15200_0M - RDM_15200_1M )/RDM_15200_1M*100,1 ) END AS RDM_15200_1M_RATE
+	            ,CASE WHEN RDM_20000_1M  = 0 THEN 0 ELSE ROUND((RDM_20000_0M - RDM_20000_1M )/RDM_20000_1M*100,1 ) END AS RDM_20000_1M_RATE
+	            ,CASE WHEN PNT_00000_12M = 0 THEN 0 ELSE ROUND((PNT_00000_0M - PNT_00000_12M)/PNT_00000_12M*100,1) END AS PNT_00000_12M_RATE
+	            ,CASE WHEN PNT_00999_12M = 0 THEN 0 ELSE ROUND((PNT_00999_0M - PNT_00999_12M)/PNT_00999_12M*100,1) END AS PNT_00999_12M_RATE
+	            ,CASE WHEN PNT_01000_12M = 0 THEN 0 ELSE ROUND((PNT_01000_0M - PNT_01000_12M)/PNT_01000_12M*100,1) END AS PNT_01000_12M_RATE
+	            ,CASE WHEN PNT_02000_12M = 0 THEN 0 ELSE ROUND((PNT_02000_0M - PNT_02000_12M)/PNT_02000_12M*100,1) END AS PNT_02000_12M_RATE
+	            ,CASE WHEN PNT_03000_12M = 0 THEN 0 ELSE ROUND((PNT_03000_0M - PNT_03000_12M)/PNT_03000_12M*100,1) END AS PNT_03000_12M_RATE
+	            ,CASE WHEN PNT_04000_12M = 0 THEN 0 ELSE ROUND((PNT_04000_0M - PNT_04000_12M)/PNT_04000_12M*100,1) END AS PNT_04000_12M_RATE
+	            ,CASE WHEN PNT_05000_12M = 0 THEN 0 ELSE ROUND((PNT_05000_0M - PNT_05000_12M)/PNT_05000_12M*100,1) END AS PNT_05000_12M_RATE
+	            ,CASE WHEN PNT_06000_12M = 0 THEN 0 ELSE ROUND((PNT_06000_0M - PNT_06000_12M)/PNT_06000_12M*100,1) END AS PNT_06000_12M_RATE
+	            ,CASE WHEN PNT_07000_12M = 0 THEN 0 ELSE ROUND((PNT_07000_0M - PNT_07000_12M)/PNT_07000_12M*100,1) END AS PNT_07000_12M_RATE
+	            ,CASE WHEN PNT_08000_12M = 0 THEN 0 ELSE ROUND((PNT_08000_0M - PNT_08000_12M)/PNT_08000_12M*100,1) END AS PNT_08000_12M_RATE
+	            ,CASE WHEN PNT_09000_12M = 0 THEN 0 ELSE ROUND((PNT_09000_0M - PNT_09000_12M)/PNT_09000_12M*100,1) END AS PNT_09000_12M_RATE
+	            ,CASE WHEN PNT_10000_12M = 0 THEN 0 ELSE ROUND((PNT_10000_0M - PNT_10000_12M)/PNT_10000_12M*100,1) END AS PNT_10000_12M_RATE
+	            ,CASE WHEN PNT_11000_12M = 0 THEN 0 ELSE ROUND((PNT_11000_0M - PNT_11000_12M)/PNT_11000_12M*100,1) END AS PNT_11000_12M_RATE
+	            ,CASE WHEN PNT_12000_12M = 0 THEN 0 ELSE ROUND((PNT_12000_0M - PNT_12000_12M)/PNT_12000_12M*100,1) END AS PNT_12000_12M_RATE
+	            ,CASE WHEN PNT_13000_12M = 0 THEN 0 ELSE ROUND((PNT_13000_0M - PNT_13000_12M)/PNT_13000_12M*100,1) END AS PNT_13000_12M_RATE
+	            ,CASE WHEN PNT_14000_12M = 0 THEN 0 ELSE ROUND((PNT_14000_0M - PNT_14000_12M)/PNT_14000_12M*100,1) END AS PNT_14000_12M_RATE
+	            ,CASE WHEN PNT_15200_12M = 0 THEN 0 ELSE ROUND((PNT_15200_0M - PNT_15200_12M)/PNT_15200_12M*100,1) END AS PNT_15200_12M_RATE
+	            ,CASE WHEN PNT_20000_12M = 0 THEN 0 ELSE ROUND((PNT_20000_0M - PNT_20000_12M)/PNT_20000_12M*100,1) END AS PNT_20000_12M_RATE
+	            ,CASE WHEN RDM_00000_12M = 0 THEN 0 ELSE ROUND((RDM_00000_0M - RDM_00000_12M)/RDM_00000_12M*100,1) END AS RDM_00000_12M_RATE
+	            ,CASE WHEN RDM_00999_12M = 0 THEN 0 ELSE ROUND((RDM_00999_0M - RDM_00999_12M)/RDM_00999_12M*100,1) END AS RDM_00999_12M_RATE
+	            ,CASE WHEN RDM_01000_12M = 0 THEN 0 ELSE ROUND((RDM_01000_0M - RDM_01000_12M)/RDM_01000_12M*100,1) END AS RDM_01000_12M_RATE
+	            ,CASE WHEN RDM_02000_12M = 0 THEN 0 ELSE ROUND((RDM_02000_0M - RDM_02000_12M)/RDM_02000_12M*100,1) END AS RDM_02000_12M_RATE
+	            ,CASE WHEN RDM_03000_12M = 0 THEN 0 ELSE ROUND((RDM_03000_0M - RDM_03000_12M)/RDM_03000_12M*100,1) END AS RDM_03000_12M_RATE
+	            ,CASE WHEN RDM_04000_12M = 0 THEN 0 ELSE ROUND((RDM_04000_0M - RDM_04000_12M)/RDM_04000_12M*100,1) END AS RDM_04000_12M_RATE
+	            ,CASE WHEN RDM_05000_12M = 0 THEN 0 ELSE ROUND((RDM_05000_0M - RDM_05000_12M)/RDM_05000_12M*100,1) END AS RDM_05000_12M_RATE
+	            ,CASE WHEN RDM_06000_12M = 0 THEN 0 ELSE ROUND((RDM_06000_0M - RDM_06000_12M)/RDM_06000_12M*100,1) END AS RDM_06000_12M_RATE
+	            ,CASE WHEN RDM_07000_12M = 0 THEN 0 ELSE ROUND((RDM_07000_0M - RDM_07000_12M)/RDM_07000_12M*100,1) END AS RDM_07000_12M_RATE
+	            ,CASE WHEN RDM_08000_12M = 0 THEN 0 ELSE ROUND((RDM_08000_0M - RDM_08000_12M)/RDM_08000_12M*100,1) END AS RDM_08000_12M_RATE
+	            ,CASE WHEN RDM_09000_12M = 0 THEN 0 ELSE ROUND((RDM_09000_0M - RDM_09000_12M)/RDM_09000_12M*100,1) END AS RDM_09000_12M_RATE
+	            ,CASE WHEN RDM_10000_12M = 0 THEN 0 ELSE ROUND((RDM_10000_0M - RDM_10000_12M)/RDM_10000_12M*100,1) END AS RDM_10000_12M_RATE
+	            ,CASE WHEN RDM_11000_12M = 0 THEN 0 ELSE ROUND((RDM_11000_0M - RDM_11000_12M)/RDM_11000_12M*100,1) END AS RDM_11000_12M_RATE
+	            ,CASE WHEN RDM_12000_12M = 0 THEN 0 ELSE ROUND((RDM_12000_0M - RDM_12000_12M)/RDM_12000_12M*100,1) END AS RDM_12000_12M_RATE
+	            ,CASE WHEN RDM_13000_12M = 0 THEN 0 ELSE ROUND((RDM_13000_0M - RDM_13000_12M)/RDM_13000_12M*100,1) END AS RDM_13000_12M_RATE
+	            ,CASE WHEN RDM_14000_12M = 0 THEN 0 ELSE ROUND((RDM_14000_0M - RDM_14000_12M)/RDM_14000_12M*100,1) END AS RDM_14000_12M_RATE
+	            ,CASE WHEN RDM_15200_12M = 0 THEN 0 ELSE ROUND((RDM_15200_0M - RDM_15200_12M)/RDM_15200_12M*100,1) END AS RDM_15200_12M_RATE
+	            ,CASE WHEN RDM_20000_12M = 0 THEN 0 ELSE ROUND((RDM_20000_0M - RDM_20000_12M)/RDM_20000_12M*100,1) END AS RDM_20000_12M_RATE
+	    FROM
+	        (
+		        SELECT
+		             SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_00000_MEM_CNT ELSE 0 END) AS PNT_00000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_00999_MEM_CNT ELSE 0 END) AS PNT_00999_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_01000_MEM_CNT ELSE 0 END) AS PNT_01000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_02000_MEM_CNT ELSE 0 END) AS PNT_02000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_03000_MEM_CNT ELSE 0 END) AS PNT_03000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_04000_MEM_CNT ELSE 0 END) AS PNT_04000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_05000_MEM_CNT ELSE 0 END) AS PNT_05000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_06000_MEM_CNT ELSE 0 END) AS PNT_06000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_07000_MEM_CNT ELSE 0 END) AS PNT_07000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_08000_MEM_CNT ELSE 0 END) AS PNT_08000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_09000_MEM_CNT ELSE 0 END) AS PNT_09000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_10000_MEM_CNT ELSE 0 END) AS PNT_10000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_11000_MEM_CNT ELSE 0 END) AS PNT_11000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_12000_MEM_CNT ELSE 0 END) AS PNT_12000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_13000_MEM_CNT ELSE 0 END) AS PNT_13000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_14000_MEM_CNT ELSE 0 END) AS PNT_14000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_15200_MEM_CNT ELSE 0 END) AS PNT_15200_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN PNT_20000_MEM_CNT ELSE 0 END) AS PNT_20000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_00000_MEM_CNT ELSE 0 END) AS RDM_00000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_00999_MEM_CNT ELSE 0 END) AS RDM_00999_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_01000_MEM_CNT ELSE 0 END) AS RDM_01000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_02000_MEM_CNT ELSE 0 END) AS RDM_02000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_03000_MEM_CNT ELSE 0 END) AS RDM_03000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_04000_MEM_CNT ELSE 0 END) AS RDM_04000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_05000_MEM_CNT ELSE 0 END) AS RDM_05000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_06000_MEM_CNT ELSE 0 END) AS RDM_06000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_07000_MEM_CNT ELSE 0 END) AS RDM_07000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_08000_MEM_CNT ELSE 0 END) AS RDM_08000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_09000_MEM_CNT ELSE 0 END) AS RDM_09000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_10000_MEM_CNT ELSE 0 END) AS RDM_10000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_11000_MEM_CNT ELSE 0 END) AS RDM_11000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_12000_MEM_CNT ELSE 0 END) AS RDM_12000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_13000_MEM_CNT ELSE 0 END) AS RDM_13000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_14000_MEM_CNT ELSE 0 END) AS RDM_14000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_15200_MEM_CNT ELSE 0 END) AS RDM_15200_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                    THEN RDM_20000_MEM_CNT ELSE 0 END) AS RDM_20000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_00000_MEM_CNT ELSE 0 END) AS PNT_00000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_00999_MEM_CNT ELSE 0 END) AS PNT_00999_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_01000_MEM_CNT ELSE 0 END) AS PNT_01000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_02000_MEM_CNT ELSE 0 END) AS PNT_02000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_03000_MEM_CNT ELSE 0 END) AS PNT_03000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_04000_MEM_CNT ELSE 0 END) AS PNT_04000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_05000_MEM_CNT ELSE 0 END) AS PNT_05000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_06000_MEM_CNT ELSE 0 END) AS PNT_06000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_07000_MEM_CNT ELSE 0 END) AS PNT_07000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_08000_MEM_CNT ELSE 0 END) AS PNT_08000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_09000_MEM_CNT ELSE 0 END) AS PNT_09000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_10000_MEM_CNT ELSE 0 END) AS PNT_10000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_11000_MEM_CNT ELSE 0 END) AS PNT_11000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_12000_MEM_CNT ELSE 0 END) AS PNT_12000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_13000_MEM_CNT ELSE 0 END) AS PNT_13000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_14000_MEM_CNT ELSE 0 END) AS PNT_14000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_15200_MEM_CNT ELSE 0 END) AS PNT_15200_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN PNT_20000_MEM_CNT ELSE 0 END) AS PNT_20000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_00000_MEM_CNT ELSE 0 END) AS RDM_00000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_00999_MEM_CNT ELSE 0 END) AS RDM_00999_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_01000_MEM_CNT ELSE 0 END) AS RDM_01000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_02000_MEM_CNT ELSE 0 END) AS RDM_02000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_03000_MEM_CNT ELSE 0 END) AS RDM_03000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_04000_MEM_CNT ELSE 0 END) AS RDM_04000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_05000_MEM_CNT ELSE 0 END) AS RDM_05000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_06000_MEM_CNT ELSE 0 END) AS RDM_06000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_07000_MEM_CNT ELSE 0 END) AS RDM_07000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_08000_MEM_CNT ELSE 0 END) AS RDM_08000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_09000_MEM_CNT ELSE 0 END) AS RDM_09000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_10000_MEM_CNT ELSE 0 END) AS RDM_10000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_11000_MEM_CNT ELSE 0 END) AS RDM_11000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_12000_MEM_CNT ELSE 0 END) AS RDM_12000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_13000_MEM_CNT ELSE 0 END) AS RDM_13000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_14000_MEM_CNT ELSE 0 END) AS RDM_14000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_15200_MEM_CNT ELSE 0 END) AS RDM_15200_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN RDM_20000_MEM_CNT ELSE 0 END) AS RDM_20000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_00000_MEM_CNT ELSE 0 END) AS PNT_00000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_00999_MEM_CNT ELSE 0 END) AS PNT_00999_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_01000_MEM_CNT ELSE 0 END) AS PNT_01000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_02000_MEM_CNT ELSE 0 END) AS PNT_02000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_03000_MEM_CNT ELSE 0 END) AS PNT_03000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_04000_MEM_CNT ELSE 0 END) AS PNT_04000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_05000_MEM_CNT ELSE 0 END) AS PNT_05000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_06000_MEM_CNT ELSE 0 END) AS PNT_06000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_07000_MEM_CNT ELSE 0 END) AS PNT_07000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_08000_MEM_CNT ELSE 0 END) AS PNT_08000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_09000_MEM_CNT ELSE 0 END) AS PNT_09000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_10000_MEM_CNT ELSE 0 END) AS PNT_10000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_11000_MEM_CNT ELSE 0 END) AS PNT_11000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_12000_MEM_CNT ELSE 0 END) AS PNT_12000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_13000_MEM_CNT ELSE 0 END) AS PNT_13000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_14000_MEM_CNT ELSE 0 END) AS PNT_14000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_15200_MEM_CNT ELSE 0 END) AS PNT_15200_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN PNT_20000_MEM_CNT ELSE 0 END) AS PNT_20000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_00000_MEM_CNT ELSE 0 END) AS RDM_00000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_00999_MEM_CNT ELSE 0 END) AS RDM_00999_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_01000_MEM_CNT ELSE 0 END) AS RDM_01000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_02000_MEM_CNT ELSE 0 END) AS RDM_02000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_03000_MEM_CNT ELSE 0 END) AS RDM_03000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_04000_MEM_CNT ELSE 0 END) AS RDM_04000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_05000_MEM_CNT ELSE 0 END) AS RDM_05000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_06000_MEM_CNT ELSE 0 END) AS RDM_06000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_07000_MEM_CNT ELSE 0 END) AS RDM_07000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_08000_MEM_CNT ELSE 0 END) AS RDM_08000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_09000_MEM_CNT ELSE 0 END) AS RDM_09000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_10000_MEM_CNT ELSE 0 END) AS RDM_10000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_11000_MEM_CNT ELSE 0 END) AS RDM_11000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_12000_MEM_CNT ELSE 0 END) AS RDM_12000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_13000_MEM_CNT ELSE 0 END) AS RDM_13000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_14000_MEM_CNT ELSE 0 END) AS RDM_14000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_15200_MEM_CNT ELSE 0 END) AS RDM_15200_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN RDM_20000_MEM_CNT ELSE 0 END) AS RDM_20000_12M
+		        FROM MRT.FT_PNT_BAND_D_ACL
+		        WHERE YYYYMMDD IN (#{toMonth},TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD'),
+		                    TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') ) ]]>
+		        AND QRY_TYPE = #{qryType}
+				<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+				 	AND STORE_CD =#{storeCd}
+				</if>
+				<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+				 	AND GEND_CD =#{genCd}
+				</if>
+				<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+				 	AND AGE_CD =#{ageCd}
+				</if>
+		        )
+		    ) A
+		    ,(
+		        SELECT LEVEL LV
+		        FROM DUAL
+		       <![CDATA[ CONNECT BY LEVEL <= 36]]>
+		    ) B
+		    <![CDATA[
+		UNION ALL
+		SELECT
+		        LV AS seq
+		      ,CASE WHEN LV BETWEEN 1 AND 18 THEN '포인트 보유 금액별' WHEN LV BETWEEN 19 AND 36 THEN '포인트 사용 금액별' WHEN LV BETWEEN 37 AND 68 THEN '구매금액 기준 회원수' END AS typea
+		      ,CASE WHEN LV = 37 THEN '0'     WHEN LV = 38 THEN '~ 1000' WHEN LV = 39 THEN '~ 2000' WHEN LV = 40 THEN '~ 3000' WHEN LV = 41  THEN '~ 4000'  WHEN LV = 42 THEN '~ 5000'
+		            WHEN LV = 43 THEN '~ 6000' WHEN LV = 44 THEN '~ 7000' WHEN LV = 45 THEN '~ 8000' WHEN LV = 46 THEN '~ 9000' WHEN LV = 47 THEN '~ 10000' WHEN LV = 48 THEN '~ 11000'
+		            WHEN LV = 49 THEN '~ 12000' WHEN LV = 50 THEN '~ 13000' WHEN LV = 51 THEN '~ 14000' WHEN LV = 52 THEN '~ 15000' WHEN LV = 53 THEN '~ 16000'  WHEN LV = 54 THEN '~ 17000'
+		            WHEN LV = 55 THEN '~ 18000' WHEN LV = 56 THEN '~ 19000' WHEN LV = 57 THEN '~ 20000' WHEN LV = 58 THEN '~ 21000' WHEN LV = 59  THEN '~ 22000'  WHEN LV = 60 THEN '~ 23000'
+		            WHEN LV = 61 THEN '~ 24000' WHEN LV = 62 THEN '~ 25000' WHEN LV = 63 THEN '~ 26000' WHEN LV = 64 THEN '~ 27000' WHEN LV = 65 THEN '~ 28000' WHEN LV = 66 THEN '~ 29000'
+		            WHEN LV = 67 THEN '~ 30000' WHEN LV = 68 THEN '30000 이상' END typeb
+		      ,DECODE(LV,37,AMT_00000_0M ,38,AMT_00999_0M ,39,AMT_01000_0M ,40,AMT_02000_0M ,41,AMT_03000_0M ,42,AMT_04000_0M ,43,AMT_05000_0M ,44,AMT_06000_0M ,45,AMT_07000_0M ,46,AMT_08000_0M ,47,AMT_09000_0M ,48,AMT_10000_0M ,49,AMT_11000_0M ,50,AMT_12000_0M ,51,AMT_13000_0M ,52,AMT_14000_0M
+		                ,53,AMT_15000_0M ,54,AMT_16000_0M ,55,AMT_17000_0M ,56,AMT_18000_0M ,57,AMT_19000_0M ,58,AMT_20000_0M ,59,AMT_21000_0M ,60,AMT_22000_0M ,61,AMT_23000_0M ,62,AMT_24000_0M ,63,AMT_25000_0M ,64,AMT_26000_0M ,65,AMT_27000_0M ,66,AMT_28000_0M ,67,AMT_29000_0M ,68,AMT_30000_0M) AS month0m
+		      ,DECODE(LV,37,AMT_00000_1M ,38,AMT_00999_1M ,39,AMT_01000_1M ,40,AMT_02000_1M ,41,AMT_03000_1M ,42,AMT_04000_1M ,43,AMT_05000_1M ,44,AMT_06000_1M ,45,AMT_07000_1M ,46,AMT_08000_1M ,47,AMT_09000_1M ,48,AMT_10000_1M ,49,AMT_11000_1M ,50,AMT_12000_1M ,51,AMT_13000_1M ,52,AMT_14000_1M
+		                ,53,AMT_15000_1M ,54,AMT_16000_1M ,55,AMT_17000_1M ,56,AMT_18000_1M ,57,AMT_19000_1M ,58,AMT_20000_1M ,59,AMT_21000_1M ,60,AMT_22000_1M ,61,AMT_23000_1M ,62,AMT_24000_1M ,63,AMT_25000_1M ,64,AMT_26000_1M ,65,AMT_27000_1M ,66,AMT_28000_1M ,67,AMT_29000_1M ,68,AMT_30000_1M) AS month1m
+		      ,DECODE(LV,37,AMT_00000_12M,38,AMT_00999_12M,39,AMT_01000_12M,40,AMT_02000_12M,41,AMT_03000_12M,42,AMT_04000_12M,43,AMT_05000_12M,44,AMT_06000_12M,45,AMT_07000_12M,46,AMT_08000_12M,47,AMT_09000_12M,48,AMT_10000_12M,49,AMT_11000_12M,50,AMT_12000_12M,51,AMT_13000_12M,52,AMT_14000_12M
+		                ,53,AMT_15000_12M,54,AMT_16000_12M,55,AMT_17000_12M,56,AMT_18000_12M,57,AMT_19000_12M,58,AMT_20000_12M,59,AMT_21000_12M,60,AMT_22000_12M,61,AMT_23000_12M,62,AMT_24000_12M,63,AMT_25000_12M,64,AMT_26000_12M,65,AMT_27000_12M,66,AMT_28000_12M,67,AMT_29000_12M,68,AMT_30000_12M) AS month12m
+		      ,DECODE(LV,37,AMT_00000_1M_RATE,38,AMT_00999_1M_RATE,39,AMT_01000_1M_RATE,40,AMT_02000_1M_RATE,41,AMT_03000_1M_RATE,42,AMT_04000_1M_RATE,43,AMT_05000_1M_RATE,44,AMT_06000_1M_RATE,45,AMT_07000_1M_RATE,46,AMT_08000_1M_RATE,47,AMT_09000_1M_RATE,48,AMT_10000_1M_RATE,49,AMT_11000_1M_RATE,50,AMT_12000_1M_RATE,51,AMT_13000_1M_RATE,52,AMT_14000_1M_RATE
+		                ,53,AMT_15000_1M_RATE,54,AMT_16000_1M_RATE,55,AMT_17000_1M_RATE,56,AMT_18000_1M_RATE,57,AMT_19000_1M_RATE,58,AMT_20000_1M_RATE,59,AMT_21000_1M_RATE,60,AMT_22000_1M_RATE,61,AMT_23000_1M_RATE,62,AMT_24000_1M_RATE,63,AMT_25000_1M_RATE,64,AMT_26000_1M_RATE,65,AMT_27000_1M_RATE,66,AMT_28000_1M_RATE,67,AMT_29000_1M_RATE,68,AMT_30000_1M_RATE) AS month1mRate
+		      ,DECODE(LV,37,AMT_00000_12M_RATE,38,AMT_00999_12M_RATE,39,AMT_01000_12M_RATE,40,AMT_02000_12M_RATE,41,AMT_03000_12M_RATE,42,AMT_04000_12M_RATE,43,AMT_05000_12M_RATE,44,AMT_06000_12M_RATE,45,AMT_07000_12M_RATE,46,AMT_08000_12M_RATE,47,AMT_09000_12M_RATE,48,AMT_10000_12M_RATE,49,AMT_11000_12M_RATE,50,AMT_12000_12M_RATE,51,AMT_13000_12M_RATE,52,AMT_14000_12M_RATE
+		                ,53,AMT_15000_12M_RATE,54,AMT_16000_12M_RATE,55,AMT_17000_12M_RATE,56,AMT_18000_12M_RATE,57,AMT_19000_12M_RATE,58,AMT_20000_12M_RATE,59,AMT_21000_12M_RATE,60,AMT_22000_12M_RATE,61,AMT_23000_12M_RATE,62,AMT_24000_12M_RATE,63,AMT_25000_12M_RATE,64,AMT_26000_12M_RATE,65,AMT_27000_12M_RATE,66,AMT_28000_12M_RATE,67,AMT_29000_12M_RATE,68,AMT_30000_12M_RATE) AS month12mRate
+		FROM
+		    (
+		    SELECT   AMT_00000_0M,AMT_00999_0M,AMT_01000_0M,AMT_02000_0M,AMT_03000_0M,AMT_04000_0M,AMT_05000_0M,AMT_06000_0M,AMT_07000_0M,AMT_08000_0M,AMT_09000_0M
+		            ,AMT_10000_0M,AMT_11000_0M,AMT_12000_0M,AMT_13000_0M,AMT_14000_0M,AMT_15000_0M,AMT_16000_0M,AMT_17000_0M,AMT_18000_0M,AMT_19000_0M,AMT_20000_0M
+		            ,AMT_21000_0M,AMT_22000_0M,AMT_23000_0M,AMT_24000_0M,AMT_25000_0M,AMT_26000_0M,AMT_27000_0M,AMT_28000_0M,AMT_29000_0M,AMT_30000_0M
+		            ,AMT_00000_1M,AMT_00999_1M,AMT_01000_1M,AMT_02000_1M,AMT_03000_1M,AMT_04000_1M,AMT_05000_1M,AMT_06000_1M,AMT_07000_1M,AMT_08000_1M,AMT_09000_1M
+		            ,AMT_10000_1M,AMT_11000_1M,AMT_12000_1M,AMT_13000_1M,AMT_14000_1M,AMT_15000_1M,AMT_16000_1M,AMT_17000_1M,AMT_18000_1M,AMT_19000_1M,AMT_20000_1M
+		            ,AMT_21000_1M,AMT_22000_1M,AMT_23000_1M,AMT_24000_1M,AMT_25000_1M,AMT_26000_1M,AMT_27000_1M,AMT_28000_1M,AMT_29000_1M,AMT_30000_1M
+		            ,AMT_00000_12M,AMT_00999_12M,AMT_01000_12M,AMT_02000_12M,AMT_03000_12M,AMT_04000_12M,AMT_05000_12M,AMT_06000_12M,AMT_07000_12M,AMT_08000_12M,AMT_09000_12M
+		            ,AMT_10000_12M,AMT_11000_12M,AMT_12000_12M,AMT_13000_12M,AMT_14000_12M,AMT_15000_12M,AMT_16000_12M,AMT_17000_12M,AMT_18000_12M,AMT_19000_12M,AMT_20000_12M
+		            ,AMT_21000_12M,AMT_22000_12M,AMT_23000_12M,AMT_24000_12M,AMT_25000_12M,AMT_26000_12M,AMT_27000_12M,AMT_28000_12M,AMT_29000_12M,AMT_30000_12M
+		            ,CASE WHEN AMT_00000_1M  = 0 THEN 0 ELSE ROUND((AMT_00000_0M - AMT_00000_1M )/AMT_00000_1M*100,1 ) END AS AMT_00000_1M_RATE
+		            ,CASE WHEN AMT_00999_1M  = 0 THEN 0 ELSE ROUND((AMT_00999_0M - AMT_00999_1M )/AMT_00999_1M*100,1 ) END AS AMT_00999_1M_RATE
+		            ,CASE WHEN AMT_01000_1M  = 0 THEN 0 ELSE ROUND((AMT_01000_0M - AMT_01000_1M )/AMT_01000_1M*100,1 ) END AS AMT_01000_1M_RATE
+		            ,CASE WHEN AMT_02000_1M  = 0 THEN 0 ELSE ROUND((AMT_02000_0M - AMT_02000_1M )/AMT_02000_1M*100,1 ) END AS AMT_02000_1M_RATE
+		            ,CASE WHEN AMT_03000_1M  = 0 THEN 0 ELSE ROUND((AMT_03000_0M - AMT_03000_1M )/AMT_03000_1M*100,1 ) END AS AMT_03000_1M_RATE
+		            ,CASE WHEN AMT_04000_1M  = 0 THEN 0 ELSE ROUND((AMT_04000_0M - AMT_04000_1M )/AMT_04000_1M*100,1 ) END AS AMT_04000_1M_RATE
+		            ,CASE WHEN AMT_05000_1M  = 0 THEN 0 ELSE ROUND((AMT_05000_0M - AMT_05000_1M )/AMT_05000_1M*100,1 ) END AS AMT_05000_1M_RATE
+		            ,CASE WHEN AMT_06000_1M  = 0 THEN 0 ELSE ROUND((AMT_06000_0M - AMT_06000_1M )/AMT_06000_1M*100,1 ) END AS AMT_06000_1M_RATE
+		            ,CASE WHEN AMT_07000_1M  = 0 THEN 0 ELSE ROUND((AMT_07000_0M - AMT_07000_1M )/AMT_07000_1M*100,1 ) END AS AMT_07000_1M_RATE
+		            ,CASE WHEN AMT_08000_1M  = 0 THEN 0 ELSE ROUND((AMT_08000_0M - AMT_08000_1M )/AMT_08000_1M*100,1 ) END AS AMT_08000_1M_RATE
+		            ,CASE WHEN AMT_09000_1M  = 0 THEN 0 ELSE ROUND((AMT_09000_0M - AMT_09000_1M )/AMT_09000_1M*100,1 ) END AS AMT_09000_1M_RATE
+		            ,CASE WHEN AMT_10000_1M  = 0 THEN 0 ELSE ROUND((AMT_10000_0M - AMT_10000_1M )/AMT_10000_1M*100,1 ) END AS AMT_10000_1M_RATE
+		            ,CASE WHEN AMT_11000_1M  = 0 THEN 0 ELSE ROUND((AMT_11000_0M - AMT_11000_1M )/AMT_11000_1M*100,1 ) END AS AMT_11000_1M_RATE
+		            ,CASE WHEN AMT_12000_1M  = 0 THEN 0 ELSE ROUND((AMT_12000_0M - AMT_12000_1M )/AMT_12000_1M*100,1 ) END AS AMT_12000_1M_RATE
+		            ,CASE WHEN AMT_13000_1M  = 0 THEN 0 ELSE ROUND((AMT_13000_0M - AMT_13000_1M )/AMT_13000_1M*100,1 ) END AS AMT_13000_1M_RATE
+		            ,CASE WHEN AMT_14000_1M  = 0 THEN 0 ELSE ROUND((AMT_14000_0M - AMT_14000_1M )/AMT_14000_1M*100,1 ) END AS AMT_14000_1M_RATE
+		            ,CASE WHEN AMT_15000_1M  = 0 THEN 0 ELSE ROUND((AMT_15000_0M - AMT_15000_1M )/AMT_15000_1M*100,1 ) END AS AMT_15000_1M_RATE
+		            ,CASE WHEN AMT_16000_1M  = 0 THEN 0 ELSE ROUND((AMT_16000_0M - AMT_16000_1M )/AMT_16000_1M*100,1 ) END AS AMT_16000_1M_RATE
+		            ,CASE WHEN AMT_17000_1M  = 0 THEN 0 ELSE ROUND((AMT_17000_0M - AMT_17000_1M )/AMT_17000_1M*100,1 ) END AS AMT_17000_1M_RATE
+		            ,CASE WHEN AMT_18000_1M  = 0 THEN 0 ELSE ROUND((AMT_18000_0M - AMT_18000_1M )/AMT_18000_1M*100,1 ) END AS AMT_18000_1M_RATE
+		            ,CASE WHEN AMT_19000_1M  = 0 THEN 0 ELSE ROUND((AMT_19000_0M - AMT_19000_1M )/AMT_19000_1M*100,1 ) END AS AMT_19000_1M_RATE
+		            ,CASE WHEN AMT_20000_1M  = 0 THEN 0 ELSE ROUND((AMT_20000_0M - AMT_20000_1M )/AMT_20000_1M*100,1 ) END AS AMT_20000_1M_RATE
+		            ,CASE WHEN AMT_21000_1M  = 0 THEN 0 ELSE ROUND((AMT_21000_0M - AMT_21000_1M )/AMT_21000_1M*100,1 ) END AS AMT_21000_1M_RATE
+		            ,CASE WHEN AMT_22000_1M  = 0 THEN 0 ELSE ROUND((AMT_22000_0M - AMT_22000_1M )/AMT_22000_1M*100,1 ) END AS AMT_22000_1M_RATE
+		            ,CASE WHEN AMT_23000_1M  = 0 THEN 0 ELSE ROUND((AMT_23000_0M - AMT_23000_1M )/AMT_23000_1M*100,1 ) END AS AMT_23000_1M_RATE
+		            ,CASE WHEN AMT_24000_1M  = 0 THEN 0 ELSE ROUND((AMT_24000_0M - AMT_24000_1M )/AMT_24000_1M*100,1 ) END AS AMT_24000_1M_RATE
+		            ,CASE WHEN AMT_25000_1M  = 0 THEN 0 ELSE ROUND((AMT_25000_0M - AMT_25000_1M )/AMT_25000_1M*100,1 ) END AS AMT_25000_1M_RATE
+		            ,CASE WHEN AMT_26000_1M  = 0 THEN 0 ELSE ROUND((AMT_26000_0M - AMT_26000_1M )/AMT_26000_1M*100,1 ) END AS AMT_26000_1M_RATE
+		            ,CASE WHEN AMT_27000_1M  = 0 THEN 0 ELSE ROUND((AMT_27000_0M - AMT_27000_1M )/AMT_27000_1M*100,1 ) END AS AMT_27000_1M_RATE
+		            ,CASE WHEN AMT_28000_1M  = 0 THEN 0 ELSE ROUND((AMT_28000_0M - AMT_28000_1M )/AMT_28000_1M*100,1 ) END AS AMT_28000_1M_RATE
+		            ,CASE WHEN AMT_29000_1M  = 0 THEN 0 ELSE ROUND((AMT_29000_0M - AMT_29000_1M )/AMT_29000_1M*100,1 ) END AS AMT_29000_1M_RATE
+		            ,CASE WHEN AMT_30000_1M  = 0 THEN 0 ELSE ROUND((AMT_30000_0M - AMT_30000_1M )/AMT_30000_1M*100,1 ) END AS AMT_30000_1M_RATE
+		            ,CASE WHEN AMT_00000_12M = 0 THEN 0 ELSE ROUND((AMT_00000_0M - AMT_00000_12M)/AMT_00000_12M*100,1) END AS AMT_00000_12M_RATE
+		            ,CASE WHEN AMT_00999_12M = 0 THEN 0 ELSE ROUND((AMT_00999_0M - AMT_00999_12M)/AMT_00999_12M*100,1) END AS AMT_00999_12M_RATE
+		            ,CASE WHEN AMT_01000_12M = 0 THEN 0 ELSE ROUND((AMT_01000_0M - AMT_01000_12M)/AMT_01000_12M*100,1) END AS AMT_01000_12M_RATE
+		            ,CASE WHEN AMT_02000_12M = 0 THEN 0 ELSE ROUND((AMT_02000_0M - AMT_02000_12M)/AMT_02000_12M*100,1) END AS AMT_02000_12M_RATE
+		            ,CASE WHEN AMT_03000_12M = 0 THEN 0 ELSE ROUND((AMT_03000_0M - AMT_03000_12M)/AMT_03000_12M*100,1) END AS AMT_03000_12M_RATE
+		            ,CASE WHEN AMT_04000_12M = 0 THEN 0 ELSE ROUND((AMT_04000_0M - AMT_04000_12M)/AMT_04000_12M*100,1) END AS AMT_04000_12M_RATE
+		            ,CASE WHEN AMT_05000_12M = 0 THEN 0 ELSE ROUND((AMT_05000_0M - AMT_05000_12M)/AMT_05000_12M*100,1) END AS AMT_05000_12M_RATE
+		            ,CASE WHEN AMT_06000_12M = 0 THEN 0 ELSE ROUND((AMT_06000_0M - AMT_06000_12M)/AMT_06000_12M*100,1) END AS AMT_06000_12M_RATE
+		            ,CASE WHEN AMT_07000_12M = 0 THEN 0 ELSE ROUND((AMT_07000_0M - AMT_07000_12M)/AMT_07000_12M*100,1) END AS AMT_07000_12M_RATE
+		            ,CASE WHEN AMT_08000_12M = 0 THEN 0 ELSE ROUND((AMT_08000_0M - AMT_08000_12M)/AMT_08000_12M*100,1) END AS AMT_08000_12M_RATE
+		            ,CASE WHEN AMT_09000_12M = 0 THEN 0 ELSE ROUND((AMT_09000_0M - AMT_09000_12M)/AMT_09000_12M*100,1) END AS AMT_09000_12M_RATE
+		            ,CASE WHEN AMT_10000_12M = 0 THEN 0 ELSE ROUND((AMT_10000_0M - AMT_10000_12M)/AMT_10000_12M*100,1) END AS AMT_10000_12M_RATE
+		            ,CASE WHEN AMT_11000_12M = 0 THEN 0 ELSE ROUND((AMT_11000_0M - AMT_11000_12M)/AMT_11000_12M*100,1) END AS AMT_11000_12M_RATE
+		            ,CASE WHEN AMT_12000_12M = 0 THEN 0 ELSE ROUND((AMT_12000_0M - AMT_12000_12M)/AMT_12000_12M*100,1) END AS AMT_12000_12M_RATE
+		            ,CASE WHEN AMT_13000_12M = 0 THEN 0 ELSE ROUND((AMT_13000_0M - AMT_13000_12M)/AMT_13000_12M*100,1) END AS AMT_13000_12M_RATE
+		            ,CASE WHEN AMT_14000_12M = 0 THEN 0 ELSE ROUND((AMT_14000_0M - AMT_14000_12M)/AMT_14000_12M*100,1) END AS AMT_14000_12M_RATE
+		            ,CASE WHEN AMT_15000_12M = 0 THEN 0 ELSE ROUND((AMT_15000_0M - AMT_15000_12M)/AMT_15000_12M*100,1) END AS AMT_15000_12M_RATE
+		            ,CASE WHEN AMT_16000_12M = 0 THEN 0 ELSE ROUND((AMT_16000_0M - AMT_16000_12M)/AMT_16000_12M*100,1) END AS AMT_16000_12M_RATE
+		            ,CASE WHEN AMT_17000_12M = 0 THEN 0 ELSE ROUND((AMT_17000_0M - AMT_17000_12M)/AMT_17000_12M*100,1) END AS AMT_17000_12M_RATE
+		            ,CASE WHEN AMT_18000_12M = 0 THEN 0 ELSE ROUND((AMT_18000_0M - AMT_18000_12M)/AMT_18000_12M*100,1) END AS AMT_18000_12M_RATE
+		            ,CASE WHEN AMT_19000_12M = 0 THEN 0 ELSE ROUND((AMT_19000_0M - AMT_19000_12M)/AMT_19000_12M*100,1) END AS AMT_19000_12M_RATE
+		            ,CASE WHEN AMT_20000_12M = 0 THEN 0 ELSE ROUND((AMT_20000_0M - AMT_20000_12M)/AMT_20000_12M*100,1) END AS AMT_20000_12M_RATE
+		            ,CASE WHEN AMT_21000_12M = 0 THEN 0 ELSE ROUND((AMT_21000_0M - AMT_21000_12M)/AMT_21000_12M*100,1) END AS AMT_21000_12M_RATE
+		            ,CASE WHEN AMT_22000_12M = 0 THEN 0 ELSE ROUND((AMT_22000_0M - AMT_22000_12M)/AMT_22000_12M*100,1) END AS AMT_22000_12M_RATE
+		            ,CASE WHEN AMT_23000_12M = 0 THEN 0 ELSE ROUND((AMT_23000_0M - AMT_23000_12M)/AMT_23000_12M*100,1) END AS AMT_23000_12M_RATE
+		            ,CASE WHEN AMT_24000_12M = 0 THEN 0 ELSE ROUND((AMT_24000_0M - AMT_24000_12M)/AMT_24000_12M*100,1) END AS AMT_24000_12M_RATE
+		            ,CASE WHEN AMT_25000_12M = 0 THEN 0 ELSE ROUND((AMT_25000_0M - AMT_25000_12M)/AMT_25000_12M*100,1) END AS AMT_25000_12M_RATE
+		            ,CASE WHEN AMT_26000_12M = 0 THEN 0 ELSE ROUND((AMT_26000_0M - AMT_26000_12M)/AMT_26000_12M*100,1) END AS AMT_26000_12M_RATE
+		            ,CASE WHEN AMT_27000_12M = 0 THEN 0 ELSE ROUND((AMT_27000_0M - AMT_27000_12M)/AMT_27000_12M*100,1) END AS AMT_27000_12M_RATE
+		            ,CASE WHEN AMT_28000_12M = 0 THEN 0 ELSE ROUND((AMT_28000_0M - AMT_28000_12M)/AMT_28000_12M*100,1) END AS AMT_28000_12M_RATE
+		            ,CASE WHEN AMT_29000_12M = 0 THEN 0 ELSE ROUND((AMT_29000_0M - AMT_29000_12M)/AMT_29000_12M*100,1) END AS AMT_29000_12M_RATE
+		            ,CASE WHEN AMT_30000_12M = 0 THEN 0 ELSE ROUND((AMT_30000_0M - AMT_30000_12M)/AMT_30000_12M*100,1) END AS AMT_30000_12M_RATE
+		    FROM
+		        (
+		        SELECT
+		             SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_00000_MEM_CNT ELSE 0 END) AS AMT_00000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_00999_MEM_CNT ELSE 0 END) AS AMT_00999_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_01000_MEM_CNT ELSE 0 END) AS AMT_01000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_02000_MEM_CNT ELSE 0 END) AS AMT_02000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_03000_MEM_CNT ELSE 0 END) AS AMT_03000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_04000_MEM_CNT ELSE 0 END) AS AMT_04000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_05000_MEM_CNT ELSE 0 END) AS AMT_05000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_06000_MEM_CNT ELSE 0 END) AS AMT_06000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_07000_MEM_CNT ELSE 0 END) AS AMT_07000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_08000_MEM_CNT ELSE 0 END) AS AMT_08000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_09000_MEM_CNT ELSE 0 END) AS AMT_09000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_10000_MEM_CNT ELSE 0 END) AS AMT_10000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_11000_MEM_CNT ELSE 0 END) AS AMT_11000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_12000_MEM_CNT ELSE 0 END) AS AMT_12000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_13000_MEM_CNT ELSE 0 END) AS AMT_13000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_14000_MEM_CNT ELSE 0 END) AS AMT_14000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_15000_MEM_CNT ELSE 0 END) AS AMT_15000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_16000_MEM_CNT ELSE 0 END) AS AMT_16000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_17000_MEM_CNT ELSE 0 END) AS AMT_17000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_18000_MEM_CNT ELSE 0 END) AS AMT_18000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_19000_MEM_CNT ELSE 0 END) AS AMT_19000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_20000_MEM_CNT ELSE 0 END) AS AMT_20000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_21000_MEM_CNT ELSE 0 END) AS AMT_21000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_22000_MEM_CNT ELSE 0 END) AS AMT_22000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_23000_MEM_CNT ELSE 0 END) AS AMT_23000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_24000_MEM_CNT ELSE 0 END) AS AMT_24000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_25000_MEM_CNT ELSE 0 END) AS AMT_25000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_26000_MEM_CNT ELSE 0 END) AS AMT_26000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_27000_MEM_CNT ELSE 0 END) AS AMT_27000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_28000_MEM_CNT ELSE 0 END) AS AMT_28000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_29000_MEM_CNT ELSE 0 END) AS AMT_29000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = #{toMonth}                                                     THEN AMT_30000_MEM_CNT ELSE 0 END) AS AMT_30000_0M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_00000_MEM_CNT ELSE 0 END) AS AMT_00000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_00999_MEM_CNT ELSE 0 END) AS AMT_00999_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_01000_MEM_CNT ELSE 0 END) AS AMT_01000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_02000_MEM_CNT ELSE 0 END) AS AMT_02000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_03000_MEM_CNT ELSE 0 END) AS AMT_03000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_04000_MEM_CNT ELSE 0 END) AS AMT_04000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_05000_MEM_CNT ELSE 0 END) AS AMT_05000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_06000_MEM_CNT ELSE 0 END) AS AMT_06000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_07000_MEM_CNT ELSE 0 END) AS AMT_07000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_08000_MEM_CNT ELSE 0 END) AS AMT_08000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_09000_MEM_CNT ELSE 0 END) AS AMT_09000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_10000_MEM_CNT ELSE 0 END) AS AMT_10000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_11000_MEM_CNT ELSE 0 END) AS AMT_11000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_12000_MEM_CNT ELSE 0 END) AS AMT_12000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_13000_MEM_CNT ELSE 0 END) AS AMT_13000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_14000_MEM_CNT ELSE 0 END) AS AMT_14000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_15000_MEM_CNT ELSE 0 END) AS AMT_15000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_16000_MEM_CNT ELSE 0 END) AS AMT_16000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_17000_MEM_CNT ELSE 0 END) AS AMT_17000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_18000_MEM_CNT ELSE 0 END) AS AMT_18000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_19000_MEM_CNT ELSE 0 END) AS AMT_19000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_20000_MEM_CNT ELSE 0 END) AS AMT_20000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_21000_MEM_CNT ELSE 0 END) AS AMT_21000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_22000_MEM_CNT ELSE 0 END) AS AMT_22000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_23000_MEM_CNT ELSE 0 END) AS AMT_23000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_24000_MEM_CNT ELSE 0 END) AS AMT_24000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_25000_MEM_CNT ELSE 0 END) AS AMT_25000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_26000_MEM_CNT ELSE 0 END) AS AMT_26000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_27000_MEM_CNT ELSE 0 END) AS AMT_27000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_28000_MEM_CNT ELSE 0 END) AS AMT_28000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_29000_MEM_CNT ELSE 0 END) AS AMT_29000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD') THEN AMT_30000_MEM_CNT ELSE 0 END) AS AMT_30000_1M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_00000_MEM_CNT ELSE 0 END) AS AMT_00000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_00000_MEM_CNT ELSE 0 END) AS AMT_00999_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_01000_MEM_CNT ELSE 0 END) AS AMT_01000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_02000_MEM_CNT ELSE 0 END) AS AMT_02000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_03000_MEM_CNT ELSE 0 END) AS AMT_03000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_04000_MEM_CNT ELSE 0 END) AS AMT_04000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_05000_MEM_CNT ELSE 0 END) AS AMT_05000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_06000_MEM_CNT ELSE 0 END) AS AMT_06000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_07000_MEM_CNT ELSE 0 END) AS AMT_07000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_08000_MEM_CNT ELSE 0 END) AS AMT_08000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_09000_MEM_CNT ELSE 0 END) AS AMT_09000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_10000_MEM_CNT ELSE 0 END) AS AMT_10000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_11000_MEM_CNT ELSE 0 END) AS AMT_11000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_12000_MEM_CNT ELSE 0 END) AS AMT_12000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_13000_MEM_CNT ELSE 0 END) AS AMT_13000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_14000_MEM_CNT ELSE 0 END) AS AMT_14000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_15000_MEM_CNT ELSE 0 END) AS AMT_15000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_16000_MEM_CNT ELSE 0 END) AS AMT_16000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_17000_MEM_CNT ELSE 0 END) AS AMT_17000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_18000_MEM_CNT ELSE 0 END) AS AMT_18000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_19000_MEM_CNT ELSE 0 END) AS AMT_19000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_20000_MEM_CNT ELSE 0 END) AS AMT_20000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_21000_MEM_CNT ELSE 0 END) AS AMT_21000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_22000_MEM_CNT ELSE 0 END) AS AMT_22000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_23000_MEM_CNT ELSE 0 END) AS AMT_23000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_24000_MEM_CNT ELSE 0 END) AS AMT_24000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_25000_MEM_CNT ELSE 0 END) AS AMT_25000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_26000_MEM_CNT ELSE 0 END) AS AMT_26000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_27000_MEM_CNT ELSE 0 END) AS AMT_27000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_28000_MEM_CNT ELSE 0 END) AS AMT_28000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_29000_MEM_CNT ELSE 0 END) AS AMT_29000_12M
+		            ,SUM(CASE WHEN YYYYMMDD = TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') THEN AMT_30000_MEM_CNT ELSE 0 END) AS AMT_30000_12M
+		        FROM MRT.FT_PNT_BAND_D_ACL
+		        WHERE YYYYMMDD IN (#{toMonth},TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-1 ),'YYYYMMDD'),
+		                    TO_CHAR(ADD_MONTHS(TO_DATE(#{toMonth},'YYYYMMDD'),-12),'YYYYMMDD') )]]>
+		        AND QRY_TYPE = #{qryType}
+				<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+				 	AND STORE_CD =#{storeCd}
+				</if>
+				<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+				 	AND GEND_CD =#{genCd}
+				</if>
+				<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+				 	AND AGE_CD =#{ageCd}
+				</if>
+		        )
+		    ) A
+		    ,(
+
+		      <![CDATA[
+		      SELECT LV
+		        FROM (
+		        SELECT LEVEL LV
+		        FROM DUAL
+		        CONNECT BY LEVEL <= 68
+		        )
+		        WHERE LV >= 37 AND LV <= 68
+        	]]>
+		    ) B
+		</if>
+		--4-2 현재와 다른 월 조회 시
+		<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(agoMonth)">
+		<![CDATA[
+		SELECT
+			 LV AS seq
+			      ,CASE WHEN LV BETWEEN 1 AND 18 THEN '포인트 보유 금액별' WHEN LV BETWEEN 19 AND 36 THEN '포인트 사용 금액별' WHEN LV BETWEEN 37 AND 66 THEN '구매금액 기준 회원수' END AS typea
+			      ,CASE WHEN LV = 1 THEN '0'      WHEN LV = 2 THEN '~ 1000' WHEN LV = 3 THEN '~ 2000' WHEN LV = 4 THEN '~ 3000' WHEN LV = 5  THEN '~ 4000'  WHEN LV = 6 THEN '~ 5000'
+			            WHEN LV = 7 THEN '~ 6000' WHEN LV = 8 THEN '~ 7000' WHEN LV = 9 THEN '~ 8000' WHEN LV =10 THEN '~ 9000' WHEN LV = 11 THEN '~ 10000' WHEN LV = 12 THEN '~ 11000'
+			            WHEN LV = 13 THEN '~ 12000' WHEN LV = 14 THEN '~ 13000' WHEN LV = 15 THEN '~ 14000' WHEN LV = 16 THEN '~ 15000' WHEN LV = 17 THEN '15000 ~ 20000'  WHEN LV = 18 THEN ' 20000 이상'
+			            WHEN LV = 19 THEN '0'      WHEN LV = 20 THEN '~ 1000' WHEN LV = 21 THEN '~ 2000' WHEN LV = 22 THEN '~ 3000' WHEN LV = 23  THEN '~ 4000'  WHEN LV = 24 THEN '~ 5000'
+			            WHEN LV = 25 THEN '~ 6000' WHEN LV = 26 THEN '~ 7000' WHEN LV = 27 THEN '~ 8000' WHEN LV = 28 THEN '~ 9000' WHEN LV = 29 THEN '~ 10000' WHEN LV = 30 THEN '~ 11000'
+			            WHEN LV = 31 THEN '~ 12000' WHEN LV = 32 THEN '~ 13000' WHEN LV = 33 THEN '~ 14000' WHEN LV = 34 THEN '~ 15000' WHEN LV = 35 THEN '15000 ~ 20000'  WHEN LV = 36 THEN ' 20000 이상' END typeb
+			      ,DECODE(LV,1 ,PNT_00000_0M ,2 ,PNT_00999_0M ,3 ,PNT_01000_0M ,4 ,PNT_02000_0M ,5 ,PNT_03000_0M ,6 ,PNT_04000_0M ,7 ,PNT_05000_0M ,8 ,PNT_06000_0M ,9 ,PNT_07000_0M ,10,PNT_08000_0M ,11,PNT_09000_0M ,12,PNT_10000_0M ,13,PNT_11000_0M ,14,PNT_12000_0M ,15,PNT_13000_0M ,16,PNT_14000_0M ,17,PNT_15200_0M ,18,PNT_20000_0M
+			                ,19,RDM_00000_0M ,20,RDM_00999_0M ,21,RDM_01000_0M ,22,RDM_02000_0M ,23,RDM_03000_0M ,24,RDM_04000_0M ,25,RDM_05000_0M ,26,RDM_06000_0M ,27,RDM_07000_0M ,28,RDM_08000_0M ,29,RDM_09000_0M ,30,RDM_10000_0M ,31,RDM_11000_0M ,32,RDM_12000_0M ,33,RDM_13000_0M ,34,RDM_14000_0M ,35,RDM_15200_0M ,36,RDM_20000_0M ) AS month0m
+			      ,DECODE(LV,1 ,PNT_00000_1M ,2 ,PNT_00999_1M ,3 ,PNT_01000_1M ,4 ,PNT_02000_1M ,5 ,PNT_03000_1M ,6 ,PNT_04000_1M ,7 ,PNT_05000_1M ,8 ,PNT_06000_1M ,9 ,PNT_07000_1M ,10,PNT_08000_1M ,11,PNT_09000_1M ,12,PNT_10000_1M ,13,PNT_11000_1M ,14,PNT_12000_1M ,15,PNT_13000_1M ,16,PNT_14000_1M ,17,PNT_15200_1M ,18,PNT_20000_1M
+			                ,19,RDM_00000_1M ,20,RDM_00999_1M ,21,RDM_01000_1M ,22,RDM_02000_1M ,23,RDM_03000_1M ,24,RDM_04000_1M ,25,RDM_05000_1M ,26,RDM_06000_1M ,27,RDM_07000_1M ,28,RDM_08000_1M ,29,RDM_09000_1M ,30,RDM_10000_1M ,31,RDM_11000_1M ,32,RDM_12000_1M ,33,RDM_13000_1M ,34,RDM_14000_1M ,35,RDM_15200_1M ,36,RDM_20000_1M ) AS month1m
+			      ,DECODE(LV,1 ,PNT_00000_12M,2 ,PNT_00999_12M,3 ,PNT_01000_12M,4 ,PNT_02000_12M,5 ,PNT_03000_12M,6 ,PNT_04000_12M,7 ,PNT_05000_12M,8 ,PNT_06000_12M,9 ,PNT_07000_12M,10,PNT_08000_12M,11,PNT_09000_12M,12,PNT_10000_12M,13,PNT_11000_12M,14,PNT_12000_12M,15,PNT_13000_12M,16,PNT_14000_12M,17,PNT_15200_12M,18,PNT_20000_12M
+			                ,19,RDM_00000_12M,20,RDM_00999_12M,21,RDM_01000_12M,22,RDM_02000_12M,23,RDM_03000_12M,24,RDM_04000_12M,25,RDM_05000_12M,26,RDM_06000_12M,27,RDM_07000_12M,28,RDM_08000_12M,29,RDM_09000_12M,30,RDM_10000_12M,31,RDM_11000_12M,32,RDM_12000_12M,33,RDM_13000_12M,34,RDM_14000_12M,35,RDM_15200_12M,36,RDM_20000_12M ) AS month12m
+			      ,DECODE(LV,1 ,PNT_00000_1M_RATE ,2 ,PNT_00999_1M_RATE ,3 ,PNT_01000_1M_RATE ,4 ,PNT_02000_1M_RATE ,5 ,PNT_03000_1M_RATE ,6 ,PNT_04000_1M_RATE ,7 ,PNT_05000_1M_RATE ,8 ,PNT_06000_1M_RATE ,9 ,PNT_07000_1M_RATE ,10,PNT_08000_1M_RATE ,11,PNT_09000_1M_RATE ,12,PNT_10000_1M_RATE ,13,PNT_11000_1M_RATE ,14,PNT_12000_1M_RATE ,15,PNT_13000_1M_RATE ,16,PNT_14000_1M_RATE ,17,PNT_15200_1M_RATE ,18,PNT_20000_1M_RATE
+			                ,19,RDM_00000_1M_RATE ,20,RDM_00999_1M_RATE ,21,RDM_01000_1M_RATE ,22,RDM_02000_1M_RATE ,23,RDM_03000_1M_RATE ,24,RDM_04000_1M_RATE ,25,RDM_05000_1M_RATE ,26,RDM_06000_1M_RATE ,27,RDM_07000_1M_RATE ,28,RDM_08000_1M_RATE ,29,RDM_09000_1M_RATE ,30,RDM_10000_1M_RATE ,31,RDM_11000_1M_RATE ,32,RDM_12000_1M_RATE ,33,RDM_13000_1M_RATE ,34,RDM_14000_1M_RATE ,35,RDM_15200_1M_RATE ,36,RDM_20000_1M_RATE ) AS month1mRate
+			      ,DECODE(LV,1 ,PNT_00000_12M_RATE,2 ,PNT_00999_12M_RATE,3 ,PNT_01000_12M_RATE ,4 ,PNT_02000_12M_RATE ,5 ,PNT_03000_12M_RATE ,6 ,PNT_04000_12M_RATE ,7 ,PNT_05000_12M_RATE ,8 ,PNT_06000_12M_RATE ,9 ,PNT_07000_12M_RATE ,10,PNT_08000_12M_RATE ,11,PNT_09000_12M_RATE ,12,PNT_10000_12M_RATE ,13,PNT_11000_12M_RATE ,14,PNT_12000_12M_RATE ,15,PNT_13000_12M_RATE ,16,PNT_14000_12M_RATE ,17,PNT_15200_12M_RATE ,18,PNT_20000_12M_RATE
+			                ,19,RDM_00000_12M_RATE,20,RDM_00999_12M_RATE,21,RDM_01000_12M_RATE ,22,RDM_02000_12M_RATE ,23,RDM_03000_12M_RATE ,24,RDM_04000_12M_RATE ,25,RDM_05000_12M_RATE ,26,RDM_06000_12M_RATE ,27,RDM_07000_12M_RATE ,28,RDM_08000_12M_RATE ,29,RDM_09000_12M_RATE ,30,RDM_10000_12M_RATE ,31,RDM_11000_12M_RATE ,32,RDM_12000_12M_RATE ,33,RDM_13000_12M_RATE ,34,RDM_14000_12M_RATE ,35,RDM_15200_12M_RATE ,36,RDM_20000_12M_RATE ) AS month12mRate
+			FROM
+			    (
+			    SELECT   PNT_00000_0M,PNT_00999_0M,PNT_01000_0M,PNT_02000_0M,PNT_03000_0M,PNT_04000_0M,PNT_05000_0M,PNT_06000_0M,PNT_07000_0M,PNT_08000_0M,PNT_09000_0M,PNT_10000_0M
+			            ,PNT_11000_0M,PNT_12000_0M,PNT_13000_0M,PNT_14000_0M,PNT_15200_0M,PNT_20000_0M,RDM_00000_0M,RDM_00999_0M,RDM_01000_0M,RDM_02000_0M,RDM_03000_0M,RDM_04000_0M
+			            ,RDM_05000_0M,RDM_06000_0M,RDM_07000_0M,RDM_08000_0M,RDM_09000_0M,RDM_10000_0M,RDM_11000_0M,RDM_12000_0M,RDM_13000_0M,RDM_14000_0M,RDM_15200_0M,RDM_20000_0M
+			            ,PNT_00000_1M,PNT_00999_1M,PNT_01000_1M,PNT_02000_1M,PNT_03000_1M,PNT_04000_1M,PNT_05000_1M,PNT_06000_1M,PNT_07000_1M,PNT_08000_1M,PNT_09000_1M,PNT_10000_1M
+			            ,PNT_11000_1M,PNT_12000_1M,PNT_13000_1M,PNT_14000_1M,PNT_15200_1M,PNT_20000_1M,RDM_00000_1M,RDM_00999_1M,RDM_01000_1M,RDM_02000_1M,RDM_03000_1M,RDM_04000_1M
+			            ,RDM_05000_1M,RDM_06000_1M,RDM_07000_1M,RDM_08000_1M,RDM_09000_1M,RDM_10000_1M,RDM_11000_1M,RDM_12000_1M,RDM_13000_1M,RDM_14000_1M,RDM_15200_1M,RDM_20000_1M
+			            ,PNT_00000_12M,PNT_00999_12M,PNT_01000_12M,PNT_02000_12M,PNT_03000_12M,PNT_04000_12M,PNT_05000_12M,PNT_06000_12M,PNT_07000_12M,PNT_08000_12M,PNT_09000_12M,PNT_10000_12M
+			            ,PNT_11000_12M,PNT_12000_12M,PNT_13000_12M,PNT_14000_12M,PNT_15200_12M,PNT_20000_12M,RDM_00000_12M,RDM_00999_12M,RDM_01000_12M,RDM_02000_12M,RDM_03000_12M,RDM_04000_12M
+			            ,RDM_05000_12M,RDM_06000_12M,RDM_07000_12M,RDM_08000_12M,RDM_09000_12M,RDM_10000_12M,RDM_11000_12M,RDM_12000_12M,RDM_13000_12M,RDM_14000_12M,RDM_15200_12M,RDM_20000_12M
+			            ,CASE WHEN PNT_00000_1M  = 0 THEN 0 ELSE ROUND((PNT_00000_0M - PNT_00000_1M )/PNT_00000_1M*100,1 ) END AS PNT_00000_1M_RATE
+			            ,CASE WHEN PNT_00999_1M  = 0 THEN 0 ELSE ROUND((PNT_00999_0M - PNT_00999_1M )/PNT_00999_1M*100,1 ) END AS PNT_00999_1M_RATE
+			            ,CASE WHEN PNT_01000_1M  = 0 THEN 0 ELSE ROUND((PNT_01000_0M - PNT_01000_1M )/PNT_01000_1M*100,1 ) END AS PNT_01000_1M_RATE
+			            ,CASE WHEN PNT_02000_1M  = 0 THEN 0 ELSE ROUND((PNT_02000_0M - PNT_02000_1M )/PNT_02000_1M*100,1 ) END AS PNT_02000_1M_RATE
+			            ,CASE WHEN PNT_03000_1M  = 0 THEN 0 ELSE ROUND((PNT_03000_0M - PNT_03000_1M )/PNT_03000_1M*100,1 ) END AS PNT_03000_1M_RATE
+			            ,CASE WHEN PNT_04000_1M  = 0 THEN 0 ELSE ROUND((PNT_04000_0M - PNT_04000_1M )/PNT_04000_1M*100,1 ) END AS PNT_04000_1M_RATE
+			            ,CASE WHEN PNT_05000_1M  = 0 THEN 0 ELSE ROUND((PNT_05000_0M - PNT_05000_1M )/PNT_05000_1M*100,1 ) END AS PNT_05000_1M_RATE
+			            ,CASE WHEN PNT_06000_1M  = 0 THEN 0 ELSE ROUND((PNT_06000_0M - PNT_06000_1M )/PNT_06000_1M*100,1 ) END AS PNT_06000_1M_RATE
+			            ,CASE WHEN PNT_07000_1M  = 0 THEN 0 ELSE ROUND((PNT_07000_0M - PNT_07000_1M )/PNT_07000_1M*100,1 ) END AS PNT_07000_1M_RATE
+			            ,CASE WHEN PNT_08000_1M  = 0 THEN 0 ELSE ROUND((PNT_08000_0M - PNT_08000_1M )/PNT_08000_1M*100,1 ) END AS PNT_08000_1M_RATE
+			            ,CASE WHEN PNT_09000_1M  = 0 THEN 0 ELSE ROUND((PNT_09000_0M - PNT_09000_1M )/PNT_09000_1M*100,1 ) END AS PNT_09000_1M_RATE
+			            ,CASE WHEN PNT_10000_1M  = 0 THEN 0 ELSE ROUND((PNT_10000_0M - PNT_10000_1M )/PNT_10000_1M*100,1 ) END AS PNT_10000_1M_RATE
+			            ,CASE WHEN PNT_11000_1M  = 0 THEN 0 ELSE ROUND((PNT_11000_0M - PNT_11000_1M )/PNT_11000_1M*100,1 ) END AS PNT_11000_1M_RATE
+			            ,CASE WHEN PNT_12000_1M  = 0 THEN 0 ELSE ROUND((PNT_12000_0M - PNT_12000_1M )/PNT_12000_1M*100,1 ) END AS PNT_12000_1M_RATE
+			            ,CASE WHEN PNT_13000_1M  = 0 THEN 0 ELSE ROUND((PNT_13000_0M - PNT_13000_1M )/PNT_13000_1M*100,1 ) END AS PNT_13000_1M_RATE
+			            ,CASE WHEN PNT_14000_1M  = 0 THEN 0 ELSE ROUND((PNT_14000_0M - PNT_14000_1M )/PNT_14000_1M*100,1 ) END AS PNT_14000_1M_RATE
+			            ,CASE WHEN PNT_15200_1M  = 0 THEN 0 ELSE ROUND((PNT_15200_0M - PNT_15200_1M )/PNT_15200_1M*100,1 ) END AS PNT_15200_1M_RATE
+			            ,CASE WHEN PNT_20000_1M  = 0 THEN 0 ELSE ROUND((PNT_20000_0M - PNT_20000_1M )/PNT_20000_1M*100,1 ) END AS PNT_20000_1M_RATE
+			            ,CASE WHEN RDM_00000_1M  = 0 THEN 0 ELSE ROUND((RDM_00000_0M - RDM_00000_1M )/RDM_00000_1M*100,1 ) END AS RDM_00000_1M_RATE
+			            ,CASE WHEN RDM_00999_1M  = 0 THEN 0 ELSE ROUND((RDM_00999_0M - RDM_00999_1M )/RDM_00999_1M*100,1 ) END AS RDM_00999_1M_RATE
+			            ,CASE WHEN RDM_01000_1M  = 0 THEN 0 ELSE ROUND((RDM_01000_0M - RDM_01000_1M )/RDM_01000_1M*100,1 ) END AS RDM_01000_1M_RATE
+			            ,CASE WHEN RDM_02000_1M  = 0 THEN 0 ELSE ROUND((RDM_02000_0M - RDM_02000_1M )/RDM_02000_1M*100,1 ) END AS RDM_02000_1M_RATE
+			            ,CASE WHEN RDM_03000_1M  = 0 THEN 0 ELSE ROUND((RDM_03000_0M - RDM_03000_1M )/RDM_03000_1M*100,1 ) END AS RDM_03000_1M_RATE
+			            ,CASE WHEN RDM_04000_1M  = 0 THEN 0 ELSE ROUND((RDM_04000_0M - RDM_04000_1M )/RDM_04000_1M*100,1 ) END AS RDM_04000_1M_RATE
+			            ,CASE WHEN RDM_05000_1M  = 0 THEN 0 ELSE ROUND((RDM_05000_0M - RDM_05000_1M )/RDM_05000_1M*100,1 ) END AS RDM_05000_1M_RATE
+			            ,CASE WHEN RDM_06000_1M  = 0 THEN 0 ELSE ROUND((RDM_06000_0M - RDM_06000_1M )/RDM_06000_1M*100,1 ) END AS RDM_06000_1M_RATE
+			            ,CASE WHEN RDM_07000_1M  = 0 THEN 0 ELSE ROUND((RDM_07000_0M - RDM_07000_1M )/RDM_07000_1M*100,1 ) END AS RDM_07000_1M_RATE
+			            ,CASE WHEN RDM_08000_1M  = 0 THEN 0 ELSE ROUND((RDM_08000_0M - RDM_08000_1M )/RDM_08000_1M*100,1 ) END AS RDM_08000_1M_RATE
+			            ,CASE WHEN RDM_09000_1M  = 0 THEN 0 ELSE ROUND((RDM_09000_0M - RDM_09000_1M )/RDM_09000_1M*100,1 ) END AS RDM_09000_1M_RATE
+			            ,CASE WHEN RDM_10000_1M  = 0 THEN 0 ELSE ROUND((RDM_10000_0M - RDM_10000_1M )/RDM_10000_1M*100,1 ) END AS RDM_10000_1M_RATE
+			            ,CASE WHEN RDM_11000_1M  = 0 THEN 0 ELSE ROUND((RDM_11000_0M - RDM_11000_1M )/RDM_11000_1M*100,1 ) END AS RDM_11000_1M_RATE
+			            ,CASE WHEN RDM_12000_1M  = 0 THEN 0 ELSE ROUND((RDM_12000_0M - RDM_12000_1M )/RDM_12000_1M*100,1 ) END AS RDM_12000_1M_RATE
+			            ,CASE WHEN RDM_13000_1M  = 0 THEN 0 ELSE ROUND((RDM_13000_0M - RDM_13000_1M )/RDM_13000_1M*100,1 ) END AS RDM_13000_1M_RATE
+			            ,CASE WHEN RDM_14000_1M  = 0 THEN 0 ELSE ROUND((RDM_14000_0M - RDM_14000_1M )/RDM_14000_1M*100,1 ) END AS RDM_14000_1M_RATE
+			            ,CASE WHEN RDM_15200_1M  = 0 THEN 0 ELSE ROUND((RDM_15200_0M - RDM_15200_1M )/RDM_15200_1M*100,1 ) END AS RDM_15200_1M_RATE
+			            ,CASE WHEN RDM_20000_1M  = 0 THEN 0 ELSE ROUND((RDM_20000_0M - RDM_20000_1M )/RDM_20000_1M*100,1 ) END AS RDM_20000_1M_RATE
+			            ,CASE WHEN PNT_00000_12M = 0 THEN 0 ELSE ROUND((PNT_00000_0M - PNT_00000_12M)/PNT_00000_12M*100,1) END AS PNT_00000_12M_RATE
+			            ,CASE WHEN PNT_00999_12M = 0 THEN 0 ELSE ROUND((PNT_00999_0M - PNT_00999_12M)/PNT_00999_12M*100,1) END AS PNT_00999_12M_RATE
+			            ,CASE WHEN PNT_01000_12M = 0 THEN 0 ELSE ROUND((PNT_01000_0M - PNT_01000_12M)/PNT_01000_12M*100,1) END AS PNT_01000_12M_RATE
+			            ,CASE WHEN PNT_02000_12M = 0 THEN 0 ELSE ROUND((PNT_02000_0M - PNT_02000_12M)/PNT_02000_12M*100,1) END AS PNT_02000_12M_RATE
+			            ,CASE WHEN PNT_03000_12M = 0 THEN 0 ELSE ROUND((PNT_03000_0M - PNT_03000_12M)/PNT_03000_12M*100,1) END AS PNT_03000_12M_RATE
+			            ,CASE WHEN PNT_04000_12M = 0 THEN 0 ELSE ROUND((PNT_04000_0M - PNT_04000_12M)/PNT_04000_12M*100,1) END AS PNT_04000_12M_RATE
+			            ,CASE WHEN PNT_05000_12M = 0 THEN 0 ELSE ROUND((PNT_05000_0M - PNT_05000_12M)/PNT_05000_12M*100,1) END AS PNT_05000_12M_RATE
+			            ,CASE WHEN PNT_06000_12M = 0 THEN 0 ELSE ROUND((PNT_06000_0M - PNT_06000_12M)/PNT_06000_12M*100,1) END AS PNT_06000_12M_RATE
+			            ,CASE WHEN PNT_07000_12M = 0 THEN 0 ELSE ROUND((PNT_07000_0M - PNT_07000_12M)/PNT_07000_12M*100,1) END AS PNT_07000_12M_RATE
+			            ,CASE WHEN PNT_08000_12M = 0 THEN 0 ELSE ROUND((PNT_08000_0M - PNT_08000_12M)/PNT_08000_12M*100,1) END AS PNT_08000_12M_RATE
+			            ,CASE WHEN PNT_09000_12M = 0 THEN 0 ELSE ROUND((PNT_09000_0M - PNT_09000_12M)/PNT_09000_12M*100,1) END AS PNT_09000_12M_RATE
+			            ,CASE WHEN PNT_10000_12M = 0 THEN 0 ELSE ROUND((PNT_10000_0M - PNT_10000_12M)/PNT_10000_12M*100,1) END AS PNT_10000_12M_RATE
+			            ,CASE WHEN PNT_11000_12M = 0 THEN 0 ELSE ROUND((PNT_11000_0M - PNT_11000_12M)/PNT_11000_12M*100,1) END AS PNT_11000_12M_RATE
+			            ,CASE WHEN PNT_12000_12M = 0 THEN 0 ELSE ROUND((PNT_12000_0M - PNT_12000_12M)/PNT_12000_12M*100,1) END AS PNT_12000_12M_RATE
+			            ,CASE WHEN PNT_13000_12M = 0 THEN 0 ELSE ROUND((PNT_13000_0M - PNT_13000_12M)/PNT_13000_12M*100,1) END AS PNT_13000_12M_RATE
+			            ,CASE WHEN PNT_14000_12M = 0 THEN 0 ELSE ROUND((PNT_14000_0M - PNT_14000_12M)/PNT_14000_12M*100,1) END AS PNT_14000_12M_RATE
+			            ,CASE WHEN PNT_15200_12M = 0 THEN 0 ELSE ROUND((PNT_15200_0M - PNT_15200_12M)/PNT_15200_12M*100,1) END AS PNT_15200_12M_RATE
+			            ,CASE WHEN PNT_20000_12M = 0 THEN 0 ELSE ROUND((PNT_20000_0M - PNT_20000_12M)/PNT_20000_12M*100,1) END AS PNT_20000_12M_RATE
+			            ,CASE WHEN RDM_00000_12M = 0 THEN 0 ELSE ROUND((RDM_00000_0M - RDM_00000_12M)/RDM_00000_12M*100,1) END AS RDM_00000_12M_RATE
+			            ,CASE WHEN RDM_00999_12M = 0 THEN 0 ELSE ROUND((RDM_00999_0M - RDM_00999_12M)/RDM_00999_12M*100,1) END AS RDM_00999_12M_RATE
+			            ,CASE WHEN RDM_01000_12M = 0 THEN 0 ELSE ROUND((RDM_01000_0M - RDM_01000_12M)/RDM_01000_12M*100,1) END AS RDM_01000_12M_RATE
+			            ,CASE WHEN RDM_02000_12M = 0 THEN 0 ELSE ROUND((RDM_02000_0M - RDM_02000_12M)/RDM_02000_12M*100,1) END AS RDM_02000_12M_RATE
+			            ,CASE WHEN RDM_03000_12M = 0 THEN 0 ELSE ROUND((RDM_03000_0M - RDM_03000_12M)/RDM_03000_12M*100,1) END AS RDM_03000_12M_RATE
+			            ,CASE WHEN RDM_04000_12M = 0 THEN 0 ELSE ROUND((RDM_04000_0M - RDM_04000_12M)/RDM_04000_12M*100,1) END AS RDM_04000_12M_RATE
+			            ,CASE WHEN RDM_05000_12M = 0 THEN 0 ELSE ROUND((RDM_05000_0M - RDM_05000_12M)/RDM_05000_12M*100,1) END AS RDM_05000_12M_RATE
+			            ,CASE WHEN RDM_06000_12M = 0 THEN 0 ELSE ROUND((RDM_06000_0M - RDM_06000_12M)/RDM_06000_12M*100,1) END AS RDM_06000_12M_RATE
+			            ,CASE WHEN RDM_07000_12M = 0 THEN 0 ELSE ROUND((RDM_07000_0M - RDM_07000_12M)/RDM_07000_12M*100,1) END AS RDM_07000_12M_RATE
+			            ,CASE WHEN RDM_08000_12M = 0 THEN 0 ELSE ROUND((RDM_08000_0M - RDM_08000_12M)/RDM_08000_12M*100,1) END AS RDM_08000_12M_RATE
+			            ,CASE WHEN RDM_09000_12M = 0 THEN 0 ELSE ROUND((RDM_09000_0M - RDM_09000_12M)/RDM_09000_12M*100,1) END AS RDM_09000_12M_RATE
+			            ,CASE WHEN RDM_10000_12M = 0 THEN 0 ELSE ROUND((RDM_10000_0M - RDM_10000_12M)/RDM_10000_12M*100,1) END AS RDM_10000_12M_RATE
+			            ,CASE WHEN RDM_11000_12M = 0 THEN 0 ELSE ROUND((RDM_11000_0M - RDM_11000_12M)/RDM_11000_12M*100,1) END AS RDM_11000_12M_RATE
+			            ,CASE WHEN RDM_12000_12M = 0 THEN 0 ELSE ROUND((RDM_12000_0M - RDM_12000_12M)/RDM_12000_12M*100,1) END AS RDM_12000_12M_RATE
+			            ,CASE WHEN RDM_13000_12M = 0 THEN 0 ELSE ROUND((RDM_13000_0M - RDM_13000_12M)/RDM_13000_12M*100,1) END AS RDM_13000_12M_RATE
+			            ,CASE WHEN RDM_14000_12M = 0 THEN 0 ELSE ROUND((RDM_14000_0M - RDM_14000_12M)/RDM_14000_12M*100,1) END AS RDM_14000_12M_RATE
+			            ,CASE WHEN RDM_15200_12M = 0 THEN 0 ELSE ROUND((RDM_15200_0M - RDM_15200_12M)/RDM_15200_12M*100,1) END AS RDM_15200_12M_RATE
+			            ,CASE WHEN RDM_20000_12M = 0 THEN 0 ELSE ROUND((RDM_20000_0M - RDM_20000_12M)/RDM_20000_12M*100,1) END AS RDM_20000_12M_RATE
+			    FROM
+			        (
+			        SELECT
+			             SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_00000_MEM_CNT ELSE 0 END) AS PNT_00000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_00999_MEM_CNT ELSE 0 END) AS PNT_00999_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_01000_MEM_CNT ELSE 0 END) AS PNT_01000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_02000_MEM_CNT ELSE 0 END) AS PNT_02000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_03000_MEM_CNT ELSE 0 END) AS PNT_03000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_04000_MEM_CNT ELSE 0 END) AS PNT_04000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_05000_MEM_CNT ELSE 0 END) AS PNT_05000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_06000_MEM_CNT ELSE 0 END) AS PNT_06000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_07000_MEM_CNT ELSE 0 END) AS PNT_07000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_08000_MEM_CNT ELSE 0 END) AS PNT_08000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_09000_MEM_CNT ELSE 0 END) AS PNT_09000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_10000_MEM_CNT ELSE 0 END) AS PNT_10000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_11000_MEM_CNT ELSE 0 END) AS PNT_11000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_12000_MEM_CNT ELSE 0 END) AS PNT_12000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_13000_MEM_CNT ELSE 0 END) AS PNT_13000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_14000_MEM_CNT ELSE 0 END) AS PNT_14000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_15200_MEM_CNT ELSE 0 END) AS PNT_15200_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN PNT_20000_MEM_CNT ELSE 0 END) AS PNT_20000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_00000_MEM_CNT ELSE 0 END) AS RDM_00000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_00999_MEM_CNT ELSE 0 END) AS RDM_00999_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_01000_MEM_CNT ELSE 0 END) AS RDM_01000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_02000_MEM_CNT ELSE 0 END) AS RDM_02000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_03000_MEM_CNT ELSE 0 END) AS RDM_03000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_04000_MEM_CNT ELSE 0 END) AS RDM_04000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_05000_MEM_CNT ELSE 0 END) AS RDM_05000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_06000_MEM_CNT ELSE 0 END) AS RDM_06000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_07000_MEM_CNT ELSE 0 END) AS RDM_07000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_08000_MEM_CNT ELSE 0 END) AS RDM_08000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_09000_MEM_CNT ELSE 0 END) AS RDM_09000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_10000_MEM_CNT ELSE 0 END) AS RDM_10000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_11000_MEM_CNT ELSE 0 END) AS RDM_11000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_12000_MEM_CNT ELSE 0 END) AS RDM_12000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_13000_MEM_CNT ELSE 0 END) AS RDM_13000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_14000_MEM_CNT ELSE 0 END) AS RDM_14000_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_15200_MEM_CNT ELSE 0 END) AS RDM_15200_0M
+			            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN RDM_20000_MEM_CNT ELSE 0 END) AS RDM_20000_0M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_00000_MEM_CNT ELSE 0 END) AS PNT_00000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_00999_MEM_CNT ELSE 0 END) AS PNT_00999_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_01000_MEM_CNT ELSE 0 END) AS PNT_01000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_02000_MEM_CNT ELSE 0 END) AS PNT_02000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_03000_MEM_CNT ELSE 0 END) AS PNT_03000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_04000_MEM_CNT ELSE 0 END) AS PNT_04000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_05000_MEM_CNT ELSE 0 END) AS PNT_05000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_06000_MEM_CNT ELSE 0 END) AS PNT_06000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_07000_MEM_CNT ELSE 0 END) AS PNT_07000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_08000_MEM_CNT ELSE 0 END) AS PNT_08000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_09000_MEM_CNT ELSE 0 END) AS PNT_09000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_10000_MEM_CNT ELSE 0 END) AS PNT_10000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_11000_MEM_CNT ELSE 0 END) AS PNT_11000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_12000_MEM_CNT ELSE 0 END) AS PNT_12000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_13000_MEM_CNT ELSE 0 END) AS PNT_13000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_14000_MEM_CNT ELSE 0 END) AS PNT_14000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_15200_MEM_CNT ELSE 0 END) AS PNT_15200_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN PNT_20000_MEM_CNT ELSE 0 END) AS PNT_20000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_00000_MEM_CNT ELSE 0 END) AS RDM_00000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_00999_MEM_CNT ELSE 0 END) AS RDM_00999_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_01000_MEM_CNT ELSE 0 END) AS RDM_01000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_02000_MEM_CNT ELSE 0 END) AS RDM_02000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_03000_MEM_CNT ELSE 0 END) AS RDM_03000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_04000_MEM_CNT ELSE 0 END) AS RDM_04000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_05000_MEM_CNT ELSE 0 END) AS RDM_05000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_06000_MEM_CNT ELSE 0 END) AS RDM_06000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_07000_MEM_CNT ELSE 0 END) AS RDM_07000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_08000_MEM_CNT ELSE 0 END) AS RDM_08000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_09000_MEM_CNT ELSE 0 END) AS RDM_09000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_10000_MEM_CNT ELSE 0 END) AS RDM_10000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_11000_MEM_CNT ELSE 0 END) AS RDM_11000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_12000_MEM_CNT ELSE 0 END) AS RDM_12000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_13000_MEM_CNT ELSE 0 END) AS RDM_13000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_14000_MEM_CNT ELSE 0 END) AS RDM_14000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_15200_MEM_CNT ELSE 0 END) AS RDM_15200_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN RDM_20000_MEM_CNT ELSE 0 END) AS RDM_20000_1M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_00000_MEM_CNT ELSE 0 END) AS PNT_00000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_00999_MEM_CNT ELSE 0 END) AS PNT_00999_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_01000_MEM_CNT ELSE 0 END) AS PNT_01000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_02000_MEM_CNT ELSE 0 END) AS PNT_02000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_03000_MEM_CNT ELSE 0 END) AS PNT_03000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_04000_MEM_CNT ELSE 0 END) AS PNT_04000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_05000_MEM_CNT ELSE 0 END) AS PNT_05000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_06000_MEM_CNT ELSE 0 END) AS PNT_06000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_07000_MEM_CNT ELSE 0 END) AS PNT_07000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_08000_MEM_CNT ELSE 0 END) AS PNT_08000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_09000_MEM_CNT ELSE 0 END) AS PNT_09000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_10000_MEM_CNT ELSE 0 END) AS PNT_10000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_11000_MEM_CNT ELSE 0 END) AS PNT_11000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_12000_MEM_CNT ELSE 0 END) AS PNT_12000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_13000_MEM_CNT ELSE 0 END) AS PNT_13000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_14000_MEM_CNT ELSE 0 END) AS PNT_14000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_15200_MEM_CNT ELSE 0 END) AS PNT_15200_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN PNT_20000_MEM_CNT ELSE 0 END) AS PNT_20000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_00000_MEM_CNT ELSE 0 END) AS RDM_00000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_00999_MEM_CNT ELSE 0 END) AS RDM_00999_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_01000_MEM_CNT ELSE 0 END) AS RDM_01000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_02000_MEM_CNT ELSE 0 END) AS RDM_02000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_03000_MEM_CNT ELSE 0 END) AS RDM_03000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_04000_MEM_CNT ELSE 0 END) AS RDM_04000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_05000_MEM_CNT ELSE 0 END) AS RDM_05000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_06000_MEM_CNT ELSE 0 END) AS RDM_06000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_07000_MEM_CNT ELSE 0 END) AS RDM_07000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_08000_MEM_CNT ELSE 0 END) AS RDM_08000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_09000_MEM_CNT ELSE 0 END) AS RDM_09000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_10000_MEM_CNT ELSE 0 END) AS RDM_10000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_11000_MEM_CNT ELSE 0 END) AS RDM_11000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_12000_MEM_CNT ELSE 0 END) AS RDM_12000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_13000_MEM_CNT ELSE 0 END) AS RDM_13000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_14000_MEM_CNT ELSE 0 END) AS RDM_14000_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_15200_MEM_CNT ELSE 0 END) AS RDM_15200_12M
+			            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN RDM_20000_MEM_CNT ELSE 0 END) AS RDM_20000_12M
+			        FROM MRT.FT_PNT_BAND_M
+		        WHERE YYYYMM IN (#{yyyymm},TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM'),
+		                        TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') )]]>
+		        AND QRY_TYPE = #{qryType}
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+			 	AND STORE_CD =#{storeCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+			 	AND GEND_CD =#{genCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+			 	AND AGE_CD =#{ageCd}
+			</if>
+		        )
+		    ) A
+		    ,(
+		        SELECT LEVEL LV
+		        FROM DUAL
+		    <![CDATA[    CONNECT BY LEVEL <= 36]]>
+		    ) B
+		UNION ALL
+		<![CDATA[
+		SELECT
+		      LV AS seq
+		      ,CASE WHEN LV BETWEEN 1 AND 18 THEN '포인트 보유 금액별' WHEN LV BETWEEN 19 AND 36 THEN '포인트 사용 금액별' WHEN LV BETWEEN 37 AND 68 THEN '구매금액 기준 회원수' END AS typea
+		      ,CASE WHEN LV = 37 THEN '0'     WHEN LV = 38 THEN '~ 1000' WHEN LV = 39 THEN '~ 2000' WHEN LV = 40 THEN '~ 3000' WHEN LV = 41  THEN '~ 4000'  WHEN LV = 42 THEN '~ 5000'
+		            WHEN LV = 43 THEN '~ 6000' WHEN LV = 44 THEN '~ 7000' WHEN LV = 45 THEN '~ 8000' WHEN LV = 46 THEN '~ 9000' WHEN LV = 47 THEN '~ 10000' WHEN LV = 48 THEN '~ 11000'
+		            WHEN LV = 49 THEN '~ 12000' WHEN LV = 50 THEN '~ 13000' WHEN LV = 51 THEN '~ 14000' WHEN LV = 52 THEN '~ 15000' WHEN LV = 53 THEN '~ 16000'  WHEN LV = 54 THEN '~ 17000'
+		            WHEN LV = 55 THEN '~ 18000' WHEN LV = 56 THEN '~ 19000' WHEN LV = 57 THEN '~ 20000' WHEN LV = 58 THEN '~ 21000' WHEN LV = 59  THEN '~ 22000'  WHEN LV = 60 THEN '~ 23000'
+		            WHEN LV = 61 THEN '~ 24000' WHEN LV = 62 THEN '~ 25000' WHEN LV = 63 THEN '~ 26000' WHEN LV = 64 THEN '~ 27000' WHEN LV = 65 THEN '~ 28000' WHEN LV = 66 THEN '~ 29000'
+		            WHEN LV = 67 THEN '~ 30000' WHEN LV = 68 THEN '30000 이상' END typeb
+		      ,DECODE(LV,37,AMT_00000_0M,38,AMT_00999_0M,39,AMT_01000_0M,40,AMT_02000_0M,41,AMT_03000_0M,42,AMT_04000_0M,43,AMT_05000_0M,44,AMT_06000_0M,45,AMT_07000_0M,46,AMT_08000_0M,47,AMT_09000_0M,48,AMT_10000_0M,49,AMT_11000_0M,50,AMT_12000_0M,51,AMT_13000_0M,52,AMT_14000_0M
+		                ,53,AMT_15000_0M,54,AMT_16000_0M,55,AMT_17000_0M,56,AMT_18000_0M,57,AMT_19000_0M,58,AMT_20000_0M,59,AMT_21000_0M,60,AMT_22000_0M,61,AMT_23000_0M,62,AMT_24000_0M,63,AMT_25000_0M,64,AMT_26000_0M,65,AMT_27000_0M,66,AMT_28000_0M,67,AMT_29000_0M,68,AMT_30000_0M) AS month0m
+		      ,DECODE(LV,37,AMT_00000_1M,38,AMT_00999_1M,39,AMT_01000_1M,40,AMT_02000_1M,41,AMT_03000_1M,42,AMT_04000_1M,43,AMT_05000_1M,44,AMT_06000_1M,45,AMT_07000_1M,46,AMT_08000_1M,47,AMT_09000_1M,48,AMT_10000_1M,49,AMT_11000_1M,50,AMT_12000_1M,51,AMT_13000_1M,52,AMT_14000_1M
+		                ,53,AMT_15000_1M,54,AMT_16000_1M,55,AMT_17000_1M,56,AMT_18000_1M,57,AMT_19000_1M,58,AMT_20000_1M,59,AMT_21000_1M,60,AMT_22000_1M,61,AMT_23000_1M,62,AMT_24000_1M,63,AMT_25000_1M,64,AMT_26000_1M,65,AMT_27000_1M,66,AMT_28000_1M,67,AMT_29000_1M,68,AMT_30000_1M) AS month1m
+		      ,DECODE(LV,37,AMT_00000_12M,38,AMT_00999_12M,39,AMT_01000_12M,40,AMT_02000_12M,41,AMT_03000_12M,42,AMT_04000_12M,43,AMT_05000_12M,44,AMT_06000_12M,45,AMT_07000_12M,46,AMT_08000_12M,47,AMT_09000_12M,48,AMT_10000_12M,49,AMT_11000_12M,50,AMT_12000_12M,51,AMT_13000_12M,52,AMT_14000_12M
+		                ,53,AMT_15000_12M,54,AMT_16000_12M,55,AMT_17000_12M,56,AMT_18000_12M,57,AMT_19000_12M,58,AMT_20000_12M,59,AMT_21000_12M,60,AMT_22000_12M,61,AMT_23000_12M,62,AMT_24000_12M,63,AMT_25000_12M,64,AMT_26000_12M,65,AMT_27000_12M,66,AMT_28000_12M,67,AMT_29000_12M,68,AMT_30000_12M) AS month12m
+		      ,DECODE(LV,37,AMT_00000_1M_RATE,38 ,AMT_00999_1M_RATE,39,AMT_01000_1M_RATE,40,AMT_02000_1M_RATE,41,AMT_03000_1M_RATE,42,AMT_04000_1M_RATE,43,AMT_05000_1M_RATE,44,AMT_06000_1M_RATE,45,AMT_07000_1M_RATE,46,AMT_08000_1M_RATE,47,AMT_09000_1M_RATE,48,AMT_10000_1M_RATE,49,AMT_11000_1M_RATE,50,AMT_12000_1M_RATE,51,AMT_13000_1M_RATE,52,AMT_14000_1M_RATE
+		                ,53,AMT_15000_1M_RATE,54 ,AMT_16000_1M_RATE,55,AMT_17000_1M_RATE,56,AMT_18000_1M_RATE,57,AMT_19000_1M_RATE,58,AMT_20000_1M_RATE,59,AMT_21000_1M_RATE,60,AMT_22000_1M_RATE,61,AMT_23000_1M_RATE,62,AMT_24000_1M_RATE,63,AMT_25000_1M_RATE,64,AMT_26000_1M_RATE,65,AMT_27000_1M_RATE,66,AMT_28000_1M_RATE,67,AMT_29000_1M_RATE,68,AMT_30000_1M_RATE) AS month1mRate
+		      ,DECODE(LV,37,AMT_00000_12M_RATE,38,AMT_00999_12M_RATE,39,AMT_01000_12M_RATE,40,AMT_02000_12M_RATE,41,AMT_03000_12M_RATE,42,AMT_04000_12M_RATE,43,AMT_05000_12M_RATE,44,AMT_06000_12M_RATE,45,AMT_07000_12M_RATE,46,AMT_08000_12M_RATE,47,AMT_09000_12M_RATE,48,AMT_10000_12M_RATE,49,AMT_11000_12M_RATE,50,AMT_12000_12M_RATE,51,AMT_13000_12M_RATE,52,AMT_14000_12M_RATE
+		                ,53,AMT_15000_12M_RATE,54,AMT_16000_12M_RATE,55,AMT_17000_12M_RATE,56,AMT_18000_12M_RATE,57,AMT_19000_12M_RATE,58,AMT_20000_12M_RATE,59,AMT_21000_12M_RATE,60,AMT_22000_12M_RATE,61,AMT_23000_12M_RATE,62,AMT_24000_12M_RATE,63,AMT_25000_12M_RATE,64,AMT_26000_12M_RATE,65,AMT_27000_12M_RATE,66,AMT_28000_12M_RATE,67,AMT_29000_12M_RATE,68,AMT_30000_12M_RATE) AS month12mRate
+		FROM
+		    (
+		    SELECT   AMT_00000_0M,AMT_00999_0M,AMT_01000_0M,AMT_02000_0M,AMT_03000_0M,AMT_04000_0M,AMT_05000_0M,AMT_06000_0M
+		            ,AMT_07000_0M,AMT_08000_0M,AMT_09000_0M,AMT_10000_0M,AMT_11000_0M,AMT_12000_0M,AMT_13000_0M,AMT_14000_0M,AMT_15000_0M,AMT_16000_0M
+		            ,AMT_17000_0M,AMT_18000_0M,AMT_19000_0M,AMT_20000_0M,AMT_21000_0M,AMT_22000_0M,AMT_23000_0M,AMT_24000_0M,AMT_25000_0M,AMT_26000_0M
+		            ,AMT_27000_0M,AMT_28000_0M,AMT_29000_0M,AMT_30000_0M
+		            ,AMT_00000_1M,AMT_00999_1M,AMT_01000_1M,AMT_02000_1M,AMT_03000_1M,AMT_04000_1M,AMT_05000_1M,AMT_06000_1M
+		            ,AMT_07000_1M,AMT_08000_1M,AMT_09000_1M,AMT_10000_1M,AMT_11000_1M,AMT_12000_1M,AMT_13000_1M,AMT_14000_1M,AMT_15000_1M,AMT_16000_1M
+		            ,AMT_17000_1M,AMT_18000_1M,AMT_19000_1M,AMT_20000_1M,AMT_21000_1M,AMT_22000_1M,AMT_23000_1M,AMT_24000_1M,AMT_25000_1M,AMT_26000_1M
+		            ,AMT_27000_1M,AMT_28000_1M,AMT_29000_1M,AMT_30000_1M
+		            ,AMT_00000_12M,AMT_00999_12M,AMT_01000_12M,AMT_02000_12M,AMT_03000_12M,AMT_04000_12M,AMT_05000_12M,AMT_06000_12M
+		            ,AMT_07000_12M,AMT_08000_12M,AMT_09000_12M,AMT_10000_12M,AMT_11000_12M,AMT_12000_12M,AMT_13000_12M,AMT_14000_12M,AMT_15000_12M,AMT_16000_12M
+		            ,AMT_17000_12M,AMT_18000_12M,AMT_19000_12M,AMT_20000_12M,AMT_21000_12M,AMT_22000_12M,AMT_23000_12M,AMT_24000_12M,AMT_25000_12M,AMT_26000_12M
+		            ,AMT_27000_12M,AMT_28000_12M,AMT_29000_12M,AMT_30000_12M
+		            ,CASE WHEN AMT_00000_1M  = 0 THEN 0 ELSE ROUND((AMT_00000_0M - AMT_00000_1M )/AMT_00000_1M*100,1) END AS AMT_00000_1M_RATE
+		            ,CASE WHEN AMT_00999_1M  = 0 THEN 0 ELSE ROUND((AMT_00999_0M - AMT_00999_1M )/AMT_00999_1M*100,1) END AS AMT_00999_1M_RATE
+		            ,CASE WHEN AMT_01000_1M  = 0 THEN 0 ELSE ROUND((AMT_01000_0M - AMT_01000_1M )/AMT_01000_1M*100,1) END AS AMT_01000_1M_RATE
+		            ,CASE WHEN AMT_02000_1M  = 0 THEN 0 ELSE ROUND((AMT_02000_0M - AMT_02000_1M )/AMT_02000_1M*100,1) END AS AMT_02000_1M_RATE
+		            ,CASE WHEN AMT_03000_1M  = 0 THEN 0 ELSE ROUND((AMT_03000_0M - AMT_03000_1M )/AMT_03000_1M*100,1) END AS AMT_03000_1M_RATE
+		            ,CASE WHEN AMT_04000_1M  = 0 THEN 0 ELSE ROUND((AMT_04000_0M - AMT_04000_1M )/AMT_04000_1M*100,1) END AS AMT_04000_1M_RATE
+		            ,CASE WHEN AMT_05000_1M  = 0 THEN 0 ELSE ROUND((AMT_05000_0M - AMT_05000_1M )/AMT_05000_1M*100,1) END AS AMT_05000_1M_RATE
+		            ,CASE WHEN AMT_06000_1M  = 0 THEN 0 ELSE ROUND((AMT_06000_0M - AMT_06000_1M )/AMT_06000_1M*100,1) END AS AMT_06000_1M_RATE
+		            ,CASE WHEN AMT_07000_1M  = 0 THEN 0 ELSE ROUND((AMT_07000_0M - AMT_07000_1M )/AMT_07000_1M*100,1) END AS AMT_07000_1M_RATE
+		            ,CASE WHEN AMT_08000_1M  = 0 THEN 0 ELSE ROUND((AMT_08000_0M - AMT_08000_1M )/AMT_08000_1M*100,1) END AS AMT_08000_1M_RATE
+		            ,CASE WHEN AMT_09000_1M  = 0 THEN 0 ELSE ROUND((AMT_09000_0M - AMT_09000_1M )/AMT_09000_1M*100,1) END AS AMT_09000_1M_RATE
+		            ,CASE WHEN AMT_10000_1M  = 0 THEN 0 ELSE ROUND((AMT_10000_0M - AMT_10000_1M )/AMT_10000_1M*100,1) END AS AMT_10000_1M_RATE
+		            ,CASE WHEN AMT_11000_1M  = 0 THEN 0 ELSE ROUND((AMT_11000_0M - AMT_11000_1M )/AMT_11000_1M*100,1) END AS AMT_11000_1M_RATE
+		            ,CASE WHEN AMT_12000_1M  = 0 THEN 0 ELSE ROUND((AMT_12000_0M - AMT_12000_1M )/AMT_12000_1M*100,1) END AS AMT_12000_1M_RATE
+		            ,CASE WHEN AMT_13000_1M  = 0 THEN 0 ELSE ROUND((AMT_13000_0M - AMT_13000_1M )/AMT_13000_1M*100,1) END AS AMT_13000_1M_RATE
+		            ,CASE WHEN AMT_14000_1M  = 0 THEN 0 ELSE ROUND((AMT_14000_0M - AMT_14000_1M )/AMT_14000_1M*100,1) END AS AMT_14000_1M_RATE
+		            ,CASE WHEN AMT_15000_1M  = 0 THEN 0 ELSE ROUND((AMT_15000_0M - AMT_15000_1M )/AMT_15000_1M*100,1) END AS AMT_15000_1M_RATE
+		            ,CASE WHEN AMT_16000_1M  = 0 THEN 0 ELSE ROUND((AMT_16000_0M - AMT_16000_1M )/AMT_16000_1M*100,1) END AS AMT_16000_1M_RATE
+		            ,CASE WHEN AMT_17000_1M  = 0 THEN 0 ELSE ROUND((AMT_17000_0M - AMT_17000_1M )/AMT_17000_1M*100,1) END AS AMT_17000_1M_RATE
+		            ,CASE WHEN AMT_18000_1M  = 0 THEN 0 ELSE ROUND((AMT_18000_0M - AMT_18000_1M )/AMT_18000_1M*100,1) END AS AMT_18000_1M_RATE
+		            ,CASE WHEN AMT_19000_1M  = 0 THEN 0 ELSE ROUND((AMT_19000_0M - AMT_19000_1M )/AMT_19000_1M*100,1) END AS AMT_19000_1M_RATE
+		            ,CASE WHEN AMT_20000_1M  = 0 THEN 0 ELSE ROUND((AMT_20000_0M - AMT_20000_1M )/AMT_20000_1M*100,1) END AS AMT_20000_1M_RATE
+		            ,CASE WHEN AMT_21000_1M  = 0 THEN 0 ELSE ROUND((AMT_21000_0M - AMT_21000_1M )/AMT_21000_1M*100,1) END AS AMT_21000_1M_RATE
+		            ,CASE WHEN AMT_22000_1M  = 0 THEN 0 ELSE ROUND((AMT_22000_0M - AMT_22000_1M )/AMT_22000_1M*100,1) END AS AMT_22000_1M_RATE
+		            ,CASE WHEN AMT_23000_1M  = 0 THEN 0 ELSE ROUND((AMT_23000_0M - AMT_23000_1M )/AMT_23000_1M*100,1) END AS AMT_23000_1M_RATE
+		            ,CASE WHEN AMT_24000_1M  = 0 THEN 0 ELSE ROUND((AMT_24000_0M - AMT_24000_1M )/AMT_24000_1M*100,1) END AS AMT_24000_1M_RATE
+		            ,CASE WHEN AMT_25000_1M  = 0 THEN 0 ELSE ROUND((AMT_25000_0M - AMT_25000_1M )/AMT_25000_1M*100,1) END AS AMT_25000_1M_RATE
+		            ,CASE WHEN AMT_26000_1M  = 0 THEN 0 ELSE ROUND((AMT_26000_0M - AMT_26000_1M )/AMT_26000_1M*100,1) END AS AMT_26000_1M_RATE
+		            ,CASE WHEN AMT_27000_1M  = 0 THEN 0 ELSE ROUND((AMT_27000_0M - AMT_27000_1M )/AMT_27000_1M*100,1) END AS AMT_27000_1M_RATE
+		            ,CASE WHEN AMT_28000_1M  = 0 THEN 0 ELSE ROUND((AMT_28000_0M - AMT_28000_1M )/AMT_28000_1M*100,1) END AS AMT_28000_1M_RATE
+		            ,CASE WHEN AMT_29000_1M  = 0 THEN 0 ELSE ROUND((AMT_29000_0M - AMT_29000_1M )/AMT_29000_1M*100,1) END AS AMT_29000_1M_RATE
+		            ,CASE WHEN AMT_30000_1M  = 0 THEN 0 ELSE ROUND((AMT_30000_0M - AMT_30000_1M )/AMT_30000_1M*100,1) END AS AMT_30000_1M_RATE
+		            ,CASE WHEN AMT_00000_12M = 0 THEN 0 ELSE ROUND((AMT_00000_0M - AMT_00000_12M)/AMT_00000_12M*100,1) END AS AMT_00000_12M_RATE
+		            ,CASE WHEN AMT_00999_12M = 0 THEN 0 ELSE ROUND((AMT_00999_0M - AMT_00999_12M)/AMT_00999_12M*100,1) END AS AMT_00999_12M_RATE
+		            ,CASE WHEN AMT_01000_12M = 0 THEN 0 ELSE ROUND((AMT_01000_0M - AMT_01000_12M)/AMT_01000_12M*100,1) END AS AMT_01000_12M_RATE
+		            ,CASE WHEN AMT_02000_12M = 0 THEN 0 ELSE ROUND((AMT_02000_0M - AMT_02000_12M)/AMT_02000_12M*100,1) END AS AMT_02000_12M_RATE
+		            ,CASE WHEN AMT_03000_12M = 0 THEN 0 ELSE ROUND((AMT_03000_0M - AMT_03000_12M)/AMT_03000_12M*100,1) END AS AMT_03000_12M_RATE
+		            ,CASE WHEN AMT_04000_12M = 0 THEN 0 ELSE ROUND((AMT_04000_0M - AMT_04000_12M)/AMT_04000_12M*100,1) END AS AMT_04000_12M_RATE
+		            ,CASE WHEN AMT_05000_12M = 0 THEN 0 ELSE ROUND((AMT_05000_0M - AMT_05000_12M)/AMT_05000_12M*100,1) END AS AMT_05000_12M_RATE
+		            ,CASE WHEN AMT_06000_12M = 0 THEN 0 ELSE ROUND((AMT_06000_0M - AMT_06000_12M)/AMT_06000_12M*100,1) END AS AMT_06000_12M_RATE
+		            ,CASE WHEN AMT_07000_12M = 0 THEN 0 ELSE ROUND((AMT_07000_0M - AMT_07000_12M)/AMT_07000_12M*100,1) END AS AMT_07000_12M_RATE
+		            ,CASE WHEN AMT_08000_12M = 0 THEN 0 ELSE ROUND((AMT_08000_0M - AMT_08000_12M)/AMT_08000_12M*100,1) END AS AMT_08000_12M_RATE
+		            ,CASE WHEN AMT_09000_12M = 0 THEN 0 ELSE ROUND((AMT_09000_0M - AMT_09000_12M)/AMT_09000_12M*100,1) END AS AMT_09000_12M_RATE
+		            ,CASE WHEN AMT_10000_12M = 0 THEN 0 ELSE ROUND((AMT_10000_0M - AMT_10000_12M)/AMT_10000_12M*100,1) END AS AMT_10000_12M_RATE
+		            ,CASE WHEN AMT_11000_12M = 0 THEN 0 ELSE ROUND((AMT_11000_0M - AMT_11000_12M)/AMT_11000_12M*100,1) END AS AMT_11000_12M_RATE
+		            ,CASE WHEN AMT_12000_12M = 0 THEN 0 ELSE ROUND((AMT_12000_0M - AMT_12000_12M)/AMT_12000_12M*100,1) END AS AMT_12000_12M_RATE
+		            ,CASE WHEN AMT_13000_12M = 0 THEN 0 ELSE ROUND((AMT_13000_0M - AMT_13000_12M)/AMT_13000_12M*100,1) END AS AMT_13000_12M_RATE
+		            ,CASE WHEN AMT_14000_12M = 0 THEN 0 ELSE ROUND((AMT_14000_0M - AMT_14000_12M)/AMT_14000_12M*100,1) END AS AMT_14000_12M_RATE
+		            ,CASE WHEN AMT_15000_12M = 0 THEN 0 ELSE ROUND((AMT_15000_0M - AMT_15000_12M)/AMT_15000_12M*100,1) END AS AMT_15000_12M_RATE
+		            ,CASE WHEN AMT_16000_12M = 0 THEN 0 ELSE ROUND((AMT_16000_0M - AMT_16000_12M)/AMT_16000_12M*100,1) END AS AMT_16000_12M_RATE
+		            ,CASE WHEN AMT_17000_12M = 0 THEN 0 ELSE ROUND((AMT_17000_0M - AMT_17000_12M)/AMT_17000_12M*100,1) END AS AMT_17000_12M_RATE
+		            ,CASE WHEN AMT_18000_12M = 0 THEN 0 ELSE ROUND((AMT_18000_0M - AMT_18000_12M)/AMT_18000_12M*100,1) END AS AMT_18000_12M_RATE
+		            ,CASE WHEN AMT_19000_12M = 0 THEN 0 ELSE ROUND((AMT_19000_0M - AMT_19000_12M)/AMT_19000_12M*100,1) END AS AMT_19000_12M_RATE
+		            ,CASE WHEN AMT_20000_12M = 0 THEN 0 ELSE ROUND((AMT_20000_0M - AMT_20000_12M)/AMT_20000_12M*100,1) END AS AMT_20000_12M_RATE
+		            ,CASE WHEN AMT_21000_12M = 0 THEN 0 ELSE ROUND((AMT_21000_0M - AMT_21000_12M)/AMT_21000_12M*100,1) END AS AMT_21000_12M_RATE
+		            ,CASE WHEN AMT_22000_12M = 0 THEN 0 ELSE ROUND((AMT_22000_0M - AMT_22000_12M)/AMT_22000_12M*100,1) END AS AMT_22000_12M_RATE
+		            ,CASE WHEN AMT_23000_12M = 0 THEN 0 ELSE ROUND((AMT_23000_0M - AMT_23000_12M)/AMT_23000_12M*100,1) END AS AMT_23000_12M_RATE
+		            ,CASE WHEN AMT_24000_12M = 0 THEN 0 ELSE ROUND((AMT_24000_0M - AMT_24000_12M)/AMT_24000_12M*100,1) END AS AMT_24000_12M_RATE
+		            ,CASE WHEN AMT_25000_12M = 0 THEN 0 ELSE ROUND((AMT_25000_0M - AMT_25000_12M)/AMT_25000_12M*100,1) END AS AMT_25000_12M_RATE
+		            ,CASE WHEN AMT_26000_12M = 0 THEN 0 ELSE ROUND((AMT_26000_0M - AMT_26000_12M)/AMT_26000_12M*100,1) END AS AMT_26000_12M_RATE
+		            ,CASE WHEN AMT_27000_12M = 0 THEN 0 ELSE ROUND((AMT_27000_0M - AMT_27000_12M)/AMT_27000_12M*100,1) END AS AMT_27000_12M_RATE
+		            ,CASE WHEN AMT_28000_12M = 0 THEN 0 ELSE ROUND((AMT_28000_0M - AMT_28000_12M)/AMT_28000_12M*100,1) END AS AMT_28000_12M_RATE
+		            ,CASE WHEN AMT_29000_12M = 0 THEN 0 ELSE ROUND((AMT_29000_0M - AMT_29000_12M)/AMT_29000_12M*100,1) END AS AMT_29000_12M_RATE
+		            ,CASE WHEN AMT_30000_12M = 0 THEN 0 ELSE ROUND((AMT_30000_0M - AMT_30000_12M)/AMT_30000_12M*100,1) END AS AMT_30000_12M_RATE
+		    FROM
+		        (
+		        SELECT
+		             SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_00000_MEM_CNT ELSE 0 END) AS AMT_00000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_00999_MEM_CNT ELSE 0 END) AS AMT_00999_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_01000_MEM_CNT ELSE 0 END) AS AMT_01000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_02000_MEM_CNT ELSE 0 END) AS AMT_02000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_03000_MEM_CNT ELSE 0 END) AS AMT_03000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_04000_MEM_CNT ELSE 0 END) AS AMT_04000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_05000_MEM_CNT ELSE 0 END) AS AMT_05000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_06000_MEM_CNT ELSE 0 END) AS AMT_06000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_07000_MEM_CNT ELSE 0 END) AS AMT_07000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_08000_MEM_CNT ELSE 0 END) AS AMT_08000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_09000_MEM_CNT ELSE 0 END) AS AMT_09000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_10000_MEM_CNT ELSE 0 END) AS AMT_10000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_11000_MEM_CNT ELSE 0 END) AS AMT_11000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_12000_MEM_CNT ELSE 0 END) AS AMT_12000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_13000_MEM_CNT ELSE 0 END) AS AMT_13000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_14000_MEM_CNT ELSE 0 END) AS AMT_14000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_15000_MEM_CNT ELSE 0 END) AS AMT_15000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_16000_MEM_CNT ELSE 0 END) AS AMT_16000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_17000_MEM_CNT ELSE 0 END) AS AMT_17000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_18000_MEM_CNT ELSE 0 END) AS AMT_18000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_19000_MEM_CNT ELSE 0 END) AS AMT_19000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_20000_MEM_CNT ELSE 0 END) AS AMT_20000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_21000_MEM_CNT ELSE 0 END) AS AMT_21000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_22000_MEM_CNT ELSE 0 END) AS AMT_22000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_23000_MEM_CNT ELSE 0 END) AS AMT_23000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_24000_MEM_CNT ELSE 0 END) AS AMT_24000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_25000_MEM_CNT ELSE 0 END) AS AMT_25000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_26000_MEM_CNT ELSE 0 END) AS AMT_26000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_27000_MEM_CNT ELSE 0 END) AS AMT_27000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_28000_MEM_CNT ELSE 0 END) AS AMT_28000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_29000_MEM_CNT ELSE 0 END) AS AMT_29000_0M
+		            ,SUM(CASE WHEN YYYYMM = #{yyyymm}                                                     THEN AMT_30000_MEM_CNT ELSE 0 END) AS AMT_30000_0M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_00000_MEM_CNT ELSE 0 END) AS AMT_00000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_00999_MEM_CNT ELSE 0 END) AS AMT_00999_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_01000_MEM_CNT ELSE 0 END) AS AMT_01000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_02000_MEM_CNT ELSE 0 END) AS AMT_02000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_03000_MEM_CNT ELSE 0 END) AS AMT_03000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_04000_MEM_CNT ELSE 0 END) AS AMT_04000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_05000_MEM_CNT ELSE 0 END) AS AMT_05000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_06000_MEM_CNT ELSE 0 END) AS AMT_06000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_07000_MEM_CNT ELSE 0 END) AS AMT_07000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_08000_MEM_CNT ELSE 0 END) AS AMT_08000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_09000_MEM_CNT ELSE 0 END) AS AMT_09000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_10000_MEM_CNT ELSE 0 END) AS AMT_10000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_11000_MEM_CNT ELSE 0 END) AS AMT_11000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_12000_MEM_CNT ELSE 0 END) AS AMT_12000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_13000_MEM_CNT ELSE 0 END) AS AMT_13000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_14000_MEM_CNT ELSE 0 END) AS AMT_14000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_15000_MEM_CNT ELSE 0 END) AS AMT_15000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_16000_MEM_CNT ELSE 0 END) AS AMT_16000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_17000_MEM_CNT ELSE 0 END) AS AMT_17000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_18000_MEM_CNT ELSE 0 END) AS AMT_18000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_19000_MEM_CNT ELSE 0 END) AS AMT_19000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_20000_MEM_CNT ELSE 0 END) AS AMT_20000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_21000_MEM_CNT ELSE 0 END) AS AMT_21000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_22000_MEM_CNT ELSE 0 END) AS AMT_22000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_23000_MEM_CNT ELSE 0 END) AS AMT_23000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_24000_MEM_CNT ELSE 0 END) AS AMT_24000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_25000_MEM_CNT ELSE 0 END) AS AMT_25000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_26000_MEM_CNT ELSE 0 END) AS AMT_26000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_27000_MEM_CNT ELSE 0 END) AS AMT_27000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_28000_MEM_CNT ELSE 0 END) AS AMT_28000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_29000_MEM_CNT ELSE 0 END) AS AMT_29000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM') THEN AMT_30000_MEM_CNT ELSE 0 END) AS AMT_30000_1M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_00000_MEM_CNT ELSE 0 END) AS AMT_00000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_00999_MEM_CNT ELSE 0 END) AS AMT_00999_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_01000_MEM_CNT ELSE 0 END) AS AMT_01000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_02000_MEM_CNT ELSE 0 END) AS AMT_02000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_03000_MEM_CNT ELSE 0 END) AS AMT_03000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_04000_MEM_CNT ELSE 0 END) AS AMT_04000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_05000_MEM_CNT ELSE 0 END) AS AMT_05000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_06000_MEM_CNT ELSE 0 END) AS AMT_06000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_07000_MEM_CNT ELSE 0 END) AS AMT_07000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_08000_MEM_CNT ELSE 0 END) AS AMT_08000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_09000_MEM_CNT ELSE 0 END) AS AMT_09000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_10000_MEM_CNT ELSE 0 END) AS AMT_10000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_11000_MEM_CNT ELSE 0 END) AS AMT_11000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_12000_MEM_CNT ELSE 0 END) AS AMT_12000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_13000_MEM_CNT ELSE 0 END) AS AMT_13000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_14000_MEM_CNT ELSE 0 END) AS AMT_14000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_15000_MEM_CNT ELSE 0 END) AS AMT_15000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_16000_MEM_CNT ELSE 0 END) AS AMT_16000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_17000_MEM_CNT ELSE 0 END) AS AMT_17000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_18000_MEM_CNT ELSE 0 END) AS AMT_18000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_19000_MEM_CNT ELSE 0 END) AS AMT_19000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_20000_MEM_CNT ELSE 0 END) AS AMT_20000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_21000_MEM_CNT ELSE 0 END) AS AMT_21000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_22000_MEM_CNT ELSE 0 END) AS AMT_22000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_23000_MEM_CNT ELSE 0 END) AS AMT_23000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_24000_MEM_CNT ELSE 0 END) AS AMT_24000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_25000_MEM_CNT ELSE 0 END) AS AMT_25000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_26000_MEM_CNT ELSE 0 END) AS AMT_26000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_27000_MEM_CNT ELSE 0 END) AS AMT_27000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_28000_MEM_CNT ELSE 0 END) AS AMT_28000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_29000_MEM_CNT ELSE 0 END) AS AMT_29000_12M
+		            ,SUM(CASE WHEN YYYYMM = TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') THEN AMT_30000_MEM_CNT ELSE 0 END) AS AMT_30000_12M
+		        FROM MRT.FT_PNT_BAND_M
+		        WHERE YYYYMM IN (#{yyyymm},TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-1 ),'YYYYMM'),
+		                        TO_CHAR(ADD_MONTHS(TO_DATE(#{yyyymm},'YYYYMM'),-12),'YYYYMM') )]]>
+		        AND QRY_TYPE = #{qryType}
+		        <if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+			 	AND STORE_CD =#{storeCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+			 	AND GEND_CD =#{genCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+			 	AND AGE_CD =#{ageCd}
+			</if>
+		        )
+		    ) A
+		    ,(
+		      <![CDATA[
+		      SELECT LV
+		        FROM (
+		        SELECT LEVEL LV
+		        FROM DUAL
+		        CONNECT BY LEVEL <= 68
+		        )
+		        WHERE LV >= 37 AND LV <= 68]]>
+		    ) B
+ 		</if>
+	</select>
+	<select id="selectSalCntAmtList" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportSalCntAmtResDto">
+		<if test="typeCd.equals('SUM')">
+		SELECT   SALE_SEC		AS price
+				,MEM_CNT_0      as cnt0m     --0회 구매회원수
+		        ,MEM_CNT_1      as cnt1m     --1회 구매회원수
+		        ,MEM_CNT_2      as cnt2m     --2회 구매회원수
+		        ,MEM_CNT_3      as cnt3m     --3회 구매회원수
+		        ,MEM_CNT_4      as cnt4m     --4회 구매회원수
+		        ,MEM_CNT_5      as cnt5m     --5회 구매회원수
+		        ,MEM_CNT_6      as cnt6m     --6회 구매회원수
+		        ,MEM_CNT_7      as cnt7m     --7회 구매회원수
+		        ,MEM_CNT_8      as cnt8m     --8회 구매회원수
+		        ,MEM_CNT_9      as cnt9m     --9회 구매회원수
+		        ,MEM_CNT_10     as cnt10m    --10회 구매회원수
+		        ,RCPT_CNT_0     as rcit0m    --0회 영수증건수
+		        ,RCPT_CNT_1     as rcit1m    --1회 영수증건수
+		        ,RCPT_CNT_2     as rcit2m    --2회 영수증건수
+		        ,RCPT_CNT_3     as rcit3m    --3회 영수증건수
+		        ,RCPT_CNT_4     as rcit4m    --4회 영수증건수
+		        ,RCPT_CNT_5     as rcit5m    --5회 영수증건수
+		        ,RCPT_CNT_6     as rcit6m    --6회 영수증건수
+		        ,RCPT_CNT_7     as rcit7m    --7회 영수증건수
+		        ,RCPT_CNT_8     as rcit8m    --8회 영수증건수
+		        ,RCPT_CNT_9     as rcit9m    --9회 영수증건수
+		        ,RCPT_CNT_10    as rcit10m   --10회 영수증건수
+		        ,SALE_AMT_0     as buy0m     --0회 구매금액
+		        ,SALE_AMT_1     as buy1m     --1회 구매금액
+		        ,SALE_AMT_2     as buy2m     --2회 구매금액
+		        ,SALE_AMT_3     as buy3m     --3회 구매금액
+		        ,SALE_AMT_4     as buy4m     --4회 구매금액
+		        ,SALE_AMT_5     as buy5m     --5회 구매금액
+		        ,SALE_AMT_6     as buy6m     --6회 구매금액
+		        ,SALE_AMT_7     as buy7m     --7회 구매금액
+		        ,SALE_AMT_8     as buy8m     --8회 구매금액
+		        ,SALE_AMT_9     as buy9m     --9회 구매금액
+		        ,SALE_AMT_10    as buy10m    --10회 구매금액
+		from MRT.FT_MATR_SALE_M
+		WHERE YYYYMM = #{yyyymm}
+		AND QRY_TYPE = #{qryType}
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+			 	AND STORE_CD =#{storeCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+			 	AND AGE_CD =#{ageCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+			 	AND GEND_CD =#{genCd}
+			</if>
+		ORDER BY TO_NUMBER(SALE_SEC)
+		</if>
+		<if test="typeCd.equals('AVG')">
+		select   AVG_SEC	    AS price
+				,MEM_CNT_0      as cnt0m     --0회 구매회원수
+		        ,MEM_CNT_1      as cnt1m     --1회 구매회원수
+		        ,MEM_CNT_2      as cnt2m     --2회 구매회원수
+		        ,MEM_CNT_3      as cnt3m     --3회 구매회원수
+		        ,MEM_CNT_4      as cnt4m     --4회 구매회원수
+		        ,MEM_CNT_5      as cnt5m     --5회 구매회원수
+		        ,MEM_CNT_6      as cnt6m     --6회 구매회원수
+		        ,MEM_CNT_7      as cnt7m     --7회 구매회원수
+		        ,MEM_CNT_8      as cnt8m     --8회 구매회원수
+		        ,MEM_CNT_9      as cnt9m     --9회 구매회원수
+		        ,MEM_CNT_10     as cnt10m    --10회 구매회원수
+		        ,RCPT_CNT_0     as rcit0m    --0회 영수증건수
+		        ,RCPT_CNT_1     as rcit1m    --1회 영수증건수
+		        ,RCPT_CNT_2     as rcit2m    --2회 영수증건수
+		        ,RCPT_CNT_3     as rcit3m    --3회 영수증건수
+		        ,RCPT_CNT_4     as rcit4m    --4회 영수증건수
+		        ,RCPT_CNT_5     as rcit5m    --5회 영수증건수
+		        ,RCPT_CNT_6     as rcit6m    --6회 영수증건수
+		        ,RCPT_CNT_7     as rcit7m    --7회 영수증건수
+		        ,RCPT_CNT_8     as rcit8m    --8회 영수증건수
+		        ,RCPT_CNT_9     as rcit9m    --9회 영수증건수
+		        ,RCPT_CNT_10    as rcit10m   --10회 영수증건수
+		        ,SALE_AMT_0     as buy0m     --0회 구매금액
+		        ,SALE_AMT_1     as buy1m     --1회 구매금액
+		        ,SALE_AMT_2     as buy2m     --2회 구매금액
+		        ,SALE_AMT_3     as buy3m     --3회 구매금액
+		        ,SALE_AMT_4     as buy4m     --4회 구매금액
+		        ,SALE_AMT_5     as buy5m     --5회 구매금액
+		        ,SALE_AMT_6     as buy6m     --6회 구매금액
+		        ,SALE_AMT_7     as buy7m     --7회 구매금액
+		        ,SALE_AMT_8     as buy8m     --8회 구매금액
+		        ,SALE_AMT_9     as buy9m     --9회 구매금액
+		        ,SALE_AMT_10    as buy10m    --10회 구매금액
+		from MRT.FT_MATR_AVG_M
+		where yyyymm = #{yyyymm}
+		and qry_type = #{qryType}
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(storeCd)">
+			 	AND STORE_CD =#{storeCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd)">
+			 	AND AGE_CD =#{ageCd}
+			</if>
+			<if test="@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd)">
+			 	AND GEND_CD =#{genCd}
+			</if>
+		ORDER BY TO_NUMBER(AVG_SEC)
+		</if>
+	</select>
+	<select id="selectCampaignChnReactionList" parameterType="com.icignal.kepler.report.dto.request.KprReportCampaignReactionReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCampaignReactionResDto">
+	SELECT
+		 T1.CAM_NM																AS camNm
+	     ,concat(T1.CAM_START_DT , ' ~ ' , T1.CAM_END_DT) 	AS camTerm
+	    ,T1.CHNL_TYPE_CD													AS chnlTypeCd
+	    ,isnull(T1.EXE_TGT_AMT,0)      										AS extraCnt
+	    ,isnull(T2.CHNL_CNT,0)         										AS chnlCnt
+	    ,isnull(T2.RESP_CNT,0)         										AS respCnt
+	    ,CASE WHEN NVL(T2.CHNL_CNT,0) = 0 THEN '0%'
+        	ELSE concat(ROUND(isnull(T2.RESP_CNT,0) / isnull(T2.CHNL_CNT,0) * 100,1) , '%') END AS responRate
+    	,isnull(T2.OPEN_CNT,0) AS openCnt
+    	, ${strColumn}
+	FROM
+	(
+	SELECT A.ID AS CAM_RID ,A.DISP_NO AS CAM_NO ,CAM_NM ,CAM_STATUS_CD
+	    	,CONVERT(varchar, CAM_START_DD, 12)			AS CAM_START_DT
+			,CONVERT(varchar, CAM_END_DD, 12)			AS CAM_END_DT
+	        ,C.CHNL_NM,C.CHNL_TYPE_CD ,B.MKT_CHNL_ID,D.EXE_TGT_AMT
+	FROM MRTSTG.MKT_CAM_MST A
+	INNER JOIN MRTSTG.MKT_CONTS_CHNL_REL B ON A.ID = B.CAM_ID
+	INNER JOIN MRTSTG.MKT_CHNL C ON B.MKT_CHNL_ID = C.ID
+	INNER JOIN MRTSTG.MKT_EXE_INFO_ITEM D ON A.ID = D.CAM_ID
+	WHERE 1 = 1
+	AND A.CAM_STATUS_CD = 'E'
+	AND A.FLAG = 1
+	AND CONVERT(varchar, A.CAM_START_DD, 12) <![CDATA[ >= ]]> #{yyyymm}
+	AND CONVERT(varchar, A.CAM_END_DD, 12) <![CDATA[ < ]]> #{endyyyymm}
+	) T1
+	LEFT OUTER JOIN
+	(
+	SELECT CAM_ID
+	    ,'PUSH' AS CHNL_TYPE
+	    , COUNT(RECV_MEM_ID) AS CHNL_CNT
+	    , SUM(CASE WHEN SEND_SUCES_YN = 'Y' THEN 1 ELSE 0 END) AS RESP_CNT
+	    , SUM(CASE WHEN READ_SUCES_YN = 'Y' THEN 1 ELSE 0 END) AS OPEN_CNT
+	FROM MRTSTG.MKT_PUSH_SEND_LOG
+	WHERE 1 = 1
+	AND FLAG = 1
+	AND BAT_SEND_STATUS = 'S'
+	GROUP BY CAM_ID
+	UNION ALL
+	SELECT CAM_ID
+    	,MSG_SEND_TYPE AS CHNL_TYPE
+   		,COUNT(RECV_MEM_ID) AS CHNL_CNT
+     	,SUM(CASE WHEN SEND_SUCES_YN = 'Y' THEN 1 ELSE 0 END) AS RESP_CNT
+     	,SUM(CASE WHEN SEND_SUCES_YN = 'Y' THEN 1 ELSE 0 END) AS OPEN_CNT
+	FROM MRTSTG.MKT_MSG_SEND_LOG
+	GROUP BY CAM_ID,MSG_SEND_TYPE
+	UNION ALL
+	SELECT CAM_ID
+   		,'EMAIL' AS CHNL_TYPE
+     	,COUNT(RECV_MEM_ID) AS CHNL_CNT
+     	,SUM(CASE WHEN SEND_SUCES_YN = 'Y' THEN 1 ELSE 0 END) AS RESP_CNT
+     	,SUM(CASE WHEN OPEN_SUCES_YN = 'Y' THEN 1 ELSE 0 END) AS OPEN_CNT
+	FROM MRTSTG.MKT_EMAIL_SEND_LOG
+	WHERE BAT_SEND_STATUS = 'S'
+	GROUP BY CAM_ID
+	) T2 ON T1.CAM_RID = T2.CAM_ID AND T1.CHNL_TYPE_CD = T2.CHNL_TYPE
+	ORDER BY T1.CAM_START_DT
+	</select>
+
+	<select id="selectCampaignExeInfoList" parameterType="com.icignal.kepler.report.dto.request.KprReportCampaignReactionReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCampaignReactionResDto">
+	SELECT t5.camId 				AS camId
+	     , t5.camNm 					AS camNm
+		 , t5.camTerm  				AS camTerm
+		 , t5.startDd 					AS startDd
+		 , t5.endDd					AS endDd
+		 , MAX(t5.pushYn) 			AS pushYn
+		 , MAX(t5.emailYn) 		AS emailYn
+		 , MAX(t5.lmsYn) 			AS lmsYn
+		 , MAX(t5.smsYn) 			AS smsYn
+		 , MAX(t5.tgtAmt) 			AS tgtAmt
+		 , ${strColumn}
+	FROM (
+		SELECT t1.CAM_NM AS camNm
+			, concat(convert(char(8), t1.CAM_START_DD, 23) , ' ~ ' , convert(char(8), t1.CAM_END_DD, 23)) AS camTerm
+	  		, CONVERT(varchar, t1.CAM_START_DD, 12) 	AS startDd
+	  		, CONVERT(varchar, t1.CAM_END_DD, 12) 		AS endDd
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'PUSH' THEN 'Y'
+	  		  ELSE 'N' END  AS pushYn
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'EMAIL' THEN 'Y'
+	  		  ELSE 'N' END  AS emailYn
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'LMS' THEN 'Y'
+	  		  ELSE 'N' END  AS lmsYn
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'SMS' THEN 'Y'
+	  		  ELSE 'N' END  AS smsYn
+	  		, t4.EXE_TGT_AMT AS tgtAmt
+	  		, t1.ID AS camId
+		 FROM mkt.MKT_CAM_MST t1 WITH (NOLOCK)
+		 JOIN mkt.MKT_CONTS_CHNL_REL t2 WITH (NOLOCK) ON t1.ID = t2.CAM_ID
+	     JOIN mkt.MKT_CHNL t3 WITH (NOLOCK) ON t2.MKT_CHNL_ID = t3.ID
+		 JOIN mkt.MKT_EXE_INFO_ITEM t4 WITH (NOLOCK) ON t1.id = t4.CAM_ID
+		WHERE t1.flag = 1
+		  AND t1.CAM_STATUS_CD = 'E'
+	) t5
+	WHERE ${strCondWhere}
+      and ${strWhere}
+ 	GROUP BY t5.camNm , t5.camTerm , t5.camId,t5.startDd,t5.endDd
+          ${strEndPaging}
+	</select>
+
+	<select id="selectCampaignExeInfo" parameterType="com.icignal.kepler.report.dto.request.KprReportCampaignReactionReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCampaignReactionResDto">
+	SELECT t5.camId as camId
+	     , t5.camNm as camNm
+		 , t5.camTerm  as camTerm
+		 , MAX(t5.pushYn) AS pushYn
+		 , MAX(t5.emailYn) AS emailYn
+		 , MAX(t5.lmsYn) AS lmsYn
+		 , MAX(t5.smsYn) AS smsYn
+		 , MAX(t5.tgtAmt) AS tgtAmt
+	FROM (
+		SELECT t1.CAM_NM AS camNm
+	  		, concat(convert(char(8), t1.CAM_START_DD, 23) , ' ~ ' , convert(char(8), t1.CAM_END_DD, 23)) AS camTerm
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'PUSH' THEN 'Y'
+	  		  ELSE 'N' END  AS pushYn
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'EMAIL' THEN 'Y'
+	  		  ELSE 'N' END  AS emailYn
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'LMS' THEN 'Y'
+	  		  ELSE 'N' END  AS lmsYn
+	  		, CASE
+	  			WHEN t3.CHNL_TYPE_CD = 'SMS' THEN 'Y'
+	  		  ELSE 'N' END  AS smsYn
+	  		, t4.EXE_TGT_AMT AS tgtAmt
+	  		, t1.ID AS camId
+		 FROM mkt.MKT_CAM_MST t1 WITH (NOLOCK)
+		 JOIN mkt.MKT_CONTS_CHNL_REL t2 WITH (NOLOCK) ON t1.ID = t2.CAM_ID
+	     JOIN mkt.MKT_CHNL t3 WITH (NOLOCK) ON t2.MKT_CHNL_ID = t3.ID
+		 JOIN mkt.MKT_EXE_INFO_ITEM t4 WITH (NOLOCK) ON t1.id = t4.CAM_ID
+		WHERE t1.flag = 1
+		  AND t1.CAM_STATUS_CD = 'E'
+		  AND t1.id = #{camId}
+	) t5
+ GROUP BY t5.camNm , t5.camTerm , t5.camId
+	</select>
+
+	<select id="selectSendCampaignInfo" parameterType="com.icignal.kepler.report.dto.request.KprReportCampaignReactionReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCampaignReactionResDto">
+	  SELECT   
+	  		   RECV_DT as recvDt
+		      ,RECV_HH as recvHh
+		      ,AGE_CD  as ageCd
+		      ,GEND_CD as gendCd
+		      ,COUNT(DISTINCT MEM_ID) AS recvCnt
+		      ,COUNT(DISTINCT CASE WHEN CHNL_TYPE= 'PUSH'  AND R_SUC_YN = 'Y' THEN MEM_ID ELSE NULL END) AS pushCnt
+		      ,COUNT(DISTINCT CASE WHEN CHNL_TYPE= 'EMAIL' AND R_SUC_YN = 'Y' THEN MEM_ID ELSE NULL END) AS emailCnt
+		FROM
+		    (
+		    SELECT  T1.RECV_DT
+		           ,T1.RECV_HH
+		           ,T2.AGE_CD
+		           ,T2.GEND_CD
+		           ,T1.CHNL_TYPE
+                   ,T1.R_SUC_YN
+		           ,T1.MEM_ID
+		    FROM
+		        (
+		        SELECT CAM_ID
+		            ,'PUSH' AS CHNL_TYPE
+		             , convert(char(8), SEND_SUCES_DT, 112) AS RECV_DT
+		             , convert(char(2), SEND_SUCES_DT, 8) AS RECV_HH
+                    , READ_SUCES_YN                     AS R_SUC_YN
+		            , RECV_MEM_ID                       AS MEM_ID
+		        FROM MRTSTG.MKT_PUSH_SEND_LOG
+		        WHERE 1 = 1
+		        AND FLAG = 1
+		        AND CAM_ID = #{camId}
+		          AND SEND_SUCES_YN = 'Y'
+		          AND BAT_SEND_STATUS = 'S'
+		        UNION ALL
+		        SELECT CAM_ID
+		             ,'EMAIL' AS CHNL_TYPE
+		             ,CONVERT(varchar(8), SEND_SUCES_DT, 112) 	AS RECV_DT
+		             ,CONVERT(varchar(2), SEND_SUCES_DT, 8) 	AS RECV_HH
+                     , OPEN_SUCES_YN                     AS R_SUC_YN
+		             ,RECV_MEM_ID                        AS MEM_ID
+		        FROM MRTSTG.MKT_EMAIL_SEND_LOG
+		        WHERE 1 = 1
+		       AND CAM_ID = #{camId}
+		          AND BAT_SEND_STATUS = 'S'
+		          AND SEND_SUCES_YN = 'Y'
+		        ) T1
+		    LEFT OUTER JOIN MRT.D_MBR T2 ON T1.MEM_ID = T2.MBR_NO
+		    WHERE 1 = 1
+		    <if test='@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd) and ageCd != "ALL"'>
+		      AND AGE_CD = #{ageCd}
+		    </if>
+		    <if test='@infavor.icncommon.util.ICNStringUtility@isNotEmpty(timeCd) and timeCd != "ALL"'>
+		      AND RECV_HH= #{timeCd}
+		    </if>
+		    <if test='@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd) and genCd != "ALL"'>
+		      AND GEND_CD = #{genCd}
+		    </if>
+		    )
+		GROUP BY RECV_DT
+		      ,RECV_HH
+		      ,AGE_CD
+		      ,GEND_CD
+		ORDER BY 1
+	</select>
+	<select id="selectPurReactionRate" parameterType="com.icignal.kepler.report.dto.request.KprReportCampaignReactionReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCampaignReactionResDto">
+	SELECT YYYYMMDD  AS  yyyyMmDd
+		  ,PUR_CNT   AS  purCnt
+		  ,RCPT_CNT  AS  rcptCnt
+		  ,TXN_AMT   AS  txnAmt
+		  ,CASE WHEN RCPT_CNT = 0 THEN 0 ELSE ROUND(TXN_AMT/RCPT_CNT,2) END AS amtRcptCnt
+		  ,CASE WHEN PUR_CNT = 0 THEN 0 ELSE ROUND(TXN_AMT/PUR_CNT,2) END AS amtPurCnt
+	  FROM
+	(
+	SELECT concat(SUBSTRING(APPR_DT,1,4) , '-' , SUBSTRING(APPR_DT,5,2) , '-', SUBSTRING(APPR_DT,7,2)) AS  YYYYMMDD
+     ,SUM(CASE WHEN TXN_STAT_CD = 'A' THEN PUR_CNT  * 1 ELSE PUR_CNT  * -1 END) AS  PUR_CNT
+     ,SUM(CASE WHEN TXN_STAT_CD = 'A' THEN RCPT_CNT * 1 ELSE RCPT_CNT * -1 END) AS  RCPT_CNT
+     ,SUM(CASE WHEN TXN_STAT_CD = 'A' THEN TXN_AMT  * 1 ELSE TXN_AMT  * -1 END) AS  TXN_AMT
+     ,SUM(CASE WHEN TXN_STAT_CD = 'A' THEN PNT_AMT  * 1 ELSE PNT_AMT  * -1 END) AS  PNT_AMT
+	FROM
+    (
+   		SELECT CONVERT(varchar(8), T1.APPR_DT,112) AS APPR_DT, T2.GEND_CD,T2.AGE_CD,T1.TXN_STAT_CD,COUNT(DISTINCT T2.RID_MBR) AS PUR_CNT, COUNT(T1.RID) AS RCPT_CNT,SUM(T1.TXN_AMT) AS TXN_AMT,SUM(T1.PNT_AMT) AS PNT_AMT
+    	FROM MRTSTG.LOY_PNT_TXN T1
+    	INNER JOIN
+            (
+            SELECT B.RID_MBR,B.GEND_CD,B.AGE_CD
+            FROM
+                (
+                SELECT DISTINCT RECV_MEM_ID
+                FROM
+                    (
+                    SELECT RECV_MEM_ID
+                    FROM MRTSTG.MKT_PUSH_SEND_LOG
+                    WHERE FLAG = 1
+                    AND BAT_SEND_STATUS = 'S'
+                    AND SEND_SUCES_YN = 'Y'
+                    AND CAM_ID = #{camId}
+                    UNION ALL
+                    SELECT RECV_MEM_ID
+                    FROM MRTSTG.MKT_MSG_SEND_LOG
+                    WHERE FLAG = 1
+                    AND BAT_SEND_STATUS = 'S'
+                    AND SEND_SUCES_YN = 'Y'
+                    AND CAM_ID = #{camId}
+                    UNION ALL
+                    SELECT RECV_MEM_ID
+                    FROM MRTSTG.MKT_EMAIL_SEND_LOG
+                    WHERE FLAG = 1
+                    AND BAT_SEND_STATUS = 'S'
+                    AND SEND_SUCES_YN = 'Y'
+                    AND CAM_ID = #{camId}
+                    )
+                ) A
+                INNER JOIN MRT.D_MBR B ON A.RECV_MEM_ID = B.MBR_NO
+            ) T2 ON T1.RID_MBR = T2.RID_MBR
+   		WHERE
+    	 ( (T1.PNT_TXN_TYPE_1_CD = '100' AND T1.PNT_TXN_TYPE_2_CD = '100')
+    	OR (T1.PNT_TXN_TYPE_1_CD = '200' AND T1.PNT_TXN_TYPE_2_CD IN ('210','211')))
+    	GROUP BY CONVERT(varchar(8), T1.APPR_DT,112),T2.GEND_CD,T2.AGE_CD,T1.TXN_STAT_CD
+    )
+	WHERE 1 = 1
+	 <if test='@infavor.icncommon.util.ICNStringUtility@isNotEmpty(genCd) and genCd != "ALL"'>
+	AND GEND_CD = #{genCd}
+	</if>
+	<if test='@infavor.icncommon.util.ICNStringUtility@isNotEmpty(ageCd) and ageCd != "ALL"'>
+	AND AGE_CD = #{ageCd}
+	</if>
+	GROUP BY concat(SUBSTRING(APPR_DT,1,4) , '-' , SUBSTRING(APPR_DT,5,2) , '-' , SUBSTRING(APPR_DT,7,2)), GEND_CD, AGE_CD
+	)
+	ORDER BY 1
+	</select>
+	
+	<select id = "selectColList" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="java.lang.String">
+	/*KprReportMapper.selectColList*/
+	SELECT  T2.CSEG_STAGE_NM
+	FROM MRT.F_CSEG_TRANS T2 WITH (NOLOCK)
+	JOIN ANL.ANL_CSEG_STAGE T1 WITH (NOLOCK) ON T2.CSEG_STAGE_ID = T1.ID AND T2.CSEG_MST_ID = T1.CSEG_MST_ID  AND T1.FLAG = 1
+	WHERE T2.CSEG_MST_ID = #{segMstId} 
+	GROUP BY T2.CSEG_STAGE_NM,T1.CSEG_STAGE_INDEX 
+	ORDER BY T1.CSEG_STAGE_INDEX DESC
+	</select>
+	
+   <select id = "selectTransReport2" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportTransResDto">
+	/*KprReportMapper.selectTransReport2*/
+	   SELECT T2.YYYYMM AS yyyymm
+			 , T2.CSEG_STAGE_NM AS stageNm
+			 , T2.PRE_CSEG_STAGE_NM AS preStageNm
+			 , T2.CSEG_TRANS_CNT AS transCnt
+			 , T2.CSEG_TRANS_RATE AS transRate
+		FROM MRT.F_CSEG_TRANS T2 WITH (NOLOCK)
+		JOIN ANL.ANL_CSEG_STAGE T1 WITH (NOLOCK) ON T2.CSEG_STAGE_ID = T1.ID AND T2.CSEG_MST_ID = T1.CSEG_MST_ID  AND T1.FLAG = 1
+		JOIN  ANL.ANL_CSEG_STAGE T3 WITH (NOLOCK) ON T2.PRE_CSEG_STAGE_ID = T3.ID AND T2.CSEG_MST_ID = T3.CSEG_MST_ID  AND T3.FLAG = 1
+		WHERE yyyymm = #{yyyymm} 
+	          AND T2.CSEG_MST_ID = #{segMstId} 
+		ORDER BY T1.CSEG_STAGE_INDEX DESC, T3.CSEG_STAGE_INDEX DESC
+		
+	</select>
+	
+	<select id = "selectColList2" parameterType="com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="java.lang.String">
+	/*KprReportMapper.selectColList2*/
+		SELECT substr(T1.col_cseg_stage_nm,17)
+		FROM mrt.f_cseg_cross T1 WITH (NOLOCK)
+		JOIN ANL.ANL_CSEG_STAGE T2 WITH (NOLOCK) ON T1.COL_CSEG_STAGE_ID = T2.ID AND T2.FLAG =1 AND T1.COL_CSEG_MST_ID =T2.CSEG_MST_ID 
+		GROUP BY substr(T1.col_cseg_stage_nm,17) ,T2.CSEG_STAGE_INDEX 
+		ORDER BY T2.CSEG_STAGE_INDEX 
+	</select>
+	
+	
+	<select id = "selectCrossReport" parameterType = "com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCrossResDto">
+		/*KprReportMapper.selectCrossReport*/
+		SELECT 
+		  yyyymm 									AS yyyymm
+		, row_cseg_stage_nm 				AS stageNm
+		, substr(col_cseg_stage_nm,17)  AS rowNm
+		, cseg_cross_rate 						AS crossRate
+		, cseg_cross_cnt 						AS crossCnt
+	FROM mrt.f_cseg_cross T1 WITH (NOLOCK)
+	JOIN ANL.ANL_CSEG_STAGE T2 WITH (NOLOCK) ON T1.ROW_CSEG_STAGE_ID = T2.ID AND T2.FLAG =1 AND T1.ROW_CSEG_MST_ID =T2.CSEG_MST_ID 
+	JOIN ANL.ANL_CSEG_STAGE T3 WITH (NOLOCK) ON T1.COL_CSEG_STAGE_ID = T3.ID AND T3.FLAG =1 AND T1.COL_CSEG_MST_ID =T3.CSEG_MST_ID 
+	WHERE YYYYMM  = #{yyyymm}
+	ORDER BY T2.CSEG_STAGE_INDEX DESC, T3.CSEG_STAGE_INDEX 
+	
+	</select>
+	
+	<select id = "selectIncReport" parameterType = "com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCrossResDto">
+	/*KprReportMapper.selectIncReport*/
+	SELECT 
+			t1.yyyymm 										AS yyyymm
+		,  t2.yyyymm 										AS preYyyymm
+		,  substr(t1.COL_CSEG_STAGE_NM,17) 	AS colStageNm 
+		,  t1.ROW_CSEG_STAGE_NM 					AS rowStageNm
+		,  t1.CSEG_CROSS_RATE 						AS crossRate
+		,  t1.CSEG_CROSS_CNT 						AS crossCnt
+		,  t2.CSEG_CROSS_CNT 
+		,  CASE WHEN t2.CSEG_CROSS_RATE <![CDATA[<]]> t1.CSEG_CROSS_RATE THEN 'U' ELSE 'D' END AS incRate
+		,  CASE WHEN t2.CSEG_CROSS_CNT<![CDATA[<]]>  t1.CSEG_CROSS_CNT THEN 'U' ELSE 'D' END AS incCnt
+	FROM mrt.F_CSEG_CROSS_INCR t1 WITH (NOLOCK)
+	LEFT OUTER JOIN mrt.F_CSEG_CROSS_INCR t2 WITH (NOLOCK) ON t1.COL_CSEG_STAGE_ID = t2.COL_CSEG_STAGE_ID AND t1.ROW_CSEG_STAGE_ID =t2.ROW_CSEG_STAGE_ID
+	JOIN ANL.ANL_CSEG_STAGE T3 WITH (NOLOCK) ON T1.ROW_CSEG_STAGE_ID = T3.ID AND T3.FLAG =1 AND T1.ROW_CSEG_MST_ID =T3.CSEG_MST_ID 
+	JOIN ANL.ANL_CSEG_STAGE T4 WITH (NOLOCK) ON T1.COL_CSEG_STAGE_ID = T4.ID AND T4.FLAG =1 AND T1.COL_CSEG_MST_ID =T4.CSEG_MST_ID 
+	AND t2.YYYYMM = to_char(add_months(TO_DATE(t1.yyyymm,'yyyymm'),-1), 'yyyymm')
+	WHERE t1.yyyymm = #{yyyymm}
+	ORDER BY  t3.CSEG_STAGE_INDEX desc, t4.CSEG_STAGE_INDEX
+	
+	</select>
+	
+	
+	<select id = "selectPreMonVal" parameterType = "com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCrossDtlResDto$preMonVal">
+	/*KprReportMapper.selectPreMonVal*/
+	SELECT t.m1StageNm AS m1StageNm
+		 , round(RATIO_TO_REPORT(t.total) over()*100,2) AS lcRate
+		 , t.total  AS lcCnt
+	FROM (
+			SELECT LC_CSEG_STAGE_M1_NM AS m1StageNm
+				 , sum(CSEG_LC_CNT) AS total
+				 , t2.CSEG_STAGE_INDEX AS stageIndex
+			FROM mrt.F_CSEG_CROSS_DTL T1
+			JOIN ANL.ANL_CSEG_STAGE T2 ON T1.LC_CSEG_STAGE_M1_ID = T2.ID AND T2.FLAG =1 AND T1.LC_CSEG_MST_ID =T2.CSEG_MST_ID 
+			WHERE YYYYMM =#{yyyymm}
+			GROUP BY LC_CSEG_STAGE_M1_NM,t2.CSEG_STAGE_INDEX
+			) t
+	ORDER BY t.stageIndex desc
+	
+	</select>
+
+	
+		<select id = "selectCrossDtlReport" parameterType = "com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportCrossDtlResDto">
+	/*KprReportMapper.selectCrossDtlReport*/
+	
+	SELECT yyyymm AS yyyymm
+		 , to_char(add_months(TO_DATE(t1.yyyymm,'yyyymm'),-6), 'yyyymm') AS preMonth
+		 , LC_CSEG_STAGE_M1_NM AS m1StageNm
+		 , LC_CSEG_STAGE_M6_NM AS m6StageNm
+		 , SUBSTR(VS_CSEG_STAGE_M6_NM,17) AS rowNm
+		 , CSEG_CROSS_CNT AS crossCnt
+		 , CSEG_CROSS_RATE AS crossRate
+	FROM mrt.F_CSEG_CROSS_DTL T1
+	JOIN ANL.ANL_CSEG_STAGE T2 ON T1.LC_CSEG_STAGE_M1_ID = T2.ID AND T2.FLAG =1 AND T1.LC_CSEG_MST_ID =T2.CSEG_MST_ID 
+	JOIN ANL.ANL_CSEG_STAGE T3 ON T1.LC_CSEG_STAGE_M6_ID = T3.ID AND T3.FLAG =1 AND t1.LC_CSEG_MST_ID = t3.CSEG_MST_ID 
+	JOIN ANL.ANL_CSEG_STAGE T4 ON T1.VS_CSEG_STAGE_M6_ID = T4.ID AND T4.FLAG =1 
+	WHERE YYYYMM = #{yyyymm}
+	ORDER BY t2.CSEG_STAGE_INDEX desc, t3.CSEG_STAGE_INDEX DESC, t4.CSEG_STAGE_INDEX 
+	
+	</select>
+	
+	
+	<select id = "selectSegMstList" parameterType = "com.icignal.kepler.report.dto.request.KprReportReqDto" 
+	resultType="com.icignal.kepler.report.dto.response.KprReportSegMstListResDto">
+		/*KprReportMapper.selectSegMstList*/
+       SELECT 
+       		id AS segMstId
+       		,CSEG_NM AS segMstNm
+       FROM anl.ANL_CSEG_MST acm WHERE flag =1
+	
+	</select>
+</mapper>

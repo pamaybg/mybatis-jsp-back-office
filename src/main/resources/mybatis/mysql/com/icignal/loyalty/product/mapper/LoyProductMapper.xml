@@ -1,0 +1,1720 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:25:22 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.product.mapper.LoyProductMapper">  
+
+	<!-- /**************************************
+    -   관련 파일            : LOYCommonPopupDAO.java (getCategoryListPop)
+    ============================================
+    -   제목                   : 공통 팝업 (카테고리 조회)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, pgm_rid
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.13
+    ***************************************/ -->
+    <select id="getCategoryListPop" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    										resultType="com.icignal.loyalty.product.dto.response.LoyCategoryListResDto">
+        /* LoyProductMapper.getCategoryListPop */
+		select 
+			  lpc1.rid          as rid
+			, lpc1.rid_pgm      as ridPgm
+			, lpc1.par_rid      as parRid
+			, lpc2.cat_id       as parCatId
+			, lpc2.cat_nm       as parCatNm
+			, lpc1.cat_id       as catId
+			, lpc1.cat_nm       as catNm
+			, lpc1.cat_desctxt  as catDesctxt
+			from loy.loy_prod_category lpc1
+			left join loy.loy_prod_category lpc2 on lpc1.par_rid = lpc2.rid and lpc2.flag = 1
+		  where ${strSVCType} 
+		    and ${strWhere}
+		    and lpc1.flag 		= 1
+		    <!-- and lpc1.rid_pgm 	= #{loyProgramId} -->
+		  order by ${strOrderby}
+		 ${strEndPaging}	
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일            : LOYCommonPopupDAO.java (getProdListPop)
+    ============================================
+    -   제목                   : 공통 팝업 (상품 조회)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, pgm_rid
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.13
+    ***************************************/ -->
+    <select id="getProdListPop" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    									resultType="com.icignal.loyalty.product.dto.response.LoyProdListResDto">
+        /* LoyProductMapper.getProdListPop */
+		select 
+			   lp.RID as rid
+		     , lp.PROD_ID as prodId
+		     , lp.PROD_NM as prodNm
+		     , lp.PROD_AMT as prodAmt
+		     , lp.RID_BRD_CAT as brdId
+		     , lbc.BRD_NM as brdNm
+		     , lp.RID_PROD_CAT catId
+		     , lpc.CAT_NM as catNm 
+		     , lp.RID_CHNL as chnlId
+		     , lc.CHNL_NM as chnlNm
+		  from loy.loy_prod lp
+		  left join loy.loy_brd_category lbc on lp.RID_BRD_CAT = lbc.RID and lbc.FLAG = 1
+		  left join loy.loy_prod_category lpc on lp.RID_PROD_CAT = lpc.RID and lpc.FLAG = 1
+		  left join LOY.LOY_CHNL lc on lp.RID_CHNL = lc.RID and lc.FLAG = 1
+		  where ${strSVCType} 
+		    and ${strWhere}
+		    and lp.flag 		= 1
+		    and lp.rid_pgm 	= #{loyProgramId}
+		  order by ${strOrderby}
+		 ${strEndPaging}	
+    </select>
+	
+	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getProdList)
+    ============================================
+    -   제목                   : 상품 목록 조회
+    -   설명                   : 상품 목록 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : 
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    -   수정자                : 이경영
+    -   수정일                : 2020.11.19
+    ***************************************/ -->
+   <select id="getProdList" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto" 
+   									resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto" fetchSize="10000">
+    /* LoyProductMapper.getProdList */
+        SELECT
+           	 T1.RID                               AS rid
+             ,T1.PROD_ID                            AS prodId
+             ,T2.MMZZSTDITEMCD          AS mmzzStdItemCd
+             ,T2.MMZZITEMCD                 AS mmzzItemCd
+             ,T2.MMZZREPCD1                  AS mmzzRepCd1
+             ,T2.MMZZREPCD2         AS mmzzRepCd2
+             ,T2.MMSKUCD            AS mmSkucd
+             ,T1.PROD_NM           AS prodNm
+             ,T2.SHGOODSNO          AS shGoodsNo
+             ,T2.SHGOODSCODE        AS shGoodsCode
+             ,T2.SHGOODSNAME        AS shGoodsName
+             ,T2.MMMTART            AS mmMtart
+             ,T2.LCTG              AS lCtg
+             ,T2.MCTG              AS mCtg
+             ,T2.SCTG              AS sCtg
+             ,T2.MMPRDHA            AS mmPrdha
+             ,T2.MMGROUP            AS mmGroup
+             ,T2.SDP1PRICE          AS sdp1Price
+             ,T2.SDP1UNIT           AS sdp1Unit
+             ,T2.MMFSTDATE          AS mmfStdate
+             ,T2.SCMGRADE           AS scmGrade
+             ,T2.GOODSCODE          AS goodsCode 
+             ,T2.GOODSNAME          AS goodsName
+             ,T2.SALESMALL          AS salesMall
+             ,T2.GOODSPACK          AS goodsPack
+             ,T2.OVERSEA            AS oversea
+             ,T2.SALESSDATE         AS salesSdate
+             ,T2.SALESEDATE        AS salesEdate
+             ,T2.EPRICE             AS eprice
+             ,T2.MALLPRICE              AS mallPrice
+             ,T2.STATE              AS state
+             ,T2.OFFPRICE              AS offPrice                 
+             ,T2.OFFPROMPRICE         AS offPromPrice         
+             ,T2.OFFEVTSUPPRICE     AS offEvtSupPrice       
+             ,T2.OFFSTRDSUPPRICE    AS offStrdSupPrice
+             , ${strColumn}
+        FROM LOY.LOY_PROD T1
+        LEFT OUTER JOIN LOY.LOY_PROD_XM T2 ON T1.PROD_ID = T2.PRODID
+	    WHERE ${strCondWhere}
+	       and ${strSVCType} 
+	       and ${strWhere}
+	       and T1.FLAG=1
+	        AND NOT EXISTS (SELECT 1 FROM LOY.LOY_OFR_PROD lop 
+                    WHERE T1.rid = lop.RID_PROD_M 
+                        AND lop.RID_OFR = #{ridOfr}  AND lop.PROD_USE_TYPE = #{prodUseType} AND lop.flag=1)
+	     order by ${strOrderby}
+	     ${strEndPaging}
+    </select>
+
+	<!--  /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getProdDtl)
+    ============================================
+    -   제목                   : 상품 목록 상세조회
+    -   설명                   : 상품 목록 상세조회
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ -->
+   <select id="getProdDtl" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto" 
+   									resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto">
+        /* LoyProductMapper.getProdDtl */
+		 select lp.rid            as rid          
+		      , lp.rid_pgm        as ridPgm           /* 로열티 프로그램 rid*/
+		     <!--  , lp.rid_brd_cat    as ridBrdCat -->        /* 브랜드 카테고리 rid*/
+		     <!--  , lbc.brd_nm        as brdNm -->
+		      , lp.rid_prod_cat   as ridProdCat       /* 상품 카테고리 rid*/
+		      , lpc.cat_nm        as catNm
+		      , lp.rid_chnl       as ridChnl          /* 채널 마스터 rid*/
+		      , lc.chnl_nm        as chnlNm
+		      , lp.prod_id        as prodId
+		      , lp.prod_nm        as prodNm           /* 상품명 */
+		      , lp.prod_amt       as prodAmt
+		      , e.NAME            as createBy
+		     <!--  , t1.CODE_NAME	  as prodType -->
+		      , lp.PROD_TYPE as prodTypeCd
+		      , to_char( lp.create_date,'yyyy-MM-dd HH24:MI:SS' ) as createDate
+		      , lp.color		  as color 
+		   from loy.loy_prod lp
+		   left outer join loy.loy_brd_category lbc on lbc.rid = lp.rid_brd_cat and lbc.flag = 1
+		   left outer join loy.loy_prod_category lpc on lpc.rid = lp.rid_prod_cat and lpc.flag = 1
+		   left outer join LOY.LOY_CHNL lc on lc.rid = lp.rid_chnl and lc.flag = 1
+		   left outer join com.crm_user cu on lp.create_by = cu.rid 
+		   left outer join com.employee e on cu.id_employee = e.id
+		   <!-- LEFT OUTER JOIN com.COMM_CODE t1 ON	t1.CODE_NAME = lp.PROD_TYPE AND t1.GROUP_CODE = 'LOY_PROD_TYPE'	AND t1.FLAG = 1 -->
+		  where ${strSVCType} 
+		    and lp.flag 		= 1
+		    and lp.rid_pgm 	= #{loyProgramId}
+		    and lp.rid 		= #{rid}
+    </select>
+ 	
+ 	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (setProdDtl)
+    ============================================
+    -   제목                   : 상세상품 저장
+    -   설명                   : 상세상품 저장
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ -->
+     <insert id="setProdDtl" parameterType="com.icignal.loyalty.product.dto.request.LoySetProdListReqDto">
+	 /* LoyProductMapper.setProdDtl */
+		insert into loy.loy_prod( 
+		       rid
+		     , flag
+		     , create_date
+		     , create_by
+		     , modify_date
+		     , modify_by
+		     , prod_id
+		     , prod_nm
+		     , prod_amt
+		     , rid_chnl
+		     , rid_pgm
+		     , rid_prod_cat
+		     <!-- , rid_brd_cat -->
+		     , prod_type
+		     , base_ymd
+		     , color
+		) values (
+		       #{rid}
+		     , 1
+		     , sysdate
+		     , #{createBy}
+		     , sysdate
+		     , #{modifyBy}
+		     , #{prodId}
+		     , #{prodNm}
+		     , #{prodAmt}
+		     , #{ridChnl}
+		     , #{loyProgramId}
+		     , #{ridProdCat}
+		    <!--  , #{ridBrdCat} -->
+		     , #{prodType}
+		     , to_char(sysdate,'yyyymmdd')
+		     , #{prodColor} 
+		)	 
+		
+	</insert>
+
+	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (editProdDtl)
+    ============================================
+    -   제목                   : 상세상품 수정
+    -   설명                   : 상세상품 수정
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ -->
+	<update id="editProdDtl" parameterType="com.icignal.loyalty.product.dto.request.LoyEditProdListReqDto">
+		/* LoyProductMapper.editProdDtl */
+		update loy.loy_prod
+		   set modify_date   = sysdate
+		     , modify_by     = #{modifyBy}
+		     , prod_id       = #{prodId}
+		     , prod_nm       = #{prodNm}
+		     , rid_chnl      = #{ridChnl}
+		     , rid_prod_cat  = #{ridProdCat}
+		    <!--  , rid_brd_cat   = #{ridBrdCat} -->
+		     , PROD_AMT	= #{prodAmt} 
+		     , PROD_TYPE 	= #{prodType} 
+		     , color		 = #{prodColor}
+		 where rid           = #{rid}		
+	</update>   
+
+	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getProdChk)
+    ============================================
+    -   제목                   : 상품명 중복 체크
+    -   설명                   : 상품명 중복 체크
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ -->
+	<select id="getProdChk" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto" 
+									resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto">
+        /* LoyProductMapper.getProdChk */
+		 select count(*) as cnt
+		   from loy.loy_prod lp
+		  where ${strSVCType} 
+		    and lp.flag 		= 1
+		    and lp.rid_pgm 	= #{loyProgramId}
+		    and lp.prod_id  = #{prodId}
+    </select>
+   
+   <!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getCategoryList)
+    ============================================
+    -   제목                   : 상품카테고리 조회
+    -   설명                   : 상품카테고리 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ --> 
+   <select id="getCategoryList" parameterType="com.icignal.loyalty.product.dto.request.LoyGetCategoryListReqDto" 
+   											resultType="com.icignal.loyalty.product.dto.response.LoyGetCategoryListResDto">
+        /* LoyProductMapper.getCategoryList */
+		SELECT lpc.RID           as rid
+				     , lpc.RID_PGM       as ridPgm
+				     , lpc.PAR_RID       as parRid
+				     , lpc2.CAT_ID         as parCatId
+				     , lpc2.CAT_NM         as parCatNm          /* 상위 카테고리 명 */
+				     , lpc.CAT_ID        as catId
+				     , lpc.CAT_NM        as catNm             /* 카테고리 명 */
+				     , lpc.CAT_DESCTXT   as catDesctxt        /* 카테고리 설명 */
+				     , e.NAME            as createBy
+				     , TO_CHAR( lpc.CREATE_DATE,'yyyy-MM-dd HH24:MI:SS' ) as createDate
+				     , ${strColumn}
+		  FROM LOY.LOY_PROD_CATEGORY lpc 
+		  LEFT OUTER JOIN LOY.LOY_PROD_CATEGORY lpc2 	on lpc2.RID = lpc.PAR_RID and lpc2.FLAG = 1
+		  LEFT OUTER JOIN COM.CRM_USER cu 	ON lpc.CREATE_BY = cu.RID 
+		  LEFT OUTER JOIN COM.EMPLOYEe e ON cu.ID_EMPLOYEE = e.ID
+		  WHERE ${strCondWhere}
+		  	AND ${strWhere}
+		    AND lpc.FLAG = 1
+		    AND lpc.CTG_TYPE_CD = 'PROD'
+		   <!--  and lpc.RID_PGM 	= #{loyProgramId} -->
+		  ORDER BY ${strOrderby}
+		 ${strEndPaging}	  
+    </select>    
+
+	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getCategoryDtl)
+    ============================================
+    -   제목                   : 상품카테고리 상세조회
+    -   설명                   : 상품카테고리 상세조회
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ -->
+   <select id="getCategoryDtl" parameterType="com.icignal.loyalty.product.dto.request.LoyGetCategoryListReqDto" 
+   											resultType="com.icignal.loyalty.product.dto.response.LoyGetCategoryListResDto">
+        /* LoyProductMapper.getCategoryDtl */
+		select lpc.rid           as rid
+		     , lpc.rid_pgm       as ridPgm
+		     , lpc.par_rid       as parRid
+		     , lp.cat_id         as parCatId
+		     , lp.cat_nm         as parCatNm          /* 상위 카테고리 명 */
+		     , lpc.cat_id        as catId
+		     , lpc.cat_nm        as catNm             /* 카테고리 명 */
+		     , lpc.cat_desctxt   as catDesctxt        /* 카테고리 설명 */
+		     , e.NAME            as createBy
+		     , to_char( lpc.create_date,'yyyy-MM-dd HH24:MI:SS' ) as createDate
+		  from loy.loy_prod_category lpc 
+		  left join loy.loy_prod_category lp 	on lp.rid 			= lpc.par_rid and lp.flag = 1
+		  left outer join com.crm_user cu 	on lpc.create_by 	= cu.rid 
+		  left outer join com.employee e 	on cu.id_employee 	= e.id
+		  where ${strSVCType} 
+		    and lpc.flag 		= 1
+		    and lpc.rid_pgm = #{loyProgramId}
+		    and lpc.rid         = #{rid} 
+		    and lpc.cat_id      = #{catId}
+    </select> 
+   
+   	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (setCategoryDtl)
+    ============================================
+    -   제목                   : 상품카테고리 저장
+    -   설명                   : 상품카테고리 저장
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ --> 
+    <insert id="setCategoryDtl" parameterType="com.icignal.loyalty.product.dto.request.LoySetCategoryListReqDto">
+	 /* LoyProductMapper.setCategoryDtl */
+		insert into loy.loy_prod_category( 
+		       rid
+		     , rid_pgm
+		     , cat_id
+		     , cat_nm
+		     , par_rid
+		     , cat_desctxt
+		     , flag
+		     , mod_num
+		     , create_date
+		     , create_by
+		     , modify_date
+		     , modify_by
+		     , CTG_TYPE_CD
+		) values (
+		       #{rid}
+		     , #{loyProgramId}
+		     , #{catId}  
+		     , #{catNm}
+		     , #{parRid}
+		     , #{catDesctxt}
+		     , 1
+		     , 0
+		     , sysdate
+		     , #{createBy}
+		     , sysdate
+		     , #{modifyBy}
+		     , 'PROD'
+		) 
+	
+	</insert>
+
+	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (editCategoryDtl)
+    ============================================
+    -   제목                   : 상품카테고리 수정
+    -   설명                   : 상품카테고리 수정
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ -->
+	<update id="editCategoryDtl" parameterType="com.icignal.loyalty.product.dto.request.LoyEditCategoryListReqDto">
+		/* LoyProductMapper.editCategoryDtl */
+		update loy.loy_prod_category
+		   set cat_id        = #{catId}
+		     , cat_nm        = #{catNm}
+		     , par_rid       = #{parRid}
+		     , cat_desctxt   = #{catDesctxt}
+		     , modify_date   = sysdate
+		     , modify_by     = #{modifyBy}
+		     , mod_num       = mod_num+1
+		 where rid           = #{rid}		
+	</update>   
+
+	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getCategoryChk)
+    ============================================
+    -   제목                   : 상품카테고리명 중복 체크
+    -   설명                   : 상품카테고리명 중복 체크
+    -   결과형태             : 단수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ -->	
+	<select id="getCategoryChk" parameterType="com.icignal.loyalty.product.dto.request.LoyGetCategoryListReqDto" 
+											resultType="com.icignal.loyalty.product.dto.response.LoyGetCategoryListResDto">
+        /* LoyProductMapper.getCategoryChk */
+		 select count(*) as cnt
+		   from loy.loy_prod_category lpc
+		  where ${strSVCType} 
+		    and lpc.flag 		= 1
+		    and lpc.rid_pgm 	= #{loyProgramId}
+		    and lpc.cat_id  	= #{catId}
+    </select>
+    
+<!-- /**************************************
+    -   관련 파일             : LoyProductMappeructDAO.java
+    ============================================
+    -   제목                  : 제품 조회 팝업 
+    -   설명                  : SearchHelp
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 이성원  
+    -   작성일                : 2017.10.16
+    ***************************************/ -->    
+    <select id="getProdSearchHelp" parameterType="com.icignal.loyalty.product.dto.request.LoyProductSearchHelpReqDto" 
+    											resultType="com.icignal.loyalty.product.dto.response.LoyProductSearchHelpResDto">
+        /* LoyProductMapper.getProdSearchHelp */
+		 select 
+		 	 a.rid     				as rid
+		 	,b.chnl_no             as chnlNo
+			,b.chnl_nm             as chnlNm
+			,a.prod_type_lv1             as prodTypeLv1
+			,a.prod_type_lv2             as prodTypeLv2
+			,a.prod_id             as prodId
+			,a.prod_nm             as prodNm
+			,a.compn_use_yn             as compnUseYn
+			,a.desc1             as desc1		 
+		   from loy.loy_prod a 
+		   left outer join LOY.LOY_CHNL b on a.rid_chnl = b.rid
+		   where ${strCondWhere}
+		    and ${strSVCType} 
+		  	and ${strWhere}
+		    and a.flag 		= 1
+<!-- 		    and a.rid_pgm 	= #{loyProgramId} -->
+		  order by ${strOrderby}
+		 ${strEndPaging}	
+    </select>	
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 목록
+    -   설명                  : 상품 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <select id="getProductList" parameterType="com.icignal.loyalty.product.dto.request.LoyProductListReqDto" 
+    										resultType="com.icignal.loyalty.product.dto.response.LoyProductListResDto">
+	 /* LoyProductMapper.getProductList */   
+	    SELECT 
+	    	lc.CHNL_NO as chnlNo
+		   ,lc.CHNL_NM as chnlNm
+	       ,lp.PROD_ID as prodId
+	       ,lp.PROD_NM as prodNm
+	       ,lp.DESC1 as desc1
+	       <!-- ,cc3.MARK_NAME as statusCd -->
+	       , lp.STATUS_CD as statusCdNm
+	       ,lc.rid as ridChnl
+	       ,lp.rid as rid
+		FROM loy.loy_prod lp    
+		LEFT OUTER JOIN  LOY.LOY_CHNL lc on lp.RID_CHNL = lc.RID
+		<!-- LEFT OUTER JOIN com.comm_code cc3 on cc3.CODE_NAME = lp.STATUS_CD and cc3.GROUP_CODE = 'PRODUCT_STATUS' and cc3.FLAG=1 and cc3.LANG=#{lang} -->
+    	WHERE ${strCondWhere}
+		AND ${strSVCType} 
+	    AND ${strWhere}
+		ORDER by ${strOrderby}
+		${strEndPaging}	
+     </select>
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 상세 정보 등록
+    -   설명                  : 상품 상세 정보 등록
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+     <insert id="insertProductDetail" parameterType="com.icignal.loyalty.product.dto.request.LoyProductInsertReqDto">
+     /* LoyProductMapper.insertProductDetail */
+    	insert into loy.loy_prod(
+    			RID
+    			,CREATE_BY
+		    	,MODIFY_BY
+		    	,CREATE_DATE
+		    	,MODIFY_DATE
+		    	,FLAG
+		    	,RID_CHNL 
+		    	,PROD_TYPE_LV1
+		    	,PROD_TYPE_LV2
+		    	,PROD_ID
+		    	,PROD_NM
+		    	,COMPN_USE_YN
+		    	,DESC1
+		    	,STATUS_CD
+		    	,ENIS_SETL_METH
+		    	,TAXTN_YN
+		    	<if test="taxtnOccAmt != null and taxtnOccAmt != ''">
+		    	,TAXTN_OCC_AMT
+		    	</if>
+		    	<if test="taxtnRate != null and taxtnRate != ''">
+			   	,TAXTN_RATE
+				</if>
+		    	,TAXTN_PROD_CD
+		    	,RID_TAXTN 
+		    	,TAXFR_PROD_CD
+		    	,RID_TAXFR 
+		    	,COPLEX_PROD_FLG
+		    	,PROD_NICK_NM
+		    	,BARCODE
+		    	,PRICE
+		    	,PRICE_FLG
+		    	)
+		    	values(
+				#{rid}
+				,#{empId} 
+				,#{empId} 
+				,sysdate
+				,sysdate
+				,1
+				,#{ridChnl}
+				,#{prodTypeLv1}
+				,#{prodTypeLv2}
+				,#{prodId}
+				,#{prodNm}
+				,#{compnUseYn}
+				,#{desc1}
+				,#{statusCd}
+				,#{enisSetlMeth}
+				,#{taxtnYn}
+				<if test="taxtnOccAmt != null and taxtnOccAmt != ''">
+				,#{taxtnOccAmt}
+				</if> 
+				<if test="taxtnRate != null and taxtnRate != ''">
+				,#{taxtnRate}
+				</if>
+				,#{taxtnProdCd}
+				,#{ridTaxtn}
+				,#{taxfrProdCd}
+				,#{ridTaxfr}
+				,#{coplexProdFlg}
+				,#{prodNickNm}
+				,#{barcode}
+				<if test="price == null or price == ''">
+				,null
+				</if>
+				<if test="price != null and price != ''">
+				,#{price}
+				</if>
+				,#{priceFlg}
+		    	)
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+				select 1
+		</selectKey>
+    </insert>
+   
+   
+    <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 상세 정보
+    -   설명                  : 상품 상세 정보 조회
+    -   결과형태              : 리스트
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+     <select id="getProductDetail" parameterType="com.icignal.loyalty.product.dto.request.LoyProductListReqDto" 
+     											resultType="com.icignal.loyalty.product.dto.response.LoyProductListResDto">
+     /* LoyProductMapper.getProductDetail */
+	    SELECT 
+	    	lc.CHNL_NO as chnlNo
+		   ,lc.CHNL_NM as chnlNm
+	       ,lp.PROD_TYPE_LV1 as prodTypeLv1
+	       ,lp.PROD_TYPE_LV2 as prodTypeLv2
+	       ,lp.PROD_ID as prodId
+	       ,lp.PROD_NM as prodNm
+	       ,lp.COMPN_USE_YN as compnUseYn
+	       ,lp.DESC1 as desc1
+	       ,lp.STATUS_CD as statusCdNm
+	       ,lp.ENIS_SETL_METH as enisSetlMeth
+	       ,lp.TAXTN_YN as taxtnYn
+	       ,lp.TAXTN_OCC_AMT as taxtnOccAmt
+	       ,lp.TAXTN_RATE as taxtnRate
+	       ,lp.TAXTN_PROD_CD as taxtnProdCd
+	       ,lp2.PROD_NM as taxtnProdNm
+	       ,lp.TAXFR_PROD_CD as taxfrProdCd
+	       ,lp3.PROD_NM as taxfrProdNm
+	       ,lp.RID_TAXTN as ridTaxtn
+	       ,lp.RID_TAXFR as ridTaxfr
+	       ,lc.rid as ridChnl
+	       ,lp.rid as rid
+	       ,lp.COPLEX_PROD_FLG   as coplexProdFlg
+	       ,lp.PROD_NICK_NM as prodNickNm 
+	       ,lp.BARCODE as barcode
+	       ,lp.PRICE as  price
+	       ,lp.PRICE_FLG as priceFlg
+		FROM loy.loy_prod lp    
+		LEFT OUTER JOIN  LOY.LOY_CHNL lc on lp.RID_CHNL = lc.RID
+		<!-- LEFT OUTER JOIN com.comm_code cc3 on cc3.CODE_NAME = lp.STATUS_CD and cc3.GROUP_CODE = 'PRODUCT_STATUS' and cc3.FLAG=1 and cc3.LANG=#{lang}   -->
+      	LEFT OUTER JOIN loy.loy_prod lp2 ON lp2.RID = lp.RID_TAXTN
+        LEFT OUTER JOIN loy.loy_prod lp3 ON lp3.RID = lp.RID_TAXFR
+		WHERE lp.rid = #{rid}
+     </select>
+    
+    
+   <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 가격 목록 
+    -   설명                  : 상품 가격 목록 조회
+    -   결과형태              : 리스트
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+     <select id="getProductPriceList" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+     											resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto">    
+    	/* LoyProductMapper.getProductPriceList */
+    	SELECT  
+    		lpp.POINT_APPLY_PRICE as pointApplyPrice
+			,lpp.MBRBS_SPL_PRICE as mbrbsSplPrice
+			,lpp.APLY_START_DD as aplyStartDd
+			,lpp.APLY_END_DD as aplyEndDd
+			,lpp.RID_PROD as ridProd
+			,lpp.rid as rid
+		FROM loy.loy_prod_price lpp
+		INNER JOIN loy.loy_prod lp on lpp.RID_PROD =  lp.rid
+		WHERE ${strCondWhere}
+		AND ${strSVCType} 
+		AND lp.rid = #{rid}
+		AND lpp.flag = 1
+	    AND ${strWhere}
+		ORDER by ${strOrderby}
+			${strEndPaging}	
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 날짜 유효성 체크
+    -   설명                  : 날짜 유효성 체크
+    -   결과형태              : 리스트
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<select id="checkProdPriceValidationDate" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+																resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto"> 
+	/* LoyProductMapper.checkProdPriceValidationDate */   
+		SELECT  
+			rid as rid
+			,RID_PROD as ridProd
+			,MBRBS_SPL_PRICE as mbrbsSplPrice
+			,POINT_APPLY_PRICE as pointApplyPrice
+		FROM loy.loy_prod_price
+		WHERE 1=1
+		AND rid != #{rid} 
+		AND FLAG=1
+	 	AND RID_PROD =#{ridProd} 
+		AND  (APLY_START_DD  &lt;= to_date(#{aplyStartDd}, 'yyyy-MM-dd') and APLY_END_DD &gt;=  to_date(#{aplyStartDd}, 'yyyy-MM-dd')
+			  OR APLY_START_DD &lt;=to_date(#{aplyEndDd}, 'yyyy-MM-dd') and APLY_END_DD &gt;= to_date(#{aplyEndDd}, 'yyyy-MM-dd')  
+		      OR APLY_START_DD  &gt;=  to_date(#{aplyStartDd}, 'yyyy-MM-dd') and APLY_END_DD  &lt;= to_date(#{aplyEndDd}, 'yyyy-MM-dd')
+		      )
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 가격 정보 등록
+    -   설명                  : 상품 가격 정보 등록
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <insert id="insertProductPrice" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto">
+    /* LoyProductMapper.insertProductPrice */
+    	insert into loy.loy_prod_price(
+    			RID
+    			,CREATE_BY
+		    	,MODIFY_BY
+		    	,CREATE_DATE
+		    	,MODIFY_DATE
+		    	,FLAG
+		    	,RID_PROD
+		    	<if test="mbrbsSplPrice != null and mbrbsSplPrice != ''">
+		    	,MBRBS_SPL_PRICE
+		    	</if>
+
+		    	,POINT_APPLY_PRICE
+		    	,APLY_START_DD
+		    	,APLY_END_DD
+		    	)
+		    	values(
+				#{rid} 
+				,#{empId} 
+				,#{empId} 
+				,sysdate
+				,sysdate
+				,1
+				,#{ridProd}
+				 <if test="mbrbsSplPrice != null and mbrbsSplPrice != ''">
+		    	,#{mbrbsSplPrice}
+		    	</if>
+		
+				,#{pointApplyPrice}
+				,to_date(#{aplyStartDd}, 'yyyy-MM-dd')
+				,to_date(#{aplyEndDd}, 'yyyy-MM-dd')
+		    	)
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+				select 1
+		</selectKey>
+    </insert>
+    
+    
+   <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 삭제 유효성 체크
+    -   설명                  : 삭제 유효성 체크
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <select id="checkDelPriceValidation" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+    													resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto">  
+    /* LoyProductMapper.checkDelPriceValidation */  
+		SELECT 
+			rid as rid
+		FROM loy.loy_prod_price
+		WHERE 1=1
+	 	AND rid =#{rid} 
+	 	AND FLAG=1
+		AND   (APLY_START_DD  &lt;= sysdate 
+			 AND  APLY_END_DD  &gt;= sysdate 
+			 )
+	</select>
+    
+    <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 가격 삭제
+    -   설명                  : 상품 가격 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <update id="deleteProductPrice" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto">
+    /* LoyProductMapper.deleteProductPrice */
+	    UPDATE loy.loy_prod_price
+			set flag = flag + 1 
+			,MODIFY_DATE = sysdate
+	   		,MODIFY_BY = #{empId}
+		WHERE rid=#{rid}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 삭제
+    -   설명                  : 상품 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : dw.ekum  
+    -   작성일                : 2019.06.14
+    ***************************************/ -->
+    <update id="deleteProd" parameterType="com.icignal.loyalty.product.dto.request.LoyProdSpecReqDto">
+    /* LoyProductMapper.deleteProd */
+	    UPDATE loy.loy_prod
+			set flag = flag + 1 
+			,MODIFY_DATE = sysdate
+	   		,MODIFY_BY = #{modifyBy}
+		WHERE rid=#{rid}
+    </update>
+    
+     <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드 목록
+    -   설명                  : 상품 코드 목록 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <select id="getProductCodeList" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+    											resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto">   
+    /* LoyProductMapper.getProductCodeList */ 
+		SELECT  
+				lpch.START_DD as startDd
+			   ,lpch.END_DD as endDd
+		       ,lpch.PROD_NM as prodNm
+		       ,lc.CHNL_NM as chnlNm
+		       ,lc.CHNL_NO as chnlNo
+		       ,lpch.DESC1 as desc1
+		       ,lpch.RID_CHNL as ridChnl
+		       ,lpch.RID_PROD as ridProd
+		       ,lpch.rid as rid
+		FROM LOGS.loy_prod_chg_hist lpch
+		INNER JOIN LOY.LOY_CHNL lc on lc.rid = lpch.RID_CHNL
+		INNER JOIN loy.loy_prod lp on lp.rid = lpch.RID_PROD
+		WHERE ${strCondWhere}
+		AND ${strSVCType}
+		AND lp.rid = #{rid}
+		AND lpch.flag = 1
+	    AND ${strWhere}
+		ORDER by ${strOrderby}
+		${strEndPaging}	
+	</select>
+	
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드 상세정보 등록
+    -   설명                  : 상품 코드 상세정보 등록
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<insert id="insertProductCodeDetail" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto">
+	/* LoyProductMapper.insertProductCodeDetail */
+    	insert into LOGS.loy_prod_chg_hist(
+    			RID
+    			,CREATE_BY
+		    	,MODIFY_BY
+		    	,CREATE_DATE
+		    	,MODIFY_DATE
+		    	,FLAG
+		    	,START_DD
+		    	,END_DD
+		    	,PROD_NM
+		    	,DESC1
+		    	,RID_CHNL
+		    	,RID_PROD
+		    	)
+		    	values(
+				#{rid} 
+				,#{empId} 
+				,#{empId} 
+				,sysdate
+				,sysdate
+				,1
+				,to_date(#{startDd}, 'yyyy-MM-dd')
+				,to_date(#{endDd}, 'yyyy-MM-dd')
+				,#{prodNm}
+				,#{desc1}
+				,#{ridChnl}
+				,#{ridProd}
+		    	)
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+				select 1
+		</selectKey>
+    </insert>
+    
+   	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 날짜 유효성 체크
+    -   설명                  : 날짜 유효성 체크
+    -   결과형태              : 
+    ============================================
+    -   입력			   : ridProd
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <select id="checkProdCodeValidationDate" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+    														resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto">    
+    /* LoyProductMapper.checkProdCodeValidationDate */
+		SELECT rid
+		FROM LOGS.loy_prod_chg_hist
+		WHERE 1=1
+		AND FLAG=1
+	 	AND RID_PROD =#{ridProd} 
+		AND  ( (START_DD  &lt;= to_date(#{startDd}, 'yyyy-MM-dd') and END_DD &gt;=  to_date(#{startDd}, 'yyyy-MM-dd'))
+			  OR (START_DD &lt;=to_date(#{endDd}, 'yyyy-MM-dd') and END_DD &gt;= to_date(#{endDd}, 'yyyy-MM-dd'))  
+		      OR (START_DD  &gt;=  to_date(#{startDd}, 'yyyy-MM-dd') and END_DD  &lt;= to_date(#{endDd}, 'yyyy-MM-dd'))
+		      )
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 날짜 유효성 체크
+    -   설명                  : 날짜 유효성 체크
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <select id="checkDelCodeValidation" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+    													resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto">   
+    /* LoyProductMapper.checkDelCodeValidation */ 
+		SELECT 
+			rid as rid
+		FROM LOGS.loy_prod_chg_hist
+		WHERE 1=1
+	 	AND rid =#{rid} 
+	 	AND FLAG=1
+		AND   (START_DD  &lt;= sysdate  
+			 AND  END_DD  &gt;= sysdate 
+			 )
+	</select>
+    
+   <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드 삭제
+    -   설명                  : 상품 코드 삭제
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <update id="deleteProductCode" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto">
+    /* LoyProductMapper.deleteProductCode */
+	    UPDATE LOGS.loy_prod_chg_hist
+			set flag = flag + 1 
+			,MODIFY_DATE = sysdate
+	   		,MODIFY_BY = #{empId}
+		WHERE rid=#{rid}
+    </update>
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드id 조회
+    -   설명                  : 상품 코드id 조회
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+    <select id="getProdutCodeId" parameterType="com.icignal.loyalty.product.dto.request.LoyProductInsertReqDto" 
+    											resultType="com.icignal.loyalty.product.dto.response.LoyProductListResDto">
+	 /* LoyProductMapper.getProdutCodeId */ 
+	    SELECT rid as rid
+	    FROM loy.loy_prod
+	    WHERE PROD_ID = #{prodId}
+	</select>
+	
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 상세 정보 수정
+    -   설명                  : 상품 상세 정보 수정
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<update id="updateProductDetail" parameterType="com.icignal.loyalty.product.dto.request.LoyProductInsertReqDto">
+	/* LoyProductMapper.updateProductDetail */
+		UPDATE loy.loy_prod
+		SET    MODIFY_DATE = sysdate
+			   ,MODIFY_BY = #{empId}
+			   ,PROD_TYPE_LV1 = #{prodTypeLv1}
+		       ,PROD_TYPE_LV2 = #{prodTypeLv2}
+		       ,PROD_ID = #{prodId}
+		       ,PROD_NM = #{prodNm}
+		       ,COMPN_USE_YN = #{compnUseYn}
+		       ,DESC1 = #{desc1}
+		       ,STATUS_CD = #{statusCd}
+		       ,ENIS_SETL_METH = #{enisSetlMeth}
+		       ,TAXTN_YN = #{taxtnYn}
+		       <if test="taxtnOccAmt != null and taxtnOccAmt != ''">
+		            ,TAXTN_OCC_AMT = #{taxtnOccAmt}
+		       </if>
+		       <if test="taxtnRate != null and taxtnRate != ''">
+		            ,TAXTN_RATE = #{taxtnRate}
+		       </if>
+		       ,TAXTN_PROD_CD = #{taxtnProdCd}
+		       ,TAXFR_PROD_CD = #{taxfrProdCd}
+		       ,RID_TAXTN = #{ridTaxtn}
+		       ,RID_TAXFR = #{ridTaxfr}
+		       ,RID_CHNL = #{ridChnl}
+		       ,COPLEX_PROD_FLG =  #{coplexProdFlg}  
+		       ,PROD_NICK_NM =  #{prodNickNm}
+		       ,BARCODE =  #{barcode}
+		       <if test="price == null or price == ''">
+		       	,PRICE = null
+		       </if>
+		       <if test="price != null and price != ''">
+		       ,PRICE =  #{price}
+		       </if>
+		       ,PRICE_FLG = #{priceFlg}
+		WHERE RID = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 상태 수정
+    -   설명                  : 상품 상태 수정
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<update id="updateProdStatusCd" parameterType="com.icignal.loyalty.product.dto.request.LoyProductInsertReqDto">
+	/* LoyProductMapper.updateProdStatusCd */
+		UPDATE loy.loy_prod
+		SET  STATUS_CD = 10
+		WHERE RID = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 가격 상세정보
+    -   설명                  : 상품 가격 상세정보 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<select id="getProductPriceDtl" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+												resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto">
+	/* LoyProductMapper.getProductPriceDtl */
+		SELECT POINT_APPLY_PRICE as pointApplyPrice
+		   	   ,MBRBS_SPL_PRICE as mbrbsSplPrice
+	       	   ,to_char(APLY_START_DD,'yyyy-MM-dd') as aplyStartDd
+	       	   ,to_char(APLY_END_DD,'yyyy-MM-dd') as aplyEndDd
+	       	   ,RID_PROD as ridProd
+		FROM loy.loy_prod_price lpp
+		INNER JOIN loy.loy_prod lp on lpp.RID_PROD = lp.rid
+		where 1=1
+		AND lpp.RID=#{rid}
+		AND lpp.flag=1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 가격 수정
+    -   설명                  : 상품 가격 수정
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<update id="updateProductPrice" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto">
+	/* LoyProductMapper.updateProductPrice */
+		UPDATE loy.loy_prod_price
+		SET MODIFY_BY = #{empId}
+		   ,MODIFY_DATE = sysdate
+		       	<if test="mbrbsSplPrice != null and mbrbsSplPrice != ''">
+		    	,MBRBS_SPL_PRICE = #{mbrbsSplPrice}
+		    	</if>
+		    	,POINT_APPLY_PRICE  = #{pointApplyPrice}
+		    	,APLY_START_DD =  to_date(#{aplyStartDd}, 'yyyy-MM-dd')
+		    	,APLY_END_DD =  to_date(#{aplyEndDd}, 'yyyy-MM-dd')
+		WHERE rid = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드 상세 
+    -   설명                  : 상품 코드 상세 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<select id="getProductCodeDetail" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto" 
+													resultType="com.icignal.loyalty.product.dto.response.LoyProductDtlTabInfoResDto"> 
+	/* LoyProductMapper.getProductCodeDetail */
+	 	SELECT  to_char(lpch.START_DD, 'yyyy-MM-dd')  as startDd
+			   ,to_char(lpch.END_DD, 'yyyy-MM-dd')  as endDd
+		       ,lpch.PROD_NM as prodNm
+		       ,lc.CHNL_NM as chnlNm
+		       ,lc.CHNL_NO as chnlNo
+		       ,lpch.DESC1 as desc1
+		       ,lpch.rid as rid 
+	 	FROM  LOGS.loy_prod_chg_hist  lpch
+	    INNER JOIN LOY.LOY_CHNL lc on lc.rid = lpch.RID_CHNL
+	 	WHERE lpch.rid = #{rid}
+	 	AND   lpch.flag = 1
+	</select>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드 정보 수정
+    -   설명                  : 상품 코드 정보 수정
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<update id="updateProductCode" parameterType="com.icignal.loyalty.product.dto.request.LoyProductDtlTabInfoReqDto">
+	/* LoyProductMapper.updateProductCode */
+		UPDATE  LOGS.loy_prod_chg_hist 
+		SET 	START_DD  = to_char(#{startDd}, 'yyyy-MM-dd')
+		    	,END_DD    = to_char(#{endDd}, 'yyyy-MM-dd')
+		    	,PROD_NM   = #{prodNm}
+		    	,DESC1     = #{desc1}
+		    	,RID_CHNL  = #{ridChnl}
+		WHERE   RID = #{rid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getProdSpecList)
+    ============================================
+    -   제목                   : 상품 스펙 목록 조회
+    -   설명                   : 상품 스펙 목록 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  :
+    -	출력			  :
+    ============================================
+    -   작성자                : 이필수
+    -   작성일                : 2018.05.21
+    ***************************************/ -->
+   <select id="getProdSpecList" parameterType="com.icignal.loyalty.product.dto.request.LoyProdSpecReqDto" 
+   											resultType="com.icignal.loyalty.product.dto.response.LoyGetProdSpecListResDto">
+        /* LoyProductMapper.getProdSpecList */
+		SELECT 
+            lpm.PROD_CD as goodsCode
+            ,lpm.PROD_NM as goodsName
+            ,cc.MARK_NAME as salesMall
+            ,lpm.PROD_PACK as goodsPack
+            ,lpm.OVERSEA  as overSea
+            ,lpm.START_DATE  as salesSdate
+            ,lpm.END_DATE as salesEdate
+            ,lpm.EPRICE as epRice
+            ,lpm.OPRICE as opRice
+            ,lpm.BPRICE as bpRice
+            ,lpm.MARKETPRICE as marketPrice
+            ,lpm.PRICE as pRice
+            ,lpm.ORIGINAL_PRICE as originalPrice
+            ,lpm.MARGIN as marGin
+            ,lpm.TAXFREE_YN as istaxFree
+            ,lpm.STOCK as sTock
+            ,lpm.PROD_STATE as sTate
+            ,TO_CHAR( lpm.CREATE_DATE, 'yyyy-MM-dd HH24:MI:SS' ) AS createDate
+			, ${strColumn}
+        FROM loy.LOY_PROD_MALL lpm
+            LEFT OUTER JOIN loy.LOY_PROD lp ON lp.RID = lpm.RID_PROD
+            LEFT OUTER JOIN com.COMM_CODE cc ON cc.FLAG =1 AND cc.LANG = #{lang} AND cc.GROUP_CODE ='SALESMALL_GC' AND cc.CODE_NAME = lpm.SALESMALL
+		WHERE ${strCondWhere}
+		    and ${strSVCType} 
+		    and ${strWhere}
+		    and lpm.RID_PROD = #{ridProd}
+		    and lpm.flag = 1
+		ORDER by ${strOrderby}
+		${strEndPaging}	
+    </select>
+    
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 스펙 등록
+    -   설명                  : 상품 스펙 등록
+    -   결과형태              : 
+    ============================================
+    -   입력			  : rid
+    ============================================
+    -   작성자                : 이필수
+    -   작성일                : 2018.05.21
+    ***************************************/ -->
+	<insert id="insertProdSpec" parameterType="com.icignal.loyalty.product.dto.request.LoyProdSpecReqDto">
+	/* LoyProductMapper.insertProdSpec */
+    	insert into loy.loy_prod_spec(
+			RID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, RID_PROD
+			, SPEC_TYPE
+			, SPEC_TYPE_VAL
+			) values (
+			#{prodSpecRid} 
+			, #{createBy} 
+			, #{modifyBy} 
+			, SYSDATE
+			, SYSDATE
+			, 1
+			, #{ridProd}
+			, #{specType}
+			, #{specTypeVal}
+		)
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+				select 1
+		</selectKey> 
+    </insert>
+
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드 정보 수정
+    -   설명                  : 상품 코드 정보 수정
+    -   결과형태              : 
+    ============================================
+    -   입력			   : rid
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<update id="updateProdSpec" parameterType="com.icignal.loyalty.product.dto.request.LoyProdSpecReqDto">
+	/* LoyProductMapper.updateProdSpec */
+		UPDATE  loy.loy_prod_spec 
+		SET 	MODIFY_BY  	= #{modifyBy} 
+		    	, MODIFY_DATE   = SYSDATE
+		    	, SPEC_TYPE   	= #{specType}
+		    	, SPEC_TYPE_VAL = #{specTypeVal}
+		WHERE   RID = #{prodSpecRid}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 상품 코드 브랜드명으로 조회
+    -   설명                  :
+    -   결과형태              : 
+    ============================================
+    -   입력			   : brdId
+    ============================================
+    -   작성자                : 김태욱
+    -   작성일                : 2017.12.06
+    ***************************************/ -->
+	<!-- <select id="getProductByBrd"
+											parameterType="com.icignal.loyalty.product.dto.request.LoyProductByBrdDto"
+											resultType="com.icignal.loyalty.product.dto.request.LoyProductByBrdDto">
+	/* LoyProductMapper.getProductByBrd */
+		select 
+			    lp.rid            as rid
+			  , lp.rid_pgm        as ridPgm           /* 로열티 프로그램 rid*/
+			  , lp.rid_brd_cat    as ridBrdCat        /* 브랜드 카테고리 rid*/
+			  , lp.rid_prod_cat   as ridProdCat       /* 상품 카테고리 rid*/
+			  , lp.rid_chnl       as ridChnl          /* 채널 마스터 rid*/
+			  , lp.prod_id        as code
+			  , lp.prod_nm        as value           /* 상품명 */
+			  , lp.prod_amt       as prodAmt
+	from loy.loy_prod lp
+  INNER join loy.loy_brd_category lbc on lp.RID_BRD_CAT = lbc.RID
+  and BRD_ID = #{brdId}
+	</select> -->
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 중복상품 체크
+    -   설명                  :
+    -   결과형태              : 
+    ============================================
+    -   입력			   : brdId
+    ============================================
+    -   작성자                : dw.keum
+    -   작성일                : 2019.06.14.
+    ***************************************/ -->
+	<select id="prodValidCnt" parameterType="String" resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto">
+	/* LoyProductMapper.prodValidCnt */
+	SELECT COUNT(*) AS cnt
+	  FROM LOY.LOY_PROD 
+	 WHERE PROD_ID = #{rid} 
+	</select> 
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 중복상품 체크후 상품테이블에 insert
+    -   설명                  :
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : jh.seo
+    -   작성일                : 2019.12.09.
+    ***************************************/ -->
+	<update id="tempTableInsert" parameterType="com.icignal.loyalty.product.dto.request.LoySetProdListReqDto">
+	/* LoyProductMapper.tempTableInsert */
+		MERGE INTO loy.LOY_PROD lp
+            USING
+      	(                               
+			SELECT  *
+			FROM loy.TEMP_LOY_PRD tlp2
+			WHERE NOT EXISTS 
+ 			(
+		 		SELECT  1
+ 		 		FROM loy.loy_prod lp
+ 		 		WHERE lp.prod_id=tlp2.prd_id
+ 			)
+		) tlp
+            ON (1=2)
+		    WHEN NOT MATCHED THEN
+		    INSERT 
+		    (
+		    		lp.RID
+		    	   ,lp.FLAG
+		    	   ,lp.CREATE_DATE
+		    	   ,lp.CREATE_BY
+		    	   ,lp.MODIFY_DATE
+		    	   ,lp.MODIFY_BY
+		    	   ,lp.PROD_ID
+		    	   ,lp.PROD_NM
+		    	   ,lp.PROD_TYPE
+		    	   ,lp.RID_CHNL
+		    	   ,lp.RID_PGM
+		    	   ,lp.RID_PROD_CAT
+		    	   <!-- ,lp.RID_BRD_CAT -->
+		    	   ,lp.BASE_YMD
+		    	   ,lp.COLOR
+		    )
+		    VALUES 
+		    (
+	 	    		com.getNewId('')
+		    	   ,1
+		    	   ,SYSDATE
+		    	   ,#{createBy}
+		    	   ,SYSDATE
+		    	   ,#{createBy}
+		    	   ,tlp.PRD_ID
+		    	   ,tlp.PRD_ID
+		    	   ,#{prodType}
+		    	   ,#{ridChnl}
+		    	   ,#{loyProgramId}
+		    	   ,#{ridProdCat}
+		    	   <!-- ,(SELECT RID FROM loy.LOY_BRD_CATEGORY WHERE BRD_NM = tlp.BRD_TYPE) -->
+		    	   ,tlp.BASE_YMD
+		    	   ,tlp.color
+		    )
+		    
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일             : LoyProductMapperDAO.java
+    ============================================
+    -   제목                  : 임시 상품테이블 데이터 비우기
+    -   설명                  :
+    -   결과형태              : 
+    ============================================
+    -   입력			   : 
+    ============================================
+    -   작성자                : jh.seo
+    -   작성일                : 2019.12.09.
+    ***************************************/ -->
+	<select id="deleteTempTable" parameterType="String" resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto">
+	/* LoyProductMapper.dropTempTable */
+		truncate table TEMP_LOY_PRD
+		
+	</select>
+	
+	<update id="deleteCategory" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto">
+	/* LoyProductMapper.deleteCategory */
+	UPDATE LOY.LOY_PROD_CATEGORY
+	SET
+		MODIFY_BY = #{empId}
+		, MODIFY_DATE = SYSDATE
+		, flag = flag + 1
+	WHERE RID = #{rid}
+	</update>
+	
+	<update id="deleteProduct" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto">
+	/* LoyProductMapper.deleteProduct */
+	<!-- UPDATE LOY.LOY_PROD
+	SET
+		MODIFY_BY = #{empId}
+		, MODIFY_DATE = SYSDATE
+		, flag = flag + 1
+	WHERE RID = #{rid} -->
+	DELETE FROM LOY.LOY_PROD WHERE RID = #{rid}
+	</update>
+	
+	<update id="deleteProdSpec" parameterType="com.icignal.loyalty.product.dto.request.LoyProdSpecReqDto">
+	/* LoyProductMapper.deleteProdSpec */
+	UPDATE LOY.LOY_PROD_SPEC
+	SET
+		MODIFY_BY = #{empId}
+		, MODIFY_DATE = SYSDATE
+		, flag = flag + 1
+	WHERE RID IN
+		<foreach collection="rids" item="item" open="(" close=")" separator=","> 
+  		 	#{item}
+		</foreach>
+	</update>
+	
+	   <!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getCategoryList)
+    ============================================
+    -   제목                   : 상품카테고리 조회
+    -   설명                   : 상품카테고리 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : accountId
+    -   출력            : 
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    ***************************************/ --> 
+   <select id="getExcelCategoryList" parameterType="com.icignal.loyalty.product.dto.request.LoyGetCategoryListReqDto" 
+                                            resultType="com.icignal.loyalty.product.dto.response.LoyGetCategoryListResDto">
+        /* LoyProductMapper.getExcelCategoryList */
+        SELECT lpc.RID           as rid
+                     , lpc.RID_PGM       as ridPgm
+                     , lpc.PAR_RID       as parRid
+                     , lpc2.CAT_ID         as parCatId
+                     , lpc2.CAT_NM         as parCatNm          /* 상위 카테고리 명 */
+                     , lpc.CAT_ID        as catId
+                     , lpc.CAT_NM        as catNm             /* 카테고리 명 */
+                     , lpc.CAT_DESCTXT   as catDesctxt        /* 카테고리 설명 */
+                     , e.NAME            as createBy
+                     , TO_CHAR( lpc.CREATE_DATE,'yyyy-MM-dd HH24:MI:SS' ) as createDate
+                     , ${strColumn}
+          FROM LOY.LOY_PROD_CATEGORY lpc 
+          LEFT OUTER JOIN LOY.LOY_PROD_CATEGORY lpc2    on lpc2.RID = lpc.PAR_RID and lpc2.FLAG = 1
+          LEFT OUTER JOIN COM.CRM_USER cu   ON lpc.CREATE_BY = cu.RID 
+          LEFT OUTER JOIN COM.EMPLOYEe e ON cu.ID_EMPLOYEE = e.ID
+          WHERE ${strCondWhere}
+            AND ${strWhere}
+            AND lpc.FLAG = 1
+           <!--  and lpc.RID_PGM    = #{loyProgramId} -->
+          ORDER BY ${strOrderby}
+    </select>    
+    
+        <!-- /**************************************
+    -   관련 파일            : LoyProductMapper.java (getProdPosList)
+    ============================================
+    -   제목                   : POS 상품 목록 조회
+    -   설명                   : POS 상품 목록 조회
+    -   결과형태            :
+    ============================================
+    -   입력            : 
+    -   출력            : 
+    ============================================
+    -   작성자                : LEE GYEONG YOUNG
+    -   작성일                : 2020-11-19
+    -   수정자                : 
+    -   수정일                : 
+    ***************************************/ -->
+   <select id="getProdPosList" parameterType="com.icignal.loyalty.product.dto.request.LoyProdSpecReqDto" 
+                                    resultType="com.icignal.loyalty.product.dto.response.LoyGetProdPosResDto">
+    /* LoyProductMapper.getProdPosList */
+   SELECT 
+           lpp.MS_NO as msNo
+           , lpp.MS_NM as msNm
+           , lpp.prod_id as  goodsCd
+           , cc.MARK_NAME as goodsPriceFg
+           , lpp.START_DATE as startDate
+           , lpp.END_DATE as endDate
+           , lpp.PRE_PRICE as prePrice
+           , lpp.AFT_PRICE as aftPrice
+           , lpp.PROD_CTR_FG as goodsControlFg
+           , TO_CHAR( lpp.CREATE_DATE, 'yyyy-MM-dd HH24:MI:SS' ) AS createDate
+           , ${strColumn}
+        FROM LOY.LOY_PROD_POS lpp 
+        LEFT OUTER JOIN LOY.LOY_PROD lp ON lp.RID = lpp.RID_PROD
+        LEFT OUTER JOIN com.COMM_CODE cc ON cc.FLAG =1 AND cc.LANG = #{lang} AND cc.GROUP_CODE ='LOY_GOODS_PRICE_FG' AND cc.CODE_NAME = lpp.PROD_PRICE_FG 
+    WHERE ${strCondWhere}
+            and ${strSVCType} 
+            and ${strWhere}
+            and lpp.RID_PROD = #{ridProd}
+            and lpp.FLAG = 1
+         order by ${strOrderby}
+                ${strEndPaging}
+    </select>
+    
+        <!-- /**************************************
+    -   관련 파일            : LoyProductMapperDAO.java (getTProdList)
+    ============================================
+    -   제목                   : 상품 목록 조회
+    -   설명                   : 상품 목록 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력            : 
+    -   출력            : 
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.09
+    -   수정자                : 이경영
+    -   수정일                : 2020.11.19
+    ***************************************/ -->
+   <select id="getTProdList" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto" 
+                                    resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto" fetchSize="10000">
+    /* LoyProductMapper.getTProdList */
+	       SELECT   T.PROD_ID AS prodId
+	        	  , T2.MM_ZZITEMCD   AS itemCd /* 아이템코드 */ 
+	              , T.PROD_NM    AS prodNm 
+	              , T.PROD_AMT  AS sdp1Price 
+	              , T.DESC1           AS desc1
+                  , T.CPN_AVL_YN    AS cpnAvlYn
+	              ,${strColumn}
+	          FROM LOY.LOY_PROD T
+	          	   LEFT JOIN LOY.LOY_PROD_X T2 ON T.RID = T2.RID_PROD
+	        WHERE ${strCondWhere}
+	           and ${strSVCType} 
+	           and ${strWhere}
+	        order by ${strOrderby}
+	         ${strEndPaging}
+    </select>
+    
+       <select id="getTProdListYnPop" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto" 
+                                    resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto" fetchSize="10000">
+    /* LoyProductMapper.getTProdListYnPop */
+			 SELECT T.PROD_ID AS prodId
+			    , T.PROD_NM    AS prodNm 
+			    , T.CPN_AVL_YN    AS cpnAvlYn
+              FROM LOY.LOY_PROD T
+              WHERE 1 = 1
+              AND T.PROD_ID = #{prodId}
+    </select>
+    
+    <select id="saveTProdListYnPop" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto"> 
+               /* LoyProductMapper.saveTProdListYnPop */
+				UPDATE LOY.LOY_PROD T
+				SET T.CPN_AVL_YN  = #{cpnAvlYn}
+				  , T.MODIFY_DATE = SYSDATE
+				  , T.MODIFY_BY   = #{modifyBy}
+				WHERE T.PROD_ID = #{prodId}
+    </select>
+    
+       <select id="getAllowUseProdList" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto" 
+   									resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto" fetchSize="10000">
+    /* LoyProductMapper.getAllowUseProdList */
+        SELECT
+           	 T1.RID                               AS rid
+             ,T1.PROD_ID                            AS prodId
+             ,MAX(T2.MMZZSTDITEMCD)          AS mmzzStdItemCd
+             ,MAX(T2.MMZZITEMCD)                 AS mmzzItemCd
+             ,MAX(T2.MMZZREPCD1)                  AS mmzzRepCd1
+             ,MAX(T2.MMZZREPCD2)         AS mmzzRepCd2
+             ,MAX(T2.MMSKUCD)            AS mmSkucd
+             ,T1.PROD_NM           AS prodNm
+             ,MAX(T2.SHGOODSNO)          AS shGoodsNo
+             ,MAX(T2.SHGOODSCODE)        AS shGoodsCode
+             ,MAX(T2.SHGOODSNAME)        AS shGoodsName
+             ,MAX(T2.MMMTART)            AS mmMtart
+             ,MAX(T2.LCTG)              AS lCtg
+             ,MAX(T2.MCTG)              AS mCtg
+             ,MAX(T2.SCTG)              AS sCtg
+             ,MAX(T2.MMPRDHA)            AS mmPrdha
+             ,MAX(T2.MMGROUP)            AS mmGroup
+             ,MAX(T2.SDP1PRICE)          AS sdp1Price
+             ,MAX(T2.SDP1UNIT)           AS sdp1Unit
+             ,MAX(T2.MMFSTDATE)          AS mmfStdate
+             ,MAX(T2.SCMGRADE)           AS scmGrade
+             ,MAX(T2.GOODSCODE)          AS goodsCode 
+             ,MAX(T2.GOODSNAME)          AS goodsName
+             ,MAX(T2.SALESMALL)          AS salesMall
+             ,MAX(T2.GOODSPACK)          AS goodsPack
+             ,MAX(T2.OVERSEA)            AS oversea
+             ,MAX(T2.SALESSDATE)         AS salesSdate
+             ,MAX(T2.SALESEDATE)        AS salesEdate
+             ,MAX(T2.EPRICE)             AS eprice
+             ,MAX(T2.MALLPRICE)              AS mallPrice
+             ,MAX(T2.STATE)              AS state
+             ,MAX(T2.OFFPRICE)              AS offPrice                 
+             ,MAX(T2.OFFPROMPRICE)         AS offPromPrice         
+             ,MAX(T2.OFFEVTSUPPRICE)     AS offEvtSupPrice       
+             ,MAX(T2.OFFSTRDSUPPRICE)    AS offStrdSupPrice
+             , ${strColumn}
+        FROM LOY.LOY_PROD T1
+        LEFT OUTER JOIN LOY.LOY_PROD_XM T2 ON T1.PROD_ID = T2.PRODID
+	    WHERE ${strCondWhere}
+	       and ${strSVCType} 
+	       and ${strWhere}
+	       and T1.FLAG=1
+           AND T1.CPN_AVL_YN = 'Y'     
+           AND NOT EXISTS (SELECT 1 FROM LOY.LOY_OFR_PROD lop 
+          	WHERE T1.rid = lop.RID_PROD_M 
+            AND lop.RID_OFR = #{ridOfr}  AND lop.PROD_USE_TYPE = #{prodUseType} AND lop.flag=1)         
+			GROUP BY T1.RID,T1.PROD_ID,T1.PROD_NM
+	     order by ${strOrderby}
+	     ${strEndPaging}
+    </select>
+    
+       <select id="getAllowNotUseProdList" parameterType="com.icignal.loyalty.product.dto.request.LoyGetProdListReqDto" 
+   									resultType="com.icignal.loyalty.product.dto.response.LoyGetProdListResDto" fetchSize="10000">
+    /* LoyProductMapper.getAllowNotUseProdList */
+        SELECT
+           	  T1.RID                               AS rid
+             ,T1.PROD_ID                            AS prodId
+             ,T2.MMZZITEMCD                 AS mmzzItemCd
+             ,T1.PROD_NM           AS prodNm
+             ,T2.LCTG              AS lCtg
+             ,T2.MCTG              AS mCtg
+             ,T2.SCTG              AS sCtg
+             , ${strColumn}
+        FROM LOY.LOY_PROD T1
+        LEFT OUTER JOIN (
+        SELECT DISTINCT T3.PRODID,T3.MMZZITEMCD,T3.LCTG,T3.MCTG,T3.SCTG
+	    FROM LOY.LOY_PROD_XM T3
+	    JOIN LOY.LOY_PROD    T4 ON T3.PRODID = T4.PROD_ID 
+	    WHERE T4.CPN_AVL_YN ='N'
+	    GROUP BY T3.PRODID,T3.MMZZITEMCD,T3.LCTG,T3.MCTG,T3.SCTG) T2 ON T1.PROD_ID = T2.PRODID
+	    WHERE ${strCondWhere}
+	       and ${strSVCType} 
+	       and ${strWhere}
+	       and T1.FLAG=1
+           AND T1.CPN_AVL_YN = 'N'             
+	     order by ${strOrderby}
+	     ${strEndPaging}
+    </select>
+	
+</mapper>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:44:00 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.unstruc.mapper.SystemUnstrucMapper">  
+
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemUnstrucMapper.java(selectLoyUnstrucList)
+    ============================================
+    -   제목                  : 이벤트 함수 유형 목록
+    -   설명                  : 이벤트 함수 유형 목록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.16
+    ***************************************/ -->
+    <select id="selectLoyUnstrucList" parameterType="com.icignal.systemmanagement.unstruc.dto.request.SystemUnstrucListReqDto" 
+    												resultType="com.icignal.systemmanagement.unstruc.dto.response.SystemUnstrucListResDto">
+        /* SystemUnstrucMapper.selectLoyUnstrucList */
+        
+        SELECT
+              t0.node_type_cd as nodeTypeCd
+            , c3.mark_name AS nodeTypeNm
+            , t0.dsp_val as dspVal
+            , em.name as createrName
+            , t1.rid as rid
+            , t1.rid_pgm as ridPgm
+            , t1.rid_node_type as ridNodeType
+            , t1.sub_type_cd as subTypeCd
+            , c2.mark_name as subTypeNm
+            , t1.exec_cls as execCls
+            , t1.exec_mthd as execMthd
+            , t1.input_scrn as inputScrn
+            , t1.desctxt as desctxt
+            , t1.flag as flag
+            , t1.mod_num as modNum
+            , com.TO_CHAR(t1.create_date, 'YYYY-MM-DD HH24:MI:SS') as createDate
+            , t1.create_by as createBy
+            , com.TO_CHAR(t1.modify_date, 'YYYY-MM-DD HH24:MI:SS') as modifyDate
+            , t1.modify_by as modifyBy
+            , c1.user_id as userId 
+           <!--  , t2.mark_name as typeMarkName -->
+            <!-- , t3.mark_name as subTypeMarkName  -->
+        FROM mkt.mkt_node_sub_type t1 
+        LEFT JOIN mkt.mkt_node_type t0 ON t0.rid = t1.RID_NODE_TYPE
+        LEFT JOIN com.crm_user c1 ON t1.create_by = c1.rid
+        LEFT JOIN com.employee em ON c1.id_employee = em.id
+        LEFT OUTER JOIN com.comm_code c2 ON c2.flag = 1 AND c2.lang = #{lang} AND c2.group_code = 'MKT_CAM_NODE_TYPE' AND c2.code_name = t1.sub_type_cd
+        LEFT OUTER JOIN com.comm_code c3 ON c3.flag = 1 AND c3.lang = 'ko' AND c3.group_code = 'MKT_NODE_TYPE_CD' AND c3.code_name = t0.node_type_cd
+       <!--  LEFT JOIN ( 유형
+            SELECT * FROM com.comm_code 
+            WHERE group_code = 'MKT_NODE_TYPE_CD'
+              AND flag = 1 
+              AND country = #{country}) t2 ON t2.code_name = t0.node_type_cd
+        LEFT JOIN ( 서브유형
+            SELECT * FROM com.comm_code 
+            WHERE group_code = 'MKT_CAM_NODE_TYPE'
+              AND flag = 1 
+              AND country = #{country}) t3 ON t3.code_name = t1.sub_type_cd -->
+        WHERE ${strCondWhere} 
+          AND ${strSVCType}
+          AND ${strWhere}
+          AND t1.flag = 1
+          AND t1.rid_pgm = #{loyProgramId}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+        
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemUnstrucMapper.java(selectLoyUnstrucList)
+    ============================================
+    -   제목                  : 이벤트 함수 유형 단일조회
+    -   설명                  : 이벤트 함수 유형 단일조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.19
+    ***************************************/ -->
+    <select id="selectLoyUnstrucItem" parameterType="com.icignal.systemmanagement.unstruc.dto.request.SystemUnstrucDetailReqDto" 
+    												resultType="com.icignal.systemmanagement.unstruc.dto.response.SystemUnstrucDetailResDto">
+        /* SystemUnstrucMapper.selectLoyUnstrucItem */
+    
+        SELECT
+            t0.node_type_cd as nodeTypeCd
+            , t0.dsp_val as dspVal
+            , t1.rid as rid
+            , t1.rid_pgm as ridPgm
+            , t1.rid_node_type as ridNodeType
+            , t1.sub_type_cd as subTypeCd
+            , t1.exec_cls as execCls
+            , t1.exec_mthd as execMthd
+            , t1.input_scrn as inputScrn
+            , t1.desctxt as desctxt
+            , t1.flag as flag
+            , t1.mod_num as modNum
+            , t1.create_date as createDate
+            , t1.create_by as createBy
+            , t1.modify_date as modifyDate
+            , t1.modify_by as modifyBy
+        FROM mkt.mkt_node_sub_type t1 
+        LEFT JOIN mkt.mkt_node_type t0 ON t0.rid = t1.RID_NODE_TYPE
+        WHERE t1.flag = 1
+          and t1.rid = #{rid}
+    
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemUnstrucMapper.java(usingByCampaignChk)
+    ============================================
+    -   제목                  : 이벤트 함수 유형을 사용중인 캠페인이 존재하는지 확인
+    -   설명                  : 이벤트 함수 유형을 사용중인 캠페인이 존재하는지 확인
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.21
+    ***************************************/ -->
+    <select id="usingByCampaignChk" parameterType="com.icignal.systemmanagement.unstruc.dto.request.SystemUnstrucDetailReqDto" 
+    												resultType="com.icignal.systemmanagement.unstruc.dto.response.SystemUnstrucDetailResDto">
+        /* SystemUnstrucMapper.chkUsingByCampaign */
+    
+        SELECT count(*) as chkCount 
+        FROM mkt.mkt_cam_node t1 
+        WHERE t1.flag = 1
+          AND t1.rid_node_sub_type = #{rid}
+    
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemUnstrucMapper.java(selectUnstrucChk)
+    ============================================
+    -   제목                  : 이벤트 함수 유형 중복체크 
+    -   설명                  : 이벤트 함수 유형 중복체크 
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.19
+    ***************************************/ -->
+    <select id="selectUnstrucChk" parameterType="com.icignal.systemmanagement.unstruc.dto.request.SystemUnstrucDetailReqDto" 
+    											resultType="com.icignal.systemmanagement.unstruc.dto.response.SystemUnstrucDetailResDto">
+        /* SystemUnstrucMapper.selectUnstrucChk */
+        
+        SELECT COUNT(*) as chkCount
+        FROM mkt.mkt_node_sub_type t1
+        WHERE t1.flag = 1
+          AND t1.rid_pgm = #{loyProgramId}
+          AND ${strSVCType}
+          AND t1.exec_CLS = #{execCls} 
+          AND t1.exec_mthd = #{execMthd}
+       <if test="rid != null and rid != ''">
+          AND t1.rid != #{rid}
+       </if>
+          
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemUnstrucMapper.java(insertUnstrucItem)
+    ============================================
+    -   제목                  : 이벤트 함수 유형 등록 
+    -   설명                  : 이벤트 함수 유형 등록 
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.20
+    ***************************************/ -->
+    <insert id="insertUnstrucItem" parameterType="com.icignal.systemmanagement.unstruc.dto.request.SystemUnstrucDetailReqDto"> 
+        /* SystemUnstrucMapper.insertUnstrucItem */
+    
+        INSERT into mkt.mkt_node_sub_type (
+             rid
+            , rid_pgm
+            , rid_node_type
+            , sub_type_cd
+            , exec_cls
+            , exec_mthd
+            , input_scrn
+            , desctxt
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by 
+        )
+        VALUES (
+            #{rid}
+            , #{loyProgramId}
+            , (select rid from mkt.mkt_node_type where node_type_cd = #{nodeTypeCd})
+            , #{subTypeCd}
+            , #{execCls}
+            , #{execMthd}
+            , #{inputScrn}
+            , #{desctxt}
+            , 1
+            , 0
+            , GETDATE()
+            , #{createBy}
+            , GETDATE()
+            , #{modifyBy}
+        )
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemUnstrucMapper.java(updateUnstrucItem)
+    ============================================
+    -   제목                  : 이벤트 함수 유형 수정 
+    -   설명                  : 이벤트 함수 유형 수정 
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.20
+    ***************************************/ -->
+    <update id="updateUnstrucItem" parameterType="com.icignal.systemmanagement.unstruc.dto.request.SystemUnstrucDetailReqDto">
+        /* SystemUnstrucMapper.updateUnstrucItem */
+        
+        UPDATE mkt.mkt_node_sub_type SET
+            rid_pgm = #{loyProgramId}
+            , rid_node_type = (select rid from mkt.mkt_node_type where node_type_cd = #{nodeTypeCd})
+            , sub_type_cd = #{subTypeCd}
+            , exec_cls = #{execCls}
+            , exec_mthd = #{execMthd}
+            , input_scrn = #{inputScrn}
+            , desctxt = #{desctxt}
+            , flag = 1
+            , mod_num = mod_num + 1
+            , modify_date = GETDATE()
+            , modify_by = #{modifyBy}
+        WHERE rid = #{rid}
+        
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemUnstrucMapper.java(deleteUnstrucItem)
+    ============================================
+    -   제목                  : 이벤트 함수 유형 삭제
+    -   설명                  : 이벤트 함수 유형 삭제
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.20
+    ***************************************/ -->
+    <update id="deleteUnstrucItem" parameterType="com.icignal.systemmanagement.unstruc.dto.request.SystemUnstrucDetailReqDto">
+    /* SystemUnstrucMapper.deleteUnstrucItem */
+        UPDATE mkt.mkt_node_sub_type SET 
+            flag = flag + 1
+            , MODIFY_BY = #{modifyBy}
+            , MODIFY_DATE = GETDATE()
+        WHERE rid = #{rid}
+    </update>
+    
+</mapper>

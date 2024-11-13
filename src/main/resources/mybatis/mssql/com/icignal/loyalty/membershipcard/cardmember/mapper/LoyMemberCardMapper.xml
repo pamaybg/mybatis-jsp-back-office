@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.membershipcard.cardmember.mapper.LoyMemberCardMapper">
+	
+	<select id="selectMbrCardList" parameterType="com.icignal.loyalty.membershipcard.cardmember.dto.request.LoyCardListReqDto" resultType="com.icignal.loyalty.membershipcard.cardmaster.dto.response.LoyIssuedCardResDto">
+            SELECT
+            lmc.CARD_NO cardNo
+            ,lck.card_knd_nm as cardKindNo
+            ,lc.CUST_NM AS custNm
+            ,lm.MBR_NO as mbrNo
+            ,lm.ECOMM_MBR_NO as ecommMbrNo
+            ,lck.card_type as cardTypeCd
+            ,lmc.CPRT_CARD_CD as cprtCardCdCode
+            ,(select MARK_NAME from com.comm_code where CODE_NAME = lmc.STAT AND lang = 'ko' AND GROUP_CODE = 'LOY_CARD_MBR_STAT_CD' <!-- AND country = 'KR' --> AND flag = 1) as stat
+            ,lmc.ISSUE_DATE as regDt
+            ,lmc.LOSE_DT as loseDt
+            ,lmc.CARD_LEAV_DATE as cardLeavDate
+            ,lmc.RID_CARD_KIND as ridCardKind
+            ,lmc.RID_MBR as ridMbr
+            ,lm.RID_CUST as ridCust
+            ,lmc.rid as rid
+            ,${strColumn}
+            FROM loy.loy_mbr_card lmc
+            INNER JOIN loy.loy_card_kind lck on lck.rid = lmc.RID_CARD_KIND
+            INNER JOIN loy.loy_mbr lm on lm.RID = lmc.RID_MBR
+            INNER JOIN loy.loy_cust lc on lm.rid_cust = lc.rid
+
+            WHERE ${strCondWhere}
+            ORDER BY ${strOrderby}
+            ${strEndPaging}
+        </select>
+        
+ <select id="selectMbrListCard" parameterType="com.icignal.loyalty.membershipcard.cardmember.dto.request.LoyMbrCardListReqDto" resultType="com.icignal.loyalty.membershipcard.cardmember.dto.response.LoyMbrCardListResDto">
+     /* LOYMbr.selectMbrListCard */
+     select
+             b.rid              as rid
+      ,b.card_no as cardNo
+      ,c.card_knd_nm             as cardKndNm
+      ,d.mark_name             as cprtCard
+      ,cc.mark_name             as cprtCardItemCd
+      ,e.mark_name             as stat
+      ,b.stat         as statCd
+      ,c.card_type        as mbrType
+      ,f.mark_name             as regChnlCd
+      ,com.TO_CHAR(b.create_date,'YYYY-MM-DD HH24:MI:SS')             as createDate
+      ,case when com.nvl(i.name,'') is not null then i.name else '시스템' end            as createBy
+      ,b.lose_dt             as loseDt
+      ,j.name            as loseTrTr
+      ,b.card_leav_date             as cardLeavDate
+      ,com.nvl(b.cprt_card_cd,'')     as cprtCardCd
+      , ${strColumn}
+    from loy.loy_mbr a
+    inner join loy.loy_mbr_card  b on a.rid = b.rid_mbr
+    left outer join loy.loy_card_kind c on b.rid_card_kind  = c.rid
+    left outer join com.comm_code d  on b.cprt_card_cd = d.code_name  and d.group_code   = 'CARD_CORP_TYPE' and d.flag  = 1  and d.lang=#{lang} <!-- and d.country = #{country} -->
+    left outer join com.comm_code e  on b.stat = e.code_name  and e.group_code   = 'LOY_CARD_MBR_STAT_CD' and e.flag  = 1  and e.lang=#{lang} <!-- and e.country = #{country} -->
+    left outer join com.comm_code f  on b.reg_chnl_cd = f.code_name  and f.group_code   = 'CARD_REGIST_CHANNEL' and f.flag  = 1  and f.lang=#{lang} <!-- and f.country = #{country} -->
+    left outer join com.comm_code cc  on b.cprt_card_item_cd =cc.code_name  and cc.group_code   = 'CARD_CORP_ITEM' and cc.flag  = 1  and cc.lang=#{lang} <!-- and cc.country = #{country} -->
+
+    left outer join com.crm_user g on  b.create_by = g.rid
+    left outer join  com.employee i on g.ID_EMPLOYEE = i.id
+    left outer join com.crm_user h on  b.rid_lose_trtr = h.rid
+    left outer join com.employee j on h.ID_EMPLOYEE = j.id
+
+    where ${strSVCType}
+          and ${strWhere}
+          and a.rid = #{rid}
+          <!-- and b.stat = 'A' -->
+        order by ${strOrderby}
+        ${strEndPaging}
+       </select>
+       
+        <!-- /**************************************
+    -   관련 파일             : LOYMbrDAO.java
+    ============================================
+    -   제목                  : 회원 오랜지카드 조회
+    -   설명                  : 회원 오랜지카드 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 이성원
+    -   작성일                : 2017.10.16
+    ***************************************/ -->
+    <select id="selectMbrCardDetail" parameterType="com.icignal.loyalty.membershipcard.cardmember.dto.request.LoyMbrCardListReqDto" resultType="com.icignal.loyalty.membershipcard.cardmember.dto.response.LoyMbrCardResDto">
+     /* LOYMbr.selectMbrOrangeCardDetail */
+     select
+             b.rid          as rid
+            ,b.rid_mbr      as mbrRid
+             ,b.card_no     as cardNo
+      ,c.card_knd_nm             as cardKndNm
+      ,b.create_date             as createDate
+      ,b.create_by             as createBy
+      ,b.lose_dt             as loseDt
+      ,b.rid_lose_trtr             as loseTrTr
+      ,b.card_leav_date             as cardLeavDate
+      ,b.stat         as stat
+    from loy.loy_mbr a
+    left outer join loy.loy_mbr_card  b on a.rid = b.rid_mbr
+    left outer  join loy.loy_card_kind c on b.rid_card_kind  = c.rid
+    where b.rid = #{rid}
+    </select>
+
+</mapper>

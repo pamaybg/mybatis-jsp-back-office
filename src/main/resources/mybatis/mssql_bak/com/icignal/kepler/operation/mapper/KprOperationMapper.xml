@@ -1,0 +1,5290 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.operation.mapper.KprOperationMapper">
+
+	<!-- /**************************************
+    -   관련 파일             : KPROperationDAO.java (getDbIformList)
+    ============================================
+    -   제목                  : DB정보관리 목록 조회
+    -   설명                  : DB정보관리 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:   accountId
+    -	출력				:	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectDbInformList" parameterType="com.icignal.kepler.operation.dto.request.KprOperationListReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprOperationListResDto">
+        /* KPROperation.selectDbInformList */
+		select  
+			   d.ID 							as dbInformId
+		     , d.SERVICE_NM 			as serviceNm
+		     , d.AWS_SECRET_NM 	as secretNm
+		     , c.code_name 				as conDbType
+		     , c.mark_name 				as conDbTypeName
+		     , d.CON_IP 					as conIp
+		     , d.CON_PORT 				as conPort
+		     , d.CON_ID 					as conId
+		     , d.CON_URL 				as conUrl
+		     , d.CON_PW 					as conPw
+		     , d.DB_DESC 				as dbDesc
+		     , d.create_by 				as createByName
+		     , d.create_date 				as createDate
+		     , ${strColumn}
+		from anl.anl_db_inform d WITH (NOLOCK)
+		left outer join com.comm_code c WITH (NOLOCK) on c.flag = 1 and d.CON_DB_TYPE = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_DB_TYPE_CD'
+		where ${strSVCType} 
+		and ${strWhere}
+		<!-- and d.accnt_id = #{accountId}  -->
+		and d.flag = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPROperationDAO.java (getDbRegist)
+    ============================================
+    -   제목                  : DB등록 목록 조회
+    -   설명                  : DB등록 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력			  :   accountId
+    -	출력				:	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectDbRegist" parameterType="com.icignal.kepler.operation.dto.request.KprDbRegistReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprDbRegistResDto">
+        /* KPROperation.selectDbRegist */
+		select d.ID as dbInformId
+		     , d.service_nm as serviceNm
+		     , d.aws_secret_nm as secretNm
+		     , c.code_name as conDbType
+		     , c.mark_name as conDbTypeName
+		     , d.CON_IP as conIp
+		     , d.CON_PORT as conPort
+		     , d.CON_ID as conId
+		     , d.CON_URL as conUrl
+		     , d.CON_PW as conPw
+		     , d.DB_DESC as dbDesc
+		     , ep.name as createByName
+		     , d.create_date as createDate
+		from anl.anl_db_inform d WITH (NOLOCK)
+		left outer join com.comm_code c WITH (NOLOCK) on c.flag = 1 and d.CON_DB_TYPE = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_DB_TYPE_CD'
+		left outer join com.crm_user u WITH (NOLOCK) on d.create_by = u.rid
+		left outer join com.employee ep WITH (NOLOCK) on u.id_employee = ep.id and ep.FLAG = 1
+		where ${strSVCType} 
+		<!-- and d.accnt_id = #{accountId}  -->
+		and d.flag = 1
+		and d.id = #{dbInformId}
+    </select>
+    
+     <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getDbChkRegist)
+    ============================================
+    -   제목                   : 서비스명 중복체크
+    -   설명                   : 서비스명 중복체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  :   accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->	
+    <select id="selectDbChkRegist" parameterType="com.icignal.kepler.operation.dto.request.KprDbRegistReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprDbRegistResDto">
+        /* KPROperation.selectDbChkRegist */
+		select count(*) as cnt from anl.anl_db_inform d with(nolock)
+		where d.SERVICE_NM = #{serviceNm}
+		<!-- and d.accnt_id = #{accountId} --> 
+		and d.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIpPortChk)
+    ============================================
+    -   제목                   : 접속IP, PORT 중복 체크
+    -   설명                   : 접속IP, PORT 중복 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->		
+    <select id="selectIpPortChk" parameterType="com.icignal.kepler.operation.dto.request.KprDbRegistReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprDbRegistResDto">
+        /* KPROperation.selectIpPortChk */
+		select count(*) as cnt 
+		from anl.anl_db_inform di
+		where  ${strSVCType} 
+		<!-- and di.accnt_id = #{accountId}  -->
+		and di.flag = 1
+		and di.CON_IP = #{conIp}
+		and di.CON_PORT = #{conPort}
+    </select>
+      <!-- /**************************************
+    -   관련 파일             : KPROperationDAO.java (getDbIformList)
+    ============================================
+    -   제목                  : DB정보관리 목록 조회
+    -   설명                  : DB정보관리 목록 조회
+    -   결과형태              : 복수
+    ============================================
+    -   입력				:   accountId
+    -	출력				:	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectSubjectAreaList" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* KPROperation.selectSubjectAreaList */
+		select  ${strColumn}
+		, s.ID as subjectAreaId
+		, s.SUBJECT_AREA_NM as subjectAreaNm
+		, s.SUBJECT_DESC as subjectDesc
+		from anl.anl_subject_area s
+		where ${strSVCType} 
+		and ${strWhere}
+		<!-- and s.accnt_id = #{accountId}  -->
+		and s.flag = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}		
+
+    </select>
+     <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (dbInformDelChk)
+    ============================================
+    -   제목                   : 서비스정보 삭제여부 체크
+    -   설명                   : 서비스정보 삭제여부 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="selectdbInformDelChk" parameterType="com.icignal.kepler.operation.dto.request.KprDbRegistReqDto" 
+    												resultType="com.icignal.kepler.operation.dto.response.KprDbRegistResDto">
+        /* KPROperation.selectdbInformDelChk */
+		select case when sum(a.cnt) <![CDATA[>]]> 0 then 1
+		         else 0
+		         end delFlag
+		from (select count(s.id) as cnt
+			    from anl.anl_db_inform d WITH (NOLOCK)
+			    join anl.anl_subject_db_rel s WITH (NOLOCK) on d.id = s.db_id and s.flag = 1
+			    where ${strSVCType}
+				and	d.flag		=  1
+				<!-- and	d.accnt_id	=  #{accountId} -->
+				<if test="dbInformId1.size() > 0">
+				and d.id in 
+					<foreach collection="dbInformId1" item="item" separator="," close=")" open="(">
+							#{item}
+	        		</foreach>
+	        	</if>
+				) a
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setDbRegist)
+    ============================================
+    -   제목                   : 서비스정보 저장
+    -   설명                   : 서비스정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->    
+	<insert id="insertDbInform" parameterType="com.icignal.kepler.operation.dto.request.KprSetDbInformReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertDbInform */
+		insert into anl.anl_db_inform 
+		( id
+		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		<!-- , COUNTRY
+		, ACCNT_ID
+		, APP_SERVICE_TYPE -->
+		, flag
+		, SERVICE_NM
+		, CON_DB_TYPE
+		, CON_IP
+		, CON_PORT
+		, CON_ID
+		, CON_URL
+		, CON_PW
+		, DB_DESC
+		, AWS_SECRET_NM 
+		)
+		values
+		( #{dbInformId}
+		, #{createBy}
+		, #{modifyBy}
+		, getDate()
+		, getDate()
+		<!-- , #{country}
+		, #{accountId}
+		, #{appServiceId} -->
+		, 1
+		, #{serviceNm}
+		, #{conDbType}
+		, #{conIp}
+		, #{conPort}
+		, #{conId}
+		, #{conUrl}
+		, #{conPw}
+		, #{dbDesc}
+		, #{secretNm}
+		)
+	</insert>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editDbRegist)
+    ============================================
+    -   제목                   : 서비스정보 수정
+    -   설명                   : 서비스정보 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<update id="updateDbInfrom" parameterType="com.icignal.kepler.operation.dto.request.KprEditDbInformReqDto">
+		/* KPROperation.updateDbInfrom */
+		update 
+			anl.anl_db_inform  
+		  set modify_by 		= #{modifyBy}
+		, modify_date 		= getDate()
+		, SERVICE_NM 		= #{serviceNm}
+		, CON_IP 				= #{conIp}
+		, CON_PORT 			= #{conPort}
+		, CON_ID 				= #{conId}
+		<if test="pwFlag == &quot;Y&quot;">
+		, CON_PW 				= #{conPw}
+		</if>
+		, CON_URL 			= #{conUrl}
+		, DB_DESC 			= #{dbDesc}
+		, AWS_SECRET_NM  	= #{secretNm}
+		where id 				= #{dbInformId} 
+	</update>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getDbInfromServiceNms)
+    ============================================
+    -   제목                   : DB정보 서비스명 조회
+    -   설명                   : DB정보 서비스명 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.02.12
+    ***************************************/ --> 
+    <select id="getDbInfromServiceNms" parameterType="java.util.List" resultType="java.lang.String">
+        /* KPROperation.getDbInfromServiceNms */
+		select AWS_SECRET_NM
+		from anl.anl_db_inform
+		where id in 
+		<foreach collection="list" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+    </select> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeDbInform)
+    ============================================
+    -   제목                   : 서비스정보 삭제
+    -   설명                   : 서비스정보 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <delete id="deleteDbInfrom" parameterType="com.icignal.kepler.operation.dto.request.KprDelDbInformReqDto">
+        /* KPROperation.deleteDbInfrom */
+		delete from anl.anl_db_inform
+		where id in <foreach collection="dbInformId" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+    </delete> 
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSubjectAreaList)
+    ============================================
+    -   제목                   : 주제영역 조회
+    -   설명                   : 주제영역 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="selectSubjectArea" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* KPROperation.selectSubjectArea */
+		select s.ID as subjectAreaId
+			   , s.SUBJECT_AREA_NM as subjectAreaNm
+			   , s.SUBJECT_DESC as subjectDesc
+		from anl.anl_subject_area s
+		where ${strSVCType} 
+		<!-- and s.accnt_id = #{accountId}  -->
+		and s.flag = 1
+		and s.id = #{subjectAreaId}
+
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSubjectAreaChkRegist)
+    ============================================
+    -   제목                   : 주제영역명 중복체크
+    -   설명                   : 주제영역명 중복체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="selectSubjectAreaChk" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    												resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* KPROperation.selectSubjectAreaChk */
+		select count(*) as cnt from anl.anl_subject_area s
+		where s.SUBJECT_AREA_NM = #{subjectAreaNm}
+		<!-- and s.accnt_id = #{accountId} --> 
+		and s.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setSubjectArea)
+    ============================================
+    -   제목                   : 주제영역 저장
+    -   설명                   : 주제영역 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<insert id="insertSubjectArea" parameterType="com.icignal.kepler.operation.dto.request.KprSetSubjectAreaReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertSubjectArea */
+		insert into anl.anl_subject_area
+		(id
+		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		<!-- , app_service_type
+		, country
+		, accnt_id -->
+		, flag
+		, subject_area_nm
+		, subject_desc
+		)
+		values
+		(#{subjectAreaId}
+		, #{createBy}
+		, #{modifyBy}
+		, getDate()
+		, getDate()
+		<!-- , #{appServiceId}
+		, #{country}
+		, #{accountId} -->
+		, 1
+		, #{subjectAreaNm}
+		, #{subjectDesc}
+		)
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String">
+            select id from anl.anl_subject_area where id = #{subjectAreaId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey> -->		
+	</insert>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editSubjectArea)
+    ============================================
+    -   제목                   : 주제영역 수정
+    -   설명                   : 주제영역 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<update id="updateSubjectArea" parameterType="com.icignal.kepler.operation.dto.request.KprEditSubjectAreaReqDto">
+		/* KPROperation.updateSubjectArea */
+		update anl.anl_subject_area
+		set MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = getDate()
+		, SUBJECT_AREA_NM = #{subjectAreaNm} 
+		, SUBJECT_DESC = #{subjectDesc}
+		where ID = #{subjectAreaId}
+	</update>
+		 
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeSubjectArea)
+    ============================================
+    -   제목                   : 주제영역 삭제
+    -   설명                   : 주제영역 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->   
+    <delete id="deleteSubjectArea" parameterType="com.icignal.kepler.operation.dto.request.KprDelSubjectAreaReqDto">
+        /* KPROperation.deleteSubjectArea */
+			update anl.anl_subject_area
+			set modify_by = #{modifyBy}
+			, modify_date = getDate()
+			, flag = flag + 1
+		where id in 
+		<foreach collection="subjectAreaId" item="item" separator="," close=")" open="(">
+           	#{item}
+        </foreach>
+    </delete> 
+    
+     <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (subjectAreaDelChk)
+    ============================================
+    -   제목                   : 주제영역 삭제여부 체크
+    -   설명                   : 주제영역 삭제여부 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="subjectAreaDelChk" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* KPROperation.subjectAreaDelChk */
+		select case when sum(a.cnt) <![CDATA[>]]> 0 then 1
+		         else 0
+		         end delFlag
+		from (select count(s.id) as cnt
+			    from anl.anl_subject_area d WITH (NOLOCK)
+			    join anl.anl_subject_db_rel s WITH (NOLOCK) on d.id = s.subject_area_id and s.flag = 1
+			    where ${strSVCType}
+				and	d.flag		=  1
+				<!-- and	d.accnt_id	=  #{accountId} -->
+				<if test="subjectAreaId1.size() > 0">
+				and d.id in 
+					<foreach collection="subjectAreaId1" item="item" separator="," close=")" open="(">
+	       		    #{item}
+	<!--        		    #{subjectAreaId1[]} -->
+	        		</foreach>
+	        	</if>
+				) a
+    </select>
+    
+    	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSubjectAreaMapping)
+    ============================================
+    -   제목                   : 주제영역DB 맵핑정보 조회
+    -   설명                   : 주제영역DB 맵핑정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="selectSubjectAreaMapping" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    														resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaTreeResDto">
+        /* KPROperation.selectSubjectAreaMapping */
+		select sd.id as id
+		, s.SUBJECT_AREA_NM as text
+		, '' as parentId
+		, sd.SEQ as seq
+		from anl.anl_subject_db_rel sd WITH (NOLOCK)
+		join anl.anl_subject_area s WITH (NOLOCK) on sd.SUBJECT_AREA_ID = s.id and s.FLAG = 1
+		where ${strSVCType} 
+		<!-- and sd.accnt_id = #{accountId} --> 
+		and sd.flag = 1
+		and sd.db_id = #{dbInformId} 
+		ORDER BY sd.seq asc
+    </select>
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editSubjectDb)
+    ============================================
+    -   제목                   : 주제영역DB 순서변경
+    -   설명                   : 주제영역DB 순서변경
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+     <update id="updateSubjectDb" parameterType="com.icignal.kepler.operation.dto.request.KprEditSubjectDbReqDto">
+        /* KPROperation.updateSubjectDb */
+		update anl.anl_subject_db_rel
+		set modify_by = #{modifyBy}
+		, modify_date = getDate()
+		, seq = #{seq}
+		where 1 = 1
+		and id = #{subjectDbId}
+    </update> 
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeSubjectDb)
+    ============================================
+    -   제목                   : 주제영역DB 삭제
+    -   설명                   : 주제영역DB 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+     <delete id="deleteSubjectDb" parameterType="com.icignal.kepler.operation.dto.request.KprDelSubjectAreaReqDto">
+        /* KPROperation.deleteSubjectDb */
+		update anl.anl_subject_db_rel
+		set modify_by = #{modifyBy}
+		, modify_date = getDate()
+		, flag = flag + 1
+		where 1 = 1
+		and id = #{subjectDbId}
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (subjectDBDelChk)
+    ============================================
+    -   제목                   : 주제영역DB 삭제여부 체크
+    -   설명                   : 주제영역DB 삭제여부 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="subjectDbDelChk" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    												resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* KPROperation.subjectDbDelChk */
+ 		SELECT case 
+		        when sum(a.cnt) &gt; 0 then 1
+		        else 0
+		       end as delFlag
+		FROM
+		    (SELECT count(t.id) as cnt
+		    FROM anl.anl_subject_db_rel c WITH (NOLOCK)
+		    JOIN anl.anl_table_mst t WITH (NOLOCK) on c.ID = t.SUBJECT_DB_REL_ID and t.FLAG = 1
+		    where ${strSVCType}
+			and	c.FLAG			=  1
+			<!-- and	c.ACCNT_ID	=  #{accountId} -->
+			and c.id 					= #{subjectDbId}
+			) a
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSubjectAreaPop)
+    ============================================
+    -   제목                   : 주제영역 조회
+    -   설명                   : 주제영역 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="selectSubjectAreaPop" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    												resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* KPROperation.selectSubjectAreaPop */
+        SELECT ${strColumn}
+             , s.id              AS subjectAreaId
+             , s.subject_area_nm AS subjectAreaNm
+             , s.subject_desc    AS subjectDesc
+             , s.modify_date     AS modifyDate
+		  FROM anl.anl_subject_area s WITH (NOLOCK)
+		  LEFT OUTER JOIN (
+	         SELECT subject_area_id AS area_id
+	           FROM anl.anl_db_inform      adi WITH (NOLOCK)
+	           JOIN anl.anl_subject_db_rel sdr  WITH (NOLOCK) ON adi.id = sdr.db_id AND sdr.flag = 1
+	          WHERE 1 = 1
+	            AND adi.flag = 1
+	            AND adi.id   = #{dbInformId}
+		) t WITH (NOLOCK) ON s.id = t.area_id
+		 WHERE 1 = 1
+		   AND ${strWhere}
+		   AND ${strSVCType}
+		   AND s.flag     = 1
+		  <!--  AND s.accnt_id = #{accountId} -->
+		   AND t.area_id IS NULL
+		 ORDER BY ${strOrderby}
+		 ${strEndPaging}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getMapping)
+    ============================================
+    -   제목                   : 주제영역DB 맵핑카운터
+    -   설명                   : 주제영역DB 맵핑카운터
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="selectSubjectRelCnt" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* KPROperation.selectSubjectRelCnt */
+		select count(*) as cnt 
+		from anl.anl_subject_db_rel 
+		where DB_ID = #{dbInformId}
+		and SUBJECT_AREA_ID = #{subjectAreaId}
+		and flag = flag + 1	
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setMapping)
+    ============================================
+    -   제목                   : 주제영역DB정보 저장
+    -   설명                   : 주제영역DB정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<insert id="insertSubjectAreaMapping" parameterType="com.icignal.kepler.operation.dto.request.KprSetSubjectAreaMappingReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertSubjectAreaMapping */
+		insert into anl.anl_subject_db_rel 
+		(id
+		, create_by
+		, modify_by
+		, create_date
+		, modify_date
+		<!-- , country
+		, app_service_type
+		, accnt_id -->
+		, flag
+		, subject_area_id
+		, db_id
+		, seq
+		)
+		values
+		(#{subjectDbId}
+		, #{createBy}
+		, #{modifyBy}
+		, getDate()
+		, getDate()
+		<!-- , #{country}
+		, #{appServiceId}
+		, #{accountId} -->
+		, 1
+		, #{subjectAreaId}
+		, #{dbInformId}
+		, (select max(sd.seq)+1 from anl.anl_subject_db_rel sd where sd.db_id = #{dbInformId} and sd.flag =1)
+		)
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String">
+            select id from anl.anl_subject_db_rel where id = #{subjectDbId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey>	 -->	
+	</insert>  
+	
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editMapping)
+    ============================================
+    -   제목                   : 주제영역DB정보 수정
+    -   설명                   : 주제영역DB정보 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+     <update id="updateSubjectAreaMapping" parameterType="com.icignal.kepler.operation.dto.request.KprSetSubjectAreaMappingReqDto">
+        /* KPROperation.updateSubjectAreaMapping */
+		update anl.anl_subject_db_rel
+		set modify_by = #{modifyBy}
+		, modify_date = getDate()
+		, flag = 1
+		where 1 = 1
+		and subject_area_id = #{subjectAreaId}
+		and db_id = #{dbInformId}
+    </update> 	
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableMstList)
+    ============================================
+    -   제목                   : 테이블정보 조회
+    -   설명                   : 테이블정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<select id="selectTableMstList" parameterType="com.icignal.kepler.operation.dto.request.KprTableMstListReqDto" 
+												resultType="com.icignal.kepler.operation.dto.response.KprTableMstListResDto">
+        /* KPROperation.selectTableMstList */
+		select ${strColumn}
+		, t.ID 							as tableId
+		, di.SERVICE_NM 			as serviceNm
+		, s.SUBJECT_AREA_NM 	as subjectAreaNm
+		, s.id 							as subjectAreaId
+		, c2.mark_name 			as dbmsTypeCd
+		, t.SCHMA_NM 				as schmaNm
+		, t.TBL_NM 					as tblNm
+		, t.DP_NM 						as dpNm
+		, c.code_name 				as tblType
+		, c.mark_name 				as tblTypeCd
+		, t.TBL_SPACE_NM 		as tblSpaceNm
+		, case when t.IMPORT_YN = 'Y' then 'Indirect'
+                 else 'Direct' 
+          end as importYn
+		, sd.DB_ID as dbId
+		from anl.anl_table_mst t WITH (NOLOCK)
+		left outer join anl.anl_subject_db_rel sd WITH (NOLOCK) on t.SUBJECT_DB_REL_ID = sd.ID and sd.FLAG = 1 
+	    join anl.anl_subject_area s WITH (NOLOCK) on sd.SUBJECT_AREA_ID = s.ID and s.FLAG = 1
+        join anl.anl_db_inform di WITH (NOLOCK) on sd.DB_ID = di.ID and di.FLAG = 1
+		left outer join com.comm_code c WITH (NOLOCK) on c.flag = 1 and t.TBL_TYPE_CD = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_TABLE_TYPE_CD'
+		left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and t.DBMS_TYPE_CD = c2.code_name and c2.lang = #{lang} and c2.group_code = 'ANL_DB_TYPE_CD'
+		where ${strCondWhere}
+		and ${strSVCType} 
+		and ${strWhere}
+		<!-- and t.accnt_id = #{accountId}  -->
+		and t.flag = 1
+		ORDER BY ${strOrderby}
+		${strEndPaging}	
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getDbServiceComboList)
+    ============================================
+    -   제목                   : 서비스정보 조회
+    -   설명                   : 서비스정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectDbServiceComboList" parameterType="com.icignal.kepler.operation.dto.request.KprComboListReqDto" 
+    													resultType="com.icignal.kepler.operation.dto.response.KprComboListResDto">
+    	/* KPROperation.selectDbServiceComboList */
+    	SELECT   adi.id          as id
+		        , adi.service_nm  as text
+		        , adi.con_db_type as dbType
+		FROM    anl.anl_db_inform adi
+		WHERE   ${strSVCType}
+		<!-- and 	adi.accnt_id = #{accountId}  -->
+		AND     adi.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableList)
+    ============================================
+    -   제목                   : 테이블구분 조회
+    -   설명                   : 테이블구분 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectTblTypeComboList" parameterType="com.icignal.kepler.operation.dto.request.KprComboListReqDto" 
+     													resultType="com.icignal.kepler.operation.dto.response.KprComboListResDto">
+    	/* KPROperation.selectTblTypeComboList */
+		 SELECT id AS id
+		 , mark_name AS text
+		FROM com.comm_code 
+		WHERE flag = 1 
+		AND ${strSVCType}
+		AND group_code = 'ANL_TABLE_TYPE_CD'
+		ORDER BY seq
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (tableIdReturn)
+    ============================================
+    -   제목                   : 테이블ID 리턴 
+    -   설명                   : 테이블ID 리턴 
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectTableIdReturn" parameterType="com.icignal.kepler.operation.dto.request.KprTableMstListReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprTableMstListResDto">
+        /* KPROperation.selectTableIdReturn */
+		select id as tableId 
+		from anl.anl_table_mst
+		where ${strSVCType} 
+		<!-- and accnt_id = #{accountId}  -->
+		and flag = 1
+		and tbl_nm = #{tblNm}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (tableNmChk)
+    ============================================
+    -   제목                   : 테이블명 중복 체크
+    -   설명                   : 테이블명 중복 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectTableNmChk" parameterType="com.icignal.kepler.operation.dto.request.KprTableMstListReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprTableMstListResDto">
+        /* KPROperation.selectTableNmChk */
+		select count(*) as cnt
+		from anl.anl_table_mst tm WITH (NOLOCK)
+        join anl.anl_subject_db_rel sdr WITH (NOLOCK) on tm.subject_db_rel_id = sdr.id and sdr.flag = 1
+        where ${strSVCType} 
+		<!-- and tm.accnt_id = #{accountId}  -->
+		and tm.flag = 1
+		and tm.tbl_nm = #{tblNm}
+        and sdr.db_id = #{dbInformId}
+        and tm.schma_nm = #{schmaNm}
+    </select>    
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableLgcChk)
+    ============================================
+    -   제목                   : 테이블 L.C사용여부 체크
+    -   설명                   : 테이블 L.C사용여부 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectTblLgcChk" parameterType="com.icignal.kepler.operation.dto.request.KprTableMstListReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprTableMstListResDto">
+        /* KPROperation.selectTblLgcChk */
+		select 	case
+					when sum(t.cnt) =	0 then 1
+					else 0
+				enD lgcFlag
+		from 
+		(	select count(*) as cnt from anl.anl_table_mst tm WITH (NOLOCK)
+			join anl.anl_column_mst cm WITH (NOLOCK) on tm.ID = cm.TBL_ID and cm.FLAG = 1
+			join anl.anl_lgc_join_column ljc2 WITH (NOLOCK) on cm.ID = ljc2.RIGHT_COL_ID and ljc2.FLAG = 1
+			where ${strSVCType} 
+			<!-- and tm.accnt_id = #{accountId}  -->
+			and tm.flag = 1
+			and tm.id = #{tableId}
+			union all
+			select count(*) as cnt from anl.anl_table_mst tm WITH (NOLOCK)
+			join anl.anl_column_mst cm WITH (NOLOCK) on tm.ID = cm.TBL_ID and cm.FLAG = 1
+			join anl.anl_lgc_join_column ljc1 WITH (NOLOCK) on cm.ID = ljc1.LEFT_COL_ID and ljc1.FLAG = 1
+			where ${strSVCType} 
+			<!-- and tm.accnt_id = #{accountId}  -->
+			and tm.flag = 1
+			and tm.id = #{tableId}
+		) t
+    </select>    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSubjectAreaComboList)
+    ============================================
+    -   제목                   : 주제영역 조회
+    -   설명                   : 주제영역 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectSubjectAreaComboList" parameterType="com.icignal.kepler.operation.dto.request.KprComboListReqDto" 
+     														resultType="com.icignal.kepler.operation.dto.response.KprComboListResDto">
+    	/* KPROperation.selectSubjectAreaComboList */
+		select sd.SUBJECT_AREA_ID as id
+		, s.SUBJECT_AREA_NM as text
+		from anl.anl_subject_area s WITH (NOLOCK)
+		join anl.anl_subject_db_rel sd WITH (NOLOCK) on sd.SUBJECT_AREA_ID = s.ID and sd.FLAG = 1
+		join anl.anl_db_inform d WITH (NOLOCK) on sd.DB_ID = d.ID and d.FLAG = 1
+		where ${strSVCType}
+		and s.flag = 1
+		<if test="dbInformId != null and dbInformId != ''">
+		and d.ID = #{dbInformId}
+		</if>
+		<if test="tableType == &quot;FACT&quot;">
+		and s.id not in (select sa.id from anl.anl_subject_area sa where sa.SUBJECT_AREA_NM = 'Dimension' or sa.SUBJECT_AREA_NM = 'Aggregation' or sa.SUBJECT_AREA_NM = '일반' )
+		</if>
+		<if test="tableType == &quot;DIM&quot;">
+		and s.id in (select sa.id from anl.anl_subject_area sa where sa.SUBJECT_AREA_NM = 'Dimension')
+		</if>
+		<if test="tableType == &quot;AGG&quot;">
+		and s.id in (select sa.id from anl.anl_subject_area sa where sa.SUBJECT_AREA_NM = 'Aggregation')
+		</if>
+		order by sd.seq
+    </select>
+  
+  	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableList)
+    ============================================
+    -   제목                   : 테이블정보 조회
+    -   설명                   : 테이블정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectTableList" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableReqDto" 
+    									resultType="com.icignal.kepler.operation.dto.response.KprGetTableResDto">
+        /* KPROperation.selectTableList */
+		select  t.ID as tableId
+				, d.SERVICE_NM as serviceNm
+				, sd.DB_ID as dbId
+				, s.SUBJECT_AREA_NM as subjectAreaNm
+				, sd.SUBJECT_AREA_ID as subjectAreaId
+				, t.DP_NM as dpNm
+			 	, c.code_name as tblTypeCd
+				, t.TBL_SPACE_NM as tblSpaceNm
+				, t.SCHMA_NM as schmaNm
+		from anl.anl_table_mst t WITH (NOLOCK)
+		join anl.anl_subject_db_rel sd WITH (NOLOCK) on t.SUBJECT_DB_REL_ID = sd.ID 
+		join anl.anl_subject_area s WITH (NOLOCK) on sd.SUBJECT_AREA_ID = s.ID 
+		join anl.anl_db_inform d WITH (NOLOCK) on sd.DB_ID = d.ID 
+		left outer join com.comm_code c WITH (NOLOCK) on c.flag = 1 and t.TBL_TYPE_CD = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_TABLE_TYPE_CD'
+		where ${strSVCType} 
+		<!-- and t.accnt_id = #{accountId}  -->
+		and t.flag = 1
+		and t.id = #{tableId} 
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setTableList)
+    ============================================
+    -   제목                   : 테이블정보 저장
+    -   설명                   : 테이블정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+ 	<insert id="insertTableList" parameterType="com.icignal.kepler.operation.dto.request.KprSetTableListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertTableList */
+		insert into anl.anl_table_mst
+		( ID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		<!-- , COUNTRY
+		, APP_SERVICE_TYPE
+		, ACCNT_ID -->
+		, FLAG
+		, SUBJECT_DB_REL_ID
+		, DBMS_TYPE_CD
+		, DP_NM
+		, TBL_TYPE_CD
+		, TBL_SPACE_NM
+		, SCHMA_NM
+		, TBL_NM
+		)
+		values
+		( #{tableId}
+		, #{createBy}
+		, #{modifyBy}
+		, getDate()
+		, getDate()
+		<!-- , #{country}
+		, #{appServiceId}
+		, #{accountId} -->
+		, 1
+		, (select ID from anl.anl_subject_db_rel where DB_ID = #{dbInformId} and SUBJECT_AREA_ID =#{subjectAreaId} and flag =1)
+		, (select CON_DB_TYPE from anl.anl_db_inform where ID = #{dbInformId} and flag =1)
+		, #{dpNm}
+		, #{tblTypeCd}
+		, #{tblSpaceNm}
+		, #{schmaNm}
+		, #{tblNm}
+		)
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String">
+            select id from anl.anl_table_mst where id = #{tableId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey> -->
+	</insert>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editTableList)
+    ============================================
+    -   제목                   : 테이블정보 수정
+    -   설명                   : 테이블정보 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<update id="updateTableList" parameterType="com.icignal.kepler.operation.dto.request.KprEditTableListReqDto">
+		/* KPROperation.updateTableList */
+		update anl.anl_table_mst
+		set MODIFY_BY 				= #{modifyBy}
+		, MODIFY_DATE 				= getDate()
+		, SUBJECT_DB_REL_ID	= (select ID from anl.anl_subject_db_rel where DB_ID = #{dbInformId} and SUBJECT_AREA_ID =#{subjectAreaId} and flag =1)
+		, DBMS_TYPE_CD			= (select CON_DB_TYPE from anl.anl_db_inform where ID = #{dbInformId} and flag =1)
+		, DP_NM						= #{dpNm}
+		, TBL_TYPE_CD				= #{tblTypeCd}
+		, TBL_SPACE_NM			= #{tblSpaceNm}
+		, SCHMA_NM					= #{schmaNm}
+		, TBL_NM						= #{tblNm}
+		where ID 						= #{tableId} 
+	</update>
+		      
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableColList)
+    ============================================
+    -   제목                   : 테이블 컬럼정보 조회
+    -   설명                   : 테이블 컬럼정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectTableColList" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableColListReqDto" 
+     											resultType="com.icignal.kepler.operation.dto.response.KprGetTableColListResDto">
+    	/* KPROperation.selectTableColList */
+		select c.ID 				as colId
+		, c.col_nm 					as colNm
+		, c.PK_YN 					as pkYn
+		, c1.mark_name 		as dataTypeCd
+		, c.LEN 						as len
+		, c.NULL_YN 				as nullYn
+		, c.DEFT_VAL 			as deftVal
+		, c.SEQ 						as seq
+		, c.DP_NM 					as dpNm
+		, c2.mark_name 		as colTypeCd
+		, c.MODIFY_YN 			as modifyYn
+		from anl.anl_column_mst c WITH (NOLOCK)
+		join anl.anl_table_mst t WITH (NOLOCK) on c.TBL_ID = t.ID and t.FLAG = 1 
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c.DATA_TYPE_CD = c1.code_name and c1.lang = #{lang} and c1.group_code = 'DB_DATA_TYPE_CD'
+		left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c.COL_TYPE_CD = c2.code_name and c2.lang = #{lang} and c2.group_code = 'ANL_COL_TYPE_CD'
+		where ${strSVCType} 
+		<!-- and ${strWhere} -->
+		<!-- and c.accnt_id = #{accountId}  -->
+		and c.flag = 1
+		and c.TBL_ID = #{tableId}
+		<!-- ORDER BY ${strOrderby}
+		${strEndPaging} -->
+    </select>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableAddColList)
+    ============================================
+    -   제목                   : 컬럼정보 상세조회
+    -   설명                   : 컬럼정보 상세조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectTableAddColList" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableColListReqDto" 
+     												resultType="com.icignal.kepler.operation.dto.response.KprGetTableColListResDto">
+    	/* KPROperation.selectTableAddColList */
+		select
+              c.ID 					as colId
+    		, c.col_nm 				as colNm
+    		, c.PK_YN 				as pkYn
+    		, c1.code_name 		as dataTypeCd
+    		, c.LEN 					as len
+    		, c.NULL_YN 			as nullYn
+    		, c.DEFT_VAL 		as deftVal
+    		, c.SEQ 					as seq
+    		, c.DP_NM 				as dpNm
+    		, c2.code_name 		as colTypeCd
+    		, c.tbl_id 				as tableId
+		from anl.anl_column_mst c WITH (NOLOCK)
+		join anl.anl_table_mst t WITH (NOLOCK) on c.TBL_ID = t.ID and t.FLAG = 1 
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c.DATA_TYPE_CD = c1.code_name and c1.lang = #{lang} and c1.group_code = 'DB_DATA_TYPE_CD'
+		left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c.COL_TYPE_CD = c2.code_name and c2.lang = #{lang} and c2.group_code = 'ANL_COL_TYPE_CD'
+		where ${strSVCType} 
+		<!-- and c.accnt_id = #{accountId}  -->
+		and c.flag = 1
+		<if test="tableId != null and tableId != ''">
+		and c.TBL_ID = #{tableId}
+		</if>
+        <if test="colId != null and colId != ''">
+        and c.ID = #{colId}
+        </if>
+        <if test="colTypeCd != null and colTypeCd != ''">
+        and c.COL_TYPE_CD = #{colTypeCd}
+        </if>
+    </select>
+    
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTblColNmChk)
+    ============================================
+    -   제목                   : 컬럼명 중복체크
+    -   설명                   : 컬럼명 중복체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectTblColNmChk" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableColListReqDto" 
+     											resultType="com.icignal.kepler.operation.dto.response.KprGetTableColListResDto">
+    	/* KPROperation.selectTblColNmChk */
+		select count(*) as cnt 
+		from anl.anl_column_mst
+		where ${strSVCType} 
+		<!-- and accnt_id = #{accountId}  -->
+		and flag = 1
+		and col_nm = #{colNm} 
+		and tbl_id = #{tableId}
+    </select>
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setTableAddColList)
+    ============================================
+    -   제목                   : 컬럼정보 저장
+    -   설명                   : 컬럼정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<insert id="insertTableAddColList" parameterType="com.icignal.kepler.operation.dto.request.KprSetTableAddColReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertTableAddColList */
+		insert into anl.anl_column_mst
+		(ID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		<!-- , COUNTRY
+		, APP_SERVICE_TYPE
+		, ACCNT_ID -->
+		, FLAG
+		, TBL_ID
+		, col_nm
+		, PK_YN
+		, DATA_TYPE_CD
+		, LEN
+		, NULL_YN 
+		, SEQ
+		, DEFT_VAL
+		, dp_nm
+		, COL_TYPE_CD
+		)
+		values
+		( #{colId}
+		, #{createBy}
+		, #{modifyBy}
+		, getDate()
+		, getDate()
+		<!-- , #{country}
+		, #{appServiceId}
+		, #{accountId} -->
+		, 1
+		, #{tableId}
+		, #{colNm}
+		, #{pkYn}
+		, #{dataTypeCd} 
+		, #{len}
+		, #{nullYn}
+		, #{seq}
+		, #{deftVal}
+		, #{dpNm}
+		, #{colTypeCd} 
+		)
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String">
+            select id from anl.anl_column_mst where id = #{colId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey>	 -->	
+	</insert>
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editTableAddColList)
+    ============================================
+    -   제목                   : 컬럼정보 수정
+    -   설명                   : 컬럼정보 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<update id="updateTableAddColList" parameterType="com.icignal.kepler.operation.dto.request.KprEditTableAddColReqDto">
+		/* KPROperation.updateTableAddColList */
+		update anl.anl_column_mst
+		set modify_by 	= #{modifyBy}
+		, modify_date 	= getDate()
+		, col_nm 			=  #{colNm}
+		, pk_yn 				= #{pkYn}
+		, data_type_cd 	=  #{dataTypeCd} 
+		, len 					= #{len}
+		, null_yn 			= #{nullYn}
+		, seq 					= #{seq}
+		, deft_val 			= #{deftVal}
+		, dp_nm  			= #{dpNm}
+		, col_type_cd 	= #{colTypeCd}
+		, MODIFY_YN 	= 'Y' 
+		where ID 			= #{colId} 
+		and tbl_id 			= #{tableId}
+	</update>
+		
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeTableAddColList)
+    ============================================
+    -   제목                   : 컬럼정보 삭제
+    -   설명                   : 컬럼정보 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->   
+    <delete id="deleteTableAddColList" parameterType="com.icignal.kepler.operation.dto.request.KprDelTableAddColReqDto">
+        /* KPROperation.deleteTableAddColList */
+		update anl.anl_column_mst
+		set MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = getDate()
+		, flag = flag + 1
+		where 1 = 1
+		<if test="colId.size() > 0">
+		and id in 
+			<foreach collection="colId" item="item" separator="," close=")" open="(">
+	           #{item}
+	        </foreach>
+	    </if>
+        <if test="colId != null and colId.size() > 0">
+           and tbl_id = #{tableId}
+         </if>
+    </delete> 
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (tableAddColDelChk)
+    ============================================
+    -   제목                   : 컬럼정보 삭제여부 체크
+    -   설명                   : 컬럼정보 삭제여부 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+    <select id="tableAddColDelChk" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableColListReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprGetTableColListResDto">
+        /* KPROperation.tableAddColDelChk */
+		SELECT case 
+		        when sum(a.cnt) &gt; 0 then 1
+		        else 0
+		       end as delFlag
+		FROM
+		    (select count(l.id) as cnt
+		    from anl.anl_column_mst c WITH (NOLOCK)
+		    join anl.anl_lgc_join_column l WITH (NOLOCK) on c.id = l.left_col_id and l.flag = 1
+		    where ${strSVCType}
+			and	c.FLAG		=  1
+			<!-- and	c.ACCNT_ID	=  #{accountId} -->
+			<if test="colId1.size != 0">
+			and c.id in 
+				<foreach collection="colId1" item="item" separator="," close=")" open="(">
+		    	#{colId1[]}
+		     	</foreach>
+		    </if>
+			and	c.tbl_id	    =  #{tableId}
+			) a
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableAdvance)
+    ============================================
+    -   제목                   : 테이블 고급설정 조회
+    -   설명                   : 테이블 고급설정 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+     <select id="selectTableAdvance" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableReqDto"
+     												resultType="com.icignal.kepler.operation.dto.response.KprGetTableResDto">
+    	/* KPROperation.selectTableAdvance */
+		select id as tableId
+		, PCTFREE as pctFree
+		, INITRANS as initRans
+		, MAXTRANS as maxTrans
+		, INITIAL as initIal
+		, NEXT as next
+		, MINEXTENTS as minExtents
+		from anl.anl_table_mst
+		where ${strSVCType} 
+		<!-- and accnt_id = #{accountId}  -->
+		and flag = 1
+		and id = #{tableId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editTableAdvance)
+    ============================================
+    -   제목                   : 고급설정 수정
+    -   설명                   : 고급설정 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<update id="updateTableAdvance" parameterType="com.icignal.kepler.operation.dto.request.KprEditTableAdvanceReqDto">
+		/* KPROperation.updateTableAdvance */
+		update anl.anl_table_mst
+		set MODIFY_BY 	= #{modifyBy}
+		, MODIFY_DATE 	= getDate()
+		, PCTFREE 			= #{pctfree}
+		, INITRANS 		= #{initrans}
+		, MAXTRANS 		= #{maxtrans}
+		, INITIAL 			= #{initial}
+		, NEXT 				= #{next}
+		, MINEXTENTS 	= #{minextents}
+		where ID			= #{tableId}
+	</update>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getDbType)
+    ============================================
+    -   제목                   : DB유형 조회
+    -   설명                   : DB유형 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<select id="selectDbType" parameterType="com.icignal.kepler.operation.dto.request.KprDbRegistReqDto" 
+										resultType="com.icignal.kepler.operation.dto.response.KprDbRegistResDto">
+        /* KPROperation.selectDbType */
+		select c.mark_name as conDbType
+        from anl.anl_db_inform d WITH (NOLOCK)
+        left outer join com.comm_code c WITH (NOLOCK) on c.flag = 1 and d.con_db_type = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_DB_TYPE_CD'
+		where ${strSVCType}
+		and	d.flag		=  1
+		<!-- and	d.accnt_id	=  #{accountId} -->
+        and   d.id = #{dbInformId}
+    </select>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableAddColSeq)
+    ============================================
+    -   제목                   : 컬럼순서조회
+    -   설명                   : 컬럼순서조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<select id="selectColSeq" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableColListReqDto" 
+										resultType="com.icignal.kepler.operation.dto.response.KprGetTableColListResDto">
+        /* KPROperation.selectColSeq */
+		select ISNULL(max(c.seq),0)+1 as seq 
+		  from anl.anl_column_mst c  
+		  where ${strSVCType} 
+			<!-- and c.accnt_id = #{accountId} --> 
+			and c.flag = 1
+			and c.TBL_ID = #{tableId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIdxList)
+    ============================================
+    -   제목                   : 인덱스 조회
+    -   설명                   : 인덱스 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectIdxList" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxListReqDto" 
+     									resultType="com.icignal.kepler.operation.dto.response.KprGetIdxListResDto">
+    	/* KPROperation.selectIdxList */
+		select ${strColumn}
+			, m.ID as idxId
+			, m.IDX_NM as idxNm
+			, m.TBL_SPACE_NM as tblSpaceNm
+			, m.UNQ_YN  as unqYn
+		from anl.anl_index_mst m 
+		where ${strSVCType} 
+		and ${strWhere}
+		<!-- and m.accnt_id = #{accountId}  -->
+		and m.flag = 1
+		and m.tbl_id = #{tableId}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIdxNmChk)
+    ============================================
+    -   제목                   : 인덱스명 중복체크
+    -   설명                   : 인덱스명 중복체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectIdxNmChk" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxListReqDto" 
+     										resultType="com.icignal.kepler.operation.dto.response.KprGetIdxListResDto">
+    	/* KPROperation.selectIdxNmChk */
+		select count(idx_nm) as cnt
+		from anl.anl_index_mst 
+		where ${strSVCType} 
+		<!-- and accnt_id = #{accountId}  -->
+		and flag = 1
+		and idx_nm = #{idxNm} 
+		and tbl_id = #{tableId}
+    </select>
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIdxInform)
+    ============================================
+    -   제목                   : 인덱스정보 상세조회
+    -   설명                   : 인덱스정보 상세조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+      <select id="selectIdxInform" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxListReqDto" 
+      										resultType="com.icignal.kepler.operation.dto.response.KprGetIdxListResDto">
+    	/* KPROperation.selectIdxInform */
+		select 
+			m.ID 						as idxId
+			, m.IDX_NM 				as idxNm
+			, m.TBL_SPACE_NM 	as tblSpaceNm
+			, m.UNQ_YN  			as unqYn
+		from anl.anl_index_mst m
+		where ${strSVCType} 
+		<!-- and m.accnt_id = #{accountId}  -->
+		and m.flag = 1
+		and m.tbl_id = #{tableId}
+		and m.id = #{idxId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setIdxList)
+    ============================================
+    -   제목                   : 인덱스정보 저장
+    -   설명                   : 인덱스정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<insert id="insertIndexList" parameterType="com.icignal.kepler.operation.dto.request.KprSetIdxListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertIndexList */
+		insert into anl.anl_index_mst
+		(ID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		<!-- , COUNTRY
+		, APP_SERVICE_TYPE
+		, ACCNT_ID -->
+		, FLAG
+		, TBL_ID
+		, IDX_NM
+		, TBL_SPACE_NM
+		, UNQ_YN
+		)
+		values
+		( #{idxId}
+		, #{createBy}
+		, #{modifyBy}
+		, getDate()
+		, getDate()
+		<!-- , #{country}
+		, #{appServiceId}
+		, #{accountId} -->
+		, 1
+		, #{tableId}
+		, #{idxNm}
+		, #{tblSpaceNm}
+		, #{unqYn}
+		)
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String">
+            select id from anl.anl_index_mst where id = #{idxId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+        </selectKey> -->		
+	</insert>
+ 	
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editIdxList)
+    ============================================
+    -   제목                   : 인덱스정보 수정
+    -   설명                   : 인덱스정보 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<update id="updateIndexList" parameterType="com.icignal.kepler.operation.dto.request.KprEditIdxListReqDto">
+		/* KPROperation.updateIndexList */
+		update anl.anl_index_mst
+		set MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = getDate()
+		, IDX_NM = #{idxNm}
+		, TBL_SPACE_NM = #{tblSpaceNm}
+		, UNQ_YN = #{unqYn}
+		where ID = #{idxId}
+		and tbl_id = #{tableId}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeIdxList)
+    ============================================
+    -   제목                   : 인덱스정보 삭제
+    -   설명                   : 인덱스정보 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->    
+    <delete id="deleteIndexList" parameterType="com.icignal.kepler.operation.dto.request.KprDelIdxListReqDto">
+        /* KPROperation.deleteIndexList */
+		update anl.anl_index_mst
+		set MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = getDate()
+		, flag = flag + 1
+		where 1 = 1
+		<if test="idxId.size() > 0">
+		and id in 
+			<foreach collection="idxId" item="item" separator="," close=")" open="(">
+      	     #{item}
+      	    </foreach>
+      	</if>
+        <if test="idxId != null and idxId.size() > 0">
+        and tbl_id = #{tableId}
+        </if>
+    </delete>     
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIdxColList)
+    ============================================
+    -   제목                   : 인덱스 컬럼정보 조회
+    -   설명                   : 인덱스 컬럼정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+     <select id="selectIdxColList" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxColListReqDto" 
+     											resultType="com.icignal.kepler.operation.dto.response.KprGetIdxColListResDto">
+    	/* KPROperation.selectIdxColList */
+		select ${strColumn}
+			, c.ID as idxColId
+			, c.col_nm as colNm
+			, c1.mark_name as orderTypeCd
+			, c.SEQ  as seq
+		from anl.anl_index_column c WITH (NOLOCK)
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c.ORDER_TYPE_CD = c1.code_name and c1.lang = #{lang} and c1.group_code= 'ANL_ORDER_TYPE_CD'
+		where ${strSVCType} 
+		and ${strWhere}
+		<!-- and c.accnt_id = #{accountId}  -->
+		and c.flag = 1
+		and c.idx_id = #{idxId}
+		ORDER BY ${strOrderby}
+		${strEndPaging}	
+    </select>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIdxColNmChk)
+    ============================================
+    -   제목                   : 인덱스 컬럼명 중복체크
+    -   설명                   : 인덱스 컬럼명 중복체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<select id="selectIdxColNmChk" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxColListReqDto" 
+												resultType="com.icignal.kepler.operation.dto.response.KprGetIdxColListResDto">
+    	/* KPROperation.selectIdxColNmChk */
+		select count(col_nm) as cnt
+		from anl.anl_index_column 
+		where ${strSVCType} 
+		<!-- and accnt_id = #{accountId}  -->
+		and flag = 1
+		and col_nm = #{colNm} 
+		and idx_id = #{idxId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIdxColInform)
+    ============================================
+    -   제목                   : 인덱스 컬럼정보 상세조회
+    -   설명                   : 인덱스 컬럼정보 상세조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+     <select id="selectIdxColInform" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxColListReqDto" 
+     											resultType="com.icignal.kepler.operation.dto.response.KprGetIdxColListResDto">
+    	/* KPROperation.selectIdxColInform */
+		select c.ID		 	as idxColId
+		, c.col_nm 			as colNm
+		, c1.code_name as orderTypeCd
+		, c.SEQ 				as seq
+		from anl.anl_index_column c WITH (NOLOCK)
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c.ORDER_TYPE_CD = c1.code_name and c1.lang = #{lang} and c1.group_code = 'ANL_ORDER_TYPE_CD'
+		where ${strSVCType} 
+		<!-- and c.accnt_id = #{accountId} --> 
+		and c.flag = 1
+		and c.idx_id = #{idxId}
+		and c.id = #{idxColId}
+    </select>
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setIdxColList)
+    ============================================
+    -   제목                   : 인덱스 컬럼정보 저장
+    -   설명                   : 인덱스 컬럼정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<insert id="insertIndexColList" parameterType="com.icignal.kepler.operation.dto.request.KprSetIdxColListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertIndexColList */
+		insert into anl.anl_index_column
+		(ID
+		, CREATE_BY
+		, MODIFY_BY
+		, CREATE_DATE
+		, MODIFY_DATE
+		<!-- , COUNTRY
+		, APP_SERVICE_TYPE
+		, ACCNT_ID -->
+		, FLAG
+		, IDX_ID
+		, COL_NM
+		, ORDER_TYPE_CD
+		, SEQ
+		)
+		values
+		( #{idxColId}
+		, #{createBy}
+		, #{modifyBy}
+		, getDate()
+		, getDate()
+		, 1
+		, #{idxId}
+		, #{colNm}
+		, #{orderTypeCd} 
+		, #{seq}
+		)
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_index_column where id = #{idxColId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+<!--         </selectKey>		 -->
+	</insert>
+ 	
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editIdxColList)
+    ============================================
+    -   제목                   : 인덱스 컬럼정보 수정
+    -   설명                   : 인덱스 컬럼정보 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ --> 
+	<update id="updateIndexColList" parameterType="com.icignal.kepler.operation.dto.request.KprEditIdxColListReqDto">
+		/* KPROperation.updateIndexColList */
+		update anl.anl_index_column
+		set MODIFY_BY 			= #{modifyBy}
+		, MODIFY_DATE 			= getDate()
+		, COL_NM 					= #{colNm}
+		, ORDER_TYPE_CD 	= #{orderTypeCd} 
+		, SEQ  						= #{seq}
+		where ID 					= #{idxColId}
+		and IDX_ID 				= #{idxId}
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeIdxColList)
+    ============================================
+    -   제목                   : 인덱스 컬럼정보 삭제
+    -   설명                   : 인덱스 컬럼정보 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->    
+    <delete id="deleteIndexColList" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxColListReqDto">
+        /* KPROperation.deleteIndexColList */
+		update anl.anl_index_column
+		set MODIFY_BY = #{modifyBy}
+		, MODIFY_DATE = getDate()
+		, flag = flag + 1
+		where 1 = 1
+		<if test="idxColId != null and idxColId.size() > 0">
+		and id in <foreach collection="idxColId" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+        	and idx_id = #{idxId}
+        </if>
+        <if test="idxId1 != null and idxId1.size( > 0)">
+		and idx_id in <foreach collection="idxId1" item="item" separator="," close=")" open="(">
+           #{idxId1[]}
+        </foreach>
+        </if>
+    </delete>       
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getIdxAdvance)
+    ============================================
+    -   제목                   : 인덱스 고급설정 조회
+    -   설명                   : 인덱스 고급설정 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectIdxAdvance" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxListReqDto" 
+     											resultType="com.icignal.kepler.operation.dto.response.KprGetIdxListResDto">
+    	/* KPROperation.selectIdxAdvance */
+		select id as idxId
+			, pctfree
+			, initrans
+			, maxtrans
+			, initial
+			, next
+			, minextents
+			, maxextents
+			, buffer_pool as bufferPool
+			, logging_yn as loggingYn
+			, compress_yn as compressYn
+			, parallel_yn as parallelYn
+		from anl.anl_index_mst 
+		where ${strSVCType} 
+		<!-- and accnt_id = #{accountId}  -->
+		and flag = 1
+		and id = #{idxId}
+    </select>    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editIdxAdvance)
+    ============================================
+    -   제목                   : 인덱스 고급설정 수정
+    -   설명                   : 인덱스 고급설정 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<update id="updateIdxAdvance" parameterType="com.icignal.kepler.operation.dto.request.KprEditIdxAdvanceReqDto">
+		/* KPROperation.updateIdxAdvance */
+		update anl.anl_index_mst
+		set MODIFY_BY = #{modifyBy}
+			, MODIFY_DATE = getDate()
+			, PCTFREE = #{pctfree}
+			, INITRANS = #{initrans}
+			, MAXTRANS = #{maxtrans}
+			, INITIAL = #{initial}
+			, NEXT = #{next}
+			, MINEXTENTS = #{minextents}
+			, MAXEXTENTS = #{maxextents}
+			, BUFFER_POOL = #{bufferPool}
+			, LOGGING_YN = #{loggingYn}
+			, COMPRESS_YN = #{compressYn}
+			, PARALLEL_YN = #{parallelYn}
+		where ID = #{idxId}
+	</update>    
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getCreatTblCol)
+    ============================================
+    -   제목                   : 컬럼정보 생성데이터 조회
+    -   설명                   : 컬럼정보 생성데이터 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+     <select id="selectCreatTableColList" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableColListReqDto" 
+     													resultType="com.icignal.kepler.operation.dto.response.KprGetTableColListResDto">
+    	/* KPROperation."selectCreatTableColList" */
+		select  ${strColumn}
+			, c.ID as colId
+			, c.col_nm as colNm
+			, c.PK_YN as pkYn
+			, c1.mark_name as dataTypeCd
+			, c.LEN as len
+			, c.NULL_YN as nullYn
+			, c.DEFT_VAL as deftVal
+			, c.DP_NM as dpNm
+			, c2.mark_name as colTypeCd
+		from anl.anl_column_mst c WITH (NOLOCK)
+		join anl.anl_table_mst t WITH (NOLOCK) on c.TBL_ID = t.ID and t.FLAG = 1 
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c.DATA_TYPE_CD = c1.code_name and c1.lang = #{lang} and c1.group_code = 'DB_DATA_TYPE_CD'
+		left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c.COL_TYPE_CD = c2.code_name and c2.lang = #{lang} and c2.group_code = 'ANL_COL_TYPE_CD'
+		where ${strSVCType} 
+		<!-- and c.accnt_id = #{accountId}  -->
+		and c.flag = 1
+		and c.TBL_ID = #{tableId}
+		ORDER BY c.seq asc
+    </select>	 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getCreatIdxCol)
+    ============================================
+    -   제목                   : 인덱스 컬럼 생성데이터 조회
+    -   설명                   : 인덱스 컬럼 생성데이터 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectCreatIdxColList" parameterType="com.icignal.kepler.operation.dto.request.KprGetIdxColListReqDto" 
+    												resultType="com.icignal.kepler.operation.dto.response.KprGetIdxColListResDto">
+    	/* KPROperation.selectCreatIdxColList */
+		select c.ID as idxColId
+			, c.col_nm as colNm
+			, c1.mark_name as orderTypeCd
+			, c.SEQ  as seq
+		from anl.anl_index_column c WITH (NOLOCK) 
+		left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c.ORDER_TYPE_CD = c1.code_name and c1.lang = #{lang} and c1.group_code = 'ANL_ORDER_TYPE_CD'
+		where ${strSVCType} 
+		<!-- and c.accnt_id = #{accountId}  -->
+		and c.flag = 1
+		and c.idx_id = #{idxId}
+		order by c.seq asc
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSourceTreeMySqlData)
+    ============================================
+    -   제목                   : Source테이블 조회
+    -   설명                   : Source테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectSourceTreeMysqlList" parameterType="com.icignal.kepler.operation.dto.request.KprTableImportTreeReqDto" 
+    													resultType="com.icignal.kepler.operation.dto.response.KprTableImportTreeResDto">
+    	/* KPROperation.selectSourceTreeMysqlList */
+    	select (
+		"select TABLE_SCHEMA as parentId
+			, table_name as id
+			, TABLE_NAME as text
+			, table_name as tblNm
+			, TABLE_SCHEMA as schmaNm
+			, '' as nodeType
+            , TABLE_COMMENT as comment
+		from information_schema.tables
+        where TABLE_SCHEMA != 'information_schema'
+        
+		union all
+		
+        select distinct '' as parentId
+			, TABLE_SCHEMA as id
+			, TABLE_SCHEMA as text
+			, '' as tblNm 
+			, '' as schmaNm
+			, 'F' as nodeType 
+            , '' as comment
+		from information_schema.tables 
+        where TABLE_SCHEMA != 'information_schema'
+        ") as mySql
+		from dual
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSourceTreeOracleData)
+    ============================================
+    -   제목                   : Source테이블 조회(oracle)
+    -   설명                   : Source테이블 조회(oracle)
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <!-- 2017. 10. 12. 이기오 수정. TABLE, VIEW 둘 다 조회하도록 수정 -->
+    <select id="selectSourceTreeOracleList" parameterType="com.icignal.kepler.operation.dto.request.KprTableImportTreeReqDto" 
+    														resultType="com.icignal.kepler.operation.dto.response.KprTableImportTreeOracleResDto">
+        /* KPROperation.WITH (NOLOCK) */
+		select 'select parentId	as "parentId"
+					 , id		as "id"
+					 , text		as "text"
+					 , tblNm	as "tblNm"
+					 , schmaNm	as "schmaNm"
+					 , nodeType	as "nodeType"
+				  from (
+					select t1.owner			as parentId
+						 , t1.object_name	as id
+						 , concat(t1.object_name
+						   , ''(''
+						   , t2.comments
+						   , '')'')			as text
+						 , t1.object_name   as tblNm
+						 , t1.owner			as schmaNm
+						 , null				as nodeType
+					  from all_objects		t1
+					  join all_tab_comments	t2 on t1.owner = t2.owner and t1.object_name = t2.table_name
+					 where t1.owner		not in (''SYS'', ''SYSTEM'')
+					   and t1.object_type	in (''TABLE'', ''VIEW'')
+					 order by t1.owner asc, t1.object_name asc
+				)
+				union all
+				select distinct null	as "parentId"
+					 , owner			as "id"
+					 , owner			as "text"
+					 , null             as "tblNm"
+					 , null				as "schmaNm"
+					 , ''F''			as "nodeType"
+				  from all_tables'		as "oracleSql"
+		  from dual
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTargetTreeData)
+    ============================================
+    -   제목                   : 주제영역 조회
+    -   설명                   : 주제영역 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectTargetTreeList" parameterType="com.icignal.kepler.operation.dto.request.KprTableImportTreeReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprTableImportTreeResDto">
+    	/* KPROperation.selectTargetTreeList */
+		select sdr.ID as id
+			, sa.SUBJECT_AREA_NM as text
+			, '' as parentId 
+			, '' as schmaNm
+			, 'F' as nodeType
+		from anl.anl_subject_area sa WITH (NOLOCK)
+		join anl.anl_subject_db_rel sdr WITH (NOLOCK) on sdr.SUBJECT_AREA_ID = sa.id and sdr.FLAG = 1
+		join anl.anl_db_inform di WITH (NOLOCK) on di.ID = sdr.DB_ID and di.FLAG = 1 
+		where ${strSVCType} 
+		and sa.flag = 1
+		<!-- and sa.accnt_id = #{accountId} -->
+		and di.id = #{dbInformId}
+		order by sdr.seq asc
+	</select>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableColImport)
+    ============================================
+    -   제목                   : 테이블 컬럼 Import데이터 조회
+    -   설명                   : 테이블 컬럼 Import데이터 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectTableColImport" parameterType="com.icignal.kepler.operation.dto.request.KprTableColImportReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprTableColImportResDto">
+    	/* KPROperation.selectTableColImport */
+		select 
+              COLUMN_NAME as colNm
+			, ORDINAL_POSITION as seq
+			, COLUMN_COMMENT as dpNm
+			, case when IS_NULLABLE = 'YES' then 'Y' else 'N' end as nullYn
+			, case when column_key  = 'PRI' then 'Y' else 'N' end as pkYn
+			, DATA_TYPE as dataTypeCd
+			, CASE WHEN len(CHARACTER_MAXIMUM_LENGTH) &gt; 0 THEN CHARACTER_MAXIMUM_LENGTH ELSE NUMERIC_PRECISION END as len
+			, COLUMN_DEFAULT as deftVal
+		from information_schema.columns 
+		where TABLE_SCHEMA = #{schmaNm}
+		and TABLE_NAME = #{tblNm}
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setTableImport)
+    ============================================
+    -   제목                   : Import 테이블정보 저장
+    -   설명                   : Import 테이블정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ============================================
+    -   수정자             : jh.kim
+    -   수정일             : 2017.07.26
+    -   설명               : select 없이 받은 parameter를 insert 하도록 수정. 
+    ***************************************/ -->
+ 	<insert id="insertTableImport" parameterType="com.icignal.kepler.operation.dto.request.KprSetTableListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertTableImport */
+		insert into anl.anl_table_mst (
+              ID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, CREATE_DATE
+    		, MODIFY_DATE
+    		<!-- , COUNTRY
+    		, APP_SERVICE_TYPE
+    		, ACCNT_ID -->
+    		, FLAG
+    		, SUBJECT_DB_REL_ID
+    		, DBMS_TYPE_CD
+    		, DP_NM
+    		, TBL_TYPE_CD
+    		, TBL_SPACE_NM
+    		, SCHMA_NM
+    		, TBL_NM
+    		, IMPORT_YN
+		)
+        values (
+              #{tableId} 
+            , #{createBy} 
+            , #{modifyBy} 
+            , getDate()
+            , getDate()
+            , 1
+            , #{subjectDbRelId}
+            , (select con_db_type from anl.anl_db_inform where id = #{dbInformId} and flag =1)
+            , #{comment}
+            , #{tblTypeCd}
+            , #{engine}
+            , #{schmaNm}
+            , #{tblNm}
+            , 'Y'
+        )
+        
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_table_mst where id = #{tableId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+<!--         </selectKey>		 -->
+	</insert>
+        
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setTableColImport)
+    ============================================
+    -   제목                   : Import 테이블 컬럼정보 저장
+    -   설명                   : Import 테이블 컬럼정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+	<insert id="insertTableColImport" parameterType="com.icignal.kepler.operation.dto.request.KprSetTableAddColReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertTableColImport */
+		insert into anl.anl_column_mst (
+              ID
+    		, CREATE_BY
+    		, MODIFY_BY
+    		, CREATE_DATE
+    		, MODIFY_DATE
+    		, FLAG
+    		, TBL_ID
+    		, col_nm
+    		, PK_YN
+    		, DATA_TYPE_CD
+    		, LEN
+    		, NULL_YN 
+    		, SEQ
+    		, DEFT_VAL
+    		, dp_nm
+    		, COL_TYPE_CD
+		) 
+        values ( 
+              #{colId}
+    		, #{createBy}
+    		, #{modifyBy}
+    		, getDate()
+    		, getDate()
+    		, 1
+    		, #{tableId}
+    		, #{colNm}
+            , #{pkYn}
+    	    , #{dataTypeCd} 
+            , #{len}
+    	    , #{nullYn}
+            , #{seq} 
+    	    , #{deftVal}
+    		, #{dpNm}
+            , #{colTypeCd}
+        )
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_column_mst where id = #{colId} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+<!--         </selectKey>		 -->
+	</insert>
+
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (tableLgcChk)
+    ============================================
+    -   제목                   : 테이블 L.C 사용유무 체크
+    -   설명                   : 테이블 L.C 사용유무 체크
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="tableLgcChk" parameterType="com.icignal.kepler.operation.dto.request.KprTableMstListReqDto" 
+    									resultType="com.icignal.kepler.operation.dto.response.KprTableMstListResDto">
+        /* KPROperation.tableLgcChk */
+ 		SELECT case 
+		        when sum(a.cnt) &gt; 0 then 1
+		        else 0
+		       end as cnt
+		FROM
+		    (
+            SELECT count(t.id) as cnt
+		    FROM anl.anl_table_mst c WITH (NOLOCK)
+		    JOIN anl.anl_lgc_comp_table_rel t WITH (NOLOCK) on c.ID = t.tbl_id and t.FLAG = 1
+			where ${strSVCType}
+			and c.FLAG			=  1
+			<!-- and c.ACCNT_ID	=  #{accountId} -->
+			and c.tbl_nm 		=  #{tblNm}
+			and c.SCHMA_NM = #{schmaNm}
+			) a
+    </select>
+  
+  	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeTableColumn)
+    ============================================
+    -   제목                   : 테이블 컬럼정보 삭제
+    -   설명                   : 테이블 컬럼정보 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <delete id="removeTableColumn" parameterType="com.icignal.kepler.operation.dto.request.KprDelTableReqDto">
+        /* KPROperation.removeTableColumn */
+		update anl.anl_column_mst 
+		set modify_by = #{modifyBy}
+		  , modify_date = getDate()
+		  , flag = flag + 1
+	  where TBL_ID in (select id 
+                       from anl.anl_table_mst 
+                       where SCHMA_NM = #{schmaNm} 
+                       and tbl_nm = #{tblNm} 
+                       and flag = 1
+                       )
+    </delete>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (removeTable)
+    ============================================
+    -   제목                   : 테이블 정보 삭제
+    -   설명                   : 테이블 정보 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <delete id="removeTable" parameterType="com.icignal.kepler.operation.dto.request.KprDelTableReqDto">
+    /*  SystemOperationMapper.removeTable */
+		update anl.anl_table_mst
+		set modify_by = #{modifyBy}
+		  , modify_date = getDate()
+		  , flag = flag + 1 
+		where SCHMA_NM = #{schmaNm} 
+		and tbl_nm = #{tblNm} 
+		and flag = 1
+    </delete>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setTableCreat)
+    ============================================
+    -   제목                   : 서비스정보 조회
+    -   설명                   : 서비스정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectDBInfo" parameterType="com.icignal.kepler.operation.dto.request.KprOperationListReqDto" 
+    									resultType="com.icignal.kepler.operation.dto.response.KprOperationListResDto">
+        /* SystemOperationMapper.selectDBInfo */
+        select 
+        	   di.id 				as dbInformId
+        	 , di.con_ip 		as conIp
+        	 , di.con_port 	as conPort
+        	 , di.con_id 		as conId
+        	 , di.con_pw 		as conPw
+        	 , di.con_url 		as conUrl
+        	 , c.code_name  as conDbType
+        	 , c.attrib01 		as conDbClass
+        	 , di.AWS_SECRET_NM as secretNm
+        from anl.anl_db_inform di WITH (NOLOCK)
+        join com.comm_code c WITH (NOLOCK) on c.flag = 1 and c.lang = #{lang} and c.code_name = di.con_db_type and c.group_code = 'ANL_DB_TYPE_CD'
+        where di.id = #{dbInformId}
+        and di.flag = 1
+        OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+    </select>    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getSubjectAreaNmRtn)
+    ============================================
+    -   제목                   : 주제영역명 리턴
+    -   설명                   : 주제영역명 리턴
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.07.14
+    ***************************************/ -->
+    <select id="selectSubjectAreaNmRtn" parameterType="com.icignal.kepler.operation.dto.request.KprSubjectAreaListReqDto" 
+    													resultType="com.icignal.kepler.operation.dto.response.KprSubjectAreaListResDto">
+        /* SystemOperationMapper.selectSubjectAreaNmRtn */
+		select sa.SUBJECT_AREA_NM as subjectAreaNm 
+		from anl.anl_subject_area sa WITH (NOLOCK)
+		join anl.anl_subject_db_rel sdr WITH (NOLOCK) on sa.id = sdr.SUBJECT_AREA_ID and sdr.flag = 1
+		where ${strSVCType} 
+		and sa.flag = 1
+		<!-- and sa.accnt_id = #{accountId} -->
+		and sdr.id = #{subjectDbRelId}
+    </select>   
+    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getAccountNm)
+    ============================================
+    -   제목                   : 어카운트명 조회
+    -   설명                   : 어카운트명 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectAccountComboList" parameterType="com.icignal.kepler.operation.dto.request.KprComboListReqDto" 
+    													resultType="com.icignal.kepler.operation.dto.response.KprComboListResDto">
+    	/* KPROperation.selectAccountComboList */
+    	select org_id as id
+    	     , name as text 
+    	from com.account 
+		WHERE  ${strSVCType}
+		and  flag = 1
+		<!-- and  id = #{accountId}  -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getMappingColInfo)
+    ============================================
+    -   제목                   : 테이블 컬럼정보 조회
+    -   설명                   : 테이블 컬럼정보 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectTableColInfo" parameterType="com.icignal.kepler.operation.dto.request.KprTableColInfoReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprTableColInfoResDto">
+    	/* KPROperation.selectTableColInfo */
+		select ORDINAL_POSITION as colId
+		, COLUMN_COMMENT as colNm 
+		from information_schema.columns  
+		where table_name  = #{tableNm}
+		and column_name != 'ACCNT_ID'
+		order by ORDINAL_POSITION asc
+    </select>  
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 회원 임시테이블 저장
+    -   설명                   : 회원 임시테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+ 	<insert id="insertCustList" parameterType="com.icignal.kepler.operation.dto.request.KprCustListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertCustList */
+		insert into brt.TMP_O_CUST11
+			(<!-- ACCNT_ID -->
+			ID
+			,MBR_ID
+			,MBR_NM
+			,MBR_YN
+			,AGE
+			,GNDR_CD
+			,BIRTH_DT
+			,ZIPCD
+			,ADDR1
+			,ADDR2
+			,FST_JOIN_DT
+			,FST_JOIN_STORE_ID
+			,RFM_GRD_CD
+			,DM_RECV_YN
+			,SMS_RECV_YN
+			,TM_RECV_YN
+			,EMAIL_RECV_YN
+			,HP_NUM
+			,EMAIL
+			,INFORM_MDF_DT
+			,WITHDRAW_DT
+			,EMP_YN
+			,FST_PUR_DT
+			,EMAIL_PUBLIC_YN
+			,ALARM_FAV_SITE_YN
+			,ALARM_MY_SITE_YN
+			,ALARM_JOIN_SITE_YN
+			,ALARM_POST_REPLY_YN
+			,ALARM_SITE_NOTICE_YN
+			,MBR_STS
+			,MBR_VALUE
+			,MBR_LC
+			,MBR_GRD
+			,MBR_GRW_TYPE
+			,MBR_STS_CHG_DT
+			,MILEAGE
+			,LST_PUR_DT
+		)values(
+			 <!--  #{accntId} -->
+			 #{id}
+			, #{mbrId}
+			, #{mbrNm}
+			, #{mbrYn}
+			, #{age}
+			, #{gndrCd}
+			, #{birthDt}
+			, #{zipcd}
+			, #{addr1}
+			, #{addr2}
+			, #{fstJoinDt}
+			, #{fstJoinStoreId}
+			, #{rfmGrdCd}
+			, #{dmRecvYn}
+			, #{smsRecvYn}
+			, #{tmRecvYn}
+			, #{emailRecvYn}
+			, #{hpNum}
+			, #{email}
+			, #{informMdfDt}
+			, #{withdrawDt}
+			, #{empYn}
+			, #{fstPurDt}
+			, #{emailPublicYn}
+			, #{alarmFavSiteYn}
+			, #{alarmMySiteYn}
+			, #{alarmJoinSiteYn}
+			, #{alarmPostReplyYn}
+			, #{alarmSiteNoticeYn}
+			, #{mbrSts}
+			, #{mbrValue}
+			, #{mbrLc}
+			, #{mbrGrd}
+			, #{mbrGrwType}
+			, #{mbrStsChgDt}
+			, #{mileage}
+			, #{lstPurDt}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+		select id
+		from brt.TMP_O_CUST
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey> -->
+	</insert> 
+	  
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매장 임시테이블 저장
+    -   설명                   : 매장 임시테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+ 	<insert id="insertStoreList" parameterType="com.icignal.kepler.operation.dto.request.KprStoreListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertStoreList */
+		insert into brt.TMP_O_STORE 
+		( <!-- ACCNT_ID -->
+		ID
+		,BRAND
+		,STORE_NM
+		,STORE_TYPE
+		,TEL_NO
+		,DEPT_ID
+		,PAR_ACCNT_ID
+		,ORG_ID
+		) values (
+		 <!--  #{accntId} -->
+		 #{id}
+		, #{brand}
+		, #{storeNm}
+		, #{storeType}
+		, #{telNo}
+		, #{deptId}
+		, #{parAccntId}
+		, #{orgId}
+		)
+		
+<!--  		<selectKey keyProperty="" resultType="java.lang.String">
+		select id 
+		from brt.TMP_O_STORE
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey>  -->
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출 임시테이블 저장
+    -   설명                   : 매출 임시테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+ 	<insert id="insertSalesList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertSalesList */
+		insert into brt.TMP_O_SALES
+		(<!-- ACCNT_ID -->
+		ID
+		,STORE_ID
+		,SALES_DT
+		,SALES_TYPE
+		,QTY
+		,TOT_SALES_AMT
+		,REAL_SALES_AMT
+		,TOT_DC_AMT
+		,SALES_EMP_ID
+		,CPN_NO
+		,MBR_ID
+		,OFFER_NO
+		)values(
+		<!-- #{accntId} -->
+		#{id}
+		,#{storeId}
+		,CONVERT(CHAR(8),#{salesDt},112)+REPLACE(CONVERT(CHAR(8),#{salesDt},108),':','')
+		,#{salesType}
+		,#{qty}
+		,#{totSalesAmt}
+		,#{realSalesAmt}
+		,#{totDcAmt}
+		,#{salesEmpId}
+		,#{cpnNo}
+		,#{mbrId}
+		,#{offerNo}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+		select ID
+		from brt.TMP_O_SALES
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey> -->		
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 임시테이블 저장
+    -   설명                   : 매출상세 임시테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+ 	<insert id="insertSalesDtlList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesDtlListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertSalesDtlList */
+		insert into brt.TMP_O_SALES_DTL
+		(<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,SALES_DT
+		,PROD_ID
+		,QTY
+		,PRC
+		,AMT
+		)values(
+		 <!-- #{accntId} -->
+		#{id}
+		,#{salesId}
+		,CONVERT(CHAR(8),#{salesDt},112)+REPLACE(CONVERT(CHAR(8),#{salesDt},108),':','')
+		,#{prodId}
+		,#{qty}
+		,#{prc}
+		,#{amt}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+		select ID
+		from brt.TMP_O_SALES_DTL
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey> -->
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 임시테이블 저장 
+    -   설명                   : 매출결제 임시테이블 저장 
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+ 	<insert id="insertSalesPayList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesPayListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertSalesPayList */
+		insert into brt.TMP_O_SALES_PAY
+		(<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,PAY_TYPE
+		,PAY_AMT
+		,DC_AMT
+		)values(
+		 <!-- #{accntId} -->
+		#{id}
+		,#{salesId}
+		,#{payType}
+		,#{payAmt}
+		,#{dcAmt}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+		select ID
+		from brt.TMP_O_SALES_PAY
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey> -->
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 임시테이블 저장 
+    -   설명                   : 맴버쉽카드 임시테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+ 	<insert id="insertCardList" parameterType="com.icignal.kepler.operation.dto.request.KprCardListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertCardList */
+		insert into brt.TMP_O_CARD
+		(<!-- ACCNT_ID -->
+		ID
+		,USE_YN
+		,ISSUE_DT
+		,CARD_NO
+		,BARCODE_NO
+		,QR_CD
+		,MBR_ID
+		)values(
+		<!--  #{accntId} -->
+		#{id}
+		,#{useYn}
+		,convert(char(8),#{issueDt},112)+REPLACE(CONVERT(CHAR(8),#{issueDt},108),':','')
+		,#{cardNo}
+		,#{barcodeNo}
+		,#{qrCd}
+		,#{mbrId}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+		select ID
+		from brt.TMP_O_CARD
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey> -->
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 임시테이블 저장 
+    -   설명                   : 매출마일리지 임시테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+ 	<insert id="insertSalesMileageList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesMileageListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertSalesMileageList */
+		insert into brt.TMP_O_SALES_MILEAGE
+		(<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,MILE_TYPE
+		,MILE_AMT
+		,CARD_ID
+		)values(
+		 <!-- #{accntId} -->
+		#{id}
+		,#{salesId}
+		,#{mileType}
+		,#{mileAmt}
+		,#{cardId}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+		select ID
+		from brt.TMP_O_SALES_MILEAGE
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey> -->
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 상품 임시테이블 저장 
+    -   설명                   : 상품 임시테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+ 	<insert id="insertProdList" parameterType="com.icignal.kepler.operation.dto.request.KprProdListReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertProdList */
+		insert into brt.TMP_O_PROD
+		(<!-- ACCNT_ID -->
+		ID
+		,PRD_CD
+		,PRD_NM
+		,BRAND
+		,PRD_LAR
+		,PRD_MID
+		,PRD_SML
+		)values(
+		<!-- #{accntId} -->
+		#{id}
+		,#{prdCd}
+		,#{prdNm}
+		,#{brand}
+		,#{prdLar}
+		,#{prdMid}
+		,#{prdSml}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+		select ID
+		from brt.TMP_O_PROD
+		WHERE ACCNT_ID = #{accntId}
+		and ID = #{id}
+		</selectKey> -->
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 회원 임시테이블 삭제
+    -   설명                   : 회원 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+	<delete id="deleteCustList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteCustList */
+		DELETE FROM brt.TMP_O_CUST
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 회원 테이블 삭제
+    -   설명                   : 회원 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+	<delete id="deleteReCustList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReCustList */
+		DELETE FROM brt.T_O_CUST
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 회원 테이블 저장
+    -   설명                   : 회원 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+  	<insert id="insertReCustList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertReCustList */
+		INSERT INTO brt.T_O_CUST (
+		<!-- ACCNT_ID -->
+		ID
+		,MBR_ID
+		,MBR_NM
+		,MBR_YN
+		,AGE
+		,GNDR_CD
+		,BIRTH_DT
+		,ZIPCD
+		,ADDR1
+		,ADDR2
+		,FST_JOIN_DT
+		,FST_JOIN_STORE_ID
+		,RFM_GRD_CD
+		,DM_RECV_YN
+		,SMS_RECV_YN
+		,TM_RECV_YN
+		,EMAIL_RECV_YN
+		,HP_NUM
+		,EMAIL
+		,INFORM_MDF_DT
+		,WITHDRAW_DT
+		,EMP_YN
+		,FST_PUR_DT
+		,EMAIL_PUBLIC_YN
+		,ALARM_FAV_SITE_YN
+		,ALARM_MY_SITE_YN
+		,ALARM_JOIN_SITE_YN
+		,ALARM_POST_REPLY_YN
+		,ALARM_SITE_NOTICE_YN
+		,MBR_STS
+		,MBR_VALUE
+		,MBR_LC
+		,MBR_GRD
+		,MBR_GRW_TYPE
+		,MBR_STS_CHG_DT
+		,MILEAGE
+		,LST_PUR_DT
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,MBR_ID
+		,MBR_NM
+		,MBR_YN
+		,AGE
+		,GNDR_CD
+		,BIRTH_DT
+		,ZIPCD
+		,ADDR1
+		,ADDR2
+		,FST_JOIN_DT
+		,FST_JOIN_STORE_ID
+		,RFM_GRD_CD
+		,DM_RECV_YN
+		,SMS_RECV_YN
+		,TM_RECV_YN
+		,EMAIL_RECV_YN
+		,HP_NUM
+		,EMAIL
+		,INFORM_MDF_DT
+		,WITHDRAW_DT
+		,EMP_YN
+		,FST_PUR_DT
+		,EMAIL_PUBLIC_YN
+		,ALARM_FAV_SITE_YN
+		,ALARM_MY_SITE_YN
+		,ALARM_JOIN_SITE_YN
+		,ALARM_POST_REPLY_YN
+		,ALARM_SITE_NOTICE_YN
+		,MBR_STS
+		,MBR_VALUE
+		,MBR_LC
+		,MBR_GRD
+		,MBR_GRW_TYPE
+		,MBR_STS_CHG_DT
+		,MILEAGE
+		,LST_PUR_DT
+		FROM brt.TMP_O_CUST
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 	
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 회원 임시테이블 중복값 제외 후 저장
+    -   설명                   : 회원 임시테이블 중복값 제외 후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+  	<insert id="insertNotInCustList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertNotInCustList */
+		INSERT INTO brt.T_O_CUST (
+		<!-- ACCNT_ID -->
+		ID
+		,MBR_ID
+		,MBR_NM
+		,MBR_YN
+		,AGE
+		,GNDR_CD
+		,BIRTH_DT
+		,ZIPCD
+		,ADDR1
+		,ADDR2
+		,FST_JOIN_DT
+		,FST_JOIN_STORE_ID
+		,RFM_GRD_CD
+		,DM_RECV_YN
+		,SMS_RECV_YN
+		,TM_RECV_YN
+		,EMAIL_RECV_YN
+		,HP_NUM
+		,EMAIL
+		,INFORM_MDF_DT
+		,WITHDRAW_DT
+		,EMP_YN
+		,FST_PUR_DT
+		,EMAIL_PUBLIC_YN
+		,ALARM_FAV_SITE_YN
+		,ALARM_MY_SITE_YN
+		,ALARM_JOIN_SITE_YN
+		,ALARM_POST_REPLY_YN
+		,ALARM_SITE_NOTICE_YN
+		,MBR_STS
+		,MBR_VALUE
+		,MBR_LC
+		,MBR_GRD
+		,MBR_GRW_TYPE
+		,MBR_STS_CHG_DT
+		,MILEAGE
+		,LST_PUR_DT
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,MBR_ID
+		,MBR_NM
+		,MBR_YN
+		,AGE
+		,GNDR_CD
+		,BIRTH_DT
+		,ZIPCD
+		,ADDR1
+		,ADDR2
+		,FST_JOIN_DT
+		,FST_JOIN_STORE_ID
+		,RFM_GRD_CD
+		,DM_RECV_YN
+		,SMS_RECV_YN
+		,TM_RECV_YN
+		,EMAIL_RECV_YN
+		,HP_NUM
+		,EMAIL
+		,INFORM_MDF_DT
+		,WITHDRAW_DT
+		,EMP_YN
+		,FST_PUR_DT
+		,EMAIL_PUBLIC_YN
+		,ALARM_FAV_SITE_YN
+		,ALARM_MY_SITE_YN
+		,ALARM_JOIN_SITE_YN
+		,ALARM_POST_REPLY_YN
+		,ALARM_SITE_NOTICE_YN
+		,MBR_STS
+		,MBR_VALUE
+		,MBR_LC
+		,MBR_GRD
+		,MBR_GRW_TYPE
+		,MBR_STS_CHG_DT
+		,MILEAGE
+		,LST_PUR_DT
+		FROM brt.TMP_O_CUST
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+		AND ID NOT IN (SELECT ID FROM brt.T_O_CUST WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 회원 테이블 수정
+    -   설명                   : 회원 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+	<update id="updateReCustList" parameterType="com.icignal.kepler.operation.dto.request.KprCustListReqDto">
+		/* KPROperation.updateReCustList */
+	  update brt.T_O_CUST
+		 set<!--  ACCNT_ID 		= #{accntId} -->
+			ID									= #{id}
+			,MBR_ID						= #{mbrId}
+			,MBR_NM						= #{mbrNm}
+			,MBR_YN						= #{mbrYn}
+			,AGE								= #{age}
+			,GNDR_CD						= #{gndrCd}
+			,BIRTH_DT						= #{birthDt}
+			,ZIPCD							= #{zipcd}
+			,ADDR1							= #{addr1}
+			,ADDR2							= #{addr2}
+			,FST_JOIN_DT				= #{fstJoinDt}
+			,FST_JOIN_STORE_ID	= #{fstJoinStoreId}
+			,RFM_GRD_CD				= #{rfmGrdCd}	
+			,DM_RECV_YN				= #{dmRecvYn}
+			,SMS_RECV_YN				= #{smsRecvYn}
+			,TM_RECV_YN				= #{tmRecvYn}
+			,EMAIL_RECV_YN			= #{emailRecvYn}
+			,HP_NUM						= #{hpNum}
+			,EMAIL							= #{email}
+			,INFORM_MDF_DT			= #{informMdfDt}
+			,WITHDRAW_DT				= #{withdrawDt}
+			,EMP_YN						= #{empYn}
+			,FST_PUR_DT					= #{fstPurDt}
+			,EMAIL_PUBLIC_YN		= #{emailPublicYn}
+			,ALARM_FAV_SITE_YN	= #{alarmFavSiteYn}
+			,ALARM_MY_SITE_YN		= #{alarmMySiteYn}
+			,ALARM_JOIN_SITE_YN	= #{alarmJoinSiteYn}
+			,ALARM_POST_REPLY_YN	= #{alarmPostReplyYn}
+			,ALARM_SITE_NOTICE_YN	= #{alarmSiteNoticeYn}
+			,MBR_STS						= #{mbrSts}
+			,MBR_VALUE					= #{mbrValue}
+			,MBR_LC						= #{mbrLc}
+			,MBR_GRD						= #{mbrGrd}
+			,MBR_GRW_TYPE			= #{mbrGrwType}
+			,MBR_STS_CHG_DT		= #{mbrStsChgDt}
+			,MILEAGE						= #{mileage}
+			,LST_PUR_DT					= #{lstPurDt}
+	   where  
+	   		ID = #{id}
+	   <!-- and ACCNT_ID = #{accntId} -->
+		 
+	</update>    
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매장 임시테이블 삭제
+    -   설명                   : 매장 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteStoreList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteStoreList */
+		DELETE FROM brt.TMP_O_STORE
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매장 테이블 삭제
+    -   설명                   : 매장 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+	<delete id="deleteReStoreList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReStoreList */
+		DELETE FROM brt.T_O_STORE
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매장 테이블 저장
+    -   설명                   : 매장 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ --> 
+  	<insert id="insertReStoreList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertReStoreList */
+		INSERT INTO brt.T_O_STORE (
+		<!-- ACCNT_ID -->
+		ID
+		,BRAND
+		,STORE_NM
+		,STORE_TYPE
+		,TEL_NO
+		,DEPT_ID
+		,PAR_ACCNT_ID
+		,ORG_ID
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,BRAND
+		,STORE_NM
+		,STORE_TYPE
+		,TEL_NO
+		,DEPT_ID
+		,PAR_ACCNT_ID
+		,ORG_ID
+		FROM brt.TMP_O_STORE
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 	
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매장 임시테이블 중복값 제외후 저장
+    -   설명                   : 매장 임시테이블 중복값 제외후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertNotInStoreList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertNotInStoreList */
+		INSERT INTO brt.T_O_STORE (
+		<!-- ACCNT_ID -->
+		ID
+		,BRAND
+		,STORE_NM
+		,STORE_TYPE
+		,TEL_NO
+		,DEPT_ID
+		,PAR_ACCNT_ID
+		,ORG_ID
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,BRAND
+		,STORE_NM
+		,STORE_TYPE
+		,TEL_NO
+		,DEPT_ID
+		,PAR_ACCNT_ID
+		,ORG_ID
+		FROM brt.TMP_O_STORE
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+		AND ID NOT IN (SELECT ID FROM brt.T_O_STORE WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매장 테이블 수정
+    -   설명                   : 매장 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<update id="updateReStoreList" parameterType="com.icignal.kepler.operation.dto.request.KprStoreListReqDto">
+		/* KPROperation.updateReStoreList */
+	  update brt.T_O_STORE
+		 set <!-- ACCNT_ID 		= #{accntId}  -->
+			ID						= #{id}
+			,BRAND				= #{brand}
+			,STORE_NM		= #{storeNm}
+			,STORE_TYPE		= #{storeType}
+			,TEL_NO			= #{telNo}
+			,DEPT_ID			= #{deptId}
+			,PAR_ACCNT_ID	= #{parAccntId}
+			,ORG_ID			= #{orgId}
+	   where ID 				= #{id}
+	    <!-- and ACCNT_ID 		= #{accntId} -->
+		  
+	</update>	
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출 임시테이블 삭제
+    -   설명                   : 매출 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteSalesList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteSalesList */
+		DELETE FROM brt.TMP_O_SALES
+		WHERE 1=1 <!--  ACCNT_ID =  #{accountId} -->
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출 테이블 삭제
+    -   설명                   : 매출 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteReSalesList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReSalesList */
+		DELETE FROM brt.T_O_SALES
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출 테이블 저장
+    -   설명                   : 매출 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertReSalesList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertReSalesList */
+		INSERT INTO brt.T_O_SALES (
+		<!-- ACCNT_ID -->
+		ID
+		,STORE_ID
+		,SALES_DT
+		,SALES_TYPE
+		,QTY
+		,TOT_SALES_AMT
+		,REAL_SALES_AMT
+		,TOT_DC_AMT
+		,SALES_EMP_ID
+		,CPN_NO
+		,MBR_ID
+		,OFFER_NO
+		)
+		select
+		<!-- ACCNT_ID -->
+		ID
+		,STORE_ID
+		,SALES_DT
+		,SALES_TYPE
+		,QTY
+		,TOT_SALES_AMT
+		,REAL_SALES_AMT
+		,TOT_DC_AMT
+		,SALES_EMP_ID
+		,CPN_NO
+		,MBR_ID
+		,OFFER_NO
+		FROM brt.TMP_O_SALES
+		WHERE  1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출 임시테이블 중복값 제외후 저장
+    -   설명                   : 매출 임시테이블 중복값 제외후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertNotInSalesList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertNotInSalesList */
+		INSERT INTO brt.T_O_SALES (
+		<!-- ACCNT_ID -->
+		ID
+		,STORE_ID
+		,SALES_DT
+		,SALES_TYPE
+		,QTY
+		,TOT_SALES_AMT
+		,REAL_SALES_AMT
+		,TOT_DC_AMT
+		,SALES_EMP_ID
+		,CPN_NO
+		,MBR_ID
+		,OFFER_NO
+		)
+		select
+		<!-- ACCNT_ID -->
+		ID
+		,STORE_ID
+		,SALES_DT
+		,SALES_TYPE
+		,QTY
+		,TOT_SALES_AMT
+		,REAL_SALES_AMT
+		,TOT_DC_AMT
+		,SALES_EMP_ID
+		,CPN_NO
+		,MBR_ID
+		,OFFER_NO
+		FROM brt.TMP_O_SALES
+		WHERE 1=1
+	    <!-- and ACCNT_ID = #{accountId} -->
+		AND ID NOT IN (select ID from brt.T_O_SALES <!-- WHERE ACCNT_ID = #{accountId} -->)
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출 테이블 수정
+    -   설명                   : 매출 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<update id="updateReSalesList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesListReqDto">
+		/* KPROperation.updateReSalesList */
+	  update brt.T_O_SALES
+		 set <!-- ACCNT_ID 		= #{accntId}  -->
+			ID						= #{id}
+			,STORE_ID		= #{storeId}
+			,SALES_DT		= #{salesDt}
+			,SALES_TYPE		= #{salesType}
+			,QTY					= #{qty}
+			,TOT_SALES_AMT	= #{totSalesAmt}
+			,REAL_SALES_AMT	= #{realSalesAmt}
+			,TOT_DC_AMT		= #{totDcAmt}
+			,SALES_EMP_ID	= #{salesEmpId}
+			,CPN_NO			= #{cpnNo}
+			,MBR_ID			= #{mbrId}
+			,OFFER_NO		= #{offerNo}
+	   where ID 	 			= #{id}
+		 <!-- and ACCNT_ID = #{accntId} -->
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 임시테이블 삭제
+    -   설명                   : 매출상세 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->	
+	<delete id="deleteSalesDtlList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteSalesDtlList */
+		DELETE FROM brt.TMP_O_SALES_DTL
+		 WHERE 1=1 <!--ACCNT_ID =  #{accountId} -->
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 테이블 삭제
+    -   설명                   : 매출상세 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteReSalesDtlList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReSalesDtlList */
+		DELETE FROM brt.T_O_SALES_DTL
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 테이블 저장
+    -   설명                   : 매출상세 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertReSalesDtlList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation."insertReSalesDtlList" */
+		INSERT INTO brt.T_O_SALES_DTL (
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,SALES_DT
+		,PROD_ID
+		,QTY
+		,PRC
+		,AMT
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,SALES_DT
+		,PROD_ID
+		,QTY
+		,PRC
+		,AMT
+		FROM brt.TMP_O_SALES_DTL
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 임시테이블 중복값 제외후 저장
+    -   설명                   : 매출상세 임시테이블 중복값 제외후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertNotInSalesDtlList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertNotInSalesDtlList */
+		INSERT INTO brt.T_O_SALES_DTL (
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,SALES_DT
+		,PROD_ID
+		,QTY
+		,PRC
+		,AMT
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,SALES_DT
+		,PROD_ID
+		,QTY
+		,PRC
+		,AMT
+		FROM brt.TMP_O_SALES_DTL
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+		AND ID NOT IN (select ID from brt.T_O_SALES_DTL where 1=1 <!-- accnt_id = #{accountId -->})
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 테이블 수정
+    -   설명                   : 매출상세 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<update id="updateReSalesDtlList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesDtlListReqDto">
+		/* KPROperation.updateReSalesDtlList */
+	  update brt.T_O_SALES_DTL
+		 set <!-- ACCNT_ID 		= #{accntId}  -->
+			ID					= #{id}
+			,SALES_ID		= #{salesId}
+			,SALES_DT	= #{salesDt}
+			,PROD_ID		= #{prodId}
+			,QTY				= #{qty}
+			,PRC				= #{prc}
+			,AMT				= #{amt}
+	   where ID 			= #{id}
+		 <!-- and ACCNT_ID 		= #{accntId} -->
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 임시테이블 삭제
+    -   설명                   : 매출결제 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteSalesPayList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteSalesPayList */
+		DELETE FROM brt.TMP_O_SALES_PAY
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 테이블 삭제
+    -   설명                   : 매출결제 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteReSalesPayList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReSalesPayList */
+		DELETE FROM brt.T_O_SALES_PAY
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 테이블 저장
+    -   설명                   : 매출결제 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertReSalesPayList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertReSalesPayList */
+		INSERT INTO brt.T_O_SALES_PAY (
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,PAY_TYPE
+		,PAY_AMT
+		,DC_AMT
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,PAY_TYPE
+		,PAY_AMT
+		,DC_AMT
+		FROM brt.TMP_O_SALES_PAY
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 임시테이블 중복값 제외후 저장
+    -   설명                   : 매출결제 임시테이블 중복값 제외후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertNotInSalesPayList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+	 /* KPROperation.insertNotInSalesPayList */
+		INSERT INTO brt.T_O_SALES_PAY (
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,PAY_TYPE
+		,PAY_AMT
+		,DC_AMT
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,PAY_TYPE
+		,PAY_AMT
+		,DC_AMT
+		FROM brt.TMP_O_SALES_PAY
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+		and ID NOT IN (select id from brt.T_O_SALES_PAY where 1=1 <!-- accnt_id = #{accountId} -->)
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 테이블 수정
+    -   설명                   : 매출결제 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<update id="updateReSalesPayList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesPayListReqDto">
+		/* KPROperation.updateReSalesPayList */
+	  update brt.T_O_SALES_PAY
+		 set <!-- ACCNT_ID 		= #{accntId}  -->
+			ID					= #{id}
+			,SALES_ID		= #{salesId}
+			,PAY_TYPE		= #{payType}
+			,PAY_AMT		= #{payAmt}
+			,DC_AMT		= #{dcAmt}
+	   where ID 			= #{id}
+		<!--  and ACCNT_ID 		= #{accntId} -->
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 임시테이블 삭제
+    -   설명                   : 맴버쉽카드 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteCardList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteCardList */
+		DELETE FROM brt.TMP_O_CARD
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 테이블 삭제
+    -   설명                   : 맴버쉽카드 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteReCardList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReCardList */
+		DELETE FROM brt.T_O_CARD
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 테이블 저장
+    -   설명                   : 맴버쉽카드 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertReCardList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertReCardList */
+		INSERT INTO brt.T_O_CARD (
+		<!-- ACCNT_ID -->
+		ID
+		,USE_YN
+		,ISSUE_DT
+		,CARD_NO
+		,BARCODE_NO
+		,QR_CD
+		,MBR_ID
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,USE_YN
+		,ISSUE_DT
+		,CARD_NO
+		,BARCODE_NO
+		,QR_CD
+		,MBR_ID
+		FROM brt.TMP_O_CARD
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 임시테이블 중복값 제외후 저장
+    -   설명                   : 맴버쉽카드 임시테이블 중복값 제외후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertNotInCardList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertNotInCardList */
+		INSERT INTO brt.T_O_CARD (
+		<!-- ACCNT_ID -->
+		ID
+		,USE_YN
+		,ISSUE_DT
+		,CARD_NO
+		,BARCODE_NO
+		,QR_CD
+		,MBR_ID
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,USE_YN
+		,ISSUE_DT
+		,CARD_NO
+		,BARCODE_NO
+		,QR_CD
+		,MBR_ID
+		FROM brt.TMP_O_CARD
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+		and id not in (select id from brt.T_O_CARD where 1=1 <!-- accnt_id = #{accountId} -->)
+	</insert> 
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 테이블 수정
+    -   설명                   : 맴버쉽카드 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<update id="updateReCardList" parameterType="com.icignal.kepler.operation.dto.request.KprCardListReqDto">
+		/* KPROperation.updateReCardList */
+	  update brt.T_O_CARD
+		 set <!-- ACCNT_ID 		= #{accntId}  -->
+			ID					= #{id}
+			,USE_YN		= #{useYn}
+			,ISSUE_DT		= #{issueDt}
+			,CARD_NO		= #{cardNo}
+			,BARCODE_NO		= #{barcodeNo}
+			,QR_CD			= #{qrCd}
+			,MBR_ID		= #{mbrId}
+	   where ID 			= #{id}
+		<!--  and ACCNT_ID 		= #{accntId} -->
+	</update>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 임시테이블 삭제
+    -   설명                   : 매출마일리지 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteSalesMileageList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteSalesMileageList */
+		DELETE FROM brt.TMP_O_SALES_MILEAGE
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 테이블 삭제
+    -   설명                   : 매출마일리지 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteReSalesMileageList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReSalesMileageList */
+		DELETE FROM brt.T_O_SALES_MILEAGE
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 테이블 저장
+    -   설명                   : 매출마일리지 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertReSalesMileageList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertReSalesMileageList */
+		INSERT INTO brt.T_O_SALES_MILEAGE (
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,MILE_TYPE
+		,MILE_AMT
+		,CARD_ID
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,MILE_TYPE
+		,MILE_AMT
+		,CARD_ID
+		FROM brt.TMP_O_SALES_MILEAGE
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 임시테이블 중복값 제외후 저장
+    -   설명                   : 매출마일리지 임시테이블 중복값 제외후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertNotInSalesMileageList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertNotInSalesMileageList */
+		INSERT INTO brt.T_O_SALES_MILEAGE (
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,MILE_TYPE
+		,MILE_AMT
+		,CARD_ID
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,SALES_ID
+		,MILE_TYPE
+		,MILE_AMT
+		,CARD_ID
+		FROM brt.TMP_O_SALES_MILEAGE
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+		and id not in (select id from brt.T_O_SALES_MILEAGE where 1=1 <!-- accnt_id = #{accountId} -->)
+	</insert>   
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 테이블 수정
+    -   설명                   : 매출마일리지 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<update id="updateReSalesMileageList" parameterType="com.icignal.kepler.operation.dto.request.KprSalesMileageListReqDto">
+		/* KPROperation.updateReSalesMileageList */
+	  update brt.T_O_SALES_MILEAGE
+		 set <!-- ACCNT_ID 		= #{accntId}  -->
+			ID					= #{id}
+			,SALES_ID		= #{salesId}
+			,MILE_TYPE	= #{mileType}
+			,MILE_AMT	= #{mileAmt}
+			,CARD_ID		= #{cardId}
+	   where  ID 			= #{id}
+		 <!-- and ACCNT_ID 		= #{accntId} -->
+	</update>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setExcelUpload)
+    ============================================
+    -   제목                   : 상품 임시테이블 삭제
+    -   설명                   : 상품 임시테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteProdList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteProdList */
+		DELETE FROM brt.TMP_O_PROD
+		WHERE ACCNT_ID = #{accountId}
+    </delete> 
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 상품 테이블 삭제
+    -   설명                   : 상품 테이블 삭제
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<delete id="deleteReProdList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto">
+        /* KPROperation.deleteReProdList */
+		DELETE FROM brt.T_O_PROD
+		WHERE ACCNT_ID = #{accountId}
+    </delete> 
+ 
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 상품 테이블 저장
+    -   설명                   : 상품 테이블 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertReProdList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertReProdList */
+		INSERT INTO brt.T_O_PROD (
+		<!-- ACCNT_ID -->
+		ID
+		,PRD_CD
+		,PRD_NM
+		,BRAND
+		,PRD_LAR
+		,PRD_MID
+		,PRD_SML
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,PRD_CD
+		,PRD_NM
+		,BRAND
+		,PRD_LAR
+		,PRD_MID
+		,PRD_SML
+		FROM brt.TMP_O_PROD
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+	</insert>   
+ 	
+ 	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 상품 임시테이블 중복값 제외후 저장
+    -   설명                   : 상품 임시테이블 중복값 제외후 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+  	<insert id="insertNotInProdList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertNotInProdList */
+		INSERT INTO brt.T_O_PROD (
+		<!-- ACCNT_ID -->
+		ID
+		,PRD_CD
+		,PRD_NM
+		,BRAND
+		,PRD_LAR
+		,PRD_MID
+		,PRD_SML
+		)
+		SELECT
+		<!-- ACCNT_ID -->
+		ID
+		,PRD_CD
+		,PRD_NM
+		,BRAND
+		,PRD_LAR
+		,PRD_MID
+		,PRD_SML
+		FROM brt.TMP_O_PROD
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->
+		and id not in (select id from brt.T_O_PROD where 1=1 <!-- accnt_id = #{accountId} --> )
+	</insert>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 상품 테이블 수정
+    -   설명                   : 상품 테이블 수정
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<update id="updateReProdList" parameterType="com.icignal.kepler.operation.dto.request.KprProdListReqDto">
+		/* KPROperation.updateReProdList */
+	  update brt.T_O_PROD
+		 set <!-- ACCNT_ID 		= #{accntId}  -->
+			ID					= #{id}
+			,PRD_CD		= #{prdCd}
+			,PRD_NM		= #{prdNm}
+			,BRAND			= #{brand}
+			,PRD_LAR		= #{prdLar}
+			,PRD_MID		= #{prdMid}
+			,PRD_SML		= #{prdSml}
+	   where ID 			= #{id}
+		 <!-- and  ACCNT_ID 		= #{accntId} -->
+	</update> 
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 엑셀 업로드 결과 저장
+    -   설명                   : 엑셀 업로드 결과 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<insert id="insertExcelUpResult" parameterType="com.icignal.kepler.operation.dto.request.KprSetUploadResultReqDto" useGeneratedKeys="false">
+	 /* KPROperation.insertExcelUpResult */
+		insert into brt.anl_upload_result
+		( <!-- accnt_id -->
+		 id
+		, create_by
+		, create_date
+		, file_nm
+		, all_cnt
+		, ok_cnt
+		, no_cnt
+		, upload_time
+		, upload_start_time
+		, upload_end_time
+		, table_type
+		, table_nm
+		)values(
+		 <!-- #{accntId} -->
+		 #{id}
+		 ,#{createBy}
+		 ,getDate()
+		 ,#{fileNm}
+		 ,#{allCnt}
+		 ,#{okCnt}
+		 ,#{noCnt}
+		 ,#{uploadTime}
+		 ,CONVERT(varchar, #{uploadStartTime}, 120)
+		 ,CONVERT(varchar, #{uploadEndTime}, 120)
+		 ,#{tableType}
+		 ,#{tblNm}
+		)
+		
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from brt.anl_upload_result where id = #{id} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY -->
+<!--         </selectKey>		 -->
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 엑셀에러 seq생성
+    -   설명                   : 엑셀에러 seq생성
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectExcelUpSeq" parameterType="com.icignal.kepler.operation.dto.request.KprGetUploadErrorReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectExcelUpSeq */
+		select ISNULL(max(seq_index),0)+1 as seqIndex 
+		from brt.anl_upload_error
+		 where  id =  #{id}
+		 <!-- and accnt_id = #{accntId}  -->
+    </select>  	
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 엑셀 에러목록 저장
+    -   설명                   : 엑셀 에러목록 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<insert id="insertExcelUpErrorList" parameterType="com.icignal.kepler.operation.dto.request.KprSetUploadErrorReqDto">
+	 /* KPROperation.insertExcelUpErrorList */
+		insert into brt.anl_upload_error
+		( <!-- accnt_id -->
+		 id
+		, seq_index
+		, tbl_nm
+		, error_code
+		, error_desc
+		)values(
+		 <!-- #{accntId} -->
+		#{id}
+		,#{seqIndex}
+		,#{tblNm}
+		,#{errorCode}
+		,#{errorDesc}
+		)
+	</insert>
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getExcelUpResultList)
+    ============================================
+    -   제목                   : 엑셀업로드 결과 조회
+    -   설명                   : 엑셀업로드 결과 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectExcelUpResultList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+													resultType="com.icignal.kepler.operation.dto.response.KprExcelUploadResultResDto">
+    	/* KPROperation.selectExcelUpResultList */
+		select ${strColumn} 
+		<!-- , aur.accnt_id as accntId -->
+		, aur.id as id
+		, aur.create_by as createBy
+		,CONVERT(varchar, aur.create_date, 120) as createDate
+		, aur.file_nm as fileNm
+		, aur.all_cnt as allCnt
+		, aur.ok_cnt as okCnt
+		, aur.no_cnt as noCnt
+		, aur.upload_time as uploadTime
+		from brt.anl_upload_result  aur
+		where  aur.id =  #{id}
+		<!-- and  aur.accnt_id = #{accountId}  -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getExcelUpResult)
+    ============================================
+    -   제목                   : 엑셀업로드 결과 조회
+    -   설명                   : 엑셀업로드 결과 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectExcelUpResult" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+												resultType="com.icignal.kepler.operation.dto.response.KprExcelUploadResultResDto">
+    	/* KPROperation.selectExcelUpResult */
+		select 
+		  <!-- aur.accnt_id as accntId -->
+		 aur.id as id
+		, aur.create_by as createBy
+		, ep.name as createByName
+		, CONVERT(varchar, aur.create_date, 120) AS createDate
+		, aur.file_nm as fileNm
+		, aur.all_cnt as allCnt
+		, aur.ok_cnt as okCnt
+		, aur.no_cnt as noCnt
+		, aur.upload_time as uploadTime
+		from brt.anl_upload_result  aur WITH (NOLOCK)
+		left outer join com.crm_user u WITH (NOLOCK) on aur.create_by = u.rid
+		left outer join com.employee ep WITH (NOLOCK) on u.id_employee = ep.id and ep.FLAG = 1
+		where aur.table_type = 'LIST'
+		<!-- and  aur.accnt_id = #{accountId}  -->
+		<if test="startDate != null and startDate != ''">
+		<if test="endDate != null and endDate != ''">
+		and CONVERT(varchar(10),aur.create_date, 120) BETWEEN  #{startDate} AND #{endDate}
+		</if>
+		</if>
+		and aur.table_nm = #{tableId}
+		ORDER BY ${strOrderby}
+		${strEndPaging}	
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 회원 임시테이블 조회
+    -   설명                   : 회원 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpCustList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+												resultType="com.icignal.kepler.operation.dto.response.KprCustListResDto">
+    	/* KPROperation.selectTmpCustList */
+		SELECT
+		 <!-- ACCNT_ID as accntId -->
+		ID as id
+		,MBR_ID as mbrId
+		,MBR_NM as mbrNm
+		,MBR_YN as mbrYn
+		,AGE as age
+		,GNDR_CD as gndrCd
+		,BIRTH_DT as birthDt
+		,ZIPCD as zipcd
+		,ADDR1 as addr1
+		,ADDR2 as addr1
+		,FST_JOIN_DT as fstJoinDt
+		,FST_JOIN_STORE_ID as fstJoinStoreId
+		,RFM_GRD_CD as rfmGrdCd
+		,DM_RECV_YN as dmRecvYn
+		,SMS_RECV_YN as smsRecvYn
+		,TM_RECV_YN AS tmRecvYn
+		,EMAIL_RECV_YN as emailRecvYn
+		,HP_NUM as hpNum
+		,EMAIL as email
+		,INFORM_MDF_DT as informMdfDt
+		,WITHDRAW_DT as withdrawDt
+		,EMP_YN as empYn
+		,FST_PUR_DT as fstPurDt
+		,EMAIL_PUBLIC_YN as emailPublicYn
+		,ALARM_FAV_SITE_YN as alarmFavSiteYn
+		,ALARM_MY_SITE_YN as alarmMySiteYn
+		,ALARM_JOIN_SITE_YN as alarmJoinSiteYn
+		,ALARM_POST_REPLY_YN as alarmPostReplyYn
+		,ALARM_SITE_NOTICE_YN as alarmSiteNoticeYn
+		,MBR_STS as mbrSts
+		,MBR_VALUE as mbrValue
+		,MBR_LC as mbrLc
+		,MBR_GRD as mbrGrd
+		,MBR_GRW_TYPE as mbrGrwType
+		,MBR_STS_CHG_DT as mbrStsChgDt
+		,MILEAGE as mileage
+		,LST_PUR_DT  as lstPurDt
+		from brt.TMP_O_CUST
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매장 임시테이블 조회
+    -   설명                   : 매장 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpStoreList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+												resultType="com.icignal.kepler.operation.dto.response.KprStoreListResDto">
+    	/* KPROperation.selectTmpStoreList */
+		SELECT <!-- ACCNT_ID as accntId -->
+			ID 						as id
+			,BRAND 				as brand
+			,STORE_NM 			as storeNm
+			,STORE_TYPE 		as storeType
+			,TEL_NO 				as telNo
+			,DEPT_ID 				as deptId
+			,PAR_ACCNT_ID 	as parAccntId
+			,ORG_ID 				as orgId
+		FROM brt.TMP_O_STORE
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출 임시테이블 조회
+    -   설명                   : 매출 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpSalesList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+													resultType="com.icignal.kepler.operation.dto.response.KprSalesListResDto">
+    	/* KPROperation.selectTmpSalesList */
+		SELECT <!-- ACCNT_ID as accntId -->
+			ID 						 as id
+			,STORE_ID 			 as storeId
+			,SALES_DT 			 as salesDt
+			,SALES_TYPE 		 as salesType
+			,QTY 						 as qty
+			,TOT_SALES_AMT   as totSalesAmt
+			,REAL_SALES_AMT as realSalesAmt
+			,TOT_DC_AMT 		 as totDcAmt
+			,SALES_EMP_ID      as salesEmpId
+			,CPN_NO 				 as cpnNo
+			,MBR_ID 			 	 as mbrId
+			,OFFER_NO 			 as offerNo
+		FROM brt.TMP_O_SALES 
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 임시테이블 조회
+    -   설명                   : 매출상세 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpSalesDtlList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+													resultType="com.icignal.kepler.operation.dto.response.KprSalesDtlListResDto">
+    	/* KPROperation.selectTmpSalesDtlList */
+		SELECT <!-- ACCNT_ID as accntId -->
+			ID 						as id
+			,SALES_ID 			as salesId
+			,SALES_DT 			as salesDt
+			,PROD_ID 				as prodId
+			,QTY 						as qty
+			,PRC 						as prc
+			,AMT 					as amt
+		FROM brt.TMP_O_SALES_DTL
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 임시테이블 조회
+    -   설명                   : 매출결제 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpSalesPayList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+													resultType="com.icignal.kepler.operation.dto.response.KprSalesPayListResDto">
+    	/* KPROperation.selectTmpSalesDtlList */
+		SELECT <!-- ACCNT_ID as accntId -->
+			ID 						as id
+			,SALES_ID 			as salesId
+			,PAY_TYPE 			as payType
+			,PAY_AMT 				as payAmt
+			,DC_AMT 				as dcAmt
+		FROM brt.TMP_O_SALES_PAY
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 임시테이블 조회
+    -   설명                   : 맴버쉽카드 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpCardList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+											resultType="com.icignal.kepler.operation.dto.response.KprCardListResDto">
+    	/* KPROperation.selectTmpCardList */
+		SELECT <!-- ACCNT_ID as accntId -->
+			ID as id
+			,USE_YN as useYn
+			,ISSUE_DT as issueDt
+			,CARD_NO as cardNo
+			,BARCODE_NO as barcodeNo
+			,QR_CD as qrCd
+			,MBR_ID as mbrId
+		FROM brt.TMP_O_CARD
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 임시테이블 조회
+    -   설명                   : 매출마일리지 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpSalesMileageList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+															resultType="com.icignal.kepler.operation.dto.response.KprSalesMileageListResDto">
+    	/* KPROperation.selectTmpSalesMileageList */
+		SELECT <!-- ACCNT_ID as accntId -->
+			ID 					as id
+			,SALES_ID 		as salesId
+			,MILE_TYPE 		as mileType
+			,MILE_AMT 		as mileAmt
+			,CARD_ID 			as cardId
+		FROM brt.TMP_O_SALES_MILEAGE
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 상품 임시테이블 조회
+    -   설명                   : 상품 임시테이블 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectTmpProdList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+												resultType="com.icignal.kepler.operation.dto.response.KprProdListResDto">
+    	/* KPROperation.selectTmpProdList */
+        SELECT <!-- ACCNT_ID as accntId -->
+			ID						 	as id
+			,PRD_CD 				as prdCd
+			,PRD_NM 				as prdNm
+			,BRAND 				as brand
+			,PRD_LAR 				as prdLar
+			,PRD_MID 				as prdMid
+			,PRD_SML 				as prdSml
+		FROM brt.TMP_O_PROD
+		where 1=1 <!-- ACCNT_ID = #{accountId} -->
+    </select>  
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getUploadErrorList)
+    ============================================
+    -   제목                   : 업로드 오류내역 조회
+    -   설명                   : 업로드 오류내역 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+	<select id="selectUploadErrorList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+													resultType="com.icignal.kepler.operation.dto.response.KprUploadErrorListResDto">
+    	/* KPROperation.selectUploadErrorList */
+        SELECT ${strColumn}
+            <!-- ,ACCNT_ID as accntId -->
+			,ID 						as id
+			,SEQ_INDEX 			as seqIndex
+			,tbl_nm 				as tblNm
+			,error_code 			as errorCode
+			,error_desc 			as errorDesc
+ 		FROM brt.anl_upload_error
+		where id= #{id} 
+		<!-- and ACCNT_ID = #{accountId} -->
+		ORDER BY ${strOrderby}
+		${strEndPaging}	
+    </select>  
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 회원 테이블 중복값 제외 Cnt
+    -   설명                   : 회원 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectCustNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectCustNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_CUST 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_CUST WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매장 테이블 중복값 제외 Cnt
+    -   설명                   : 매장 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectStoreNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectStoreNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_STORE 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_STORE WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출 테이블 중복값 제외 Cnt
+    -   설명                   : 매출 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectSalesNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_SALES 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_SALES WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 테이블 중복값 제외 Cnt
+    -   설명                   : 매출상세 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesDtlNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectSalesDtlNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_SALES_DTL 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_SALES_DTL WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 테이블 중복값 제외 Cnt
+    -   설명                   : 매출결제 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesPayNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectSalesPayNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_SALES_PAY 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_SALES_PAY WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 테이블 중복값 제외 Cnt
+    -   설명                   : 맴버쉽카드 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectCardNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectCardNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_SALES_MILEAGE 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_SALES_MILEAGE WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 테이블 중복값 제외 Cnt
+    -   설명                   : 매출마일리지 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesMileageNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectSalesMileageNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_CARD 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_CARD WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	    
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 상품 테이블 중복값 제외 Cnt
+    -   설명                   : 상품 테이블 중복값 제외 Cnt
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectProdNoCnt" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" resultType="java.lang.Integer">
+    	/* KPROperation.selectProdNoCnt */
+		select count(*) as cnt 
+		FROM brt.TMP_O_PROD 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID NOT IN (select ID from brt.T_O_PROD WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>  	
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 회원 테이블 중복 ID 조회
+    -   설명                   : 회원 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectCustDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectCustDupList */
+    	select id 
+		FROM brt.TMP_O_CUST 
+		WHERE 1=1 <!-- ACCNT_ID = #{accountId}  -->
+		AND ID IN (select ID from brt.T_O_CUST WHERE 1=1 <!-- ACCNT_ID = #{accountId} -->)
+    </select>      
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매장 테이블 중복 ID 조회
+    -   설명                   : 매장 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectStoreDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectStoreDupList */
+		select id 
+		FROM brt.TMP_O_STORE 
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+		AND ID IN (select ID from brt.T_O_STORE WHERE 1=1 <!--  ACCNT_ID =  #{accountId} -->)
+    </select>      
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출 테이블 중복 ID 조회
+    -   설명                   : 매출 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    											resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectSalesDupList */
+		select id 
+		FROM brt.TMP_O_SALES 
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+		AND ID IN (select ID from brt.T_O_SALES WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->)
+    </select>      
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출상세 테이블 중복 ID 조회
+    -   설명                   : 매출상세 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesDtlDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    													resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectSalesDtlDupList */
+		select id 
+		FROM brt.TMP_O_SALES_DTL 
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+		AND ID IN (select ID from brt.T_O_SALES_DTL WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->)
+    </select>      
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출결제 테이블 중복 ID 조회
+    -   설명                   : 매출결제 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesPayDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    												resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectSalesPayDupList */
+		select id 
+		FROM brt.TMP_O_SALES_PAY 
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+		AND ID IN (select ID from brt.T_O_SALES_PAY WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->)
+    </select>      
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 맴버쉽카드 테이블 중복 ID 조회
+    -   설명                   : 맴버쉽카드 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectCardDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectCardDupList */
+		select id 
+		FROM brt.TMP_O_CARD 
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+		AND ID IN (select ID from brt.T_O_CARD WHERE 1=1<!-- ACCNT_ID =  #{accountId} -->) 
+    </select>      
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 매출마일리지 테이블 중복 ID 조회
+    -   설명                   : 매출마일리지 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectSalesMileageDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    												resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectSalesMileageDupList */
+		select id 
+		FROM brt.TMP_O_SALES_MILEAGE 
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+		AND ID IN (select ID from brt.T_O_SALES_MILEAGE WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->) 
+    </select>      
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setReExcelUpload)
+    ============================================
+    -   제목                   : 상품 테이블 중복 ID 조회
+    -   설명                   : 상품 테이블 중복 ID 조회
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.10.21
+    ***************************************/ -->
+    <select id="selectProdDupList" parameterType="com.icignal.kepler.operation.dto.request.KprExcelUpLoadReqDto" 
+    										resultType="com.icignal.kepler.operation.dto.response.KprDuplicateValResDto">
+    	/* KPROperation.selectProdDupList */
+		select id 
+		FROM brt.TMP_O_PROD 
+		WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->
+		AND ID IN (select ID from brt.T_O_PROD WHERE 1=1 <!-- ACCNT_ID =  #{accountId} -->)
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (editTableColsType)
+    ============================================
+    -   제목                 : 
+    -   설명                 : 
+    -   결과형태             : 
+    ============================================
+    -   입력                 : modifyBy  : 수정자
+    -                        : accountId : 
+    -                        : colTypeCd : 컬럼구분코드 DIMENSION/MEASURE
+    -                        : tblId     : 테이블ID
+    -                        : colIds    : 수정할 컬럼의 ID 
+    -   출력                 : 
+    ============================================
+    -   작성자               : jh.kim
+    -   작성일               : 2018.07.26
+    ***************************************/ -->
+    <update id="updateTableColsType"  parameterType="com.icignal.kepler.operation.dto.request.KprEditTableColConvertReqDto">
+        /* KPROperation.updateTableColsType */
+    
+        update anl.anl_column_mst
+        set 
+              COL_TYPE_CD = #{colTypeCd}
+            , modify_date = getDate()
+            , modify_by = #{modifyBy}
+            
+        where tbl_id = #{tblId}
+          <!-- and accnt_id = #{accountId}  -->
+          and flag = 1 
+          <if test="colIds.size() > 0">
+          and id in (
+             <foreach collection="colIds" item="item" separator=",">
+                #{item}
+            </foreach>          
+          )
+          </if>
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (setTableColImport)
+    ============================================
+    -   제목                 : 테이블 정보 조회 쿼리
+    -   설명                 : 테이블 정보 조회 쿼리
+    -   결과형태             : 단일
+    ============================================
+    -   입력                 : schmaNm   : 스키마명
+    -                        : tblNm     : 테이블명
+    -   출력                 : 
+    ============================================
+    -   작성자               : jh.kim
+    -   작성일               : 2017.07.26
+    ***************************************/ -->
+    <select id="selectTableImportSource" parameterType="com.icignal.kepler.operation.dto.request.KprSetTableListReqDto" resultType="java.lang.String">
+        /* KPROperation.selectTableImportSource */
+    
+        SELECT (
+            "SELECT
+                  TABLE_SCHEMA as parentId
+                , table_name   as id
+                , TABLE_NAME   as text 
+                , TABLE_SCHEMA as schmaNm
+                , ''           as nodeType
+                , TABLE_COMMENT as comment
+                , ENGINE as engine
+            FROM information_schema.tables
+            WHERE table_schema = '" , #{schmaNm} , "' AND table_name = '" , #{tblNm} , "'") as mySql
+        FROM dual
+    
+    </select>
+        
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableColImportSource)
+    ============================================
+    -   제목                 : 테이블 컬럼 정보 조회 쿼리 
+    -   설명                 : 테이블 컬럼 정보 조회 쿼리
+    -   결과형태             : 단일
+    ============================================
+    -   입력                 : schmaNm : 스키마명
+    -                        : tblNm   : 테이블명
+    -   출력                 : 
+    ============================================
+    -   작성자               : jh.kim
+    -   작성일               : 2017.07.26
+    ***************************************/ -->
+    <select id="selectTableColImportSource" parameterType="com.icignal.kepler.operation.dto.request.KprTableColImportReqDto" resultType="java.lang.String">
+        /* KPROperation.selectTableColImportSource */ 
+    
+        SELECT (
+            "select 
+                  COLUMN_NAME as colNm
+                , ORDINAL_POSITION as seq
+                , COLUMN_COMMENT as dpNm
+                , case when IS_NULLABLE = 'YES' then 'Y' else 'N' end as nullYn
+                , case when column_key  = 'PRI' then 'Y' else 'N' end as pkYn
+                , DATA_TYPE as dataTypeCd
+                , CHARACTER_MAXIMUM_LENGTH as len
+                , COLUMN_DEFAULT as deftVal
+            from information_schema.columns
+            where TABLE_SCHEMA = '"
+            , #{schmaNm}
+            , "' and TABLE_NAME = '"
+            , #{tblNm}
+            , "'"
+            ) as mySql 
+        FROM dual 
+    
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getTableColListByType)
+    ============================================
+    -   제목                 : 테이블 컬럼 타입별 목록 조회
+    -   설명                 : 테이블 컬럼 타입별 목록 조회
+    -   결과형태             : 목록
+    ============================================
+    -   입력 
+    -       accountId : 
+    -       tableId   : 테이블명
+    -       colTypeCd : DIMENSION/MEASURE 구분
+    -   출력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.07.25
+    ***************************************/ -->
+    <select id="selectTableColListByType" parameterType="com.icignal.kepler.operation.dto.request.KprGetTableColListReqDto" 
+    													resultType="com.icignal.kepler.operation.dto.response.KprGetTableColListResDto">
+        /* KPROperation.selectTableColListByType */
+    
+        SELECT
+              c.ID as colId
+            , c.col_nm as colNm
+            , c.PK_YN as pkYn
+            , c1.code_name as dataTypeCd
+            , c.LEN as len
+            , c.NULL_YN as nullYn
+            , c.DEFT_VAL as deftVal
+            , c.SEQ as seq
+            , c.DP_NM as dpNm
+            , c2.code_name as colTypeCd
+            , c.tbl_id as tableId
+        FROM anl.anl_column_mst c WITH (NOLOCK)
+        JOIN anl.anl_table_mst t WITH (NOLOCK) ON c.TBL_ID = t.ID AND t.FLAG = 1 
+        LEFT OUTER JOIN com.comm_code c1 WITH (NOLOCK) ON c1.flag = 1 AND c.DATA_TYPE_CD = c1.code_name AND c1.lang = #{lang} AND c1.group_code = 'DB_DATA_TYPE_CD'
+        LEFT OUTER JOIN com.comm_code c2 WITH (NOLOCK) ON c2.flag = 1 AND c.COL_TYPE_CD = c2.code_name  AND c2.lang = #{lang} AND c2.group_code = 'ANL_COL_TYPE_CD'
+        WHERE ${strSVCType} 
+          AND c.flag = 1
+        <!--   AND c.accnt_id = #{accountId}  -->
+          AND c.TBL_ID = #{tableId}
+          AND c.COL_TYPE_CD = #{colTypeCd}
+        
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (selectDatabaseUseSchemaList)
+    ============================================
+    -   제목                 : 테이블 사용 스키마 목록 조회
+    -   설명                 : 테이블 사용 스키마 목록 조회
+    -   결과형태             : 목록
+    ============================================
+    -   입력 
+    -   출력
+    ============================================
+    -   작성자                : ko.lee
+    -   작성일                : 2017.12.20.
+    ***************************************/ -->
+    <select id="selectDatabaseUseSchemaList" parameterType="com.icignal.kepler.operation.dto.request.KprDatabaseUseSchemaReqDto" 
+    														resultType="com.icignal.kepler.operation.dto.response.KprDatabaseUseSchemaResDto">
+    /* SystemOperationMapper.selectDatabaseUseSchemaList */
+    	select rid		as nodeId
+			 , rid		as rId
+			 , schma_nm	as nodeText
+			 , schma_nm	as schemaName
+		  from anl.anl_db_use_schma
+		 where flag		= 1
+		   and db_id	= #{databaseId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (selectDatabaseUseSchemaNameList)
+    ============================================
+    -   제목                 : 테이블 사용 스키마명 목록 조회
+    -   설명                 : 테이블 사용 스키마명 목록 조회
+    -   결과형태             : 목록
+    ============================================
+    -   입력 
+    -   출력
+    ============================================
+    -   작성자                : ko.lee
+    -   작성일                : 2017.12.20.
+    ***************************************/ -->
+    <select id="selectDatabaseUseSchemaNameList" parameterType="java.lang.String" resultType="java.lang.String">
+    /* SystemOperationMapper.selectDatabaseUseSchemaNameList */
+    	select schma_nm
+    	  from anl.anl_db_use_schma
+		 where flag		= 1
+		   and db_id	= #{databaseId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (selectDatabaseUseSchemaNameCount)
+    ============================================
+    -   제목                 : 테이블 사용 스키마명 중복 조회
+    -   설명                 : 테이블 사용 스키마명 중복 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력 
+    -   출력
+    ============================================
+    -   작성자                : ko.lee
+    -   작성일                : 2017.12.20.
+    ***************************************/ -->
+    <select id="selectDatabaseUseSchemaNameCount" parameterType="com.icignal.kepler.operation.dto.request.KprDatabaseUseSchemaReqDto" resultType="java.lang.Integer">
+     /* SystemOperationMapper.selectDatabaseUseSchemaNameCount */
+    	select count(*)
+		  from anl.anl_db_use_schma
+		 where flag		= 1
+		   and rid		= #{rId}
+		   and db_id	= #{databaseId}
+		   and schma_nm	= #{schemaName}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (insertDatabaseUseSchema)
+    ============================================
+    -   제목                 : 사용 스키마 정보 저장
+    -   설명                 : 사용 스키마 정보 저장
+    -   결과형태             : 단일
+    ============================================
+    -   입력 
+    -   출력
+    ============================================
+    -   작성자                : ko.lee
+    -   작성일                : 2017.12.20.
+    ***************************************/ -->
+	<insert id="insertDatabaseUseSchema" parameterType="com.icignal.kepler.operation.dto.request.KprDatabaseUseSchemaReqDto" useGeneratedKeys="false">
+	 /* SystemOperationMapper.insertDatabaseUseSchema */
+		insert into anl.anl_db_use_schma (
+			  rid
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country
+			, app_service_type
+			, accnt_id -->
+			, db_id
+			, schma_nm
+		) values (
+			  #{rId}
+			, #{createBy}
+			, #{modifyBy}
+			, getDate()
+			, getDate()
+			, 1
+			<!-- , #{country}
+			, #{appServiceId}
+			, #{accountId} -->
+			, #{databaseId}
+			, #{schemaName}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+			select 1
+		</selectKey> -->
+	</insert>
+
+    <!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (insertDatabaseUseSchema)
+    ============================================
+    -   제목                 : 사용 스키마 정보 삭제
+    -   설명                 : 사용 스키마 정보 삭제
+    -   결과형태             : 목록
+    ============================================
+    -   입력 
+    -   출력
+    ============================================
+    -   작성자                : ko.lee
+    -   작성일                : 2017.12.20.
+    ***************************************/ -->
+	<update id="deleteDatabaseUseSchema" parameterType="com.icignal.kepler.operation.dto.request.KprDatabaseUseSchemaReqDto">
+	 /* SystemOperationMapper.deleteDatabaseUseSchema */
+		update anl.anl_db_use_schma
+		   set flag = flag + 1
+		 where db_id = #{databaseId}
+		 <if test="useSchemaList.size() > 0">
+		   and rid not in
+			 <foreach collection="useSchemaList" item="item" separator="," close=")" open="(">
+				#{item.rId}
+			</foreach>
+		 </if>
+	</update>
+	
+	
+	<!-- /**************************************
+    -   관련 파일            : KPROperationDAO.java (getDbInfromServiceNm)
+    ============================================
+    -   제목                   : DB정보 서비스명 조회
+    -   설명                   : DB정보 서비스명 조회
+    -   결과형태             : 단일
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : hy.jun
+    -   작성일                : 2019.02.12
+    ***************************************/ --> 
+    <select id="getDbInfromServiceNm" parameterType="java.lang.String" resultType="java.lang.String">
+        /* KPROperation.getDbInfromServiceNm */
+		select AWS_SECRET_NM
+		from anl.anl_db_inform
+		where id = #{dbInformId}
+    </select> 
+ 
+</mapper>

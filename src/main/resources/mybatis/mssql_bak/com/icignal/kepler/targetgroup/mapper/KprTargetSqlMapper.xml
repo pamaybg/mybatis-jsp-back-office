@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:22:05 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.targetGroup.targetSql.mapper.KprTargetSqlMapper">
+
+
+    <!-- /**************************************
+    -   관련 파일             : KprTargetSqlDAO.java (getTargetSqlDetail)
+    ============================================
+    -   제목                  : 타겟SQL 상세
+    -   설명                  :
+    -   결과형태              : 단수
+    ============================================
+    -   입력				  : targetGroupId
+    -	출력				  :
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2018.04.17
+    ***************************************/ -->
+	<select id="selectTargetSqlDetail" parameterType="com.icignal.kepler.targetGroup.targetSql.dto.request.KprTargetSqlDetailReqDto" resultType="com.icignal.kepler.targetGroup.targetSql.dto.response.KprTargetSqlDetailResDto">
+        select
+        	   tg.id 							as targetGroupId
+             , e.name 						as createByName
+             , tg.create_date 			as createDate
+             , tg.seg_filter_id 			as segFilterId
+             , tg.filter_sql_count 		as filterSqlCount
+             , tg.tgt_group_nm 		as targetGroupName
+             , tg.tgt_group_desc 		as targetGroupDesc
+             , c.code_name 				as comprGroupTypeCode
+             , c.mark_name 				as comprGroupTypeName
+             , tg.compr_group_dtl 	as comprGroupDtl
+        	 , tg.filter_sql 				as filterSql
+             , tg.dp_cond 					as dpCond
+             , tg.db_inform_id 			as dbInformId
+             , db.con_db_type 			as conDbType
+        	 , db.service_nm 			as serviceNm
+        	 , db.con_ip 	 				as conIp
+        	 , db.con_port 	 			as conPort
+        	 , db.con_id 	 				as conId
+        	 , db.con_pw 	 				as conPassword
+        	 , db.con_url 	 				as conUrl
+        	 , c2.code_name 	   	 	as conDbType
+        	 , c2.attrib01 	        		as conDbClass
+        from anl.anl_tgt_group tg WITH (NOLOCK)
+        left outer join com.crm_user u  WITH (NOLOCK) on tg.create_by = u.rid
+        left outer join com.employee e WITH (NOLOCK) on u.id_employee = e.id
+		left outer join anl.anl_db_inform db WITH (NOLOCK) on db.id = tg.db_inform_id
+        left outer join com.comm_code c WITH (NOLOCK) on c.flag = 1  and tg.compr_group_type_cd = c.code_name and c.lang = #{lang}   and c.group_code = 'ANL_COMPR_TYPE_CD'
+        left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.code_name = db.con_db_type        and c2.lang = #{lang}  and c2.group_code = 'ANL_DB_TYPE_CD'
+		where tg.id = #{targetGroupId}
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일             : KprTargetSqlDAO.java (getDBInform)
+    ============================================
+    -   제목                  : DB정보조회
+    -   설명                  :
+    -   결과형태              : 단수
+    ============================================
+    -   입력				  : dbId
+    -	출력				  :
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2018.04.17
+    ***************************************/ -->
+	<select id="selectDBInform" parameterType="com.icignal.core.database.dto.request.MKTDBInfoDTO" resultType="com.icignal.core.database.dto.request.MKTDBInfoDTO">
+        select
+        	   di.id 		 					as dbId
+        	 , di.service_nm 			as serviceNm
+        	 , di.con_ip 	 				as conIp
+        	 , di.con_port 	 			as conPort
+        	 , di.con_id 	 				as userName
+        	 , di.con_pw 	 				as password
+        	 , di.con_url 	 				as url
+        	 , c.code_name 				as conDbType
+        	 , c.attrib01 	 				as driverClassName
+        	 , di.AWS_SECRET_NM   as secretNm
+        from anl.anl_db_inform  di WITH (NOLOCK)
+        join com.comm_code c WITH (NOLOCK)  on c.flag = 1   and c.code_name = di.con_db_type and c.lang = #{lang} and c.group_code = 'ANL_DB_TYPE_CD'
+        where di.id = #{dbId}
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일             : KprTargetSqlDAO.java (addAnlTargetGroup)
+    ============================================
+    -   제목                  : 타겟SQL 정보 등록
+    -   설명                  :
+    -   결과형태              : 단수
+    ============================================
+    -   입력				  :
+    -	출력				  :
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2018.04.17
+    ***************************************/ -->
+	<insert id="insertAnlTargetGroup" parameterType="com.icignal.kepler.targetGroup.targetSql.dto.request.KprTargetSqlEditReqDto" >
+		insert into anl.anl_tgt_group (
+		      id
+		    , create_by
+		    , modify_by
+		    , create_date
+		    , modify_date
+		    , flag
+		    , type
+		    , store_id
+		    , seg_filter_id
+		    , filter_sql
+		    , tgt_group_nm
+		    , tgt_group_desc
+		    , dp_cond
+		    , compr_group_type_cd
+		    , compr_group_dtl
+		    , lgc_comp_id
+		    , filter_sql_count
+		    , cnt
+		    , db_inform_id
+		)
+		values (
+		      #{id}
+		    , #{createBy}
+		    , #{modifyBy}
+		    , GETDATE()
+		    , GETDATE()
+		    , 1
+		    , #{type}
+		    , #{storeId}
+		    , #{segFilterId}
+		    , #{filterSql}
+		    , #{tgtGroupNm}
+		    , #{tgtGroupDesc}
+		    , #{dpCond}
+		    , #{comprGroupTypeCd}
+		    , #{comprGroupDtl}
+		    , #{lgcCompId}
+		    , #{filterSqlCount}
+		    , #{cnt}
+		    , #{dbInformId}
+		)
+	</insert>
+
+    <!-- /**************************************
+    -   관련 파일             : KprTargetSqlDAO.java (editAnlTargetGroup)
+    ============================================
+    -   제목                  : 타겟 SQL 정보 수정
+    -   설명                  :
+    -   결과형태              : 단수
+    ============================================
+    -   입력				  :
+    -	출력				  :
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2018.04.17
+    ***************************************/ -->
+	<update id="updateAnlTargetGroup" parameterType="com.icignal.kepler.targetGroup.targetSql.dto.request.KprTargetSqlEditReqDto" >
+		update anl.anl_tgt_group
+		set
+		      modify_by			  		= #{modifyBy}
+		    , modify_date		  			= GETDATE()
+		    , store_id			  			= #{storeId}
+		    , seg_filter_id		  		= #{segFilterId}
+		    , tgt_group_nm 		  		= #{tgtGroupNm}
+		    , tgt_group_desc 	  		= #{tgtGroupDesc}
+		    , dp_cond 			  			= #{dpCond}
+		    , compr_group_type_cd = #{comprGroupTypeCd}
+		    , compr_group_dtl 	  		= #{comprGroupDtl}
+		    , lgc_comp_id		  			= #{lgcCompId}
+		    , filter_sql		  				= #{filterSql}
+		    , filter_sql_count 	  		= #{filterSqlCount}
+		    , cnt 				  				= #{cnt}
+		    , db_inform_id 		  		= #{dbInformId}
+		where id = #{id}
+	</update>
+
+    <!-- /**************************************
+    -   관련 파일             : KprTargetSqlDAO.java (getTargetSqlList)
+    ============================================
+    -   제목                  : 타겟 SQL 정보 수정
+    -   설명                  :
+    -   결과형태              : 단수
+    ============================================
+    -   입력				  :
+    -	출력				  :
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2018.04.17
+    ***************************************/ -->
+	<select id="selectTargetSqlList" parameterType="com.icignal.kepler.targetGroup.targetSql.dto.request.KprTargetSqlListReqDto" resultType="com.icignal.kepler.targetGroup.targetSql.dto.response.KprTargetSqlListResDto">
+        select ${strColumn}
+       	     , tg.id 								as targetGroupId
+             , e.name 							as createByName
+             , tg.create_date 				as createDate
+             , tg.tgt_group_nm 			as targetGroupName
+             , tg.db_inform_id 				as dbInformId
+        from anl.anl_tgt_group tg WITH (NOLOCK)
+        left outer join com.crm_user u WITH (NOLOCK) on tg.create_by = u.rid
+        left outer join com.employee e WITH (NOLOCK) on u.id_employee = e.id
+        left outer join com.comm_code c WITH (NOLOCK) on c.flag = 1  and tg.compr_group_type_cd = c.code_name and c.lang = #{lang}   and c.group_code = 'ANL_COMPR_TYPE_CD'
+        where ${strCondWhere}
+          and ${strSVCType}
+          and ${strWhere}
+          and tg.flag = 1
+          and tg.type = 'SQL'
+        order by ${strOrderby}
+        ${strEndPaging}
+	</select>
+	
+	<!-- 타겟그룹 건수 업데이트 -->    
+    <update id="updateTagetGroupCount" parameterType="com.icignal.kepler.targetGroup.targetSql.dto.request.KprTargetSqlDetailReqDto">
+    	/* KprTargetSql.updateTagetGroupCount */
+        UPDATE 
+        	anl.anl_tgt_group
+        SET
+            MODIFY_BY 		= #{modifyBy}
+            , MODIFY_DATE  = GETDATE()
+            , CNT 					= #{cnt}
+        WHERE
+         	id = #{targetGroupId}
+    </update>
+    
+</mapper>

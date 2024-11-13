@@ -1,0 +1,2300 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:22:05 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.logicalComponent.mapper.KprLogicalComponentMapper">
+ 
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectDbServiceInfo)
+    ============================================
+    -   제목                  : DB 서비스 정보 조회
+    -   설명                  : DB 서비스 정보 조회
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: lang, dbInformId
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectDbServiceInfo" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDbServiceResDto">
+    	/* KprLogicalComponentMapper.selectDbServiceInfo */
+	    SELECT 	  adi.ID				as dbServiceId
+		      	, adi.CREATE_BY			as createBy
+		      	, adi.MODIFY_BY			as modifyBy
+		      	, adi.CREATE_DATE		as createDate
+		      	, adi.MODIFY_DATE		as modifyDate
+		      	, adi.FLAG				as flag
+		      	, adi.TYPE				as type
+		      	, adi.STORE_ID			as storeId
+		      	, adi.SERVICE_NM		as serviceNm
+		      	, adi.CON_IP			as conIp
+		      	, adi.CON_PORT			as conPort
+		      	, adi.CON_ID			as conId
+		      	, adi.CON_URL			as conUrl
+		      	, adi.CON_PW			as conPw
+		      	, adi.DB_DESC			as dbDesc
+		      	, dbTyp.code_name 		as conDbType
+        	    , dbTyp.attrib01 		as conDbClass
+        	    , aws_secret_nm			as secretNm
+		FROM   anl.anl_db_inform 		adi
+		JOIN   com.comm_code 	 		dbTyp  on dbTyp.flag = 1 
+												and dbTyp.lang = #{lang}
+												and dbTyp.group_code = 'ANL_DB_TYPE_CD' 
+												and dbTyp.code_name = adi.con_db_type
+		WHERE  adi.id = #{dbInformId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertLogicalComponent)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 저장
+    -   설명                  : 로지컬 컴포넌트 저장
+    -   결과형태            : 건수
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <insert id="insertLogicalComponent" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertLogicalComponent */
+    	INSERT INTO anl.anl_lgc_comp_mst (
+     		  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, LGC_COMP_NM
+			, LGC_DESC
+			, LGC_SQL
+			, CMPLT_YN
+			, DB_INFORM_ID
+    	) VALUES (
+			  #{lgcCompId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE() /*create_date */
+			, GETDATE() /*modify_date */
+			, 1
+			, #{type}
+			, #{storeId}
+			, #{lgcCompNm}
+			, #{lgcDesc}
+			, #{lgcSql} 
+			, #{cmpltYn}
+			, #{dbInformId}
+    	)
+<!--      * myBatis 컨버젼시 insert시 ClassCastException 발생하여 주석 처리함 2018.05.11 김민준 -->
+<!--     	<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_lgc_comp_mst where id = #{lgcCompId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateLogicalComponent)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 수정
+    -   설명                  : 로지컬 컴포넌트 수정
+    -   결과형태            : 건수
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <update id="updateLogicalComponent" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.updateLogicalComponent */
+    	UPDATE 	  anl.anl_lgc_comp_mst 
+    	SET       MODIFY_BY				= #{modifyBy}
+				, MODIFY_DATE			= GETDATE()
+				<if test="lgcCompNm != null">
+				, LGC_COMP_NM			= #{lgcCompNm}
+				</if>
+				<if test="lgcDesc != null">
+				, LGC_DESC				= #{lgcDesc}
+				</if>
+				<if test="lgcSql != null">
+				, LGC_SQL				= #{lgcSql}
+				</if>
+				<if test="cmpltYn != null">
+				, CMPLT_YN				= #{cmpltYn}
+				</if>
+				<if test="dbInformId != null">
+				, DB_INFORM_ID   		= #{dbInformId}
+				</if>
+		WHERE 	  ID					= #{lgcCompId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteLogicalComponent)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 삭제
+    -   설명                  : 로지컬 컴포넌트 삭제
+    -   결과형태            : 건수
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <update id="deleteLogicalComponent" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.deleteLogicalComponent */
+    	UPDATE 	  anl.anl_lgc_comp_mst 
+    	SET       MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE 	  ID			= #{lgcCompId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectLogicalComponent)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 조회
+    -   설명                  : 로지컬 컴포넌트 조회
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+	<select id="selectLogicalComponent" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto"
+	 resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentResDto">
+        /* KprLogicalComponentMapper.selectLogicalComponent */
+		SELECT 	  lgc.ID				as lgcCompId
+				, lgc.CREATE_BY			as createBy
+				, lgc.MODIFY_BY			as modifyBy
+				, lgc.CREATE_DATE		as createDate
+				, lgc.MODIFY_DATE		as modifyDate
+				, lgc.FLAG				as flag
+				, lgc.LGC_COMP_NM		as lgcCompNm
+				, lgc.LGC_DESC		    as lgcDesc
+				, lgc.LGC_SQL			as lgcSql
+				, lgc.DB_INFORM_ID 		as dbInformId
+				, lgc.CMPLT_YN			as cmpltYn
+		FROM 	anl.anl_lgc_comp_mst lgc WITH (NOLOCK) 
+  		WHERE   ${strSVCType}
+  		AND     lgc.id = #{lgcCompId}
+		AND     lgc.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectLogicalComponentList)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 목록 조회
+    -   설명                  : 로지컬 컴포넌트 목록 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+	<select id="selectLogicalComponentList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentListReqDto" 
+	resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentsResDto">
+        /* KprLogicalComponentMapper.selectLogicalComponentList */
+		SELECT 	${strColumn} 
+			    , lgc.ID				as lgcCompId
+				, lgc.name				as createBy
+				, lgc.MODIFY_BY			as modifyBy
+				, lgc.CREATE_DATE		as createDate
+				, lgc.MODIFY_DATE		as modifyDate
+				, lgc.FLAG				as flag
+				, lgc.LGC_COMP_NM		as lgcCompNm
+				, lgc.LGC_DESC		    as lgcDesc
+				, lgc.name              as name
+		FROM 	(
+					/* alias 구분을 위해 한번 감싸서 조회 */
+					SELECT  lgc.*
+						   ,e.name as name
+					FROM    anl.anl_lgc_comp_mst lgc WITH (NOLOCK) 
+					LEFT OUTER JOIN com.crm_user u WITH (NOLOCK) on lgc.create_by = u.rid
+					LEFT OUTER JOIN com.employee e WITH (NOLOCK) on e.flag = 1 and u.id_employee = e.id
+					WHERE   lgc.flag = 1
+				) lgc
+  		WHERE   ${strCondWhere}
+        AND     ${strSVCType}
+        AND     ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectCheckLogicalComponentName)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트명 중복여부 체크
+    -   설명                  : 로지컬 컴포넌트명 중복여부 체크
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectCheckLogicalComponentName" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" 
+    resultType="java.lang.Integer">
+    	/* KprLogicalComponentMapper.selectCheckLogicalComponentName */
+    	SELECT  COUNT(1) as cnt
+    	FROM	anl.anl_lgc_comp_mst
+    	WHERE   ${strSVCType}
+    	AND		id != #{lgcCompId}
+    	AND     lgc_comp_nm = #{lgcCompNm}
+    	AND     flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectCheckUsingOnSegmentAndReport)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트를 세그먼트/분석 사용여부 체크
+    -   설명                  : 로지컬 컴포넌트를 세그먼트/분석 사용여부 체크
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectCheckUsingOnSegmentAndReport" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto"
+     resultType="java.lang.Integer">
+    	/* KprLogicalComponentMapper.selectCheckUsingOnSegmentAndReport */
+		SELECT  SUM(sr_cnt.cnt)
+		FROM    (
+		            SELECT  COUNT(1) as cnt
+		            FROM    anl.anl_seg_mst asm
+		            WHERE   ${strSVCType}
+		            AND     flag = 1
+		            AND     lgc_comp_id = #{lgcCompId}
+		            
+		            UNION ALL 
+		
+		            SELECT  COUNT(1) as cnt
+		            FROM    anl.anl_rpt_mst asm
+		            WHERE   ${strSVCType}
+		            AND     flag = 1
+		            AND     lgc_comp_id = #{lgcCompId}
+		        ) sr_cnt
+    </select>
+    
+    <!--  kj.kang 추가 : selectCheckUsingOnSegmentAndReport 쿼리문을 용도에 맞춰 둘로 나눔. -->
+    <select id="selectCheckUsingOnSegment" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" resultType="java.lang.Integer">
+    	/* KprLogicalComponentMapper.selectCheckUsingOnSegment */
+    	SELECT COUNT(*)
+    	FROM anl.anl_seg_mst
+		WHERE ${strSVCType}
+		AND FLAG = 1
+		AND LGC_COMP_ID = #{lgcCompId}
+    </select>
+    
+    <select id="selectCheckUsingOnAnalysis" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" resultType="java.lang.Integer">
+    	/* KprLogicalComponentMapper.selectCheckUsingOnAnalysis */
+    	SELECT COUNT(*)
+    	FROM anl.anl_rpt_mst
+		WHERE ${strSVCType}
+		AND FLAG = 1
+		AND LGC_COMP_ID = #{lgcCompId}
+    </select>
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectLogicalComponentDetail)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 상세 조회 - 로지컬 컴포넌트 조회
+    -   설명                  : 로지컬 컴포넌트 상세 조회 - 로지컬 컴포넌트 조회
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectLogicalComponentDetail" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDetailReqDto"
+     resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailResDto">
+    	/* KprLogicalComponentMapper.selectLogicalComponentDetail */
+		SELECT  alcm.id                 as lgcCompId
+		       ,alcm.lgc_comp_nm        as lgcCompNm
+		       ,alcm.lgc_desc           as lgcDesc
+		       ,alcm.cmplt_yn           as cmpltYn
+		       ,alcm.db_inform_id  		as dbInformId
+		       ,alcm.lgc_sql			as lgcSql
+		FROM    anl.anl_lgc_comp_mst alcm WITH (NOLOCK)
+		WHERE  ${strSVCType}
+		AND    alcm.id 		 = #{lgcCompId}
+		AND    alcm.flag 	 = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectLogicalComponentDetailJoinTableRelNodeList)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 상세 조회 - 테이블관계 노드 조회 
+    -   설명                  : 로지컬 컴포넌트 상세 조회 - 테이블관계 노드 조회 
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectLogicalComponentDetailJoinTableRelNodeList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDetailReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailJoinTableRelResDto">
+    	/* KprLogicalComponentMapper.selectLogicalComponentDetailJoinTableRelNodeList */
+		SELECT alctr.id 			as	tblRelId
+		      ,alctr.off_set_x 		as	offsetX
+		      ,alctr.off_set_y 		as	offsetY
+		      ,atm.id 				as	tblMstId
+		      ,alctr.tbl_nm 		as	tblMstNm
+		      ,atm.schma_nm 		as	schmaTblNm
+		      ,tblTyp.mark_name		as	tblTypeCd
+		      ,alctr.tbl_alias 		as	tblAlias
+		FROM  anl.anl_lgc_comp_table_rel  alctr WITH (NOLOCK)
+		JOIN  anl.anl_table_mst           atm    WITH (NOLOCK) on atm.flag = 1 and atm.id = alctr.tbl_id
+		JOIN  com.comm_code               tblTyp WITH (NOLOCK) on tblTyp.code_name = atm.TBL_TYPE_CD 
+													and tblTyp.flag = 1 and tblTyp.lang = #{lang} and tblTyp.group_code = 'ANL_TABLE_TYPE_CD'
+		WHERE ${strSVCType}
+		AND   alctr.lgc_comp_id = #{lgcCompId}
+		AND   alctr.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectLogicalComponentDetailJoinColumnBaseInfo)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 상세 조회 - 조인 칼럼 커넥터 기본 정보 조회
+    -   설명                  : 로지컬 컴포넌트 상세 조회 - 조인 칼럼 커넥터 기본 정보 조회 
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectLogicalComponentDetailJoinColumnBaseInfo" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDetailReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailJoinColumnBaseResDto">
+    	/* KprLogicalComponentMapper.selectLogicalComponentDetailJoinColumnBaseInfo */
+		SELECT join_typ.code_name                	as	joinTypeCd
+		      ,aljc.LEFT_LGC_COMP_TBL_REL_ID    	as	leftNodeId
+		      ,aljc.LEFT_LGC_COMP_TBL_REL_ID    	as	leftLgcCompTblRelId
+		      ,left_atm.id                          as	leftTblId
+		      ,left_atm.dp_nm                       as	leftTblNm
+		      ,left_alctr.TBL_ALIAS       			as	leftTblAlias
+		      ,aljc.RIGHT_LGC_COMP_TBL_REL_ID   	as	rightNodeId
+		      ,aljc.RIGHT_LGC_COMP_TBL_REL_ID   	as	rightLgcCompTblRelId
+		      ,right_atm.id                         as	rightTblId
+		      ,right_atm.dp_nm                      as	rightTblNm
+		      ,right_alctr.TBL_ALIAS      			as	rightTblAlias
+		      ,aljc.seq
+		FROM   anl.anl_lgc_join_column    aljc  WITH (NOLOCK)
+		JOIN   anl.anl_lgc_comp_table_rel left_alctr   WITH (NOLOCK) ON aljc.LEFT_LGC_COMP_TBL_REL_ID = left_alctr.ID 
+														 AND left_alctr.flag = 1 AND left_alctr.lgc_comp_id = #{lgcCompId}
+		JOIN   anl.anl_lgc_comp_table_rel right_alctr  WITH (NOLOCK) ON aljc.RIGHT_LGC_COMP_TBL_REL_ID = right_alctr.ID 
+														 AND right_alctr.flag = 1 AND right_alctr.lgc_comp_id = #{lgcCompId}
+		JOIN   anl.anl_table_mst          left_atm     WITH (NOLOCK) ON left_atm.ID = left_alctr.TBL_ID AND left_atm.flag = 1 
+		JOIN   anl.anl_table_mst          right_atm    WITH (NOLOCK) ON right_atm.ID = right_alctr.TBL_ID AND right_atm.flag = 1 
+		JOIN   com.comm_code              join_typ 	   WITH (NOLOCK) ON join_typ.code_name = aljc.JOIN_TYPE_CD
+														  AND join_typ.flag = 1 AND join_typ.lang = #{lang} 
+														  AND join_typ.group_code = 'ANL_JOIN_TYPE_CD'
+		WHERE  ${strSVCType}
+		AND    aljc.flag = 1
+		GROUP BY join_typ.code_name               
+				,aljc.LEFT_LGC_COMP_TBL_REL_ID    
+				,aljc.LEFT_LGC_COMP_TBL_REL_ID    
+				,left_atm.id                      
+				,left_atm.dp_nm                   
+				,left_alctr.TBL_ALIAS       		
+				,aljc.RIGHT_LGC_COMP_TBL_REL_ID   
+				,aljc.RIGHT_LGC_COMP_TBL_REL_ID   
+				,right_atm.id                     
+				,right_atm.dp_nm                  
+				,right_alctr.TBL_ALIAS      		
+				,aljc.seq
+		ORDER BY  aljc.seq
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectLogicalComponentDetailJoinColumn)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 상세 조회 - 조인 칼럼 커넥터 상세 정보 조회
+    -   설명                  : 로지컬 컴포넌트 상세 조회 - 조인 칼럼 커넥터 상세 정보 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectLogicalComponentDetailJoinColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDetailReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentDetailJoinColumnResDto">
+    	/* KprLogicalComponentMapper.selectLogicalComponentDetailJoinColumn */
+		SELECT aljc.id                        as	joinColumnId
+			  ,''							  as    tempJoinColumnId
+		      ,aljc.seq                       as	seq
+		      ,joinTyp.code_name              as	joinTypeCd
+		      ,aljc.LEFT_LGC_COMP_TBL_REL_ID  as	leftLgcCompTblRelId
+		      ,aljc.LEFT_COL_ID               as	leftColId
+		      ,aljc.LEFT_TBL_ALIAS_COL_NM     as	leftTblAliasColNm
+		      ,oprtTyp.code_name              as	joinOprtCd
+		      ,aljc.RIGHT_LGC_COMP_TBL_REL_ID as	rightLgcCompTblRelId
+		      ,aljc.RIGHT_COL_ID              as	rightColId
+		      ,aljc.RIGHT_TBL_ALIAS_COL_NM    as	rightTblAliasColNm
+		FROM   anl.anl_lgc_join_column    aljc  WITH (NOLOCK)
+		JOIN   com.comm_code              joinTyp  WITH (NOLOCK) ON joinTyp.code_name = aljc.JOIN_TYPE_CD 
+													 AND joinTyp.flag = 1 AND joinTyp.lang = #{lang} 
+		                                             AND joinTyp.group_code = 'ANL_JOIN_TYPE_CD'
+		JOIN   com.comm_code              oprtTyp  WITH (NOLOCK) ON oprtTyp.code_name = aljc.JOIN_OPRT_CD 
+		                                             AND oprtTyp.flag = 1 AND oprtTyp.lang = #{lang}
+		                                             AND oprtTyp.group_code = 'ANL_JOIN_OPRT_TYPE_CD'
+		WHERE  ${strSVCType}
+		AND    aljc.flag = 1
+		AND    aljc.left_lgc_comp_tbl_rel_id = #{leftLgcCompTblRelId}
+		AND    aljc.right_lgc_comp_tbl_rel_id = #{rightLgcCompTblRelId}
+		GROUP BY  	 aljc.id ,aljc.seq ,joinTyp.mark_name ,aljc.LEFT_LGC_COMP_TBL_REL_ID
+					,aljc.LEFT_COL_ID ,aljc.LEFT_TBL_ALIAS_COL_NM ,oprtTyp.mark_name
+					,aljc.RIGHT_LGC_COMP_TBL_REL_ID ,aljc.RIGHT_COL_ID ,aljc.RIGHT_TBL_ALIAS_COL_NM
+					<!-- 20181102 group by 검증 필요함 mj.pyo  -->
+					, joinTyp.code_name, oprtTyp.code_name
+					<!-- 20181102 group by 검증 필요함 mj.pyo END  -->
+		ORDER BY     aljc.seq
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectLogicalComponentDetailJoinColumn)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 쿼리 생성
+    -   설명                  : 로지컬 컴포넌트 쿼리 생성
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/
+    2016. 11. 03. 이기오 - Account ID Parameter 추가 -->
+    <parameterMap id="lgcCompReqMap" type="map">
+		<parameter property="lgcCompId" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="lang" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="accntId" jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="lgcSql" jdbcType="VARCHAR" javaType="java.lang.String" mode="OUT"/>
+ 	</parameterMap>
+	<update id="selectLogicalComponentSqlQuery" parameterMap="lgcCompReqMap" statementType="CALLABLE">
+		{
+		CALL anl.procLgcsqlGen(?, ?, ?, ?)
+		}
+ 	</update>
+     
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectJoinTableRelList)
+    ============================================
+    -   제목                  : 테이블 관계 리스트 조회
+    -   설명                  : 테이블 관계 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectJoinTableRelList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto"
+     resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentTableRelResDto">
+   	 	/* KprLogicalComponentMapper.selectJoinTableRelList */
+		SELECT    	  ID				as tableRelId
+					, CREATE_BY			as createBy
+					, MODIFY_BY			as modifyBy
+					, CREATE_DATE		as createDate
+					, MODIFY_DATE		as modifyDate
+					, FLAG				as flag
+					, TYPE				as type
+					, STORE_ID			as storeId
+					, LGC_COMP_ID		as lgcCompId
+					, TBL_ID			as tblId
+					, SCHMA_TBL_NM		as schmaTblNm
+					, TBL_NM			as tblNm
+					, TBL_ALIAS			as tblAlias
+					, OFF_SET_X			as offSetX
+					, OFF_SET_Y			as offSetY
+		FROM   anl.anl_lgc_comp_table_rel WITH (NOLOCK)
+		WHERE  lgc_comp_id = #{lgcCompId}
+		AND    flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectJoinTableRelList)
+    ============================================
+    -   제목                  : 조인 설정 리스트 조회
+    -   설명                  : 조인 설정 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectJoinColumnList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinColumnResDto">
+   	 	/* KprLogicalComponentMapper.selectJoinColumnList */
+   	 	
+   	 	/* 왼쪽 조인 기준 조회 */
+		SELECT   aljc.ID						as joinColumnId
+				,aljc.CREATE_BY					as createBy
+				,aljc.MODIFY_BY					as modifyBy
+				,aljc.CREATE_DATE				as createDate
+				,aljc.MODIFY_DATE				as modifyDate
+				,aljc.FLAG						as flag
+				,aljc.TYPE						as type
+				,aljc.STORE_ID					as storeId
+				,aljc.JOIN_TYPE_CD				as joinTypeCd
+				,aljc.SEQ						as seq
+				,aljc.LEFT_LGC_COMP_TBL_REL_ID	as leftLgcCompTblRelId
+				,aljc.LEFT_COL_ID				as leftColId
+				,aljc.LEFT_TBL_ALIAS_COL_NM		as leftTblAliasColNm
+				,aljc.JOIN_OPRT_CD				as joinOprtCd
+				,aljc.RIGHT_LGC_COMP_TBL_REL_ID	as rightLgcCompTblRelId
+				,aljc.RIGHT_COL_ID				as rightColId
+				,aljc.RIGHT_TBL_ALIAS_COL_NM	as rightTblAliasColNm
+		FROM   anl.anl_lgc_join_column    aljc  WITH (NOLOCK)
+		JOIN   anl.anl_lgc_comp_table_rel left_alctr   WITH (NOLOCK) ON aljc.LEFT_LGC_COMP_TBL_REL_ID = left_alctr.ID 
+														 AND left_alctr.flag = 1 AND left_alctr.lgc_comp_id = #{lgcCompId}
+		WHERE  ${strSVCType}
+		AND    aljc.flag = 1
+		
+		UNION
+		
+		/* 오른쪽 조인 기준 조회 */
+		SELECT   aljc.ID						as id
+				,aljc.CREATE_BY					as createBy
+				,aljc.MODIFY_BY					as modifyBy
+				,aljc.CREATE_DATE				as createDate
+				,aljc.MODIFY_DATE				as modifyDate
+				,aljc.FLAG						as flag
+				,aljc.TYPE						as type
+				,aljc.STORE_ID					as storeId
+				,aljc.JOIN_TYPE_CD				as joinTypeCd
+				,aljc.SEQ						as seq
+				,aljc.LEFT_LGC_COMP_TBL_REL_ID	as leftLgcCompTblRelId
+				,aljc.LEFT_COL_ID				as leftColId
+				,aljc.LEFT_TBL_ALIAS_COL_NM		as leftTblAliasColNm
+				,aljc.JOIN_OPRT_CD				as joinOprtCd
+				,aljc.RIGHT_LGC_COMP_TBL_REL_ID	as rightLgcCompTblRelId
+				,aljc.RIGHT_COL_ID				as rightColId
+				,aljc.RIGHT_TBL_ALIAS_COL_NM	as rightTblAliasColNm
+		FROM   anl.anl_lgc_join_column    aljc  WITH (NOLOCK)
+		JOIN   anl.anl_lgc_comp_table_rel right_alctr  WITH (NOLOCK) ON aljc.RIGHT_LGC_COMP_TBL_REL_ID = right_alctr.ID 
+														 AND right_alctr.flag = 1 AND right_alctr.lgc_comp_id = #{lgcCompId}
+		WHERE  ${strSVCType}
+		AND    aljc.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectJoinAccordionList)
+    ============================================
+    -   제목                  : 조인설정 어코디언 리스트 조회
+    -   설명                  : 조인설정 어코디언 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectJoinAccordionList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinAccordionListReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinAccordionListResDto">
+   	 	/* KprLogicalComponentMapper.selectJoinAccordionList */
+		SELECT    code_name   as id
+		        , mark_name   as text
+		FROM    com.comm_code cc WITH (NOLOCK)
+		WHERE   cc.flag = 1 
+		AND     cc.lang = #{lang} 
+		AND     cc.group_code = 'ANL_TABLE_TYPE_CD'
+		ORDER BY cc.seq
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (joinAccordionTreeNodeListRequestDTO)
+    ============================================
+    -   제목                  : 조인설정 어코디언 내 트리 리스트 조회
+    -   설명                  : 조인설정 어코디언 내 트리 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectJoinAccordionTreeNodeList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinAccordionTreeNodeListReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinAccordionTreeNodeListResDto">
+    	/* KprLogicalComponentMapper.selectJoinAccordionTreeNodeList */
+    	SELECT   id        
+				,parentId  
+				,text      
+				,expanded  
+				,hasChiled 
+				,tblTypeCd 
+				,schmaTblNm
+				,colType   
+    	FROM	( 
+    				/* SUBJECT_AREA DATA */
+				    SELECT DISTINCT asa.id     		as id
+				          ,''                   	as parentId
+						  , asa.subject_area_nm  	as text
+						  ,1      		    		as expanded
+						  ,1      		    		as hasChiled
+						  ,'' 	                	as tblTypeCd
+						  ,''						as schmaTblNm
+						  ,'P'						as colType
+						  ,asdr.seq					as seq
+					FROM   anl.anl_subject_db_rel asdr WITH (NOLOCK)
+				    JOIN   anl.anl_subject_area   asa   WITH (NOLOCK) ON asdr.subject_area_id = asa.id AND asdr.flag = 1
+				    JOIN   anl.anl_table_mst      atm   WITH (NOLOCK) ON atm.SUBJECT_DB_REL_ID = asdr.ID AND asa.flag = 1
+				    WHERE  asdr.db_id = #{dbInformId}
+				    AND	   asdr.flag  = 1
+				    AND    atm.tbl_type_cd = #{tblTypeCdId}
+				    
+				    UNION ALL
+				    
+				    /* TABLE DATA */
+				    SELECT 	    atm.id     		        				as id
+				              , asdr.subject_area_id     				as parentId
+						      , case when (atm.dp_nm is null or atm.dp_nm = '') then atm.tbl_nm
+                                     else CONCAT(atm.tbl_nm, ' (', atm.dp_nm, ')')
+                                end as text
+						      , 0      		                        	as expanded
+						      , 0      		                        	as hasChiled
+						      , cc.mark_name 	                        as tblTypeCd
+						      , CONCAT(atm.schma_nm, '.', atm.tbl_nm)		as schmaTblNm
+						      , 'C'										as colType
+						      , asdr.seq								as seq
+					FROM   anl.anl_subject_db_rel asdr WITH (NOLOCK)
+					JOIN   anl.anl_table_mst      atm   WITH (NOLOCK) ON atm.SUBJECT_DB_REL_ID = asdr.ID AND atm.flag = 1
+					JOIN   com.comm_code          cc    WITH (NOLOCK) ON cc.code_name = atm.TBL_TYPE_CD and cc.flag = 1 and cc.lang = #{lang} and cc.group_code = 'ANL_TABLE_TYPE_CD'
+					WHERE  asdr.flag = 1
+				    AND    cc.code_name = #{tblTypeCdId}
+				    AND    asdr.db_id = #{dbInformId}
+    			) acc
+    	ORDER BY acc.colType, acc.seq, acc.text
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectJoinDbServiceComboList)
+    ============================================
+    -   제목                  : 조인설정 서비스 콤보 리스트 조회
+    -   설명                  : 조인설정 서비스 콤보 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectJoinDbServiceComboList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinDbServiceComboListReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinDbServiceComboListResDto">
+    	/* KprLogicalComponentMapper.selectJoinDbServiceComboList */
+    	SELECT    asdr.db_id      as id
+		        , adi.service_nm  as text
+		FROM    anl.anl_db_inform      adi WITH (NOLOCK)
+		JOIN    anl.anl_subject_db_rel asdr WITH (NOLOCK) on adi.id = asdr.db_id and asdr.flag = 1
+		JOIN    anl.anl_table_mst      atm WITH (NOLOCK) on atm.subject_db_rel_id = asdr.id and atm.flag = 1
+		WHERE   ${strSVCType}
+		AND     adi.flag = 1
+		GROUP BY asdr.db_id, adi.service_nm
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectJoinColumnMasterList)
+    ============================================
+    -   제목                  : 조인설정 컬럼 마스터 리스트 조회
+    -   설명                  : 조인설정 컬럼 마스터 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <select id="selectJoinColumnMasterList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinColumnMasterListReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinColumnMasterListResDto">
+    	/* KprLogicalComponentMapper.selectJoinColumnMasterList */
+		SELECT    acm.id   		as columnMstId
+		        , acm.col_nm 	as col
+		        , acm.dp_nm 		as columnName
+		        , CASE WHEN acm.len is null THEN typ.mark_name
+		               ELSE (CONCAT(trim(typ.mark_name), '(', acm.len, ')')) 
+		          END 		    as columnType
+				, acm.col_type_cd as columnUseType
+		FROM    anl.anl_column_mst acm WITH (NOLOCK)
+		JOIN    anl.anl_table_mst atm WITH (NOLOCK) ON atm.id = acm.tbl_id
+		JOIN    com.comm_code      typ WITH (NOLOCK) ON UPPER(acm.data_type_cd) = upper(typ.code_name) 
+									   AND typ.group_code = 'DB_DATA_TYPE_CD' 
+									   AND typ.lang = #{lang} 
+									   AND typ.flag = 1
+		WHERE   acm.tbl_id = #{tblMstId}
+		AND     acm.flag = 1
+		ORDER BY acm.SEQ
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectJoinColumnMasterPopupList)
+    ============================================
+    -   제목                  : 조인설정 컬럼 마스터 팝업 리스트 조회
+    -   설명                  : 조인설정 컬럼 마스터 팝업 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.26
+    ***************************************/ -->
+	<select id="selectJoinColumnMasterPopupList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinColumnMasterListReqDto" 
+	resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentJoinColumnMasterPopupListResDto">
+        /* KprLogicalComponentMapper.selectJoinColumnMasterPopupList */
+		SELECT 	${strColumn} 
+			    ,acm.colId
+		        ,acm.colNm
+		        ,acm.dpNm
+		        ,acm.colType
+		FROM 	(
+					SELECT   acm.id   		as colId
+					        ,acm.col_nm 	as colNm
+					        ,acm.dp_nm 		as dpNm
+					        ,CASE WHEN acm.len is null THEN typ.mark_name
+					              ELSE CONCAT(trim(typ.mark_name), '(', acm.len, ')') 
+					         END 			as colType
+					        ,acm.seq
+					FROM    anl.anl_column_mst acm WITH (NOLOCK)
+					JOIN    anl.anl_table_mst atm WITH (NOLOCK) ON atm.id = acm.tbl_id
+					JOIN    com.comm_code      typ WITH (NOLOCK) ON acm.data_type_cd = typ.code_name 
+													AND typ.group_code = 'DB_DATA_TYPE_CD' 
+													AND typ.lang = #{lang}
+													AND typ.flag = 1
+					WHERE   acm.tbl_id = #{tblMstId}
+					AND     acm.flag = 1
+					AND     ${strWhere}
+				) acm
+  		WHERE   ${strCondWhere}
+        AND     ${strSVCType}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertJoinTableRelByList)
+    ============================================
+    -   제목                  : 테이블 관계 다중 저장
+    -   설명                  : 테이블 관계 다중 저장
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <insert id="insertJoinTableRelByList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertJoinTableRelByList */
+		<foreach collection="joinTableRelList" item="item"  open=" " separator=" " close=" ">
+		INSERT INTO anl.anl_lgc_comp_table_rel (
+    	                ID
+						, CREATE_BY
+						, MODIFY_BY
+						, CREATE_DATE
+						, MODIFY_DATE
+						, FLAG
+						, TYPE
+						, STORE_ID
+						, LGC_COMP_ID
+						, TBL_ID
+						, SCHMA_TBL_NM
+						, TBL_NM
+						, TBL_ALIAS
+						, OFF_SET_X
+						, OFF_SET_Y
+		) VALUES (
+			 	  #{item.tblRelId}
+				, #{item.createBy}
+				, #{item.modifyBy}
+				, GETDATE() /*create_date */
+				, GETDATE() /*modify_date */
+				, 1
+				, #{item.type}
+				, #{item.storeId}
+				, #{item.lgcCompId}
+				, #{item.tblId}
+				, #{item.schmaTblNm}
+				, #{item.tblNm}
+				, #{item.tblAlias}
+				, #{item.offSetX}
+				, #{item.offSetY}
+			)
+		</foreach>
+		
+-- 		SELECT *
+<!-- 		mybatis 컨버젼시 불필요하여 주석처리 2018.05.17 김민준 -->
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_lgc_comp_table_rel where lgc_comp_id = #{lgcCompId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertJoinTableRel)
+    ============================================
+    -   제목                  : 조인설정 테이블 관계 저장
+    -   설명                  : 조인설정 테이블 관계 저장
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <insert id="insertJoinTableRel" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinTableRelReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertJoinTableRel */
+    	INSERT INTO anl.anl_lgc_comp_table_rel ( 
+    		  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, LGC_COMP_ID
+			, TBL_ID
+			, SCHMA_TBL_NM
+			, TBL_NM
+			, TBL_ALIAS
+			, OFF_SET_X
+			, OFF_SET_Y
+		 ) VALUES ( 
+		 	  #{tblRelId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE() /*create_date */
+			, GETDATE() /*modify_date */
+			, 1
+			, #{type}
+			, #{storeId}
+			, #{lgcCompId}
+			, #{tblId}
+			, #{schmaTblNm}
+			, #{tblNm}
+			, #{tblAlias}
+			, #{offSetX}
+			, #{offSetY}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_lgc_comp_table_rel where id = #{tblRelId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateJoinTableRel)
+    ============================================
+    -   제목                  : 조인설정 테이블 관계 수정
+    -   설명                  : 조인설정 테이블 관계 수정
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <update id="updateJoinTableRel" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinTableRelReqDto">
+    	/* KprLogicalComponentMapper.updateJoinTableRel */
+    	UPDATE 	anl.anl_lgc_comp_table_rel 
+    	SET 	  MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, OFF_SET_X		= #{offSetX}
+				, OFF_SET_Y		= #{offSetY}
+		WHERE     ID = #{tblRelId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateJoinTableRel)
+    ============================================
+    -   제목                  : 조인설정 테이블 관계 삭제
+    -   설명                  : 조인설정 테이블 관계 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <update id="deleteJoinTableRel" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDeleteIdListReqDto">
+    	/* KprLogicalComponentMapper.deleteJoinTableRel */
+    	UPDATE 	anl.anl_lgc_comp_table_rel 
+    	SET 	  MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     LGC_COMP_ID   = #{lgcCompId} 
+		AND       FLAG          = 1
+		<if test="removeIdList.size() > 0">
+		AND ID NOT IN 
+			<foreach collection="removeIdList" item="item" separator="," close=")" open="(">
+				#{item}
+			</foreach>
+		</if>
+	</update>
+	
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateJoinTableRel)
+    ============================================
+    -   제목                  : 조인설정 테이블 관계 전체 삭제
+    -   설명                  : 조인설정 테이블 관계 전체 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <update id="deleteJoinTableRelAll" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.deleteJoinTableRelAll */
+    	UPDATE 	anl.anl_lgc_comp_table_rel 
+    	SET 	  MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     LGC_COMP_ID 	= #{lgcCompId}
+	</update>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateJoinTableRel)
+    ============================================
+    -   제목                  : 조인 설정 다중 저장
+    -   설명                  : 조인 설정 다중 저장
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+    <insert id="insertJoinColumnByList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertJoinColumnByList */
+		<foreach collection="joinColumnList" item="item" open=" " separator=" " close=" ">
+		INSERT INTO anl.anl_lgc_join_column (
+    		 ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, JOIN_TYPE_CD
+			, SEQ
+			, LEFT_LGC_COMP_TBL_REL_ID
+			, LEFT_COL_ID
+			, LEFT_TBL_ALIAS_COL_NM
+			, JOIN_OPRT_CD
+			, RIGHT_LGC_COMP_TBL_REL_ID
+			, RIGHT_COL_ID
+			, RIGHT_TBL_ALIAS_COL_NM
+    	 )
+    	 VALUES 
+			( 
+	    	 	  #{item.joinColumnId}
+				, #{item.createBy}
+				, #{item.modifyBy}
+				, GETDATE() /*create_date */
+				, GETDATE() /*modify_date */
+				, 1
+				, #{item.type}
+				, #{item.storeId}
+				, #{item.joinTypeCd}
+				, #{item.seq}
+				, #{item.leftLgcCompTblRelId}
+				, #{item.leftColId}
+				, #{item.leftTblAliasColNm}
+				, #{item.joinOprtCd}
+				, #{item.rightLgcCompTblRelId}
+				, #{item.rightColId}
+				, #{item.rightTblAliasColNm}
+			)
+		</foreach>
+
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+            select  aljc.id 
+            from 	anl.anl_lgc_join_column 	aljc   
+            join    anl.anl_lgc_comp_table_rel  l_alctr  on l_alctr.flag = 1 and l_alctr.id = aljc.left_lgc_comp_tbl_rel_id   and l_alctr.lgc_comp_id = #{lgcCompId}
+            join    anl.anl_lgc_comp_table_rel  r_alctr  on r_alctr.flag = 1 and r_alctr.id = aljc.right_lgc_comp_tbl_rel_id  and r_alctr.lgc_comp_id = #{lgcCompId}
+            limit 0, 1
+        </selectKey> -->
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertJoinColumn)
+    ============================================
+    -   제목                  : 조인설정 컬럼 저장 
+    -   설명                  : 조인설정 컬럼 저장 
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->    
+    <insert id="insertJoinColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinColumnReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertJoinColumn */
+    	INSERT INTO anl.anl_lgc_join_column ( 
+    		 ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, JOIN_TYPE_CD
+			, SEQ
+			, LEFT_LGC_COMP_TBL_REL_ID
+			, LEFT_COL_ID
+			, LEFT_TBL_ALIAS_COL_NM
+			, JOIN_OPRT_CD
+			, RIGHT_LGC_COMP_TBL_REL_ID
+			, RIGHT_COL_ID
+			, RIGHT_TBL_ALIAS_COL_NM
+    	 ) VALUES ( 
+    	 	  #{joinColumnId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE() /*create_date */
+			, GETDATE() /*modify_date */
+			, 1
+			, #{type}
+			, #{storeId}
+			, #{joinTypeCd}
+			, #{seq}
+			, #{leftLgcCompTblRelId}
+			, #{leftColId}
+			, #{leftTblAliasColNm}
+			, #{joinOprtCd}
+			, #{rightLgcCompTblRelId}
+			, #{rightColId}
+			, #{rightTblAliasColNm}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String">
+            select id from anl.anl_lgc_join_column where id = #{joinColumnId} limit 0, 1
+        </selectKey> -->
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateJoinColumn)
+    ============================================
+    -   제목                  : 조인설정 컬럼 수정
+    -   설명                  : 조인설정 컬럼 수정
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->  
+    <update id="updateJoinColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinColumnReqDto">
+    	/* KprLogicalComponentMapper.updateJoinColumn */
+    	UPDATE 	  anl.anl_lgc_join_column 
+    	SET       MODIFY_BY						= #{modifyBy}
+				, MODIFY_DATE					= GETDATE()
+				, JOIN_TYPE_CD					= #{joinTypeCd}
+				, SEQ							= #{seq}
+				, LEFT_COL_ID					= #{leftColId}
+				, LEFT_TBL_ALIAS_COL_NM			= #{leftTblAliasColNm}
+				, JOIN_OPRT_CD					= #{joinOprtCd}
+				, RIGHT_COL_ID					= #{rightColId}
+				, RIGHT_TBL_ALIAS_COL_NM		= #{rightTblAliasColNm}
+		WHERE     ID = #{joinColumnId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteJoinColumn)
+    ============================================
+    -   제목                  : 조인설정 컬럼 삭제
+    -   설명                  : 조인설정 컬럼 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->  
+    <update id="deleteJoinColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDeleteIdListReqDto">
+    	/* KprLogicalComponentMapper.deleteJoinColumn */
+    	UPDATE 	  anl.anl_lgc_join_column 
+    	SET       MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE  (
+					       LEFT_LGC_COMP_TBL_REL_ID IN (
+					          SELECT  ID
+					          FROM    anl.anl_lgc_comp_table_rel
+					          WHERE   LGC_COMP_ID = #{lgcCompId})
+					OR     RIGHT_LGC_COMP_TBL_REL_ID IN (
+					          SELECT  ID
+					          FROM    anl.anl_lgc_comp_table_rel
+					          WHERE   LGC_COMP_ID = #{lgcCompId})
+			    )
+		AND     FLAG = 1
+		<if test="removeIdList.size() > 0">
+		AND ID NOT IN  
+			<foreach collection="removeIdList" item="item" separator="," close=")" open="(">
+				#{item}
+			</foreach>
+		</if>
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteJoinColumnAll)
+    ============================================
+    -   제목                  : 조인설정 컬럼 전체 삭제 
+    -   설명                  : 조인설정 컬럼 전체 삭제 
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->  
+    <update id="deleteJoinColumnAll" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.deleteJoinColumnAll */
+    	UPDATE 	  anl.anl_lgc_join_column 
+    	SET       MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     ID IN (
+					  SELECT    A.ID
+					  FROM      (
+									  SELECT  	aljc.id
+									  FROM		anl.anl_lgc_join_column    aljc
+									  JOIN		anl.anl_lgc_comp_table_rel alctr on alctr.LGC_COMP_ID = #{lgcCompId}
+									  												and alctr.flag = 1 
+									  												and (       alctr.id = aljc.left_lgc_comp_tbl_rel_id 
+									  											   		   or   alctr.id = aljc.right_lgc_comp_tbl_rel_id)   
+									  WHERE   	aljc.FLAG = 1
+									  GROUP BY  aljc.id
+								) A
+				  )
+    </update>
+    
+    
+    
+    
+    
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectAttributeGroupList)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 리스트 조회
+    -   설명                  : 어트리뷰트 그룹 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->  
+    <select id="selectAttributeGroupList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupResDto">
+   	 	/* KprLogicalComponentMapper.selectAttributeGroupList */
+		SELECT	  ID				as attributeGroupId
+				, CREATE_BY			as createBy
+				, MODIFY_BY			as modifyBy
+				, CREATE_DATE		as createDate
+				, MODIFY_DATE		as modifyDate
+				, FLAG				as flag
+				, TYPE				as type
+				, STORE_ID			as storeId
+				, ATRIB_GROUP_NM	as atribGroupNm
+				, SEQ				as seq
+				, LGC_COMP_ID		as lgcCompId
+		FROM    anl.anl_atrib_group WITH (NOLOCK)
+		WHERE   lgc_comp_id = #{lgcCompId}
+		AND     flag = 1
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectAttributeGroupTreeNodeList)
+    ============================================
+    -   제목                  : 어트리뷰트설정 트리 리스트 조회
+    -   설명                  : 어트리뷰트설정 트리 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->     
+	<select id="selectAttributeGroupTreeNodeList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupTreeNodeListReqDto" 
+	resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupTreeNodeListResDto">
+		/* KprLogicalComponentMapper.selectAttributeGroupTreeNodeList */
+		SELECT  tree.id							 as id
+		       ,tree.text 						 as text
+		       ,tree.parentId					 as parentId
+		       ,tree.hasChild					 as hasChild
+		       ,tree.expanded					 as expanded
+		       ,tree.colType					 as colType
+      		   ,tree.attributeGroupColumnId    	 as attributeGroupColumnId    
+      		   ,tree.tempAttributeGroupColumnId	 as tempAttributeGroupColumnId
+      		   ,tree.lgcCompTblRelId			 as lgcCompTblRelId
+      		   ,tree.seq                       	 as seq
+      		   ,tree.colId                     	 as colId
+      		   ,tree.colAlias                    as colAlias
+      		   ,tree.dpNm                        as dpNm
+      		   ,tree.dimColId                    as dimColId
+      		   ,tree.calColYn                    as calColYn
+      		   ,tree.calDtl                      as calDtl  
+      		   ,tree.calDtlHis                   as calDtlHis
+      		   ,tree.tblAliasColNm               as tblAliasColNm
+      		   ,tree.atribGroupId                as atribGroupId
+      		   ,tree.segKeyYn                    as segKeyYn
+      		   ,tree.dateKeyYn					 as dateKeyYn
+      		   ,tree.evtTriggerKeyYn			 as evtTriggerKeyYn
+      		   ,tree.sqlValue					 as sqlValue
+		FROM   (
+		          SELECT   aag.id              as id
+		        		   ,aag.ATRIB_GROUP_NM as text
+		        		   ,''                 as parentId
+		        		   ,1               	as hasChild
+		        		   ,1               	as expanded
+		        		   ,'P'				   as colType
+		        		   ,''	           	   as attributeGroupColumnId
+		        		   ,''		           as tempAttributeGroupColumnId
+		        		   ,''				   as lgcCompTblRelId
+		        		   ,aag.seq		       as seq
+		        		   ,''		           as colId        
+		        		   ,''                 as colAlias     
+		        		   ,''                 as dpNm         
+		        		   ,''                 as dimColId     
+		        		   ,''                 as calColYn     
+		        		   ,''                 as calDtl       
+		        		   ,''                 as calDtlHis    
+		        		   ,''                 as tblAliasColNm
+		        		   ,aag.id             as atribGroupId 
+		        		   ,''                 as segKeyYn     
+		        		   ,''                 as dateKeyYn
+		        		   ,''                 as evtTriggerKeyYn
+		        		   ,''                 AS sqlValue
+		      	  FROM    anl.anl_atrib_group aag WITH (NOLOCK)
+		          WHERE   ${strSVCType}
+		          AND     aag.flag = 1
+		          AND     aag.lgc_comp_id = #{lgcCompId} 
+		      		
+		      	  UNION ALL
+		      		
+		          SELECT   agc.id                           as id
+		        		   ,agc.dp_nm                       as text
+		        		   ,agc.ATRIB_GROUP_ID              as parentId
+		        		   ,0                           	as hasChild
+		        		   ,0                           	as expanded
+		        		   ,'C'				              	as colType
+		        		   ,agc.id							as attributeGroupColumnId
+		        		   ,''								as tempAttributeGroupColumnId
+		        		   ,agc.LGC_COMP_TBL_REL_ID			as lgcCompTblRelId
+		        		   ,agc.seq            				as seq
+		        		   ,agc.COL_ID                      as colId
+		        		   ,agc.COL_ALIAS                   as colAlias
+		        		   ,agc.DP_NM                       as dpNm
+		        		   ,agc.DIM_COL_ID                  as dimColId
+		        		   ,agc.CAL_COL_YN                  as calColYn
+		        		   ,agc.CAL_DTL                     as calDtl
+		        		   ,agc.CAL_DTL_HIS                 as calDtlHis
+		        		   ,agc.TBL_ALIAS_COL_NM            as tblAliasColNm
+		        		   ,agc.ATRIB_GROUP_ID              as atribGroupId
+		        		   ,agc.SEG_KEY_YN                  as segKeyYn
+		        		   ,agc.DATE_KEY_YN                 as dateKeyYn
+		        		   ,agc.EVT_TRIGGER_KEY_YN          as evtTriggerKeyYn
+		        		   ,agc.VAL_SQL						as sqlValue		        		   
+		      	  FROM    anl.anl_atrib_group aag WITH (NOLOCK)
+		          LEFT JOIN anl.anl_atrib_group_column agc WITH (NOLOCK) ON aag.ID = agc.atrib_group_id AND aag.flag = 1
+		          WHERE   ${strSVCType}
+		          AND     agc.flag = 1
+		          AND     aag.lgc_comp_id = #{lgcCompId} 
+		          AND     ( agc.DIM_COL_ID is null OR agc.DIM_COL_ID = '' )
+		        ) tree
+		ORDER BY tree.parentId, tree.seq
+	</select>
+	
+	
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertAttributeGroupByList)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 다중 저장
+    -   설명                  : 어트리뷰트 그룹 다중 저장
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->   
+    <insert id="insertAttributeGroupByList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertAttributeGroupByList */
+    	INSERT INTO anl.anl_atrib_group ( 
+    		 ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, ATRIB_GROUP_NM
+			, SEQ
+			, LGC_COMP_ID
+    	 )
+    	VALUES ( 
+    	 	  #{attributeGroupId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE() /*create_date */
+			, GETDATE() /*modify_date */
+			, 1
+			, #{type}
+			, #{storeId}
+			, #{atribGroupNm}
+			, #{seq}
+			, #{lgcCompId}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!-- 			select id from anl.anl_atrib_group where lgc_comp_id = #{lgcCompId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+	
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertAttributeGroup)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 저장
+    -   설명                  : 어트리뷰트 그룹 저장
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->   
+    <insert id="insertAttributeGroup" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertAttributeGroup */
+    	INSERT INTO anl.anl_atrib_group ( 
+    		 ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, ATRIB_GROUP_NM
+			, SEQ
+			, LGC_COMP_ID
+    	 ) VALUES ( 
+    	 	  #{attributeGroupId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE() /*create_date */
+			, GETDATE() /*modify_date */
+			, 1
+			, #{type}
+			, #{storeId}
+			, #{atribGroupNm}
+			, #{seq}
+			, #{lgcCompId}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_atrib_group where id = #{attributeGroupId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateAttributeGroup)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 수정
+    -   설명                  : 어트리뷰트 그룹 수정
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->   
+    <update id="updateAttributeGroup" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupReqDto">
+    	/* KprLogicalComponentMapper.updateAttributeGroup */
+    	UPDATE 	  anl.anl_atrib_group 
+    	SET	  	  MODIFY_BY			= #{modifyBy}
+				, MODIFY_DATE		= GETDATE()
+				, ATRIB_GROUP_NM	= #{atribGroupNm}
+				, SEQ				= #{seq}
+		WHERE 	  ID = #{attributeGroupId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteAttributeGroup)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 삭제
+    -   설명                  : 어트리뷰트 그룹 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->   
+    <update id="deleteAttributeGroup" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDeleteIdListReqDto">
+    	/* KprLogicalComponentMapper.deleteAttributeGroup */
+    	UPDATE 	  anl.anl_atrib_group 
+    	SET       MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     LGC_COMP_ID   = #{lgcCompId}
+		AND       FLAG          = 1
+		<if test="removeIdList.size() > 0">
+		AND ID NOT IN  
+			<foreach collection="removeIdList" item="item" separator="," close=")" open="(">
+				#{item}
+			</foreach>
+		</if>
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteAttributeGroupAll)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 전체 삭제
+    -   설명                  : 어트리뷰트 그룹 전체 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <update id="deleteAttributeGroupAll" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.deleteAttributeGroupAll */
+    	UPDATE 	  anl.anl_atrib_group 
+    	SET 	  MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     FLAG 			= 1
+		AND		  LGC_COMP_ID   = #{lgcCompId}
+    </update>
+    
+    
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectAttributeGroupColumnList)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 칼럼 리스트 조회
+    -   설명                  : 어트리뷰트 그룹 칼럼 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <select id="selectAttributeGroupColumnList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupColumnResDto">
+   	 	/* KprLogicalComponentMapper.selectAttributeGroupColumnList */
+		SELECT	 aagc.ID					as attributeGroupColumnId
+				,aagc.CREATE_BY				as createBy
+				,aagc.MODIFY_BY				as modifyBy
+				,aagc.CREATE_DATE			as createDate
+				,aagc.MODIFY_DATE			as modifyDate
+				,aagc.FLAG					as flag
+				,aagc.TYPE					as type
+				,aagc.STORE_ID				as storeId
+				,aagc.SEQ					as seq
+				,aagc.LGC_COMP_TBL_REL_ID	as lgcCompTblRelId
+				,aagc.COL_ID				as colId
+				,aagc.DP_NM					as dpNm
+				,aagc.DIM_COL_ID			as dimColId
+				,aagc.CAL_DTL				as calDtl
+				,aagc.CAL_DTL_HIS			as calDtlHis
+				,aagc.TBL_ALIAS_COL_NM		as tblAliasColNm
+				,aagc.COL_ALIAS				as colAlias
+				,aagc.CAL_COL_YN			as calColYn
+				,aagc.ATRIB_GROUP_ID		as atribGroupId
+				,aagc.SEG_KEY_YN			as segKeyYn
+				,aagc.DATE_KEY_YN			as dateKeyYn
+				,aagc.EVT_TRIGGER_KEY_YN	as evtTriggerKeyYn
+				, aagc.VAL_SQL 				AS valSql
+		FROM    anl.anl_atrib_group_column  aagc WITH (NOLOCK)
+		JOIN    anl.anl_atrib_group			aag		 WITH (NOLOCK) ON aag.lgc_comp_id = #{lgcCompId} AND aag.flag = 1 AND aag.id = aagc.atrib_group_id
+		WHERE   aagc.flag = 1
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertAttributeGroupColumnByList)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 컬럼 다중 저장
+    -   설명                  : 어트리뷰트 그룹 컬럼 다중 저장
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <insert id="insertAttributeGroupColumnByList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertAttributeGroupColumnByList */
+    	INSERT ALL
+    	<foreach collection="atribGroupColumnList" item="item" separator=" ">
+    	INTO anl.anl_atrib_group_column ( 
+			  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, SEQ
+			, LGC_COMP_TBL_REL_ID
+			, COL_ID
+			, DP_NM
+			, DIM_COL_ID
+			, CAL_DTL
+			, CAL_DTL_HIS
+			, TBL_ALIAS_COL_NM
+			, COL_ALIAS
+			, CAL_COL_YN
+			, ATRIB_GROUP_ID
+			, SEG_KEY_YN
+			, DATE_KEY_YN
+			, EVT_TRIGGER_KEY_YN
+			, VAL_SQL			
+    	)
+    	VALUES 
+		( 
+			  #{item.attributeGroupColumnId}
+			, #{item.createBy}
+			, #{item.modifyBy}
+			, GETDATE() /*create_date */
+			, GETDATE() /*modify_date */
+			, 1
+			, #{item.type}
+			, #{item.storeId}
+			, CONVERT(int, #{item.seq})
+			, #{item.lgcCompTblRelId}
+			, #{item.colId}
+			, #{item.dpNm}
+			, #{item.dimColId}
+			, #{item.calDtl}
+			, #{item.calDtlHis}
+			, #{item.tblAliasColNm}
+			, anl.getColAlias(#{lgcCompId}) /* colAlias */
+			, #{item.calColYn}
+			, #{item.atribGroupId}
+			, #{item.segKeyYn}
+			, #{item.dateKeyYn}
+			, #{item.evtTriggerKeyYn}
+			, #{item.sqlValue}			
+		)
+		</foreach>
+		SELECT * FROM DUAL
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select  aagc.id  -->
+<!--             from 	anl.anl_atrib_group_column  aagc   -->
+<!--             join    anl.anl_atrib_group         aag    on aag.flag = 1 and aag.id = aagc.atrib_group_id and aag.lgc_comp_id = #{lgcCompId} -->
+<!--             limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>    
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (insertAttributeGroupColumn)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 칼럼 저장
+    -   설명                  : 어트리뷰트 그룹 칼럼 저장
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <insert id="insertAttributeGroupColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupColumnReqDto" useGeneratedKeys="false">
+    	/* KprLogicalComponentMapper.insertAttributeGroupColumn */
+    	INSERT INTO anl.anl_atrib_group_column ( 
+			  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, TYPE
+			, STORE_ID
+			, SEQ
+			, LGC_COMP_TBL_REL_ID
+			, COL_ID
+			, DP_NM
+			, DIM_COL_ID
+			, CAL_DTL
+			, CAL_DTL_HIS
+			, TBL_ALIAS_COL_NM
+			, COL_ALIAS
+			, CAL_COL_YN
+			, ATRIB_GROUP_ID
+			, SEG_KEY_YN
+			, DATE_KEY_YN
+			, EVT_TRIGGER_KEY_YN
+			, VAL_SQL
+    	 ) VALUES ( 
+			  #{attributeGroupColumnId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE() /*create_date */
+			, GETDATE() /*modify_date */
+			, 1
+			, #{type}
+			, #{storeId}
+			, CONVERT(int, #{seq})
+			, #{lgcCompTblRelId}
+			, #{colId}
+			, #{dpNm}
+			, #{dimColId}
+			, #{calDtl}
+			, #{calDtlHis}
+			, #{tblAliasColNm}
+			, anl.getColAlias(#{lgcCompId}) /* colAlias */
+			, #{calColYn}
+			, #{atribGroupId}
+			, #{segKeyYn}
+			, #{dateKeyYn}
+			, #{evtTriggerKeyYn}
+			, #{sqlValue}
+		)
+		
+<!-- 		<selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_atrib_group_column where id = #{attributeGroupColumnId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectAttributeGroupDimensionColumn)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 칼럼 디멘전 기준 저장
+    -   설명                  : 어트리뷰트 그룹 칼럼 디멘전 기준 저장
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <select id="selectAttributeGroupDimensionColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupColumnResDto">
+    	/* KprLogicalComponentMapper.selectAttributeGroupDimensionColumn */
+		/* 전체 쿼리 : 로지컬 컴포넌트 ID를 기준으로 어트리뷰트 그룹 컬럼에 디멘젼 칼럼이 Insert 되지 않은 칼럼을 조회 후, 디멘젼 컬럼을 Insert 함.*/
+		SELECT    com.getNewID('A')					as attributeGroupColumnId
+				, #{createBy}                        as createBy              
+				, #{modifyBy}                        as modifyBy              
+				, GETDATE()                         as createDate            
+				, GETDATE()                         as modifyDate            
+				, 1                                 as flag                  
+				, #{type}                            as type                  
+				, #{storeId}                         as storeId               
+				, ''                            	as seq                   
+				, std.lgc_comp_tbl_rel_id           as lgcCompTblRelId       
+				, std.col_id                        as colId                 
+				, std.dp_nm                         as dpNm                  
+				, std.dim_col_id                    as dimColId              
+				, ''                                as calDtl                
+				, ''                                as calDtlHis             
+				, std.tbl_alias_col_nm              as tblAliasColNm
+				, anl.getColAlias(std.lgc_comp_id)  as colAlias
+				, '0'                               as calColYn
+				, std.atrib_group_id                as atribGroupId
+				, '0'                               as segKeyYn
+				, '0'                               as dateKeyYn
+		FROM   (
+					/* 디멘전 컬럼 추가가 필요한 경우 */
+					SELECT   aagc.lgc_comp_id							as lgc_comp_id
+							,CASE 
+					            WHEN aagc.lgc_comp_tbl_rel_id = aljc.left_lgc_comp_tbl_rel_id THEN aljc.right_lgc_comp_tbl_rel_id
+					            ELSE                                                               aljc.left_lgc_comp_tbl_rel_id
+					         END 										as lgc_comp_tbl_rel_id
+					        ,aagc.col_id								as col_id
+					        ,acm.dp_nm									as dp_nm
+					        ,acm.id   									as dim_col_id
+					        ,CONCAT(alctr.tbl_alias, '.', acm.col_nm) 	as tbl_alias_col_nm
+					        ,aagc.atrib_group_id						as atrib_group_id
+					FROM   (
+							  /* 이미 디멘전이 추가 된 어트리뷰트 그룹 칼럼은 제외 */
+					          SELECT   aagc.atrib_group_id
+					                  ,aagc.col_id
+					                  ,aagc.lgc_comp_tbl_rel_id
+					                  ,aagc.dp_nm
+					                  ,aag.lgc_comp_id
+					          FROM    anl.anl_atrib_group_column   aagc  WITH (NOLOCK)
+					          JOIN   anl.anl_atrib_group           aag   WITH (NOLOCK)  ON aag.id = aagc.atrib_group_id
+					                                                        AND aag.flag = 1
+					                                                        AND aag.lgc_comp_id = #{lgcCompId}
+					          WHERE   aagc.flag = 1
+					          GROUP BY aagc.atrib_group_id
+					                  ,aagc.col_id
+					                  ,aagc.lgc_comp_tbl_rel_id
+					                  ,aagc.dp_nm
+					                  ,aag.lgc_comp_id
+					          HAVING   COUNT(col_id) = 1
+					       )                            aagc
+					JOIN   anl.anl_lgc_comp_table_rel   alctr WITH (NOLOCK) ON alctr.lgc_comp_id = aagc.lgc_comp_id 
+					                                            AND alctr.flag = 1
+					JOIN   anl.anl_lgc_join_column      aljc WITH (NOLOCK)  ON (aljc.left_lgc_comp_tbl_rel_id = alctr.id OR aljc.right_lgc_comp_tbl_rel_id = alctr.id)
+					                                            AND (aagc.col_id = aljc.left_col_id OR aagc.col_id = aljc.right_col_id)
+					                                            AND (aljc.left_tbl_alias_col_nm like 'D%' OR aljc.right_tbl_alias_col_nm like 'D%')
+					                                            AND aljc.flag = 1
+					JOIN   anl.anl_table_mst          atm    WITH (NOLOCK)  ON atm.id = alctr.tbl_id 
+					                                            AND atm.flag = 1
+					JOIN   com.comm_code              tblTyp  WITH (NOLOCK) ON tblTyp.code_name = atm.tbl_type_cd 
+																		  AND tblTyp.flag = 1
+										                                  AND tblTyp.group_code = 'ANL_TABLE_TYPE_CD' 
+										                                  AND tblTyp.lang = #{lang}
+										                                  AND tblTyp.code_name = 'DIM'
+					JOIN   anl.anl_column_mst         acm     WITH (NOLOCK) ON acm.tbl_id = atm.id
+					                                            AND acm.flag = 1   
+				) std
+				where std.dim_col_id not in (select dim_col_id from anl.anl_atrib_group_column t1 join anl.anl_atrib_group t2 on t2.flag =1 and t2.id = t1.atrib_group_id and t2.lgc_comp_id = #{lgcCompId} where t1.flag = 1)
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateAttributeGroupColumn)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 칼럼 수정
+    -   설명                  : 어트리뷰트 그룹 칼럼 수정
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <update id="updateAttributeGroupColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupColumnReqDto">
+    	/* KprLogicalComponentMapper.updateAttributeGroupColumn */
+    	UPDATE 	  anl.anl_atrib_group_column  
+		SET 	  MODIFY_BY				= #{modifyBy}
+				, MODIFY_DATE			= GETDATE()
+				, SEQ					= #{seq}
+				, DP_NM					= #{dpNm}
+				, CAL_DTL				= #{calDtl}
+				, CAL_DTL_HIS			= #{calDtlHis}
+				, CAL_COL_YN			= #{calColYn}
+				, SEG_KEY_YN			= #{segKeyYn}
+				, DATE_KEY_YN			= #{dateKeyYn}
+				, EVT_TRIGGER_KEY_YN	= #{evtTriggerKeyYn}
+				, VAL_SQL = #{sqlValue}
+		WHERE     id    = #{attributeGroupColumnId}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (updateAttributeGroupColumnName)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 칼럼명만 수정
+    -   설명                  : 어트리뷰트 그룹 칼럼명만 수정
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.22
+    ***************************************/ --> 
+    <update id="updateAttributeGroupColumnName" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupColumnReqDto">
+    	/* KprLogicalComponentMapper.updateAttributeGroupColumnName */
+    	UPDATE 	  anl.anl_atrib_group_column  
+		SET 	  MODIFY_BY				= #{modifyBy}
+				, MODIFY_DATE			= GETDATE()
+				, DP_NM					= #{dpNm}
+		WHERE     id    = #{attributeGroupColumnId}
+    </update>
+    
+    
+
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteAttributeGroupColumn)
+    ============================================
+    -   제목                  : 어트리뷰트 그룹 칼럼 삭제
+    -   설명                  : 어트리뷰트 그룹 칼럼 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <update id="deleteAttributeGroupColumn" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentDeleteIdListReqDto">
+    	/* KprLogicalComponentMapper.deleteAttributeGroupColumn */
+    	UPDATE 	  anl.anl_atrib_group_column
+    	SET       MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE 	  FLAG          = 1
+		AND       ATRIB_GROUP_ID IN (
+					  SELECT id
+					  FROM   anl.anl_atrib_group
+					  WHERE  LGC_COMP_ID = #{lgcCompId}
+		          )
+		AND       (DIM_COL_ID IS NULL OR DIM_COL_ID = '')
+		<if test="removeIdList.size() > 0">
+		AND ID NOT IN  
+			<foreach collection="removeIdList" item="item" separator="," close=")" open="(">
+				#{item}
+			</foreach>
+		</if>
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteAttributeGroupColumnAll)
+    ============================================
+    -   제목                  : 디멘전 어트리뷰트 그룹 칼럼을 제외한 어트리뷰트 그룹 칼럼 전체 삭제
+    -   설명                  : 디멘전 어트리뷰트 그룹 칼럼을 제외한 어트리뷰트 그룹 칼럼 전체 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <update id="deleteAttributeGroupColumnAll" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.deleteAttributeGroupColumnAll */
+    	UPDATE 	  anl.anl_atrib_group_column
+    	SET       MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     FLAG = 1
+		AND       DIM_COL_ID = ''
+		AND		  LGC_COMP_TBL_REL_ID IN (
+					  SELECT  	id
+					  FROM		anl.anl_atrib_group
+					  WHERE   	LGC_COMP_ID = #{lgcCompId} 
+					  AND       FLAG = 1
+				  )
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteAttributeGroupColumnOnNoneTableRel)
+    ============================================
+    -   제목                  : 디멘전 어트리뷰트 그룹 칼럼을 제외한 어트리뷰트 그룹 칼럼 중 테이블관계가 없는 컬럼 전체 삭제
+    -   설명                  : 디멘전 어트리뷰트 그룹 칼럼을 제외한 어트리뷰트 그룹 칼럼 중 테이블관계가 없는 컬럼 전체 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <update id="deleteAttributeGroupColumnOnNoneTableRel" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.deleteAttributeGroupColumnOnNoneTableRel */
+    	UPDATE 	  anl.anl_atrib_group_column
+    	SET       MODIFY_BY		= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     FLAG = 1
+		AND       DIM_COL_ID = ''
+		AND		  ID IN (
+						SELECT aagc.id
+						FROM   (
+									SELECT aagc.id
+									FROM   anl.anl_atrib_group_column aagc
+									JOIN   anl.anl_lgc_comp_table_rel alctr ON aagc.lgc_comp_tbl_rel_id = alctr.id 
+									                                           AND alctr.flag = aagc.flag + 1
+									WHERE  aagc.flag = 1
+									AND    alctr.lgc_comp_id = #{lgcCompId}
+							   ) aagc
+				  )
+    </update>
+    
+    <!-- 디멘전 어트리뷰트 그룹 칼럼 전체 삭제 -->
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (deleteAttributeGroupDimensionColumnAll)
+    ============================================
+    -   제목                  : 디멘전 어트리뷰트 그룹 칼럼 전체 삭제
+    -   설명                  : 디멘전 어트리뷰트 그룹 칼럼 전체 삭제
+    -   결과형태            : 단건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ --> 
+    <update id="deleteAttributeGroupDimensionColumnAll" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentReqDto">
+    	/* KprLogicalComponentMapper.deleteAttributeGroupDimensionColumnAll */
+    	UPDATE 	  anl.anl_atrib_group_column
+    	SET       MODIFY_BY	= #{modifyBy}
+				, MODIFY_DATE	= GETDATE()
+				, FLAG			= flag + 1
+		WHERE     FLAG = 1
+		AND       ID IN (
+					SELECT   del_id.id
+					FROM     (
+								/* 모수가 된 테이블관계가 사라진 디멘젼 */
+								SELECT   aagc.id as id
+								FROM    anl.anl_atrib_group_column aagc WITH (NOLOCK)
+								JOIN    anl.anl_atrib_group        aag    WITH (NOLOCK) ON aagc.atrib_group_id = aag.id
+								                                            AND aag.flag = 1
+								                                            AND aag.lgc_comp_id = #{lgcCompId}
+								LEFT JOIN    anl.anl_lgc_comp_table_rel alctr  WITH (NOLOCK) ON alctr.lgc_comp_id = aag.lgc_comp_id
+								                                            AND alctr.id = aagc.lgc_comp_tbl_rel_id
+								                                            AND alctr.flag = 1
+								WHERE  1=1
+								AND    aagc.dim_col_id IS NOT NULL
+								AND    aagc.flag = 1
+								AND    alctr.id IS NULL
+								
+								UNION
+								
+								/* 모수가 된 어트리뷰트 그룹 칼럼이 사라진 디멘젼 */
+								SELECT  aagc.id as id
+								FROM    anl.anl_atrib_group_column aagc WITH (NOLOCK)
+								JOIN    anl.anl_atrib_group        aag     WITH (NOLOCK)  ON aagc.atrib_group_id = aag.id
+								                                              AND aag.flag = 1
+								                                              AND aag.lgc_comp_id = #{lgcCompId}
+								LEFT JOIN anl.anl_atrib_group_column aagc_  WITH (NOLOCK) ON aagc.col_id = aagc_.col_id
+								                                              AND aagc_.flag = 1
+								                                              AND (aagc_.dim_col_id IS NULL OR aagc_.dim_col_id = '')
+								                                              AND aagc_.atrib_group_id = aag.id
+								WHERE  1=1
+								AND    aagc.dim_col_id IS NOT NULL
+								AND    aagc.flag = 1
+								AND    aagc_.id IS NULL
+								GROUP BY aagc.id
+							 ) del_id
+
+				  )
+		
+    </update>
+    
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectSegRptUsedList)
+    ============================================
+    -   제목                  : 로지컬 컴포넌트 상세 > 분석/세그먼트 적용 목록 조회
+    -   설명                  : 로지컬 컴포넌트 상세 > 분석/세그먼트 적용 목록 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->
+	<select id="selectSegRptUsedList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentSegRptUsedListReqDto" 
+	resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentSegRptUsedResDto">
+        /* KprLogicalComponentMapper.selectSegRptUsedList */
+		SELECT 	objId
+		        ,objNm
+		        ,objType
+		        ,${strColumn}
+		FROM    (
+		          SELECT   id           	as objId
+		                  ,seg_nm       	as objNm
+		                  ,'Segment'        as objType
+		                  ,create_date
+		          FROM    anl.anl_seg_mst obj WITH (NOLOCK)
+		          WHERE   flag = 1
+		          AND     lgc_comp_id = #{lgcCompId}
+		
+		          UNION
+		
+		          SELECT   id           	as objId  
+		                  ,rpt_nm       	as objNm  
+		                  ,'Report'         as objType
+		                  ,create_date
+		          FROM    anl.anl_rpt_mst obj WITH (NOLOCK)
+		          WHERE   flag = 1
+		          AND     lgc_comp_id = #{lgcCompId}
+		        ) obj
+		WHERE   ${strCondWhere}
+		AND     ${strSVCType}
+		AND     ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+    <!-- *** NHIS 관련 추가 *** -->
+    <select id="selectLgcCompTblGrpCnt" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListReqDto" 
+    resultType="java.lang.Integer">
+    	SELECT COUNT(rid)	AS cnt
+    	  FROM anl.anl_lgc_comp_mst			lcm
+    	  JOIN anl.anl_lgc_comp_table_rel	ctr ON	lcm.id		= ctr.lgc_comp_id
+    	  										AND	ctr.flag	= 1
+    	  JOIN anl.anl_lgc_group_column		lgc ON	ctr.id		= lgc.lgc_comp_tbl_rel_id
+												AND	lgc.flag	= 1
+		 WHERE lcm.flag 	= 1
+		   AND lcm.id		= #{lgcCompId}
+		   AND ctr.tbl_id	= #{tblMstId}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectAttributeGroupLeftAccordionList)
+    ============================================
+    -   제목                  : 어트리뷰트설정 왼쪽 어코디언 리스트 조회
+    -   설명                  : 어트리뷰트설정 왼쪽 어코디언 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->     
+    <select id="selectAttributeGroupLeftAccordionList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupLeftAccordionListReqDto" 
+    resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupLeftAccordionListResDto">
+   	 	/* KprLogicalComponentMapper.selectAttributeGroupLeftAccordionList */
+		SELECT ctr.id														AS id
+			 , CONCAT(ctr.tbl_alias, ' - ', atm.dp_nm)						AS text
+			 , atm.id														AS tblMstId
+			 , ctr.id														AS lgcCompTblRelId
+			 , ctr.tbl_alias												AS tblAlias
+			 , CONCAT(atm.schma_nm, '.', atm.tbl_nm, ' ', ctr.tbl_alias)	AS tblNmAlias
+			 , atm.tbl_type_cd												AS tblTypeCd
+		  FROM anl.anl_lgc_comp_table_rel	ctr WITH (NOLOCK)
+		  JOIN anl.anl_table_mst			atm  WITH (NOLOCK) ON	ctr.tbl_id		= atm.id
+												AND	atm.flag		= 1
+		 WHERE ctr.flag			= 1
+		   AND ctr.lgc_comp_id	= #{lgcCompId}
+		   AND atm.tbl_type_cd	IN ('FACT', 'AGG')
+	  ORDER BY ctr.tbl_alias
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : KPRLogicalComponentMapper.java (selectAttributeGroupLeftAccordionTreeNodeList)
+    ============================================
+    -   제목                  : 어트리뷰트설정 왼쪽 어코디언 내 트리 리스트 조회
+    -   설명                  : 어트리뷰트설정 왼쪽 어코디언 내 트리 리스트 조회
+    -   결과형태            : 다건
+    ============================================
+    -   입력			: 
+    -	출력			:	
+    ============================================
+    -   작성자                : 예준호
+    -   작성일                : 2016.08.11
+    ***************************************/ -->     
+    <select id="selectAttributeGroupLeftAccordionTreeNodeList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListReqDto"
+     resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentAttributeGroupLeftAccordionTreeNodeListResDto">
+    	/* KprLogicalComponentMapper.selectAttributeGroupLeftAccordionTreeNodeList */
+    	SELECT acm.id								AS id
+			 , CASE WHEN LEN(acm.dp_nm) > 0 
+			 		THEN CONCAT(acm.COL_NM, '(', acm.dp_nm, ')')
+			 		ELSE acm.col_nm
+			   END									AS text
+			 , #{lgcCompTblRelId}					AS lgcCompTblRelId
+			 , CONCAT(#{tblAlias}, '.', acm.col_nm)	AS tblAliasColNm
+			 , acm.id								AS colId
+			 , ''									AS dimColId
+			 , ccd.code_name						AS colTypeCd
+    	  FROM anl.anl_table_mst	atm WITH (NOLOCK)
+    	  JOIN anl.anl_column_mst	acm  WITH (NOLOCK) ON	atm.id			= acm.tbl_id
+    	  								AND	acm.flag		= 1
+    	  JOIN com.comm_code		ccd  WITH (NOLOCK) ON	acm.col_type_cd	= ccd.code_name
+    	  								AND	ccd.group_code	= 'ANL_COL_TYPE_CD'
+    	  								AND	ccd.flag		= 1
+    	  								AND	ccd.lang		= #{lang}
+		<if test="grpFlag">
+		  JOIN (
+		  	SELECT lgc.col_id									AS col_id
+			  FROM anl.anl_lgc_comp_mst			lcm WITH (NOLOCK)
+			  JOIN anl.anl_lgc_comp_table_rel	ctr WITH (NOLOCK) ON	lcm.id		= ctr.lgc_comp_id
+			  										AND	lcm.flag	= 1
+			  JOIN anl.anl_lgc_group_column		lgc WITH (NOLOCK) ON	ctr.id		= lgc.lgc_comp_tbl_rel_id
+													AND	lgc.flag	= 1
+			 WHERE lcm.flag		= 1
+			   AND lcm.id		= #{lgcCompId}
+			   AND ctr.tbl_id	= #{tblMstId}
+
+			 UNION ALL
+
+			SELECT com.nvl(ltr.left_col_id, rtr.right_col_id)	AS col_id
+			  FROM anl.anl_lgc_comp_mst			lcm WITH (NOLOCK)
+			  JOIN anl.anl_lgc_comp_table_rel	ctr WITH (NOLOCK) ON	lcm.id		= ctr.lgc_comp_id
+													AND	ctr.flag	= 1
+		 LEFT JOIN anl.anl_lgc_join_column		ltr WITH (NOLOCK) ON	ctr.id		= ltr.left_lgc_comp_tbl_rel_id
+													AND	ltr.flag	= 1
+		 LEFT JOIN anl.anl_lgc_join_column		rtr WITH (NOLOCK) ON	ctr.id		= rtr.right_lgc_comp_tbl_rel_id
+													AND	rtr.flag	= 1
+			 WHERE lcm.flag		= 1
+			   AND lcm.id		= #{lgcCompId}
+			   AND ctr.tbl_id	= #{tblMstId}
+		  )							z	ON	acm.id			= z.col_id
+		</if>
+		 WHERE atm.flag	= 1
+		   AND atm.id	= #{tblMstId}
+	  ORDER BY acm.seq ASC
+    </select>
+    
+    <select id="selectLgcCompGrpColMstList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentGroupColumnReqDto"
+     resultType="com.icignal.kepler.logicalComponent.dto.response.KprLogicalComponentGroupColumnResDto">
+    	/* KprLogicalComponentMapper.selectLgcCompGrpColMstList */
+		SELECT lgc.rid					AS grpColId
+			 , acm.id					AS colId
+			 , lgc.group_func_type_cd	AS grpFuncTypeCd
+		  FROM anl.anl_lgc_comp_table_rel	ctr WITH (NOLOCK)
+		  JOIN anl.anl_table_mst			atm WITH (NOLOCK) ON	ctr.tbl_id	= atm.id
+		  										AND	atm.flag	= 1
+		  JOIN anl.anl_column_mst			acm WITH (NOLOCK) ON	atm.id		= acm.tbl_id
+		  										AND	acm.flag	= 1
+		  JOIN anl.anl_lgc_group_column		lgc WITH (NOLOCK) ON	ctr.id		= lgc.lgc_comp_tbl_rel_id
+	 											AND	acm.id		= lgc.col_id
+	 											AND	lgc.flag	= 1
+		 WHERE ctr.flag	= 1
+		   AND ctr.id	= #{tblRelId}
+    </select>
+    
+    <insert id="insertLgcCompGrpColListSaveAs" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentGroupColumnReqDto" useGeneratedKeys="false">
+    	INSERT INTO anl.anl_lgc_group_column (
+    		  rid
+    		, create_by
+    		, modify_by
+    		, create_date
+    		, modify_date
+    		, flag
+    		, type
+    		, store_id
+    		, lgc_comp_tbl_rel_id
+    		, col_id
+    		, group_func_type_cd
+    	)
+    	SELECT com.getNewID('A')
+    		 , #{createBy}
+    		 , #{modifyBy}
+    		 , GETDATE()
+    		 , GETDATE()
+    		 , flag
+    		 , type
+    		 , store_id
+    		 , #{tblRelId_New}
+    		 , col_id
+    		 , group_func_type_cd
+		  FROM anl.anl_lgc_group_column
+		 WHERE flag					= 1
+		   AND lgc_comp_tbl_rel_id	= #{tblRelId}
+		   
+<!-- 		<selectKey resultType="java.lang.Integer">
+			SELECT 1
+		</selectKey> -->
+    </insert>
+    
+    <insert id="insertLgcCompGrpColDtl" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentGroupColumnReqDto" useGeneratedKeys="false">
+    	INSERT INTO anl.anl_lgc_group_column (
+    		  rid
+    		, create_by
+    		, modify_by
+    		, create_date
+    		, modify_date
+    		, flag
+    		, type
+    		, store_id
+    		, lgc_comp_tbl_rel_id
+    		, col_id
+    		, group_func_type_cd
+    	) VALUES (
+    		  com.getNewID('A')
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, NULL
+			, NULL
+			, #{tblRelId}
+			, #{colId}
+			, #{grpFuncTypeCd}
+    	)
+    
+<!--     	<selectKey resultType="java.lang.Integer">
+    		SELECT 1
+    	</selectKey> -->
+    </insert>
+    
+    <update id="updateLgcCompGrpColDtl" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentGroupColumnReqDto">
+    	UPDATE anl.anl_lgc_group_column
+    	   SET modify_by			= #{modifyBy}
+			 , modify_date			= GETDATE()
+			 , group_func_type_cd	= #{grpFuncTypeCd}
+		 WHERE rid = #{grpColId}
+    </update>
+    
+    <update id="deleteLgcCompGrpColDtl" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentGroupColumnReqDto">
+    	UPDATE anl.anl_lgc_group_column
+    	   SET modify_by	= #{modifyBy}
+			 , modify_date	= GETDATE()
+			 , flag			= flag + 1
+		 WHERE lgc_comp_tbl_rel_id in (
+								SELECT t.rid
+								  FROM (
+									SELECT ltr.id	as rid
+									  FROM anl.anl_lgc_comp_mst			lcm
+									  JOIN anl.anl_lgc_comp_table_rel	ltr ON	lcm.id		= ltr.lgc_comp_id
+									 WHERE lcm.id	= #{lgcCompId}
+									<if test="tblRelIdList != null and tblRelIdList.size() > 0">
+									   AND ltr.id	NOT IN
+									<foreach collection="tblRelIdList" item="tblRelId" open="(" close=")" separator=",">
+										#{tblRelId}
+									</foreach>
+									</if>
+								) t
+		)
+    </update>
+    
+    <select id="selectLgcCompTblList" parameterType="com.icignal.kepler.logicalComponent.dto.request.KprLogicalComponentJoinAccordionListReqDto" 
+    resultType="java.lang.String">
+		SELECT DISTINCT atm.id	as tblId
+		  FROM anl.anl_table_mst			atm WITH (NOLOCK)
+		  JOIN anl.anl_lgc_comp_table_rel	ltr WITH (NOLOCK) ON	atm.id			= ltr.tbl_id
+												AND	ltr.flag		= 1
+	 LEFT JOIN anl.anl_lgc_comp_mst			lcm WITH (NOLOCK) ON	ltr.lgc_comp_id	= lcm.id
+												AND	lcm.flag		= 1
+		 WHERE atm.flag		= 1
+		   AND lcm.id		= #{lgcCompId}
+    </select>
+    <!-- *** NHIS 관련 추가 *** -->
+</mapper>

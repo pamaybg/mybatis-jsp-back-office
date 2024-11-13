@@ -1,0 +1,865 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.auth.mapper.SystemAuthMapper">
+
+	<select id="getAuthList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemAuthListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemAuthListResDto">
+	/* SystemAuthMapper.getAuthList */
+		select 
+		h.id as id
+		, h.aut_num as autNum
+		, h.aut_nm as autNm
+		, h.aut_desc as autDesc
+		, e.name as authCreater
+		, h.create_date as createDate
+		, ${strColumn}
+		from com.auth h with (nolock)
+		join com.crm_user u with (nolock) on u.rid = h.create_by
+		join com.employee e with (nolock) on e.id = u.id_employee and e.flag = 1
+		join com.account acc with (nolock) on acc.id = h.accnt_id and acc.flag = 1
+		where
+		${strSVCType}
+		and h.flag = 1
+		and ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<update id="deleteAuthList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthMenuListRequestDto">
+	/* SystemAuthMapper.deleteAuthList */
+		update com.auth
+		set
+		flag = flag + 1
+		, modify_by = #{empId}
+		, modify_date = getdate()
+		where
+		${strSVCType}
+		<if test="authIds.size !=0">
+		and id in
+		 <foreach collection="authIds" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+		</if>
+	</update>
+	
+	<select id="authDetail" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthDetailReqDto" 
+	resultType="com.icignal.systemmanagement.auth.dto.response.SystemAuthDetailResDto">
+	/* SystemAuthMapper.authDetail */
+		select
+		a.aut_nm as authName
+		, a.aut_num as authNo
+		, a.aut_desc as authDesc
+		, e.name as authCreater
+		, a.create_date as authCreateDate
+		, cc.code_name as authDataType
+		, a.PGM_OBJ_TYPE_CD AS pgmObjType
+		from com.auth a with (nolock)
+		join com.crm_user u with (nolock) on u.rid = a.create_by
+		left outer join com.employee e with (nolock) on e.id = u.id_employee and e.flag = 1
+		join com.account acc with (nolock) on acc.id = a.accnt_id and acc.flag = 1
+		join com.comm_code cc with (nolock) on cc.code_name = a.data_type_cd and cc.lang =
+		#{lang} and group_code = 'DATA_TYPE_CD' and cc.flag = 1
+		and a.flag = 1
+		where
+		${strSVCType}
+		and a.id = #{authId}
+	</select>
+	
+	<insert id="insertAuthDetail" parameterType="com.icignal.systemmanagement.authgroup.dto.request.InsertAuthDetailReqDto" 
+	useGeneratedKeys="false">
+	/* SystemAuthMapper.insertAuthDetail */
+		insert into com.auth
+		(
+			id
+			,create_by
+			,modify_by
+			,create_date
+			,modify_date
+			,flag
+			,lang
+			,aut_nm
+			,aut_num
+			,aut_desc
+			,data_type_cd
+			,PGM_OBJ_TYPE_CD
+		)
+		values
+		(
+			#{authId}
+			,#{empId}
+			,#{empId}
+			,getdate()
+			,getdate()
+			,1
+			,#{lang}
+			,#{authName}
+			,(select count(1) + 1 from com.auth)
+			,#{authDesc}
+			,#{dataType}
+			,#{pgmObjType}
+		)
+	</insert>
+
+		<update id="updateAuthDetail" parameterType="com.icignal.systemmanagement.authgroup.dto.request.InsertAuthDetailReqDto">
+	/* SystemAuthMapper.updateAuthDetail */
+		update com.auth
+		set
+		modify_by = #{empId}
+		, modify_date = getdate()
+		, aut_nm = #{authName}
+		, aut_desc = #{authDesc}
+		, data_type_cd = #{dataType}
+		, PGM_OBJ_TYPE_CD = #{pgmObjType}
+		where
+		id = #{authId}
+		and ${strSVCType}
+	</update>
+	
+	<select id="getMenuNameLang" parameterType="com.icignal.systemmanagement.menu.dto.response.SystemAuthMenuNameLangResDto" 
+													resultType="com.icignal.systemmanagement.menu.dto.response.SystemAuthMenuNameLangResDto">
+	/* SystemAuthMapper.getMenuNameLang */
+	SELECT	lg.lang_name 	as langName
+			, lg.lang_code 	as langCode
+			<if test="lang != null and lang.equals('en')">
+			, m.menu_nm_nm as menuLangName
+			</if>
+			<if test="lang != null and lang.equals('ko')">
+			, m.menu_nm as menuLangName
+			</if>
+			, m.lang as menuLangCode
+			, m.ICON_IMG AS iconImg
+	from com.LANGUAGE lg with (nolock)
+	LEFT OUTER JOIN com.menu m with (nolock) ON lg.LANG_CODE = m.LANG AND m.FLAG = 1
+	where lg.flag = 1 
+	AND m.ID = #{menuId}
+	</select>
+	
+		<select id="getAuthMenuList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthMenuListRequestDto" 
+		resultType="com.icignal.systemmanagement.auth.dto.response.SystemAuthMenuListResDto">
+	/* SystemAuthMapper.getAuthMenuList */
+		select
+		<if test="lang != null and lang.equals('en')">
+			m.menu_nm_en 				as menuName
+		</if> 
+		<if test="lang != null and lang.equals('ko')">
+			m.menu_nm 				    as menuName
+		</if> 
+			, m.id 						as menuId
+			, m.prnts_menu_id 			as parentMenuId
+			, m.menu_lvl 				as menuLevel
+			, amr.menu_id 				as checkedMenuId
+			, concat(CONCAT(i.image_folder, i.image_file_name), i.image_file_type) as imgURL
+			, #{lang} 					as lang
+			from com.menu m with (nolock)
+			left outer join com.image i with (nolock) on i.parent_id = m.id
+			left outer join com.auth_menu_rel amr with (nolock) on amr.menu_id = m.id and amr.aut_id = #{authId} and amr.flag = 1
+		where
+			 m.lang = #{lang}
+			and m.flag = 1
+		order by m.sort_odgr
+	</select>
+	
+		<!-- 메뉴 프로그램 목록 리스트 -->	
+	<select id="getProgramAccessList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthProgramAccessReqDto" 
+	resultType="com.icignal.systemmanagement.auth.dto.response.SystemAuthProgramAccessResDto">
+	/* SystemAuthMapper.getProgramAccessList */
+		select DISTINCT
+				p.id 				as programId
+				, p.pgm_no 			as progNum
+				, p.pgm_nm 			as progName
+				, p.pgm_path 		as progPath
+				, p.pgm_type_cd		as progTypeCd
+				,  CEILING(COUNT(1) OVER()) totalCount
+		from com.program p with (nolock)
+			LEFT OUTER join com.menu_pgm_rel mpr with (nolock) on mpr.pgm_id = p.id and mpr.flag = 1
+			LEFT OUTER join com.menu m with (nolock) on mpr.menu_id = m.id
+		WHERE 	m.id = #{menuId}
+			and p.FLAG = 1
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	 
+	 	<update id="updateViewAuthList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemInsertVIewAuthListReqDto">
+	/* SystemAuthMapper.updateViewAuthList */
+		update
+		com.auth_menu_rel
+		set modify_by = #{empId}
+		, modify_date = getdate()
+		, flag = flag + 1
+		where
+		aut_id = #{authId}
+	</update>
+	
+		<update id="setViewAuthList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemInsertVIewAuthListReqDto">
+	/* SystemAuthMapper.setViewAuthList */
+		
+		insert into com.auth_menu_rel
+		(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, aut_id
+			, menu_id
+		)
+		values
+		<foreach collection="menuIdList" item="item"  open="" separator="," close="">
+		
+		(
+			  com.getNewId('A')
+			, #{empId}
+			, #{empId}
+			, getdate()
+			, getdate()
+			, 1
+			, #{lang}
+			, #{authId}
+			, #{item}
+		)
+		</foreach>
+	</update>
+	
+		<!-- 권한관리 오프젝트권한 프로그램 목록 -->
+	<select id="getProgList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemAuthMapper.getProgList */
+	SELECT  p.id as id
+			, p.pgm_no as pgmNo
+			, p.pgm_nm as pgmNm
+			, p.pgm_path as pgmPath
+			, p.pgm_type_cd as pgmTypeCd
+			, convert(varchar, apr.create_date, 120 ) as createDate
+			, e.name as prog_crea
+			, ${strColumn}
+	FROM    COM.AUTH_PGM_REL apr with (nolock)
+			LEFT OUTER JOIN COM.PROGRAM p with (nolock) ON p.id = apr.pgm_id and apr.flag = 1
+			LEFT OUTER join com.crm_user u with (nolock) on u.rid = p.create_by
+			LEFT OUTER join com.employee e with (nolock) on e.id = u.id_employee	
+	WHERE   apr.flag = 1
+	AND     apr.auth_id = #{authId}
+	AND     ${strWhere}
+    ORDER BY ${strOrderby}
+			 ${strEndPaging}	
+	</select>
+	
+		<update id="deleteAuthObjRel" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemDeleteAuthObjRelReqDto">
+	/* SystemAuthMapper.deleteAuthObjRel */
+		update com.auth_object_rel
+		set
+		flag = flag + 1
+		, modify_by = #{empId}
+		, modify_date = getdate()
+		where
+		${strSVCType}
+		<if test="objRelIdList.size!=0">
+		and id in
+		 <foreach collection="objRelIdList" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+		</if>
+	</update>
+	
+	<select id="getAuthObjectList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthObjectListReqDto"
+		 										resultType="com.icignal.systemmanagement.auth.dto.response.SystemAuthObjectListResDto">
+	/* SystemAuthMapper.getAuthObjectList */
+		select 
+			aor.id as id
+			, uo.ui_obj_nm as objNm
+			, uo.ui_obj_desc as objDesc
+			<!-- , cc.mark_name as viewType -->
+			, aor.ui_View_cd as viewTypeCd
+			<!-- , cc2.mark_name as objType -->
+			, uo.obj_type_cd as objTypeCd
+			, e.name as createBy
+			, aor.create_date as createDate
+			, ${strColumn}
+		from com.auth_object_rel aor with (nolock)
+		join com.ui_object uo with (nolock) on aor.ui_obj_id = uo.id and uo.flag = 1
+		join com.crm_user u with (nolock) on u.rid = aor.create_by
+		left outer join com.employee e with (nolock) on e.id = u.id_employee and e.flag = 1
+		<!-- left outer join com.comm_code cc on cc.code_name = aor.ui_View_cd and	cc.lang = #{lang} and cc.group_code = 'UI_VIEW_CD' and cc.flag = 1
+		left outer join com.comm_code cc2 on cc2.code_name = uo.obj_type_cd and	cc2.lang = #{lang} and cc2.group_code = 'OBJ_TYPE_CD' -->
+		where ${strSVCType}
+		and aor.pgm_id = #{pgmId}
+		and aor.aut_id = #{authId}
+		and aor.flag = 1
+		and ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+		<!-- 권한 변경로그 등록 -->
+	<insert id="insertAuthLog" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthLogInsertReqDto">
+		/* SystemAuthMapper.insertAuthLog */
+		insert into com.com_auth_log (
+			RID
+			, CREATE_BY
+			, CREATE_DATE
+			, SRCH_DT
+			, AUTH_LOG_TYPE_CD
+			, LOG_TYPE_DTL
+			, WORK_USER_RID
+			, SRC_RID
+			, SRC_NM
+			, TARGET_RID
+			, TARGET_NM
+			, OBJ_RID
+			, OBJ_NM
+		) values (
+			com.getNewId('A')
+			, #{createBy}
+			, getdate()
+			, getdate()        
+			, #{authLogTypeCd} 
+			, #{logTypeDtl} 
+			, #{createBy}   
+			, #{srcRid}        
+			, #{srcNm}         
+			, #{targetRid}     
+			, #{targetNm}      
+			, #{objRid}        
+			, #{objNm}        
+		)
+	</insert>
+	
+	<!-- 권한명 조회 -->
+	<select id="selectAuthNm" parameterType="java.lang.String" resultType="java.lang.String">
+		/* SystemAuthMapper.selectAuthNm */
+		select 	aut_nm
+		from 	com.auth with (nolock)
+		where	id = #{value}
+	</select>
+	
+	<!-- 권한 메뉴 관계 삭제 -->
+	<update id="deleteAuthRelList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthMenuListRequestDto">
+	/* SystemAuthMapper.deleteAuthRelList */
+		update com.auth_menu_rel
+		set
+		flag = flag + 1
+		, modify_by = #{empId}
+		, modify_date = getdate()
+		where
+		${strSVCType}
+		<if test="authIds.size !=0">
+		and aut_id in
+		 <foreach collection="authIds" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+		</if>
+	</update>
+	
+	<!-- 권한 프로그램 관계 삭제 -->
+	<update id="deleteAuthProgramRel" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthMenuListRequestDto">
+	/* SystemAuthMapper.deleteAuthProgramRel */
+		DELETE FROM   COM.AUTH_PGM_REL
+		where
+		${strSVCType}
+		<if test="authIds.size !=0">
+		and AUTH_ID in
+		 <foreach collection="authIds" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+		</if>
+	</update>
+	
+	<!-- 권한 오브젝트 관계 삭제 -->
+	<update id="deleteAuthObjectRelList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthMenuListRequestDto">
+	/* SystemAuthMapper.deleteAuthObjectRelList */
+		DELETE FROM com.AUTH_OBJECT_REL
+		where
+		${strSVCType}
+		<if test="authIds.size !=0">
+		and aut_id in
+		 <foreach collection="authIds" item="item" separator="," close=")" open="(">
+			#{item}
+		</foreach>
+		</if>
+	</update>
+	
+	<select id="getAuthCopyList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemAuthListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemAuthListResDto">
+		/* SystemAuthMapper.getAuthListPop */
+		SELECT 
+		h.id as id
+		, h.aut_num as authNo
+		, h.aut_nm as authName
+		, h.aut_desc as authDesc
+		, e.name as authCreater
+		, h.create_date as authCreateDate
+		, ${strColumn}
+		FROM 
+		com.auth h with (nolock)
+		join com.crm_user u with (nolock) on u.rid = h.create_by
+		join com.employee e with (nolock) on e.id = u.id_employee and e.flag = 1
+		join com.account acc with (nolock) on acc.id = h.accnt_id and acc.flag = 1
+		WHERE
+		${strSVCType}
+		and h.flag = 1
+		and NOT EXISTS(SELECT 1 FROM com.auth g WHERE h.id=g.id AND h.id=#{id})
+		and ${strWhere}
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<!-- 권한 복사 PROCEDURE 호출 -->
+ 	<parameterMap id="callAuthCopyMap" type="com.icignal.systemmanagement.auth.dto.request.SystemAuthCallProcReqDto">
+		<parameter property="pAuthID" 	  jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+		<parameter property="pAtuhCopyID"   jdbcType="VARCHAR" javaType="java.lang.String" mode="IN"/>
+	</parameterMap>
+	<update id="callAuthCopyProc" parameterMap="callAuthCopyMap" statementType="CALLABLE">
+	/* SystemAuthMapper.callAuthCopyProc */
+	{
+		CALL COM.AUTH_COPY(?, ?)
+	}
+ 	</update> 
+ 	
+ 	
+ 	<select id="getAuthProgramListPop" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+												resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemAuthMapper.getAuthProgramListPop */
+	SELECT DISTINCT p.id as pgmRid
+					, p.pgm_no as pgmNo
+					, p.pgm_nm as pgmNm
+					, p.pgm_path as pgmPath
+					, p.pgm_type_cd as pgmTypeCd
+					, e.name as prog_crea
+					, convert(varchar, p.create_date, 120) as createDate
+					, m.id AS menuId
+					, a.id AS authId
+					, ${strColumn}
+		FROM com.PROGRAM p with (nolock)
+		LEFT OUTER join com.menu_pgm_rel mpr with (nolock) ON mpr.PGM_ID = p.ID AND mpr.FLAG = 1
+		LEFT OUTER JOIN com.MENU m with (nolock) ON m.ID = mpr.MENU_ID AND m.FLAG = 1
+		LEFT OUTER JOIN com.AUTH_MENU_REL amr with (nolock) on m.id = amr.MENU_ID and amr.FLAG = 1
+		LEFT OUTER JOIN com.AUTH a with (nolock) ON amr.AUT_ID = a.ID AND a.FLAG = 1
+		LEFT OUTER join com.crm_user u with (nolock) on u.rid = p.create_by
+		LEFT OUTER join com.employee e with (nolock) on e.id = u.id_employee		
+		WHERE p.FLAG = 1 
+		AND   p.pgm_type_cd = 'LIST'
+		AND a.ID = #{authId}
+		AND NOT EXISTS (  SELECT 1
+									  FROM   COM.AUTH_PGM_REL apl
+									  WHERE  apl.pgm_id  = p.id 
+									  AND    apl.auth_id = a.id	)
+		AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectProgAuthList" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+											resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemAuthMapper.selectProgAuthList */
+		SELECT t1.pgm_Rid  		AS pgmRid
+				, t1.prog_Id 			AS progId
+				, t1.prog_Name 		AS progName
+				, t1.prog_Path 		AS progPath
+				, t1.prog_Type 		AS progType
+				, t1.create_Date 	AS createDate
+				, ${strColumn}
+		FROM (
+			SELECT DISTINCT p.id as pgm_Rid
+					, p.pgm_no as prog_Id
+					, p.pgm_nm as prog_Name
+					, p.pgm_path as prog_Path
+					, cc.mark_name as prog_Type
+					, convert(varchar, apr.create_date, 120 ) as create_Date
+			FROM COM.AUTH_PGM_REL apr with (nolock)
+			JOIN COM.PROGRAM P with (nolock) on p.id = apr.pgm_id and p.flag=1
+			join com.comm_code cc with (nolock) on cc.code_name = p.pgm_type_cd and cc.lang =#{lang} and group_code = 'ADMIN_PROG_TYPE' and cc.flag = 1
+			WHERE p.FLAG = 1 
+			AND   cc.code_name = 'LIST'
+			AND   apr.auth_id = #{authId}
+			) t1
+		WHERE ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectProgId" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto"
+	resultType="java.lang.String">
+	/* SystemAuthMapper.selectProgId */
+	SELECT p.id AS id
+	FROM   com.program p with (nolock)
+	WHERE  p.MAIN_PGM_ID = #{prgId}
+	AND    p.flag = 1
+	</select>
+	
+	<insert id="insertProgramParentAuth" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+		/* SystemAuthMapper.insertProgramParentAuth */
+		insert into com.AUTH_PGM_REL(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, auth_id
+			, pgm_id
+		)
+		values(	
+			  #{rid}
+			, #{createBy}
+			, #{modifyBy}
+			, getdate()
+			, getdate()
+			, 1
+			, #{authId}
+			, #{prgId}
+		)
+	</insert>
+	
+	<insert id="insertProgramchildAuth" parameterType="java.util.HashMap">
+		/* SystemAuthMapper.insertProgramchildAuth */
+	 	
+		insert into com.AUTH_PGM_REL(
+			  id
+		    , create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, auth_id
+			, pgm_id
+		)
+		values
+		<foreach collection="progId" item="item" open="" separator="," close="">
+		(	
+			  com.getNewID('A')
+		    , #{createBy}
+			, #{modifyBy}
+			, getdate()
+			, getdate()
+			, 1
+		    , #{authId}
+			, #{item}
+		)
+		</foreach>
+	</insert>
+	
+	<select id="selectAuthProgram" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemAuthMapper.selectAuthProgram */
+	SELECT  p.id as pgmRid
+			, p.pgm_no as progId
+			, p.pgm_nm as progName
+			, p.pgm_path as progPath
+			, p.pgm_type_cd as progTypeCd
+	<!-- 		, cc.mark_name as progType -->
+			, convert(varchar, apr.create_date, 120 ) as createDate
+			, ${strColumn}
+	FROM    COM.AUTH_PGM_REL apr with (nolock)
+			LEFT OUTER JOIN COM.PROGRAM p with (nolock) ON p.id = apr.pgm_id and apr.flag = 1
+			<!-- LEFT OUTER JOIN com.comm_code cc on cc.code_name = p.pgm_type_cd and cc.lang =#{lang} and group_code = 'ADMIN_PROG_TYPE' and cc.flag = 1 -->
+	WHERE   apr.flag = 1
+	AND     apr.auth_id = #{authId}
+	AND     p.main_pgm_id  = #{prgId}
+	AND     p.pgm_type_cd != 'LIST'
+	AND     ${strWhere}
+    ORDER BY ${strOrderby}
+			 ${strEndPaging}
+	</select>
+	
+	<delete id="deleteProgramAuth" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+		/* SystemAuthMapper.deleteProgramAuth */
+		DELETE 
+		FROM   COM.AUTH_PGM_REL 
+		WHERE  auth_Id = #{authId}
+		AND    pgm_id     = #{prgId}
+	</delete>
+	
+	<delete id="deleteProgramchildAuth" parameterType="java.util.HashMap">
+		/* SystemAuthMapper.deleteProgramchildAuth */
+		DELETE FROM COM.AUTH_PGM_REL 
+		WHERE 
+		<foreach collection="progId" item="item" open="" close="" separator="OR">
+		(      auth_Id       = #{authId}
+		  AND  pgm_id        = #{item} )
+		</foreach>
+	</delete>
+	
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (getUserPwdInfo)
+	============================================
+	- 제목 : 로그인 사용자 아이디 정보로 비밀번호 정보 조회
+	- 설명 : 로그인 사용자 아이디 정보로 비밀번호 정보 조회
+	- 결과형태 :
+	============================================
+	- 입력 : id
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.23
+	***************************************/ -->
+	<select id="selectUserPwdInfo" parameterType="com.icignal.auth.dto.request.UserDetailReqDto" resultType="com.icignal.auth.dto.response.GetUserPwdInfoResDto">
+		/* SystemAuthMapper.selectUserPwdInfo */
+		SELECT
+			a.user_id AS userId
+			, a.USER_PW AS userPw
+			, a.USER_PW_BEF_1 AS userPwBef1
+			, a.USER_PW_BEF_2 AS userPwBef2
+			, b.EMP_NO as empNo
+		FROM com.crm_user a with (nolock)
+		LEFT OUTER JOIN com.employee b with (nolock) ON a.id_employee = b.id AND b.flag = '1'
+		WHERE 1=1
+		<if test="userId != null and userId != ''">and
+			a.user_id = #{userId}
+		</if>
+		<if test="ridCrmuser != null and ridCrmuser != ''">and
+			a.rid = #{ridCrmuser}
+		</if>
+		AND a.flag = '1'
+	</select>
+	
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (isUserIdExist)
+	============================================
+	- 제목 : 로그인 사용자 정보, 사용자 ID 중복 검사
+	- 설명 : 로그인 사용자 정보, 사용자 ID 중복 검사
+	- 결과형태 :
+	============================================
+	- 입력 : userId, rid
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<select id="isUserIdExist" parameterType="com.icignal.auth.dto.request.UserDetailReqDto" resultType="java.lang.Integer">
+		/* SystemAuthMapper.isUserIdExist */
+		SELECT
+		COUNT(*)
+		FROM com.crm_user cu with (nolock)
+		WHERE cu.flag = 1
+		and cu.user_id = #{userId}
+		and cu.rid != COALESCE(#{ridCrmuser}, '')
+	</select>
+	
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (updateUserDetail)
+	============================================
+	- 제목 : 로그인 사용자 정보 수정
+	- 설명 : 로그인 사용자 정보 수정
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.04.05
+	***************************************/ -->
+	<update id="updateUserDetail" parameterType="com.icignal.auth.dto.request.UserDetailReqDto">
+		/*
+		SystemAuthMapper.updateUserDetail */
+		update com.crm_user
+			set
+				rid_loy_pgm = #{ridLoyPgm}
+				, user_id = #{userId}
+				, user_stat = #{userStat}
+				, modify_date = getdate()
+				, modify_by = #{empId}
+		where
+		rid = #{rid}
+	</update>
+	
+	<!-- /**************************************
+	- 관련 파일 : MKTAuthDAO.java (modifyUserPwd)
+	============================================
+	- 제목 : 로그인 사용자 비밀번호 변경
+	- 설명 : 로그인 사용자 비밀번호 변경
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : jun.lee
+	- 작성일 : 2017.11.22
+	***************************************/ -->
+	<update id="updateUserPwd" parameterType="com.icignal.auth.dto.request.UserDetailReqDto">
+		/* SystemAuthMapper.updateUserPwd */
+		UPDATE com.crm_user
+		SET
+		modify_by = #{empId}
+		, modify_date = getdate()
+		, USER_PW = #{userPw}
+		, USER_PW_BEF_1 = #{userPwBef1}
+		, USER_PW_BEF_2 = #{userPwBef2}
+		, PW_EXPIR_DATE = getdate() + #{pwdChangeTerm}
+		, USER_PW_CNT = 0
+		, first_login_flg = #{firstLoginFlg}
+		WHERE
+		rid = #{ridCrmuser}
+		AND user_pw = #{preUserPw}
+	</update>
+	
+	<select id="selectAuthProgramLChildistPop" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto" 
+	resultType="com.icignal.systemmanagement.program.dto.response.SystemProgListResDto">
+	/* SystemAuthMapper.selectAuthProgramLChildistPop */
+		select 
+			p.id as id
+			, p.pgm_no as progId
+			, p.pgm_nm as progName
+			, p.pgm_path as progPath
+			<!-- , cc.mark_name as progType -->
+			, p.pgm_type_cd as progTypeCd
+			, e.name as prog_crea
+			, substring(convert(varchar,p.create_date),1,19) as createDate
+			, p.id as progKey
+			, ${strColumn}
+		from com.program p with (nolock)
+			join com.crm_user u with (nolock) on u.rid = p.create_by
+			join com.employee e with (nolock) on e.id = u.id_employee
+			<!-- LEFT OUTER join com.comm_code cc on cc.code_name = p.pgm_type_cd and cc.lang=#{lang} and cc.flag = 1 and cc.group_code = 'ADMIN_PROG_TYPE' -->
+		where p.MENU_CHK_YN != 'Y'
+			<!-- cc.code_name != 'LIST' -->
+			and p.flag = 1
+			and ${strWhere}
+			and p.main_pgm_id = #{prgId}
+			AND NOT EXISTS (
+			SELECT 1 
+			FROM COM.AUTH_PGM_REL p2
+			WHERE p2.pgm_id      = p.id
+			AND   p2.auth_id     = #{authId}
+			AND   FLAG = 1
+			)
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<insert id="insertProgramChildAuth" parameterType="com.icignal.systemmanagement.program.dto.request.SystemProgListReqDto">
+		/* SystemAuthMapper.insertProgramParentAuth */
+		insert into com.AUTH_PGM_REL(
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, auth_id
+			, pgm_id
+		)
+		values(	
+			com.getNewID('A')
+			, #{createBy}
+			, #{modifyBy}
+			, getdate()
+			, getdate()
+			, 1
+			, #{authId}
+			, #{prgId}
+		)
+	</insert>
+	
+	<parameterMap id="getSnsAccessKeyParameterMap" type="java.util.Map">
+    	<parameter property="loginRid" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN"/>
+    	<parameter property="id" javaType="java.lang.String" jdbcType="VARCHAR" mode="IN"/>
+  	</parameterMap>
+	
+	<update id ="updateNaverToken" parameterMap="getSnsAccessKeyParameterMap">
+		/* SystemAuthMapper.updateNaverToken */
+		UPDATE com.CRM_USER
+		set    SNS_NAVER_KEY = #{id}
+		where rid = #{loginRid}
+	</update>
+	
+		<delete id="delAuthObjRel" parameterType="com.icignal.systemmanagement.program.dto.request.SystemAuthGroupListReqDto">
+		/* SystemAuthMapper.delAuthObjRel */
+		DELETE FROM 
+			com.AUTH_OBJECT_REL
+		WHERE
+			id = #{id}
+	</delete>
+	
+	<update id ="updateKakaoToken" parameterMap="getSnsAccessKeyParameterMap">
+		/* SystemAuthMapper.updateKakaoToken */
+		UPDATE com.CRM_USER
+		set    SNS_KAKAO_KEY = #{id}
+		where rid = #{loginRid}
+	</update>
+	
+	<update id ="updateGogleToken" parameterMap="getSnsAccessKeyParameterMap">
+		/* SystemAuthMapper.updateGogleToken */
+		UPDATE com.CRM_USER
+		set    SNS_GOOGLE_KEY = #{id}
+		where rid = #{loginRid}
+	</update>
+	
+	<update id ="updateFackbookToken" parameterMap="getSnsAccessKeyParameterMap">
+		/* SystemAuthMapper.updateFackbookToken */
+		UPDATE com.CRM_USER
+		set    SNS_FACEBOOK_KEY = #{id}
+		where rid = #{loginRid}
+	</update>
+	
+	<select id ="selectrCheckNaverToken" parameterType="java.lang.String" resultType="java.lang.Integer">
+		/* SystemAuthMapper.selectCheckToken */
+		SELECT count(*)
+		FROM   com.CRM_USER with (nolock)
+		where  SNS_NAVER_KEY = #{id}
+	</select>
+	
+	<select id ="selectrCheckKakaoToken" parameterType="java.lang.String" resultType="java.lang.Integer">
+		/* SystemAuthMapper.selectrCheckKakaoToken */
+		SELECT count(*)
+		FROM   com.CRM_USER with (nolock)
+		where  SNS_KAKAO_KEY = #{id}
+	</select>
+	
+	<select id ="selectrCheckGoogleToken" parameterType="java.lang.String" resultType="java.lang.Integer">
+		/* SystemAuthMapper.selectrCheckGoogleToken */
+		SELECT count(*)
+		FROM   com.CRM_USER with (nolock)
+		where  SNS_GOOGLE_KEY = #{id}
+	</select>		
+	
+		<!-- /**************************************
+	- 관련 파일 : SystemAuthMapper.java (modifyUserFirstLoginFlg)
+	============================================
+	- 제목 : 로그인 사용자 최초 로그인 플래그 변경
+	- 설명 : 로그인 사용자 최초 로그인 플래그 변경
+	- 결과형태 :
+	============================================
+	- 입력 :
+	- 출력 :
+	============================================
+	- 작성자 : hy.jun
+	- 작성일 : 2018.03.08
+	***************************************/ -->
+	<update id="modifyUserFirstLoginFlg" parameterType="com.icignal.auth.dto.request.UserDetailReqDto">
+		/* SystemAuthMapper.modifyUserFirstLoginFlg */
+		UPDATE COM.CRM_USER
+		      SET	  modify_by = #{empId}
+				, modify_date = getdate()
+				, first_login_flg = #{firstLoginFlg}
+		WHERE	rid = #{ridCrmuser}
+			and flag = 1
+	</update>
+	
+	<select id="selectEmpAddListModalForCallCenter" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthGroupEmployeeModalReqDto" resultType="com.icignal.systemmanagement.auth.dto.response.SystemAuthGroupEmployeeModalResDto">
+	/* SystemAuthMapper.selectEmpAddListModalForCallCenter */
+		select 
+	      	  DISTINCT u.rid as ridUser
+			, e.id as empId
+			, e.name as empName
+			<!-- , e.email as empEmail -->
+			, e.email as empEmail
+			, cc.mark_name as empType
+			, u.user_id as userId
+			, ${strColumn}
+		from com.crm_user u with (nolock)
+			join com.employee e with (nolock) on e.id = u.id_employee
+			left outer join com.comm_code cc with (nolock) on cc.CODE_NAME = e.work_status  and cc.group_code='WORK_STATUS' and cc.lang = #{lang}
+			left outer join com.auth_user_rel aur with (nolock) on e.id = aur.emp_id
+		where 
+			u.flag = 1
+			and 1=1
+			<!-- and (aur.aut_group_id = 'A25252792356573957' or aur.aut_group_id = 'A25252792356573959') -->
+			and ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+		
+</mapper>

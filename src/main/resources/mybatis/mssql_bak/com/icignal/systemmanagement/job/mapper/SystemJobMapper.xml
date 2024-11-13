@@ -1,0 +1,1127 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:39 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.job.mapper.SystemJobMapper">
+
+	<select id="selectJobList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobListReqDto" 
+										resultType="com.icignal.systemmanagement.job.dto.response.SystemJobItemResDto">
+	/* SystemJobMapper.selectJobList */
+		SELECT
+			 bj.rid					as rid
+			,bj.job_nm              as jobNm
+			,bj.job_desc            as jobDesc
+	        ,emp.name               as modifyBy
+	        ,bj.result_cd			as resultCd
+            ,bj.last_exec_start_dt	as lastExecStartDt
+            ,bj.last_exec_end_dt	as lastExecEndDt
+            ,qct.cron_expression	as execCycle
+            ,bj.exec_cycle_desc		as execCycleDesc
+            ,bj.last_exec_time		as lastExecTime
+            ,${strColumn}
+		FROM batch.batch_job bj with(nolock)
+			left outer JOIN dbo.QRTZ_CRON_TRIGGERS qct with(nolock) on qct.trigger_name = bj.job_nm
+			left join com.crm_user cu with(nolock) on cu.rid = bj.modify_by
+			left join com.employee emp with(nolock) on emp.id = cu.id_employee
+		WHERE ${strCondWhere}
+			<if test="jobDesc != null and jobDesc != ''">
+				AND bj.job_desc like #{jobDesc}
+			</if>
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<insert id="insertJob" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobInsertReqDto" useGeneratedKeys="false">
+	/* SystemJobMapper.insertJob */
+		INSERT INTO batch.batch_job(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, job_nm
+			, job_desc
+			, use_yn
+			, exec_cycle
+			, exec_cycle_desc
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{modifyBy}
+			, #{jobNm}
+			, #{jobDesc}
+			, #{useYn}
+			, #{execCycle}
+			, #{execCycleDesc}
+		)
+	</insert>
+
+	<select id="selectJobDetail" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobDetailReqDto" 
+											resultType="com.icignal.systemmanagement.job.dto.response.SystemJobDetailResDto">
+	/* SystemJobMapper.selectJobDetail */
+		SELECT
+			 rid					as rid
+			,job_nm                 as jobNm
+			,job_desc               as jobDesc
+	        ,modify_by              as modifyBy
+	        ,last_exec_start_dt     as lastExecStartDt
+	        ,exec_cycle				as execCycle
+	        ,exec_cycle_desc		as execCycleDesc
+	        ,use_yn					as useYn
+		FROM batch.batch_job bj
+		WHERE bj.rid = #{rid}
+	</select>
+
+	<update id="updateJob" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobUpdateReqDto">
+	/* SystemJobMapper.updateJob */
+		UPDATE batch.batch_job
+		SET
+			modify_date = getdate()
+			, modify_by = #{modifyBy}
+			, job_nm = #{jobNm}
+			, job_desc = #{jobDesc}
+			, exec_cycle = #{execCycle}
+			, exec_cycle_desc= #{execCycleDesc}
+			, use_yn = #{useYn}
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="deleteJobList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobDetailReqDto">
+	/* SystemJobMapper.deleteJobList */
+		DELETE FROM batch.batch_job
+		WHERE rid  IN
+			<foreach collection="rids" item="item" separator=", " close=")" open="(">
+				#{item}
+			</foreach>
+	</delete>
+
+	<select id="selectExecParamList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemExecParamListReqDto" 
+												resultType="com.icignal.systemmanagement.job.dto.response.SystemExecParamItemResDto">
+	/* SystemJobMapper.selectExecParamList */
+		SELECT
+			ljp.rid			AS rid
+			, cc1.mark_name	AS paramTypeCd
+			, ljp.param_seq	AS paramSeq
+			, ljp.param_nm	AS paramNm
+			, ljp.param_val	AS paramVal
+			, ${strColumn}
+		FROM batch.loy_job_param ljp with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON ljp.param_type_cd = cc1.code_name AND cc1.group_code = 'PARAM_TYPE_CD' AND cc1.lang = 'ko'
+		WHERE ljp.del_yn = 'N'
+			AND ljp.rid_job_mst = #{ridJobMst}
+			AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="checkParamSeqDup" parameterType="com.icignal.systemmanagement.job.dto.request.SystemExecParamListReqDto" 
+												resultType="java.lang.Integer">
+	/* SystemJobMapper.checkParamSeqDup */
+		SELECT count(ljp.rid)
+		FROM batch.loy_job_param ljp
+		WHERE ljp.del_yn = 'N'
+			AND ljp.rid_job_mst = #{ridJobMst}
+			AND ljp.param_seq = #{paramSeq}
+			<if test="rid != null and rid != ''">
+				AND  ljp.rid != #{rid}
+			</if>
+	</select>
+
+	<insert id="insertExecParam" parameterType="com.icignal.systemmanagement.job.dto.request.SystemExecParamListReqDto">
+		/* SystemJobMapper.insertExecParam */
+		INSERT INTO batch.loy_job_param(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, rid_job_mst
+			, param_nm
+			, param_val
+			, param_type_cd
+			, param_seq
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{modifyBy}
+			, #{ridJobMst}
+			, #{paramNm}
+			, #{paramVal}
+			, #{paramTypeCd}
+			, #{paramSeq}
+		)
+	</insert>
+
+	<select id="selectExecParamDetail" parameterType="com.icignal.systemmanagement.job.dto.request.SystemExecParamListReqDto" 
+													resultType="com.icignal.systemmanagement.job.dto.response.SystemExecParamDetailResDto">
+	/* SystemJobMapper.selectExecParamDetail */
+		SELECT
+		  ljp.rid			AS rid
+		  , cc1.code_name	AS paramTypeCd
+		  , ljp.param_seq	AS paramSeq
+		  , ljp.param_nm	AS paramNm
+		  , ljp.param_val	AS paramVal
+		FROM batch.loy_job_param ljp with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON ljp.param_type_cd = cc1.code_name AND cc1.group_code = 'PARAM_TYPE_CD' AND cc1.lang = 'ko'
+		WHERE ljp.del_yn = 'N'
+		AND ljp.rid = #{rid}
+	</select>
+
+	<update id="updateExecParam" parameterType="com.icignal.systemmanagement.job.dto.request.SystemExecParamListReqDto">
+	/* SystemJobMapper.updateExecParam */
+		UPDATE batch.loy_job_param
+		SET
+			modify_date = getdate()
+			, modify_by = #{modifyBy}
+			, mod_num = mod_num + 1
+			, param_nm = #{paramNm}
+			, param_val = #{paramVal}
+			, param_type_cd = #{paramTypeCd}
+			, param_seq = #{paramSeq}
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="deleteExecParamList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemExecParamListReqDto">
+	/* SystemJobMapper.deleteExecParamList */
+		DELETE FROM batch.loy_job_param ljp
+		WHERE ljp.rid  IN
+		<foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+
+	<select id="selectLogList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemLogListReqDto" 
+										resultType="com.icignal.systemmanagement.job.dto.response.SystemLogItemResDto">
+	/* SystemJobMapper.selectLogList */
+		SELECT
+		    jl1.fr_dttm                                                              AS frDttm,
+			jl2.end_dttm                                                             AS endDttm,
+			DATE(jl2.end_dttm - jl1.fr_dttm) + '일 ' + DATE(mod((jl2.end_dttm - jl1.fr_dttm), 1) * 24) + '시 ' +
+				DATE(mod((jl2.end_dttm - jl1.fr_dttm) * 24, 1) * 60) + '분 ' +
+				DATE(round(mod((jl2.end_dttm - jl1.fr_dttm) * 24 * 60, 1) * 60)) + '초' AS spentTime,
+			ifnull(jl2.stat_cd, jl1.stat_cd)                                            AS statCd,
+			jl1.exec_param                                                           AS execParam,
+			jl1.rslt_msg                                                             AS reqRsltMsg,
+			jl2.rslt_msg                                                             AS resRsltMsg,
+			jl1.rid                                                                  AS rid
+		  , ${strColumn}
+		FROM ${logTblNm} jl1 with(nolock)
+			LEFT JOIN ${logTblNm} jl2 with(nolock) ON jl1.rid = jl2.rid_job_log
+		WHERE jl1.del_yn = 'N'
+			AND jl1.rid_job_log IS NULL
+			AND jl1.job_cd = #{jobCd}
+			AND jl1.fr_dttm BETWEEN STR_TO_DATE('', '%Y-%m-%d') AND STR_TO_DATE('', '%Y-%m-%d') + 0.99999
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectLogListForExcel" parameterType="com.icignal.systemmanagement.job.dto.request.SystemLogListReqDto" 
+													resultType="com.icignal.systemmanagement.job.dto.response.SystemLogItemForExcelResDto">
+	/* SystemJobMapper.selectLogListForExcel */
+		SELECT
+			jl1.fr_dttm		AS frDttm
+			, jl2.end_dttm	AS endDttm
+			, trunc(jl2.end_dttm - jl1.fr_dttm) + '일 ' +
+				trunc(mod((jl2.end_dttm - jl1.fr_dttm), 1) * 24) + '시 ' +
+				trunc(mod((jl2.end_dttm - jl1.fr_dttm) * 24, 1) * 60) + '분 ' +
+				trunc(round(mod((jl2.end_dttm - jl1.fr_dttm) * 24 * 60, 1) * 60)) + '초' AS spentTime
+			, nvl(jl2.stat_cd, jl1.stat_cd) AS statCd
+			, jl1.exec_param	AS execParam
+			, jl1.rslt_msg	AS reqRsltMsg
+			, jl2.rslt_msg	AS resRsltMsg
+		FROM ${logTblNm} jl1 with(nolock)
+			LEFT JOIN ${logTblNm} jl2 with(nolock) ON jl1.rid = jl2.rid_job_log
+		WHERE jl1.del_yn = 'N'
+			AND jl1.rid_job_log IS NULL
+			AND jl1.job_cd = #{jobCd}
+			AND jl1.fr_dttm BETWEEN convert(datetime, #{startDate}) AND convert(datetime, #{endDate}) + 0.99999
+	</select>
+
+	<select id="selectLogDtlList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemLogDtlListReqDto" 
+											resultType="com.icignal.systemmanagement.job.dto.response.SystemLogDtlItemResDto">
+	/* SystemJobMapper.selectLogDtlList */
+		SELECT
+			jld.log_dttm			AS logDttm
+			, cc1.mark_name		AS logTypeCd
+			, jld.sbsqnt_job_nm	AS sbsqntJobNm
+			, jld.log_content		AS logContent
+			, ${strColumn}
+		FROM ${schema}.loy_job_log_dtl jld with(nolock)
+			JOIN ${schema}.comm_code cc1 with(nolock) ON jld.log_type_cd = cc1.code_name AND cc1.group_code = 'JOB_LOG_TYPE_CD' AND cc1.lang = 'ko'
+		WHERE jld.del_yn = 'N'
+			AND jld.rid_job_log = #{ridJobLog}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectLogDtlListForExcel" parameterType="com.icignal.systemmanagement.job.dto.request.SystemLogDtlListReqDto" 
+														resultType="com.icignal.systemmanagement.job.dto.response.SystemLogDtlItemForExcelResDto">
+	/* SystemJobMapper.selectLogDtlListForExcel */
+		SELECT
+			jld.log_dttm			AS logDttm
+			, cc1.mark_name		AS logTypeCd
+			, jld.sbsqnt_job_nm	AS sbsqntJobNm
+			, jld.log_content		AS logContent
+		FROM batch.loy_job_log_dtl jld with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON jld.log_type_cd = cc1.code_name AND cc1.group_code = 'JOB_LOG_TYPE_CD' AND cc1.lang = 'ko'
+		WHERE jld.del_yn = 'N'
+			AND jld.rid_job_log = #{ridJobLog}
+	</select>
+
+	<insert id="insertTrgr" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTrgrListReqDto">
+		<selectKey keyProperty="rid" resultType="java.lang.String" order="BEFORE">
+			SELECT com.getNewId('A') as rid
+		</selectKey>
+		/* SystemJobMapper.insertTrgr */
+		INSERT INTO batch.loy_job_trgr(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, rid_job_mst
+			, trgr_nm
+			, stat_cd
+			, start_dttm
+			, end_dttm
+			, cron_expr
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{modifyBy}
+			, #{ridJobMst}
+			, #{trgrNm}
+			, 'NORMAL'
+			, #{startDttm}
+			, #{endDttm}
+			, #{cronExpr}
+		)
+	</insert>
+
+	<select id="selectTrgrList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTrgrListReqDto" 
+										resultType="com.icignal.systemmanagement.job.dto.response.SystemTrgrItemResDto">
+	/* SystemJobMapper.selectTrgrList */
+		SELECT
+		  ljt.rid			AS rid
+		  , ljt.trgr_nm		AS trgrNm
+		  , cc1.mark_name	AS trgrStatCd
+		  , ljt.start_dttm	AS startDttm
+		  , ljt.end_dttm	AS endDttm
+		  , ljt.cron_expr	AS cronExpr
+		  , ${strColumn}
+		FROM batch.loy_job_trgr ljt with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON ljt.stat_cd = cc1.code_name AND cc1.group_code = 'JOB_TRGR_STAT_CD' AND cc1.lang = 'ko'
+		WHERE ljt.rid_job_mst = #{ridJobMst}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectTrgrDetail" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTrgrListReqDto" 
+											resultType="com.icignal.systemmanagement.job.dto.response.SystemTrgrDetailResDto">
+	/* SystemJobMapper.selectTrgrDetail */
+		SELECT
+		  ljt.rid			AS rid
+		  , ljt.trgr_nm		AS trgrNm
+		  , ljt.start_dttm	AS startDttm
+		  , ljt.end_dttm	AS endDttm
+		  , ljt.cron_expr	AS cronExpr
+		  , ljt.stat_cd		AS statCd
+		FROM batch.loy_job_trgr ljt
+		WHERE ljt.del_yn = 'N'
+			AND ljt.rid = #{rid}
+	</select>
+
+	<update id="updateTrgr" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTrgrListReqDto">
+	/* SystemJobMapper.updateTrgr */
+		UPDATE batch.loy_job_trgr
+		SET
+			modify_date = getdate()
+			, modify_by = #{modifyBy}
+			, mod_num = mod_num + 1
+			, trgr_nm = #{trgrNm}
+			, start_dttm = #{startDttm}
+			, end_dttm = #{endDttm}
+			, cron_expr = #{cronExpr}
+			, stat_cd = 'NORMAL'
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="deleteTrgrList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTrgrListReqDto">
+	/* SystemJobMapper.deleteTrgrList */
+		DELETE FROM batch.loy_job_trgr ljt
+		WHERE ljt.rid  IN
+		<foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<update id="updateTrgrStatCd" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTrgrStartPauseReqDto">
+	/* SystemJobMapper.updateTrgrStatCd */
+		UPDATE batch.loy_job_trgr
+		SET
+			modify_date = getdate()
+			, modify_by = #{modifyBy}
+			, mod_num = mod_num + 1
+			, stat_cd = #{statCd}
+		WHERE rid = #{rid}
+	</update>
+
+	<insert id="insertAlrt" parameterType="com.icignal.systemmanagement.job.dto.request.SystemAlrtListReqDto">
+		<selectKey keyProperty="rid" resultType="java.lang.String" order="BEFORE">
+		select com.getNewId('A') as rid
+		</selectKey>
+		/* SystemJobMapper.insertAlrt */
+		INSERT INTO batch.loy_job_alrt(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, rid_job_mst
+			, alrt_nm
+			, alrt_cond_cd
+			<if test="alrtCondCd == &quot;RESULT&quot;">
+			, cond_val
+			</if>
+			<if test="alrtCondCd == &quot;TIME&quot;">
+			, exec_time
+			</if>
+			, trs_chnl_cd
+			, active_yn
+			, rcvr
+			<if test="trsChnlCd == &quot;MAIL&quot;">
+			, sbjt
+			</if>
+			, msg_content
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{modifyBy}
+			, #{ridJobMst}
+			, #{alrtNm}
+			, #{alrtCondCd}
+			<if test="alrtCondCd == &quot;RESULT&quot;">
+			, #{condVal}
+			</if>
+			<if test="alrtCondCd == &quot;TIME&quot;">
+			, #{execTime}
+			</if>
+			, #{trsChnlCd}
+			, #{activeYn}
+			, #{rcvr}
+			<if test="trsChnlCd == &quot;MAIL&quot;">
+			, #{sbjt}
+			</if>
+			, #{msgContent}
+		)
+	</insert>
+
+	<select id="selectAlrtList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemAlrtListReqDto" 
+										resultType="com.icignal.systemmanagement.job.dto.response.SystemAlrtItemResDto">
+	/* SystemJobMapper.selectAlrtList */
+		SELECT
+			lja.rid			AS rid
+			, lja.alrt_nm		AS alrtNm
+			, lja.active_yn	AS activeYn
+			, cc1.mark_name	AS alrtCondCd
+			<!-- , cc2.mark_name	AS condVal -->
+			, lja.cond_val as condValCdNm
+			, cc3.mark_name	AS trsChnlcd
+			, lja.rcvr		AS rcvr
+			, ${strColumn}
+		FROM batch.loy_job_alrt lja with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON lja.alrt_cond_cd = cc1.code_name AND cc1.group_code = 'BAT_JOB_COND_CD' AND cc1.lang = 'ko'
+		<!-- LEFT OUTER JOIN com.comm_code cc2 ON lja.cond_val = cc2.code_name AND cc2.group_code = 'BAT_JOB_COND_VAL' AND cc2.lang = 'ko' -->
+			JOIN com.comm_code cc3 with(nolock) ON lja.trs_chnl_cd = cc3.code_name AND cc3.group_code = 'BAT_ALARM_CHANNEL' AND cc3.lang = 'ko'
+		WHERE lja.rid_job_mst = #{ridJobMst}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectAlrtDetail" parameterType="com.icignal.systemmanagement.job.dto.request.SystemAlrtListReqDto" 
+											resultType="com.icignal.systemmanagement.job.dto.response.SystemAlrtDetailResDto">
+	/* SystemJobMapper.selectAlrtDetail */
+		SELECT
+			lja.rid			AS rid
+			, lja.alrt_nm		AS alrtNm
+			, lja.active_yn	AS activeYn
+			, cc1.code_name	AS alrtCondCd
+			<!-- , cc2.code_name	AS condVal -->
+			, lja.cond_val as condValCdNm
+			, lja.exec_time	AS execTime
+			, cc3.code_name	AS trsChnlCd
+			, lja.rcvr		AS rcvr
+			, lja.sbjt		AS sbjt
+			, lja.msg_content	AS msgContent
+		FROM batch.loy_job_alrt lja with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON lja.alrt_cond_cd = cc1.code_name AND cc1.group_code = 'BAT_JOB_COND_CD' AND cc1.lang = 'ko'
+		<!-- LEFT OUTER JOIN com.comm_code cc2 ON lja.cond_val = cc2.code_name AND cc2.group_code = 'BAT_JOB_COND_VAL' AND cc2.lang = 'ko' -->
+			JOIN com.comm_code cc3 with(nolock) ON lja.trs_chnl_cd = cc3.code_name AND cc3.group_code = 'BAT_ALARM_CHANNEL' AND cc3.lang = 'ko'
+		WHERE lja.del_yn = 'N'
+			AND lja.rid = #{rid}
+	</select>
+
+	<update id="updateAlrt" parameterType="com.icignal.systemmanagement.job.dto.request.SystemAlrtListReqDto">
+	/* SystemJobMapper.updateAlrt */
+		UPDATE batch.loy_job_alrt
+		SET
+			modify_date = getdate()
+			, modify_by = #{modifyBy}
+			, mod_num = mod_num + 1
+			, alrt_nm = #{alrtNm}
+			, alrt_cond_cd = #{alrtCondCd}
+			, cond_val = decode(#{alrtCondCd}, 'RESULT', #{condVal}, null)
+			, exec_time = decode(#{alrtCondCd}, 'TIME', #{execTime}, null)
+			, trs_chnl_cd = #{trsChnlCd}
+			, active_yn = #{activeYn}
+			, rcvr = #{rcvr}
+			, sbjt = decode(#{trsChnlCd}, 'MAIL', #{sbjt}, null)
+			, msg_content = #{msgContent}
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="deleteAlrtList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemAlrtListReqDto">
+	/* SystemJobMapper.deleteAlrtList */
+		DELETE FROM batch.loy_job_alrt lja
+		WHERE lja.rid IN
+		<foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<insert id="insertSbsqnt" parameterType="com.icignal.systemmanagement.job.dto.request.SystemSbsqntListReqDto">
+		<selectKey keyProperty="rid" resultType="java.lang.String" order="BEFORE">
+			SELECT com.getNewId('A') as rid
+		</selectKey>
+		/* SystemJobMapper.insertSbsqnt */
+		INSERT INTO batch.loy_job_sbsqnt(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, rid_job_mst
+			, sbsqnt_job_nm
+			, exec_cond_cd
+			<if test="execCondCd == &quot;RESULT&quot;">
+			, cond_val
+			</if>
+			<if test="execCondCd == &quot;TIME&quot;">
+			, exec_time
+			</if>
+			, active_yn
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{modifyBy}
+			, #{ridJobMst}
+			, #{sbsqntJobNm}
+			, #{execCondCd}
+			<if test="execCondCd == &quot;RESULT&quot;">
+			, #{condVal}
+			</if>
+			<if test="execCondCd == &quot;TIME&quot;">
+			, #{execTime}
+			</if>
+			, #{activeYn}
+		)
+	</insert>
+
+	<select id="selectSbsqntList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemSbsqntListReqDto" 
+											resultType="com.icignal.systemmanagement.job.dto.response.SystemSbsqntItemResDto">
+	/* SystemJobMapper.selectSbsqntList */
+		SELECT
+			ljs.rid				AS rid
+			, ljs.sbsqnt_job_nm	AS sbsqntJobNm
+			, ljs.active_yn		AS activeYn
+			, cc1.mark_name		AS execCondCd
+			<!-- , cc2.mark_name		AS condVal -->
+			, ljs.cond_val as condValCdNm
+			, ${strColumn}
+		FROM batch.loy_job_sbsqnt ljs with(nolock)
+		JOIN com.comm_code cc1 with(nolock) ON ljs.exec_cond_cd = cc1.code_name AND cc1.group_code = 'BAT_JOB_COND_CD' AND cc1.lang = 'ko'
+		<!-- LEFT OUTER JOIN com.comm_code cc2 ON ljs.cond_val = cc2.code_name AND cc2.group_code = 'BAT_JOB_COND_VAL' AND cc2.lang = 'ko' -->
+		WHERE ljs.rid_job_mst = #{ridJobMst}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectSbsqntDetail" parameterType="com.icignal.systemmanagement.job.dto.request.SystemSbsqntListReqDto" 
+												resultType="com.icignal.systemmanagement.job.dto.response.SystemSbsqntDetailResDto">
+	/* SystemJobMapper.selectSbsqntDetail */
+		SELECT
+			ljs.rid				AS rid
+			, ljs.sbsqnt_job_nm	AS sbsqntJobNm
+			, ljs.active_yn		AS activeYn
+			, cc1.code_name		AS execCondCd
+			<!-- , cc2.code_name		AS condVal -->
+			, ljs.cond_val as condValCdNm
+			, ljs.exec_time		AS execTime
+		FROM batch.loy_job_sbsqnt ljs with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON ljs.exec_cond_cd = cc1.code_name AND cc1.group_code = 'BAT_JOB_COND_CD' AND cc1.lang = 'ko'
+		<!-- LEFT OUTER JOIN com.comm_code cc2 ON ljs.cond_val = cc2.code_name AND cc2.group_code = 'BAT_JOB_COND_VAL' AND cc2.lang = 'ko' -->
+		WHERE ljs.del_yn = 'N'
+			AND ljs.rid = #{rid}
+	</select>
+
+	<update id="updateSbsqnt" parameterType="com.icignal.systemmanagement.job.dto.request.SystemSbsqntListReqDto">
+	/* SystemJobMapper.updateSbsqnt */
+		UPDATE batch.loy_job_sbsqnt
+		SET
+			modify_date = getdate()
+			, modify_by = #{modifyBy}
+			, mod_num = mod_num + 1
+			, sbsqnt_job_nm = #{sbsqntJobNm}
+			, exec_cond_cd = #{execCondCd}
+			, cond_val = decode(#{execCondCd}, 'RESULT', #{condVal}, null)
+			, exec_time = decode(#{execCondCd}, 'TIME', #{execTime}, null)
+			, active_yn = #{activeYn}
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="deleteSbsqntList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemSbsqntListReqDto">
+	/* SystemJobMapper.deleteSbsqntList */
+		DELETE FROM batch.loy_job_sbsqnt ljs
+		WHERE ljs.rid
+		IN <foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<delete id="deleteSbsqntTaskList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemSbsqntListReqDto">
+	/* SystemJobMapper.deleteSbsqntTaskList */
+		DELETE FROM batch.loy_job_sbsqnt_task ljst
+		WHERE ljst.rid_sbsqnt
+		IN <foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<select id="selectChoiceJobList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemChoiceJobListReqDto" 
+												resultType="com.icignal.systemmanagement.job.dto.response.SystemChoiceJobItemResDto">
+	/* SystemJobMapper.selectChoiceJobList */
+		SELECT
+			ljm.rid			AS rid
+			, ljm.job_nm		AS jobNm
+			, cc1.mark_name	AS jobGrp
+			, ljm.pgm_nm		AS pgmNm
+			, ${strColumn}
+		FROM batch.loy_job_mst ljm with(nolock)
+			JOIN com.comm_code cc1 with(nolock) ON ljm.job_grp_cd = cc1.code_name AND cc1.group_code = 'JOB_GRP_CD' AND cc1.lang = 'ko'
+		WHERE ljm.del_yn = 'N'
+			AND ljm.rid != #{ridJobMst}
+			AND ljm.rid NOT IN ( SELECT rid_exec_job FROM batch.loy_job_sbsqnt_task WHERE del_yn = 'N' )
+			AND ${strWhere}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<insert id="insertTargetJob" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTargetJobListReqDto">
+		<selectKey keyProperty="rid" resultType="java.lang.String" order="BEFORE">
+			SELECT com.getNewId('A') as rid
+		</selectKey>
+		/* SystemJobMapper.insertTargetJob */
+		INSERT INTO batch.loy_job_sbsqnt_task(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, rid_sbsqnt
+			, rid_exec_job
+			, exec_delay_time
+			, active_yn
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{modifyBy}
+			, #{ridSbsqnt}
+			, #{ridExecJob}
+			, #{execDelayTime}
+			, #{activeYn}
+		)
+	</insert>
+
+	<select id="selectTargetJobList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTargetJobListReqDto" 
+												resultType="com.icignal.systemmanagement.job.dto.response.SystemTargetJobItemResDto">
+	/* SystemJobMapper.selectTargetJobList */
+		SELECT
+		  ljst.rid               AS rid
+		  , ljm.job_nm           AS jobNm
+		  , ljst.active_yn       AS activeYn
+		  , ljst.exec_delay_time AS execDelayTime
+		  , ${strColumn}
+		FROM batch.loy_job_sbsqnt_task ljst with(nolock)
+			JOIN batch.loy_job_mst ljm with(nolock) ON ljst.rid_exec_job = ljm.rid
+		WHERE ljst.rid_sbsqnt = #{ridSbsqnt}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="selectTargetJobDetail" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTargetJobListReqDto" 
+													resultType="com.icignal.systemmanagement.job.dto.response.SystemTargetJobDetailResDto">
+	/* SystemJobMapper.selectTargetJobDetail */
+		SELECT
+		  ljst.rid               AS rid
+		  , ljm.job_nm           AS targetJobNm
+		  , ljst.rid_exec_job    AS ridExecJob
+		  , ljst.active_yn       AS activeYn
+		  , ljst.exec_delay_time AS execDelayTime
+		  ,ljst.exec_cycle_desc  As execCycleDesc
+		FROM batch.loy_job_sbsqnt_task ljst with(nolock)
+			JOIN batch.loy_job_mst ljm with(nolock) ON ljst.rid_exec_job = ljm.rid
+		WHERE ljst.del_yn = 'N'
+			AND ljst.rid = #{rid}
+	</select>
+
+	<update id="updateTargetJob" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTargetJobListReqDto">
+	/* SystemJobMapper.updateTargetJob */
+		UPDATE batch.loy_job_sbsqnt_task
+		SET
+		  modify_date = getdate()
+		  , modify_by = #{modifyBy}
+		  , mod_num = mod_num + 1
+		  , rid_exec_job = #{ridExecJob}
+		  , exec_delay_time = #{execDelayTime}
+		  , active_yn = #{activeYn}
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="deleteTargetJobList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemTargetJobListReqDto">
+	/* SystemJobMapper.deleteTargetJobList */
+		DELETE FROM batch.loy_job_sbsqnt_task ljst
+		WHERE ljst.rid
+		IN <foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+	<select id="getJobStepList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepListReqDto" 
+											resultType="com.icignal.systemmanagement.job.dto.response.SystemJobStepItemResDto">
+	/* SystemJobMapper.getJobStepList */
+		SELECT
+			bjs.STEP_NM             as stepNm
+		   ,bjs.STEP_DESC           as stepDesc
+		   ,bjs.RID                 as rid
+		   ,emp.name                as modifyBy
+		   ,bjs.MODIFY_DATE         as modifyDate
+		   ,bjs.RID_JOB             as ridJob
+		   ,bjs.STEP_SEQ            as stepSeq
+		   <!-- ,nvl(c1.mark_name, bjs.step_method_nm) as stepMethodNm -->
+		   , bjs.step_method_nm as stepMethodCdNm
+		   ,${strColumn}
+		FROM batch.batch_job_step bjs with(nolock)
+			JOIN batch.batch_job bj with(nolock) on bj.rid =  bjs.rid_job
+			left join com.crm_user cu with(nolock) on cu.rid = bjs.modify_by
+			left join com.employee emp with(nolock) on emp.id = cu.id_employee
+		<!-- left join com.comm_code c1 on c1.group_code = 'BATCH_STEP_METHOD' and c1.code_name = bjs.step_method_nm and c1.lang = #{lang} and c1.flag = 1 -->
+		WHERE bjs.rid_job = #{ridJob}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="getJobStepDtl" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepListReqDto" 
+										resultType="com.icignal.systemmanagement.job.dto.response.SystemJobStepItemResDto">
+	/* SystemJobMapper.getJobStepDtl */
+		SELECT
+			bjs.STEP_NM             as stepNm
+		   ,bjs.STEP_DESC           as stepDesc
+		   ,bjs.step_class_field_nm as stepClassFieldNm
+		   ,bjs.step_method_nm		as stepMethodNm
+		   ,bjs.item_reader_nm		as itemReaderNm
+		   ,bjs.item_writer_nm		as itemWriterNm
+		   ,bjs.RID                 as rid
+		   ,bjs.MODIFY_BY           as modifyBy
+		   ,bjs.MODIFY_DATE         as modifyDate
+		   ,bjs.RID_JOB             as ridJob
+		   ,bjs.STEP_SEQ            as stepSeq
+		FROM batch.batch_job_step bjs with(nolock)
+			JOIN batch.batch_job bj with(nolock) on bj.rid =  bjs.rid_job
+		WHERE bjs.rid = #{rid}
+	</select>
+
+
+	<insert id="addJobStep" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepListReqDto">
+	/* SystemJobMapper.addJobStep */
+		INSERT INTO batch.batch_job_step(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, STEP_NM
+			, STEP_DESC
+			, step_class_field_nm
+			, step_method_nm
+			, item_reader_nm
+			, item_writer_nm
+			, step_seq
+			, RID_JOB
+
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{createBy}
+			, #{stepNm}
+			, #{stepDesc}
+			, #{stepClassFieldNm}
+			, #{stepMethodNm}
+			, #{itemReaderNm}
+			, #{itemWriterNm}
+			, (select count(*)+1 from batch.batch_job_step s  where s.rid_job =#{ridJob} )
+			, #{ridJob}
+		)
+	</insert>
+
+	<update id="editJobStep" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepListReqDto">
+	/* SystemJobMapper.editJobStep */
+		UPDATE batch.batch_job_step
+		SET
+			modify_date 			 = getdate()
+			, modify_by 			 = #{createBy}
+			, STEP_NM 			 = #{stepNm}
+			, STEP_DESC 			 = #{stepDesc}
+			, step_class_field_nm  = #{stepClassFieldNm}
+			, step_method_nm       = #{stepMethodNm}
+			, item_reader_nm       = #{itemReaderNm}
+			, item_writer_nm       = #{itemWriterNm}
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="removeJobStep" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepListReqDto">
+	/* SystemJobMapper.removeJobStep */
+		DELETE FROM batch.batch_job_step
+		WHERE rid
+	    IN <foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+
+	<select id="getJobStepMapperList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepMapperListReqDto" 
+													resultType="com.icignal.systemmanagement.job.dto.response.SystemJobStepMapperItemResDto">
+	/* SystemJobMapper.getJobStepMapperList */
+		SELECT
+			bjsm.rid												as rid
+		   ,bjsm.item_type                  						as itemType
+		   ,bjsm.mapper_id                  						as mapperId
+		   ,bjsm.mapper_param               						as mapperParam
+		   ,bjsm.mapper_desc                						as mapperDesc
+		   ,bjsm.cond_extr_apply_yn         						as condExtrApplyYn
+		   ,bjsm.cond_extr_base_dt          						as condExtrBaseDt
+		   ,bjsm.cond_extr_term          							as condExtrTerm
+		   ,convert(varchar(10), bjsm.cond_extr_startDt,120)            as condExtrStartdt
+		   ,convert(varchar(10), bjsm.cond_extr_endDt,120)            	as condExtrEnddt
+		   ,convert(varchar(10), bjsm.cond_extr_startDt_before,120)   	as condExtrStartdtBefore
+		   ,convert(varchar(10), bjsm.cond_extr_endDt_before,120)     	as condExtrEnddtBefore
+		   ,bjsm.cond_extr_unit             						as condExtrUnit
+		   ,emp.name 		                 						as modifyBy
+		   ,bjsm.modify_date                						as modifyDate
+		   ,bjsm.rid_step											as ridStep
+		   ,${strColumn}
+		FROM batch.batch_job_step_mapper bjsm with(nolock)
+			JOIN batch.batch_job_step bjs with(nolock) on bjs.rid = bjsm.rid_step
+			left join com.crm_user cu with(nolock) on cu.rid = bjsm.modify_by
+			left join com.employee emp with(nolock) on emp.id = cu.id_employee
+		WHERE bjsm.rid_step = #{ridStep}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="getJobStepMapperDtl" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepMapperListReqDto" 
+													resultType="com.icignal.systemmanagement.job.dto.response.SystemJobStepMapperItemResDto">
+	/* SystemJobMapper.getJobStepMapperDtl */
+		SELECT
+			bjsm.rid												as rid
+		   ,bjsm.item_type                  						as itemType
+		   ,bjsm.mapper_id                  						as mapperId
+		   ,bjsm.mapper_param               						as mapperParam
+		   ,bjsm.mapper_desc                						as mapperDesc
+		   ,bjsm.cond_extr_apply_yn         						as condExtrApplyYn
+		   ,bjsm.cond_extr_base_dt          						as condExtrBaseDt
+		   ,bjsm.cond_extr_term										as condExtrTerm
+		   ,convert(varchar(10), bjsm.cond_extr_startDt,120)            as condExtrStartdt
+		   ,convert(varchar(10), bjsm.cond_extr_endDt,120)            	as condExtrEnddt
+		   ,convert(varchar(10), bjsm.cond_extr_startDt_before,120)   	as condExtrStartdtBefore
+		   ,convert(varchar(10), bjsm.cond_extr_endDt_before,120)     	as condExtrEnddtBefore
+		   ,bjsm.cond_extr_unit             						as condExtrUnit
+		   ,emp.name 		                 						as modifyBy
+		   ,bjsm.modify_date                						as modifyDate
+		   ,bjsm.rid_step											as ridStep
+		FROM batch.batch_job_step_mapper bjsm with(nolock)
+			JOIN batch.batch_job_step bjs with(nolock) on bjs.rid = bjsm.rid_step
+			left join com.crm_user cu with(nolock) on cu.rid = bjsm.modify_by
+			left join com.employee emp with(nolock) on emp.id = cu.id_employee
+		WHERE bjsm.rid = #{rid}
+	</select>
+
+
+	<insert id="addJobStepMapper" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepMapperListReqDto">
+	/* SystemJobMapper.addJobStepMapper */
+		INSERT INTO batch.batch_job_step_mapper(
+			rid
+			, create_date
+			, create_by
+			, modify_date
+			, modify_by
+			, item_type
+			, mapper_id
+			, mapper_param
+			, mapper_desc
+			, cond_extr_apply_yn
+			, cond_extr_base_dt
+			, cond_extr_term
+	      <if test="condExtrStartdt != null and condExtrStartdt != ''">
+         	, cond_extr_startDt
+          </if>
+           <if test="condExtrEnddt != null and condExtrEnddt != ''">
+         	, cond_extr_endDt
+          </if>
+			, cond_extr_unit
+			, rid_step
+		) VALUES (
+			#{rid}
+			, getdate()
+			, #{createBy}
+			, getdate()
+			, #{createBy}
+			, #{itemType}
+			, #{mapperId}
+			, #{mapperParam}
+			, #{mapperDesc}
+			, #{condExtrApplyYn}
+		  <if test="condExtrBaseDt == null or condExtrBaseDt == ''">
+         	  , 0
+          </if>
+           <if test="condExtrBaseDt != null and condExtrBaseDt != ''">
+         	  , #{condExtrBaseDt}
+          </if>
+          	<if test="condExtrTerm == null or condExtrTerm == ''">
+         	  , 0
+          </if>
+           <if test="condExtrTerm != null and condExtrTerm != ''">
+         	  , #{condExtrTerm}
+          </if>
+           <if test="condExtrStartdt != null and condExtrStartdt != ''">
+            , to_date(#{condExtrStartdt}, 'yyyy-mm-dd')
+          </if>
+			<if test="condExtrEnddt != null and condExtrEnddt != ''">
+         	, to_date(#{condExtrEnddt}, 'yyyy-mm-dd')
+          </if>
+			, #{condExtrUnit}
+			, #{ridStep}
+		)
+	</insert>
+
+	<update id="editJobStepMapper" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepMapperListReqDto">
+	/* SystemJobMapper.editJobStepMapper */
+		UPDATE batch.batch_job_step_mapper
+		SET
+		  modify_date 				  = getdate()
+		  , modify_by 				  = #{createBy}
+		  , item_type                 = #{itemType}
+		  , mapper_id                 = #{mapperId}
+		  , mapper_param              = #{mapperParam}
+		  , mapper_desc               = #{mapperDesc}
+		  , cond_extr_apply_yn        = #{condExtrApplyYn}
+		  <if test="condExtrBaseDt == null or condExtrBaseDt == ''">
+         	   , cond_extr_base_dt    = 0
+          </if>
+          <if test="condExtrBaseDt != null and condExtrBaseDt != ''">
+         	  , cond_extr_base_dt 	  = #{condExtrBaseDt}
+          </if>
+           <if test="condExtrTerm == null or condExtrTerm == ''">
+         	   , cond_extr_term    = 0
+          </if>
+          <if test="condExtrTerm != null and condExtrTerm != ''">
+         	  , cond_extr_term 	  = #{condExtrTerm}
+          </if>
+ 		  , cond_extr_unit            = #{condExtrUnit}
+ 		 <if test="condExtrStartdt != null and condExtrStartdt != ''">
+             , cond_extr_startDt      = convert(datetime, #{condExtrStartdt})
+          </if>
+           <if test="condExtrEnddt != null and condExtrEnddt != ''">
+            , cond_extr_endDt           = convert(datetime, #{condExtrEnddt})
+          </if>
+		WHERE rid = #{rid}
+	</update>
+
+	<delete id="removeJobStepMapper" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepMapperListReqDto">
+	/* SystemJobMapper.removeJobStepMapper */
+		DELETE FROM batch.batch_job_step_mapper
+		WHERE rid
+		IN <foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+
+	<!-- BATCH_JOB_STEP_COMMAND 영역 시작 -->
+	<select id="getJobStepCommandList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepCommandListReqDto" 
+														resultType="com.icignal.systemmanagement.job.dto.response.SystemJobStepCommandItemResDto">
+	/* SystemJobMapper.getJobStepCommandList */
+		SELECT	bjsc.rid												as rid
+				, bjsc.rid_step											as ridStep
+				, bjsc.item_type                  						as itemType
+				<!-- , c1.mark_name                  						as itemTypeNm -->
+				, bjsc.item_type 										as itemTypeCdNm
+				, bjsc.command                  						as command
+				, bjsc.command_param_type               				as commandParamType
+				<!-- , c2.mark_name			                  				as commandParamTypeNm -->
+				, bjsc.command_param_type 							as commandParamTypeCdNm
+				, bjsc.command_param                					as commandParam
+				, bjsc.working_directory         						as workingDirectory
+				, bjsc.timeout          								as timeout
+				, emp.name                  							as modifyBy
+				, bjsc.modify_date                						as modifyDate
+				, ${strColumn}
+		FROM 	batch.batch_job_step_command bjsc with(nolock)
+			JOIN 	batch.batch_job_step bjs with(nolock) on bjs.rid = bjsc.rid_step
+			left join com.crm_user cu with(nolock) on cu.rid = bjsc.modify_by
+			left join com.employee emp with(nolock) on emp.id = cu.id_employee
+		<!-- left join com.comm_code c1 on c1.group_code = 'BATCH_ITEM_TYPE' and c1.code_name = bjsc.item_type and c1.lang = #{lang} and c1.flag = 1 -->
+		<!-- left join com.comm_code c2 on c2.group_code = 'BATCH_COMMAND_PARAM_TYPE' and c2.code_name = bjsc.command_param_type and c2.lang = #{lang} and c2.flag = 1 -->
+		WHERE bjsc.rid_step = #{ridStep}
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select id="getJobStepCommandDtl" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepCommandListReqDto" 
+														resultType="com.icignal.systemmanagement.job.dto.response.SystemJobStepCommandItemResDto">
+	/* SystemJobMapper.getJobStepCommandDtl */
+		SELECT	bjsc.rid												as rid
+			, bjsc.rid_step											as ridStep
+			, bjsc.item_type                  						as itemType
+			<!-- , c1.mark_name                  						as itemTypeNm -->
+			, bjsc.item_type 										as itemTypeCdNm
+			, bjsc.command                  						as command
+			, bjsc.command_param_type                  				as commandParamType
+			<!-- , c2.mark_name			                  				as commandParamTypeNm -->
+			, bjsc.command_param_type 						as commandParamTypeCdNm
+			, bjsc.command_param			                  		as commandParam
+			, bjsc.working_directory			                    as workingDirectory
+			, bjsc.timeout			                  				as timeout
+			, emp.name                  							as modifyBy
+			, bjsc.modify_date                						as modifyDate
+		FROM 	batch.batch_job_step_command bjsc with(nolock)
+			JOIN 	batch.batch_job_step bjs with(nolock) on bjs.rid = bjsc.rid_step
+			left join com.crm_user cu with(nolock) on cu.rid = bjsc.modify_by
+			left join com.employee emp with(nolock) on emp.id = cu.id_employee
+		<!-- left join com.comm_code c1 on c1.group_code = 'BATCH_ITEM_TYPE' and c1.code_name = bjsc.item_type and c1.lang = #{lang} and c1.flag = 1 -->
+		<!-- left join com.comm_code c2 on c2.group_code = 'BATCH_COMMAND_PARAM_TYPE' and c2.code_name = bjsc.command_param_type and c2.lang = #{lang} and c2.flag = 1 -->
+		WHERE 	bjsc.rid = #{rid}
+	</select>
+
+
+	<insert id="addJobStepCommand" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepCommandListReqDto">
+	/* SystemJobMapper.addJobStepCommand */
+		INSERT INTO batch.batch_job_step_command(
+			rid
+			, rid_step
+			, item_type
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, command
+			, command_param_type
+			, command_param
+			, working_directory
+			, timeout
+		) VALUES (
+			#{rid}
+			, #{ridStep}
+			, #{itemType}
+			, #{createBy}
+			, #{createBy}
+			, getdate()
+			, getdate()
+			, #{command}
+			, #{commandParamType}
+			, #{commandParam}
+			, #{workingDirectory}
+			, #{timeout}
+		)
+	</insert>
+
+	<update id="editJobStepCommand" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepCommandListReqDto">
+	/* SystemJobMapper.editJobStepCommand */
+		UPDATE 	batch.batch_job_step_command
+		SET		modify_date 				  = getdate()
+				, modify_by 				  = #{createBy}
+				, item_type                   = #{itemType}
+				, command                     = #{command}
+				, command_param_type          = #{commandParamType}
+				, command_param               = #{commandParam}
+				, working_directory           = #{workingDirectory}
+				, timeout                     = #{timeout}
+		WHERE 	rid = #{rid}
+	</update>
+
+	<delete id="removeJobStepCommand" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobStepCommandListReqDto">
+	/* SystemJobMapper.removeJobStepCommand */
+		DELETE FROM batch.batch_job_step_command
+		WHERE rid
+		IN <foreach collection="rids" item="item" separator=", " close=")" open="(">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- BATCH_JOB_STEP_COMMAND 영역 종료 -->
+	<select  id ="getJobLogList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobListReqDto" 
+											resultType="com.icignal.systemmanagement.job.dto.response.SystemJobItemResDto">
+	/* SystemJobMapper.getJobLogList */
+        select
+		   bje.create_time		as createTime
+		  ,bje.start_time       as startTime
+		  ,bje.end_time         as endTime
+		  ,bje.status           as status
+		  ,bje.exit_code        as exitCode
+		  ,bje.exit_message     as exitMessage
+		  ,bje.last_updated     as lastUpdated
+		  ,${strColumn}
+        from batch.BATCH_JOB_EXECUTION bje with(nolock)
+        	join batch.BATCH_JOB_INSTANCE bji with(nolock) on bje.job_instance_id  =  bji.job_instance_id
+        where bji.job_name = #{jobNm}
+        ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<select  id ="getBatchLogList" parameterType="com.icignal.systemmanagement.job.dto.request.SystemJobListReqDto" 
+												resultType="com.icignal.systemmanagement.job.dto.response.SystemJobItemResDto">
+	/* SystemJobMapper.getBatchLogList */
+      select
+			   bj.job_nm			as jobNm
+			  ,bj.job_desc      	as jobDesc
+        	  ,bje.create_time		as createTime
+        	  ,bje.create_time		as createTime
+			  ,bje.start_time       as startTime
+              ,bje.end_time         as endTime
+              ,bje.status           as status
+              ,bje.exit_code        as exitCode
+              ,bje.exit_message     as exitMessage
+              ,bje.last_updated     as lastUpdated
+              ,bj.last_exec_time    as lastExecTime
+        from batch.BATCH_JOB_EXECUTION bje with(nolock)
+			join batch.BATCH_JOB_INSTANCE bji with(nolock) on bje.job_instance_id  =  bji.job_instance_id
+			join batch.batch_job bj with(nolock) on bj.job_nm =  bji.job_name
+		WHERE ${strCondWhere}
+			<if test="jobDesc != null and jobDesc != ''">
+				AND bj.job_desc like #{jobDesc}
+			</if>
+        ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+</mapper>

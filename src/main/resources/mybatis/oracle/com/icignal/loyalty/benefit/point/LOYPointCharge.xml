@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:25:21 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="LOYPointCharge">
+
+</mapper>
+
+<!-- <?xml version="1.0" encoding="UTF-8"?>Converted at: Wed May 02 14:25:21 KST 2018
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="LOYPointCharge">  
+
+   
+    /**************************************
+    -   관련 파일             : LOYPointChargeDAO.java
+    ============================================
+    -   제목                  : 포인트 충전소 목록 
+    -   설명                  : 포인트 충전소 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.10.23
+    ***************************************/
+   <select id="selectPointChargeList" parameterType="pointChargeListRequest" resultType="pointChargeListResponse">
+	    SELECT 
+	   		  lsp.TXN_NUM as txtNum
+	   		  ,(select MARK_NAME from com.comm_code where CODE_NAME = lsp.SUB_TYPE_CD AND lang = #{lang} AND GROUP_CODE = 'SPNT_TXN_SUB_TYPE_CD' AND country = #{country} AND flag = 1) as subTypeCd
+		   	  ,lsp.APPROVE_DT as approveDt
+	       	  ,lm.MBR_NO as mbrNo
+	          ,lm.RID_CUST as ridCust
+	          ,lm.MBR_HID_NM as custNm
+	          ,case
+	          	when lsp.CARD_NUM ='' or   lsp.CARD_NUM  is null
+	          	then lsp.CARD_NUM
+              	when lsp.CARD_TYPE_CD='10' then com.fn_getCardNum(secu.fn_getDecrypt(#{cipherKey} ,lsp.CARD_NUM, null ))
+             	else
+              	secu.fn_getDecrypt(#{cipherKey} ,lsp.CARD_NUM, 'CARD_NUM')
+              	end as cardNum
+	          ,lsp.ACC_POINTS as accPnts
+	          ,lsp.USE_POINTS as usePnts
+	          ,lsp.TOTAL_USABLE_POINTS as totalUsablePnts
+	          ,lsp.STATION_GIFT_NM  as stationGiftNm
+	          ,lp.PROD_NM as prodNm
+	          ,lc.CHNL_NO as chnlNo
+	          ,lc.CHNL_NM as chnlNm
+	          ,lsp.rid as rid
+	          ,lsp.CARD_TYPE_CD as cardTypeCd
+	          ,lmc.cprt_card_cd as cprtCardCd
+	          ,lsp.RID_MBR as ridMbr
+	          ,lsp.RID_CHNL as ridChnl
+	          ,lsp.RID_PROD as ridProd
+		FROM 
+		<if test="defaultArchive == null or defaultArchive == ''">loy.loy_stn_pnt_txn</if>
+		<if test="defaultArchive != null and defaultArchive != ''">loy.loy_stn_pnt_txn_archive</if>		
+		lsp
+		LEFT OUTER JOIN LOY.LOY_CHNL lc on lsp.RID_CHNL =  lc.rid
+		LEFT OUTER JOIN loy.loy_mbr lm on lm.rid = lsp.RID_MBR
+		LEFT OUTER JOIN loy.loy_prod lp on lp.rid = lsp.RID_PROD
+		LEFT OUTER JOIN loy.loy_mbr_card lmc on lsp.CARD_NUM = lmc.CARD_NO
+		WHERE ${strCondWhere}
+		<if test="defaultMbrRid != null and defaultMbrRid != ''">and lsp.rid_mbr = #{defaultMbrRid} </if>
+		<if test="defaultChnlRid != null and defaultChnlRid != ''">and lsp.rid_chnl = #{defaultChnlRid} </if>
+		<if test="defaultStnRid != null and defaultStnRid != ''">and lsp.rid_par = #{defaultStnRid} </if>
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+    </select>
+    
+	<select id="selectPointChargeListCount" parameterType="pointChargeListRequest" resultType="java.lang.Integer">
+		SELECT COUNT(*)as count
+		FROM 
+		<if test="defaultArchive == null or defaultArchive == ''">loy.loy_stn_pnt_txn</if>
+		<if test="defaultArchive != null and defaultArchive != ''">loy.loy_stn_pnt_txn_archive</if>		
+		lsp
+		LEFT OUTER JOIN LOY.LOY_CHNL lc on lsp.RID_CHNL =  lc.rid
+		LEFT OUTER JOIN loy.loy_mbr lm on lm.rid = lsp.RID_MBR
+		LEFT OUTER JOIN loy.loy_prod lp on lp.rid = lsp.RID_PROD
+		LEFT OUTER JOIN loy.loy_mbr_card lmc on lsp.CARD_NUM = lmc.CARD_NO
+		WHERE ${strCondWhere}
+		<if test="defaultMbrRid != null and defaultMbrRid != ''">and lsp.rid_mbr = #{defaultMbrRid} </if>
+		<if test="defaultChnlRid != null and defaultChnlRid != ''">and lsp.rid_chnl = #{defaultChnlRid} </if>
+	</select>
+
+    /**************************************
+    -   관련 파일             : LOYPointChargeDAO.java
+    ============================================
+    -   제목                  : 포인트 충전소 상세 
+    -   설명                  : 포인트 충전소 상세 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력 			   : pointChargeDtlRequest
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.10.23
+    ***************************************/
+   <select id="selectPointChargeDtl" parameterType="pointChargeDtlRequest" resultType="pointChargeDtlResponse">
+	   SELECT  lsp.APPROVE_DT as approveDt
+			   ,lsp.APPROVAL_NUM as approvalNm
+			   ,lsp.TYPE_CD as typeCd
+		       ,lsp.SUB_TYPE_CD as subTypeCd
+		       ,lsp.TERMINAL_CD as terminalCd
+		       ,lsp.REQ_TYPE_CD as reqTypeCd
+		       ,lsp.AMT_TYPE_CD as amtTypeCd
+		       ,lsp.PAYMENT_CD as paymentTypeCd
+		       ,lm.MBR_NO as mbrNo
+		       ,lm.MBR_HID_NM as custNm
+		       ,lsp.MEM_DIV as memDiv
+		       ,lsp.MEM_GRADE as memGrade
+		       ,case
+              	when lsp.CARD_TYPE_CD='10' then com.fn_getCardNum(secu.fn_getDecrypt(#{cipherKey} ,lsp.CARD_NUM, null ))
+             	else
+              	secu.fn_getDecrypt(#{cipherKey} ,lsp.CARD_NUM, 'CARD_NUM')
+              	end as cardNum
+	            ,lsp.CARD_NUM as cardNum
+		       ,lc.CHNL_NO as chnlNo
+		       ,lc.CHNL_NM as chnlNm
+		       ,lc.BIZR_NO as bizrNo
+		       ,lsp.ACC_POINTS as accPoints
+		       ,lsp.USE_POINTS as usePoints
+		       ,lsp.TOTAL_USABLE_POINTS as totalUsablePoints
+		       ,lp.rid as prodId
+		       ,lp.PROD_NM as prodNm
+		       ,lsp.TXN_UCOST as txnUcost
+		       ,lsp.PROD_COST as prodCost
+		       ,lsp.ADJ_LIST_PRI as adjListPri
+		       ,lsp.CANCEL_FLG as cancelFlg
+		       ,lsp.CANCEL_CD as cancelCd
+		       ,lsp.CANCEL_DT as cancelDt
+		       ,lsp.ORG_TXN_DT as orgTxnDt
+		       ,lsp.ORG_TXN_APPRV_NUM as orgTxnApprvNum
+		       ,lsp.TICKET_NUM as ticketNum
+		       ,lsp.COMPLEX_APPRV_NUM as complexApprvNum
+		       ,lsp.STATION_GIFT_NM as stationGiftNm
+		       ,lm.RID_CUST as ridCust
+		       ,lsp.CARD_TYPE_CD as cardTypeCd
+	          ,lmc.cprt_card_cd as cprtCardCd
+		FROM loy.loy_stn_pnt_txn lsp
+		LEFT OUTER JOIN LOY.LOY_CHNL lc on lsp.RID_CHNL =  lc.rid
+		LEFT OUTER JOIN loy.loy_mbr lm on lm.rid = lsp.RID_MBR
+		LEFT OUTER JOIN loy.loy_prod lp on lp.rid = lsp.RID_PROD
+		LEFT OUTER JOIN loy.loy_mbr_card lmc on lsp.CARD_NUM = lmc.CARD_NO
+		LEFT OUTER JOIN com.comm_code cc1 on cc1.CODE_NAME = lsp.TYPE_CD and cc1.GROUP_CODE = 'TXN_TYPE_CD' AND cc1.lang = #{lang} and cc1.flag=1 and cc1.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc2 on cc2.CODE_NAME = lsp.SUB_TYPE_CD and cc2.GROUP_CODE = 'SPNT_TXN_SUB_TYPE_CD' AND cc2.lang = #{lang} and cc2.flag=1  and cc2.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc3 on cc3.CODE_NAME = lsp.TERMINAL_CD and cc3.GROUP_CODE = 'TXN_TERMINAL' AND cc3.lang = #{lang} and cc3.flag=1 and  cc3.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc4 on cc4.CODE_NAME = lsp.REQ_TYPE_CD and cc4.GROUP_CODE = 'TXN_REQ_TYPE' AND cc4.lang = #{lang} and cc4.flag=1 and cc4.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc5 on cc5.CODE_NAME = lsp.AMT_TYPE_CD and cc5.GROUP_CODE = 'TXN_AMT_TYPE' AND cc5.lang = #{lang} and cc5.flag=1 and cc5.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc6 on cc6.CODE_NAME = lsp.PAYMENT_CD and cc6.GROUP_CODE = 'TXN_PAYMENT' AND cc6.lang = #{lang} and cc6.flag=1 and cc6.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc7 on cc7.CODE_NAME = lsp.MEM_DIV and cc7.GROUP_CODE = 'MEMBER_TYPE' AND cc7.lang = #{lang} and cc7.flag=1 and cc7.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc8 on cc8.CODE_NAME = lsp.MEM_GRADE and cc8.GROUP_CODE = 'MEMBER_GRADE' AND cc8.lang = #{lang} and cc8.flag=1 and cc8.country = #{country}
+		LEFT OUTER JOIN com.comm_code cc9 on cc9.CODE_NAME = lsp.CANCEL_CD and cc9.GROUP_CODE = 'CANCEL_REASON' AND cc9.lang = #{lang} and cc9.flag=1 and cc9.country = #{country}
+		WHERE lsp.rid = #{rid}
+    </select>
+    
+    
+    /**************************************
+    -   관련 파일             : LOYPointChargeDAO.java
+    ============================================
+    -   제목                  : 포인트 마스킹 해제 
+    -   설명                  : 포인트 마스킹 해제
+    -   결과형태              : 목록
+    ============================================
+    -   입력                  : pointChargeDtlRequest
+    ============================================
+    -   작성자                : 김준기  
+    -   작성일                : 2017.10.23
+    ***************************************/
+    <select id="pointChargeUnmask" parameterType="pointChargeListRequest" resultType="pointChargeListResponse">
+	   	SELECT SQL_CALC_FOUND_ROWS
+	   		  lsp.TXN_NUM as txtNum
+	   		  ,lsp.SUB_TYPE_CD as subTypeCd
+		   	  ,lsp.APPROVE_DT as approveDt
+	       	  ,lm.MBR_NO as mbrNo
+	          ,lm.RID_CUST as ridCust
+	          ,lm.MBR_HID_NM as custNm
+	     	  ,lsp.CARD_NUM cardNum  
+	          ,lsp.ACC_POINTS as accPnts
+	          ,lsp.USE_POINTS as usePnts
+	          ,lsp.TOTAL_USABLE_POINTS as totalUsablePnts
+	          ,lsp.STATION_GIFT_NM  as stationGiftNm
+	          ,lp.PROD_NM as prodNm
+	          ,lc.CHNL_NO as chnlNo
+	          ,lc.CHNL_NM as chnlNm
+	          ,lsp.rid as rid
+		FROM loy.loy_stn_pnt_txn lsp
+		LEFT OUTER JOIN LOY.LOY_CHNL lc on lsp.RID_CHNL = lc.rid
+		LEFT OUTER JOIN loy.loy_mbr lm on lm.rid = lsp.RID_MBR
+		LEFT OUTER JOIN loy.loy_prod lp on lp.rid = lsp.RID_PROD
+		WHERE lsp.rid = #{rid}
+    </select>
+</mapper> -->

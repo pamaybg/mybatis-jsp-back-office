@@ -1,0 +1,1309 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 16:49:24 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.promotion.ruleset.mapper.LoyRuleSetMapper">
+
+ <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getLoyRulesetDtl)
+    ============================================
+    -   제목                  : Ruleset 상세 조회
+    -   설명                  : Ruleset 상세 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <select id="selectLoyRulesetDtl" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetDtlReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetDtlResDto">
+      select
+              t1.rid                			as rid
+            , t1.create_by          		as createBy
+            , t1.modify_by          		as modifyBy
+            , t1.create_date        		as createDate
+            , t1.modify_date        		as modifyDate
+            , t1.rid_mkt_cam_mst    as ridMktCamMst
+            , t1.prom_type_cd       	as promTypeCd
+            , t1.alliance_type_cd   	as allianceTypeCd
+            , t1.month_lmt_point    	as monthLmtPoint
+            , t1.prom_occ_tmscnt_cd as promOccTmscntCd
+            , t1.fst_prize_cnt      		as fstPrizeCnt
+            , t1.prize_period       		as prizePeriod
+            , t1.step_asc_amt       	as stepAscAmt
+            , t1.chit_otput_sbst    	as chitOtputSbst
+            , t1.ruleset_desc       		as rulesetDesc
+            , t1.prirt_type_cd      		as prirtTypeCd
+            , CONVERT(varchar, t1.cncl_dt, 120)       				as cnclDt
+            , CONVERT(varchar, t1.prom_start_dt, 120) 		as promStartDt
+            , CONVERT(varchar, t1.prom_end_dt, 120)  			as promEndDt
+            , t1.prom_cycl_type_cd			as promCyclTypeCd
+            , t1.prom_cycl_start_dd			as promCyclStartDd
+            , t1.prom_cycl_end_dd			as promCyclEndDd
+            , t1.prom_tgt_send_type_cd   as promTgtSendTypeCd
+			, t2.PNT_WEBID_YN 				as newMemYn
+        from loy.loy_ruleset t1 WITH (NOLOCK)
+        LEFT OUTER JOIN mkt.MKT_CAM_MST t2 WITH (NOLOCK) ON t1.RID_MKT_CAM_MST = t2.ID AND t2.FLAG = 1
+        where t1.flag = 1
+          and t1.rid_mkt_cam_mst = #{ridMktCamMst}
+        OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+
+    </select>
+
+   <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(removeRuleSet)
+    ============================================
+    -   제목                  : Ruleset 삭제
+    -   설명                  : Ruleset 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <update id="deleteRuleSet" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetDtlReqDto">
+
+        update loy.loy_ruleset
+        set
+              modify_by             = #{modifyBy}
+            , modify_date           = getDate()
+            , flag = flag + 1
+        where rid = #{rid}
+
+    </update>
+
+ <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getRulesetPrvBnfList)
+    ============================================
+    -   제목                  : RuleSet 혜택 수량 목록 조회
+    -   설명                  : RuleSet 혜택 수량 목록 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <select id="selectRulesetPrvBnfList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPrvBnfListReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetPrvBnfListResDto">
+        select
+              t1.rid as rid
+            , t1.create_by as createBy
+            , t1.modify_by as modifyBy
+            , t1.create_date as createDate
+            , t1.modify_date as modifyDate
+            , t1.ruleset_id as rulesetId
+            , t1.min_mat as minMat
+            , t1.max_amt as maxAmt
+            , t1.acrl_type as acrlType
+            , c1.mark_name as acrlTypeNm
+            , t1.acrl_amt as acrlAmt
+        from loy.loy_ruleset_prv_bnf t1 WITH (NOLOCK)
+        left join com.comm_code      c1 WITH (NOLOCK) on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = t1.acrl_type and c1.group_code = 'OBJECT_OPER_CODE'
+        where t1.flag = 1
+          and t1.ruleset_id = #{rulesetId}
+
+    </select>
+
+<!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getLoyRulesetMbr)
+    ============================================
+    -   제목                  : RuleSet 고객 정보 조회
+    -   설명                  : RuleSet 고객 정보 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+     <select id="selectLoyRulesetMbr" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetMbrReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetMbrResDto">
+        select
+              t1.rid as rid
+            , t1.create_by as createBy
+            , t1.modify_by as modifyBy
+            , t1.create_date as createDate
+            , t1.modify_date as modifyDate
+            , t1.ruleset_id as rulesetId
+            , t1.cust_type_cd as custTypeCd
+            , t1.cust_grade_cd as custGradeCd
+            , t1.sex_cd as sexCd
+            , t1.vip_div_cd as vipDivCd
+            , t1.tot_avl_point as totAvlPoint
+            , t1.avlpnt_compr_optr_cd as avlpntComprOptrCd
+        from loy.loy_ruleset_mbr t1
+        where t1.flag = 1
+          and t1.ruleset_id = #{rulesetId}
+
+    </select>
+
+ <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(removeRulesetPrvBnf)
+    ============================================
+    -   제목                  : RuleSet 혜택수량 삭제
+    -   설명                  : RuleSet 혜택수량 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <update id="removeRulesetPrvBnf" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPrvBnfDtlReqDto">
+
+        update loy.loy_ruleset_prv_bnf
+        set
+              modify_by = #{modifyBy}
+            , modify_date = getDate()
+            , flag = flag + 1
+
+        where rid = #{rid}
+
+    </update>
+<!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(removeRulesetMbr)
+    ============================================
+    -   제목                  : RuleSet 고객 정보 삭제
+    -   설명                  : RuleSet 고객 정보 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <update id="removeRulesetMbr" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetMbrDtlReqDto">
+
+        update loy.loy_ruleset_mbr
+        set
+
+              modify_by = #{modifyBy}
+            , modify_date = getDate()
+            , flag = flag + 1
+
+        where rid = #{rid}
+
+    </update>
+
+ <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getLoyRulesetTran)
+    ============================================
+    -   제목                  : RuleSet 거래 정보 조회
+    -   설명                  : RuleSet 거래 정보 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+     <select id="selectLoyRulesetTran" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetTranReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetTranResDto">
+
+        select
+
+              t1.rid                    as rid
+            , t1.create_by              as createBy
+            , t1.modify_by              as modifyBy
+            , t1.create_date            as createDate
+            , t1.modify_date            as modifyDate
+            , t1.ruleset_id             as rulesetId
+            , t1.charg_amt              as chargAmt
+            , t1.charg_compr_optr_cd    as chargComprOptrCd
+            , t1.deal_dow_cd            as dealDowCd
+            , t1.deal_cnt               as dealCnt
+            , t1.deal_compr_optr_cd     as dealComprOptrCd
+            , t1.base_dd_cd             as baseDdCd
+            , t1.basedd_compr_optr_cd   as baseddComprOptrCd
+            , t1.aply_daycnt            as aplyDaycnt
+            , t1.aply_daycnt_optr_cd    as aplyDaycntOptrCd
+
+            , t1.deal_start_dt          as dealStartDt
+            , t1.deal_end_dt            as dealEndDt
+
+        from loy.loy_ruleset_tran t1
+        where t1.flag = 1
+          and t1.ruleset_id = #{rulesetId}
+
+    </select> 
+
+ <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(removeRulesetTran)
+    ============================================
+    -   제목                  : RuleSet 거래 정보 삭제
+    -   설명                  : RuleSet 거래 정보 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <update id="removeRulesetTran" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetTranDtlReqDto">
+
+        update loy.loy_ruleset_tran
+        set
+              modify_by = #{modifyBy}
+            , modify_date = getDate()
+            , flag = flag + 1
+
+        where rid = #{rid}
+
+    </update>
+
+  <!-- RuleSet 기념일 조회 -->
+    <select id="selectLoyRulesetSday" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetSdayReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetSdayResDto">
+
+        select
+
+              t1.rid as rid
+            , t1.create_by as createBy
+            , t1.modify_by as modifyBy
+            , t1.create_date as createDate
+            , t1.modify_date as modifyDate
+            , t1.ruleset_id as rulesetId
+            , t1.cmrtn_type_cd as cmrtnTypeCd
+            , t1.sday_compr_optr_cd as sdayComprOptrCd
+            , t1.deal_dd as dealDd
+
+        from loy.loy_ruleset_sday t1
+        where t1.flag = 1
+          and t1.ruleset_id = #{rulesetId}
+
+    </select> 
+
+  <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(removeRulesetSday)
+    ============================================
+    -   제목                  : RuleSet 기념일 삭제
+    -   설명                  : RuleSet 기념일 삭제
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+     <update id="removeRulesetSday" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetSdayDtlReqDto">
+
+        update loy.loy_ruleset_sday
+        set
+              modify_by = #{modifyBy}
+            , modify_date = getDate()
+            , flag = flag + 1
+
+        where rid = #{rid}
+
+    </update> 
+
+  <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(addLoyRuleSetMst)
+    ============================================
+    -   제목                  : RuleSet 마스터 등록
+    -   설명                  : RuleSet 마스터 등록
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.12
+    ***************************************/ -->
+    <insert id="insertLoyRuleSetMst" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRuleSetMstReqDto" 
+    useGeneratedKeys="false">
+        /* LOYRuleSet.insertLoyRuleSetMst */
+        insert into loy.loy_ruleset_mst (
+            rid
+            , rid_mkt_cam_mst
+            , rid_mkt_offer_mst
+            , type
+            , rid_tiers
+            , club_cd
+            , min_amt
+            , max_amt
+            , acrl_type
+            , acrl_amt
+            <!-- , accnt_id -->
+            <!-- , app_service_type -->
+            <!-- , country -->
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+         	, min_cnt
+         	, mbr_cnt
+         )
+        values (
+            com.getNewId('')
+            , #{ridMktCamMst}
+            , #{ridMktOfferMst}
+            , #{type}
+            , #{tierRid}
+            , #{clubCd}
+            , replace(#{minAmt}, ',', '')
+            , replace(#{maxAmt}, ',', '')
+            , #{acrlType}
+            , replace(#{acrlAmt}, ',', '')
+            <!-- , #{accountId} -->
+            <!-- , #{appServiceId} -->
+            <!-- , #{country} -->
+            , 1
+            , 0
+            , getDate()
+            , #{createBy}
+            , getDate()
+            , #{modifyBy}
+            , #{minCnt}
+            , #{mbrCnt}
+            )
+
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select rid from loy.loy_ruleset_mst where rid = #{rid} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+
+
+	<!-- 룰셋 부여기준 삭제 -->
+    <update id="deleteLoyRulesetPaymentPolicyList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPymntPolicyListReqDto">
+        /* LOYRuleSet.deleteLoyRulesetPaymentPolicyList */
+        update 	loy.loy_ruleset_mst
+           set	flag = flag + 1
+				, MODIFY_BY = #{modifyBy}
+				, MODIFY_DATE = getDate()
+         where 	RID_MKT_CAM_MST = #{ridMktCamMst}
+         	and flag = 1
+    </update>
+ <select id="selectPaymentPolicyList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPymntPolicyListReqDto"
+     resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetPymntPolicyListResDto">
+            SELECT
+        	  	<!-- lt.TIER_NM					AS	tierNm			/*	등급명	*/
+                ,lrm.CUST_GRADE_CD 			AS  custGradeCd		/*	등급코드	*/ -->
+                lrm.ACRL_TYPE 					AS  acrlType		/*	적립구분 코드	*/
+                ,cc.MARK_NAME					AS	acrlTypeNm		/*	적립구분 명		*/
+                ,lrm.ACRL_AMT  				AS  acrlAmt			/*	금액		*/
+                ,lrm.min_cnt						AS  minCnt			/*	구매횟수		*/
+                ,lrm.min_amt						AS  minAmt			/*	구매금액		*/
+                ,lrm.mbr_cnt						AS  mbrCnt			/*	인원		*/
+                <!-- ,lt.RID						AS	ridTier -->
+                ,lrm.Rid								AS  rid
+                ,lt.tier_nm							AS  tierNm
+                ,lrm.rid_tiers						as  tierRid
+		   FROM  loy.loy_ruleset_mst lrm WITH (NOLOCK)
+		   left outer join loy.loy_tiers lt WITH (NOLOCK) on lt.rid = lrm.rid_tiers and lt.flag = 1
+		   <!-- LEFT outer join   loy.loy_tiers lt  on lrm.CUST_GRADE_CD = lt.TIER_CD and  lt.tier_cd_stat_cd ='I' -->
+		   LEFT outer join com.comm_code cc WITH (NOLOCK) on cc.CODE_NAME = lrm.ACRL_TYPE and cc.GROUP_CODE = 'LOY_ACRL_TYPE' and cc.lang = #{lang}
+		   WHERE lrm.rid_mkt_cam_mst = #{ridMktCamMst}
+		   AND   lrm.flag = 1
+		   ORDER BY lrm.min_amt ASC,lrm.min_cnt ASC ,lrm.ACRL_AMT ASC
+
+    </select>
+
+
+  <select id="selectCondProdList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondProdListReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetCondProdListResDto">
+			SELECT
+				lrp.RID AS rid ,
+				lrp.PRD_PROMO_ID AS promoId,
+				lrp.ACRL_AMT AS acrlAmt,
+				lrp.MIN_SALES_AMT AS minSalesAmt,
+				cc1.MARK_NAME AS acrlTypeNm,
+				lrp.ACRL_TYPE AS acrlType,
+				lrp.RID_MKT_CAM_MST as camRid
+			FROM loy.loy_ruleset_prod lrp WITH (NOLOCK)
+			LEFT OUTER JOIN com.comm_code cc1 WITH (NOLOCK) on cc1.flag = 1 and cc1.lang = #{lang} 	AND cc1.group_code = 'LOY_ACRL_TYPE' AND cc1.CODE_NAME = lrp.ACRL_TYPE
+			<!-- LEFT OUTER JOIN com.comm_code cc2 on cc2.flag = 1 and cc2.lang = #{lang} and cc2.code_name = lrp.TARGET_TYPE and cc2.group_code = 'RULESET_TARGET_TYPE' -->
+			WHERE lrp.ruleset_id = #{rulesetId}
+			AND   lrp.flag = 1
+    </select>
+<select id="selectCondChnlList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondChnlListReqDto"
+ 	 resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetCondChnlListResDto">
+			SELECT lrc.RID			as rid
+				  <!-- ,lrc.TYPE 		as type -->
+			      <!-- ,lrc.TARGET_TYPE	as targetType -->
+			      ,lrc.CHNL_NO		as chnlNo
+			      ,lc.CHNL_NM		as chnlNm
+				  <!-- ,cc1.mark_name    as typeNm -->
+				  <!-- ,cc2.mark_name    as targetTypeNm -->
+			FROM loy.loy_ruleset_channel lrc WITH (NOLOCK)
+			left outer JOIN LOY.LOY_CHNL lc WITH (NOLOCK) on lrc.chnl_no = lc.chnl_no
+			<!-- LEFT OUTER JOIN com.comm_code cc1 on cc1.flag = 1 and cc1.lang = #{lang} and cc1.code_name = lrc.TYPE and cc1.group_code = 'RULESET_TYPE' -->
+			<!-- LEFT OUTER JOIN com.comm_code cc2 on cc2.flag = 1 and cc2.lang = #{lang} and cc2.code_name = lrc.TARGET_TYPE and cc2.group_code = 'RULESET_TARGET_TYPE' -->
+			WHERE lrc.RULESET_RID = #{rulesetId}
+			AND   lrc.flag = 1
+    </select>
+
+	<!-- 룰셋 - 거래시간 조회 -->
+	<select id="selectCondTime" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondTimeListReqDto" 
+	resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetCondTimeListResDto">
+		/* LOYRuleSet.selectCondTime */
+		select 	start_time as startTime
+				, end_time as endTime
+				, rid as rid
+		from 	loy.loy_ruleset_time
+		where 	ruleset_rid = #{rulesetId}
+			and flag = 1
+	</select>
+
+
+  <!-- 룰셋 - 결제수단 조회 -->
+    <select id="selectPaymentStandardList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPaymentStandardListReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetPaymentStandardListResDto">
+    	/* LOYRuleSet.selectPaymentStandardList */
+    	select 	lrp.rid as rid
+		    	, c1.mark_name as acrlTypeNm
+		    	, lrp.acrl_type as acrlType
+		    	, c2.mark_name as cardTypeNm
+		    	, lrp.card_type as cardType
+		    	, lrp.acrl_amt as acrlAmt
+		    	, lrp.ruleset_rid as rulesetId
+    	from 	loy.loy_ruleset_pay lrp WITH (NOLOCK)
+    	left outer join com.comm_code c1 WITH (NOLOCK) on c1.group_code = 'LOY_ACRL_TYPE' and c1.code_name = lrp.acrl_type and c1.lang = #{lang}
+    	left outer join com.comm_code c2 WITH (NOLOCK) on c2.group_code = 'LOY_CARD_TYPE' and c2.code_name = lrp.card_type and c2.lang = #{lang}
+    	where 	lrp.ruleset_rid = #{rulesetId}
+    		and lrp.flag = 1
+    </select>
+
+ <select id="selectSpecificDayList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetSpecificDayListReqDto"
+     resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyRulesetSpecificDayListResDto">
+            select 	lrd.rid as rid
+		    	, c1.mark_name as specificDayName
+		    	, lrd.day as specificDay
+		    	, lrd.ruleset_rid as rulesetId
+    	from 	loy.loy_ruleset_day lrd WITH (NOLOCK)
+    	left outer join com.comm_code c1 WITH (NOLOCK) on c1.group_code = 'LOY_FAM_DAY' and c1.code_name = lrd.day and c1.lang = #{lang}
+    	where 	lrd.ruleset_rid = #{rulesetId}
+    	and 	lrd.flag = 1
+    </select>
+    
+
+   <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(editCampaignMstPromType)
+    ============================================
+    -   제목                  : 캠페인 마스터 프로모션 유형 수정
+    -   설명                  : 캠페인 마스터 프로모션 유형 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.12
+    ***************************************/ -->
+    <update id="updateCampaignMstPromType" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRuleSetReqDto">
+        /* LOYRuleSet.updateCampaignMstPromType */
+        update mkt.mkt_cam_mst
+        set prom_type         	= #{promType}
+            , prom_sub_type   	= #{promSubType}
+            , exec_type      		= #{execType}
+            , rule_prod_type  	= #{ruleProdType}
+            , modify_date     	= getDate()
+            , modify_by       	= #{modifyBy}
+        where id = #{ridMktCamMst}
+    </update>
+  <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(addRuleSet)
+    ============================================
+    -   제목                  : Ruleset 등록
+    -   설명                  : Ruleset 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <insert id="insertRuleSet" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetDtlReqDto" useGeneratedKeys="false">
+        insert into loy.loy_ruleset (
+              rid
+            , create_by
+            , modify_by
+            , create_date
+            , modify_date
+            , flag
+            <!-- , country -->
+            <!-- , currency -->
+            <!-- , app_service_type -->
+            <!-- , accnt_id -->
+            , rid_mkt_cam_mst
+            , prom_type_cd
+            , alliance_type_cd
+            , month_lmt_point
+            , prom_occ_tmscnt_cd
+            , fst_prize_cnt
+            , prize_period
+            , step_asc_amt
+            , chit_otput_sbst
+            , ruleset_desc
+            , prirt_type_cd
+        )
+        values (
+              #{rid}
+            , #{createBy}
+            , #{modifyBy}
+            , getDate()
+            , getDate()
+            , 1
+            <!-- , #{country} -->
+            <!-- , (select currency from com.language where flag = 1 and lang = #{lang}) -->
+            <!-- , #{appServiceId} -->
+            <!-- , #{accountId} -->
+            , #{ridMktCamMst}
+            , #{promTypeCd}
+            , #{allianceTypeCd}
+            , #{monthLmtPoint}
+            , #{promOccTmscntCd}
+            , #{fstPrizeCnt}
+            , #{prizePeriod}
+            , #{stepAscAmt}
+            , #{chitOtputSbst}
+            , #{rulesetDesc}
+            , #{prirtTypeCd}
+        )
+
+
+    </insert>
+
+  <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(editRuleSet)
+    ============================================
+    -   제목                  : Ruleset 수정
+    -   설명                  : Ruleset 수정
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <update id="updateRuleSet" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetDtlReqDto">
+
+        update loy.loy_ruleset
+        set
+              modify_by             		= #{modifyBy}
+            , modify_date           		= getDate()
+            , rid_mkt_cam_mst    	= #{ridMktCamMst}
+            , prom_type_cd          	= #{promTypeCd}
+            , alliance_type_cd      	= #{allianceTypeCd}
+            , month_lmt_point     	= #{monthLmtPoint}
+            , prom_occ_tmscnt_cd    = #{promOccTmscntCd}
+            , fst_prize_cnt         		= #{fstPrizeCnt}
+            , prize_period          		= #{prizePeriod}
+            , step_asc_amt          		= #{stepAscAmt}
+            , chit_otput_sbst       		= #{chitOtputSbst}
+            , ruleset_desc          		= #{rulesetDesc}
+            , prirt_type_cd         		= #{prirtTypeCd}
+        where rid = #{rid}
+
+    </update>
+
+	<!-- 룰셋 - 대상경로 삭제 (list) -->
+	<update id="deleteLoyRulesetCondChnlList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondChnlListReqDto">
+		/* LOYRuleSet.deleteLoyRulesetCondChnlList */
+		update 	
+			loy.loy_ruleset_channel
+		set 	
+				flag = flag + 1
+				, modify_date = getDate()
+				, modify_by = #{modifyBy}
+		where 	ruleset_rid = #{rulesetId}
+			and flag = 1
+	</update>
+<!-- 룰셋 - 대상경로 등록 (list) -->
+    <insert id="insertLoyRulesetCondChnlList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondChnlListReqDto" useGeneratedKeys="false">
+        /* LOYRuleSet.insertLoyRulesetCondChnlList */
+		<foreach collection="list" item="item" separator=" ">	
+			INSERT into loy.loy_ruleset_channel (
+				rid
+				, CHNL_NO
+				<!-- , accnt_id -->
+				<!-- , app_service_type -->
+				<!-- , country -->
+				<!-- , currency -->
+				, flag
+				, create_date
+				, create_by
+				, modify_date
+				, modify_by
+				, ruleset_rid
+			) values (
+				com.getNewId('')
+				, #{item.chnlNo}
+				<!-- , #{item.accountId} -->
+				<!-- , #{item.appServiceId} -->
+				<!-- , #{item.country} -->
+				<!-- , (select currency from com.language where flag = 1 and lang = #{item.lang}) -->
+				, 1
+				, getDate()
+				, #{item.createBy}
+				, getDate()
+				, #{item.modifyBy}
+				, #{item.rulesetId}
+			)
+		</foreach>
+    </insert>
+<!-- 룰셋 - 거래시간 등록 (list) -->
+	<insert id="insertLoyRulesetCondTimeList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondTimeListReqDto">
+		/* LOYRuleSet.insertLoyRulesetCondTimeList */
+		<foreach collection="list" item="item" separator=" ">
+		INSERT into loy.loy_ruleset_time (
+				rid
+				, create_by
+				, modify_by
+				, create_date
+				, modify_date
+				, flag
+				<!-- , country -->
+				<!-- , currency -->
+				<!-- , app_service_type -->
+				<!-- , accnt_id -->
+				, ruleset_rid
+				, start_time
+				, end_time
+			) values (
+				com.getNewId('')
+				, #{item.createBy}
+				, #{item.modifyBy}
+				, getDate()
+				, getDate()
+				, 1
+				<!-- , #{item.country} -->
+				<!-- , (select currency from com.language where flag = 1 and lang = #{item.lang}) -->
+				<!-- , #{item.appServiceId} -->
+				<!-- , #{item.accountId} -->
+				, #{item.rulesetId}
+				, #{item.startTime}
+				, #{item.endTime}
+			)
+		</foreach>
+	</insert>
+    <!-- 룰셋 특정일 삭제 -->
+    <update id="deleteLoyRulesetSpecificDayList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetSpecificDayListReqDto">
+        /* LOYRuleSet.deleteLoyRulesetSpecificDayList */
+        update 	loy.loy_ruleset_day
+           set	flag = flag + 1
+				, MODIFY_BY = #{modifyBy}
+				, MODIFY_DATE = getDate()
+         where 	RULESET_RID = #{rulesetId}
+         	and flag = 1
+    </update>
+<!-- 룰셋 부여기준 삭제 -->
+    <update id="deleteLoyRulesetPaymentStandardList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPaymentStandardListReqDto">
+        /* LOYRuleSet.deleteLoyRulesetPaymentStandardList */
+        update 	loy.loy_ruleset_pay
+           set	flag = flag + 1
+				, MODIFY_BY = #{modifyBy}
+				, MODIFY_DATE = getDate()
+         where 	RULESET_RID = #{rulesetId}
+         	and flag = 1
+    </update>
+
+<!-- 룰셋 결제수단 등록 (list) -->
+    <insert id="insertLoyRulesetPaymentStandardList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPaymentStandardListReqDto">
+        /* LOYRuleSet.insertLoyRulesetPaymentStandardList */
+		<foreach collection="list" item="item" separator=" ">
+			insert into loy.loy_ruleset_pay (
+				rid
+				, create_by
+				, modify_by
+				, create_date
+				, modify_date
+				, flag
+				<!-- , country -->
+				<!-- , currency -->
+				<!-- , app_service_type -->
+				<!-- , accnt_id -->
+				, ruleset_rid
+				, acrl_type
+				, acrl_amt
+				, card_type
+			) values (
+				com.getNewId('')
+				, #{item.createBy}
+				, #{item.modifyBy}
+				, getDate()
+				, getDate()
+				, 1
+				<!-- , #{item.country} -->
+				<!-- , (select currency from com.language where flag = 1 and lang = #{item.lang}) -->
+				<!-- , #{item.appServiceId} -->
+				<!-- , #{item.accountId} -->
+				, #{item.rulesetId}
+				, #{item.acrlType}
+				, #{item.acrlAmt}
+				, #{item.cardType}
+			)
+		</foreach>
+    </insert>
+<!-- 룰셋 결제수단 등록 (list) -->
+    <insert id="insertLoyRulesetSpecificDayList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetSpecificDayListReqDto">
+        /* LOYRuleSet.insertLoyRulesetSpecificDayList */
+		<foreach collection="list" item="item" separator=" ">
+		insert into loy.loy_ruleset_day (
+				rid
+				, create_by
+				, modify_by
+				, create_date
+				, modify_date
+				, flag
+				<!-- , country -->
+				<!-- , currency -->
+				<!-- , app_service_type -->
+				<!-- , accnt_id -->
+				, ruleset_rid
+				, day
+			) values (
+				com.getNewId('')
+				, #{item.createBy}
+				, #{item.modifyBy}
+				, getDate()
+				, getDate()
+				, 1
+				<!-- , #{item.country} -->
+				<!-- , (select currency from com.language where flag = 1 and lang = #{item.lang}) -->
+				<!-- , #{item.appServiceId} -->
+				<!-- , #{item.accountId} -->
+				, #{item.rulesetId}
+				, #{item.specificDay}
+			)
+		</foreach>
+    </insert>
+<update id="removeLoyAllRulesetCondProd" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetDtlReqDto">
+    /* LOYRuleSet.removeLoyAllRulesetCondProd */
+    update loy.LOY_RULESET_PROD
+       SET
+           flag = flag + 1
+         , MODIFY_BY = #{modifyBy}
+         , MODIFY_DATE = getDate()
+    WHERE RID_MKT_CAM_MST = #{ridMktCamMst}
+    and flag = 1
+    </update>
+
+  <update id="removeProductPromAll" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPromProductListReqDto">
+	/* LOYRuleSet.removeProductPromAll */
+	UPDATE loy.LOY_RULESET_PROD_PRD_REL
+       SET 	flag = flag + 1
+       	  , MODIFY_BY = #{modifyBy}
+          , MODIFY_DATE = getDate()
+     WHERE RID_RULESET_PROD IN(
+    SELECT RID
+      FROM loy.loy_ruleset_prod
+     WHERE RID_MKT_CAM_MST = #{camRid})
+    </update>
+   <update id="updateLoyRulesetCondProd" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondProdListReqDto">
+        /* LOYRuleSet.updateLoyRulesetCondProd */
+        update loy.loy_ruleset_prod
+        set
+              modify_by 	= #{modifyBy}
+            , modify_date 	= getDate()
+            , ruleset_id 	= #{rulesetId}
+            , TYPE			= #{type}
+       		<!-- ,TARGET_TYPE	= #{targetType} -->
+       		, PROD_CD 		= #{prodCd}
+       		, ACRL_TYPE		= #{acrlType}
+       		, ACRL_AMT		= replace(#{acrlAmt}, ',', '')
+       		, MIN_SALES_AMT = replace(#{minSalesAmt}, ',', '')
+        where rid = #{rid}
+    </update>
+<update id="updatePromNewMember" parameterType = "com.icignal.loyalty.promotion.ruleset.dto.request.LoyRuleSetReqDto">
+	UPDATE MKT.MKT_CAM_MST
+	   SET PNT_WEBID_YN = #{newMemYn}
+	 WHERE FLAG = 1
+	   AND ID = #{ridMktCamMst}
+	</update>
+
+	<update id="deletePromNewMember" parameterType = "com.icignal.loyalty.promotion.ruleset.dto.request.LoyRuleSetReqDto">
+	UPDATE MKT.MKT_CAM_MST
+	   SET PNT_WEBID_YN = ''
+	 WHERE ID = #{ridMktCamMst}
+	</update>
+
+<update id="removeLoyRulesetCondProd" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondProdListReqDto">
+        /* LOYRuleSet.removeLoyRulesetCondProd */
+        update loy.loy_ruleset_prod
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = getDate()
+         where rid = #{rid}
+    </update>
+
+<insert id="insertLoyRulesetCondProd" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondProdListReqDto" useGeneratedKeys="false">
+        /* LOYRuleSet.insertLoyRulesetCondProd */
+        insert into loy.loy_ruleset_prod (
+              rid
+       		  ,TYPE
+       		  ,PRD_PROMO_ID
+			  , RID_MKT_CAM_MST
+       		  ,PROD_CD
+            , flag
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+            , ruleset_id
+            , acrl_type
+            , min_sales_amt
+            , acrl_amt
+        )
+        values (
+             #{rid}
+            , #{type}
+            , loy.fn_get_prod_prom_id
+			, #{ridMktCamMst}
+            , #{prodCd}
+            , 1
+            , getDate()
+            , #{createBy}
+            , getDate()
+            , #{modifyBy}
+            , #{rulesetId}
+            , #{acrlType}
+            , #{minSalesAmt}
+            , #{acrlAmt}
+        )
+    </insert>
+
+<!-- 룰셋 - 거래시간 삭제 (list) -->
+	<update id="deleteLoyRulesetCondTimeList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondTimeListReqDto">
+		/* LOYRuleSet.deleteLoyRulesetCondTimeList */
+		update 	loy.loy_ruleset_time
+		set 	flag = flag + 1
+				, modify_date = getDate()
+				, modify_by = #{modifyBy}
+		where 	ruleset_rid = #{rulesetId}
+			and flag = 1
+	</update>
+
+    <select id="selectValidPromProdTerm" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPromProductListReqDto"
+     resultType="java.lang.Integer">
+    /* LOYRuleSet.selectValidPromProdTerm */
+    SELECT COUNT(*)
+	FROM mkt.MKT_CAM_MST mcm WITH (NOLOCK)
+	JOIN loy.LOY_RULESET_PROD lrp WITH (NOLOCK) ON mcm.ID = lrp.RID_MKT_CAM_MST AND lrp.FLAG = 1
+	JOIN loy.LOY_RULESET_PROD_PRD_REL ppr WITH (NOLOCK) ON lrp.RID = ppr.RID_RULESET_PROD AND ppr.FLAG = 1
+	WHERE mcm.flag = 1
+	AND mcm.ID != #{camId}
+	AND   mcm.CAM_STATUS_CD = 'A'
+	AND  ppr.DAISO_GDS_NUM IN (
+		SELECT
+		  ppr.DAISO_GDS_NUM AS gdsNum 
+		FROM mkt.MKT_CAM_MST mcm WITH (NOLOCK)
+		JOIN loy.LOY_RULESET_PROD lrp WITH (NOLOCK) ON mcm.ID = lrp.RID_MKT_CAM_MST AND lrp.FLAG = 1
+		JOIN loy.LOY_RULESET_PROD_PRD_REL ppr WITH (NOLOCK) ON lrp.RID = ppr.RID_RULESET_PROD AND ppr.FLAG = 1
+		WHERE mcm.flag = 1
+		AND   mcm.ID = #{camId}
+	)
+	AND EXISTS (SELECT 'O' FROM mkt.MKT_CAM_MST T1 WHERE T1.ID = #{camId} AND T1.CAM_START_DD &lt;= mcm.CAM_END_DD AND T1.CAM_END_DD &gt;= mcm.CAM_START_DD)
+	</select>
+	
+	    <select id="selectValidPromProd" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPromProductListReqDto" resultType="java.lang.Integer">
+    /* LOYRuleSet.selectValidPromProd */
+     SELECT COUNT(*)
+	 FROM mkt.MKT_CAM_MST mcm WITH (NOLOCK)
+     JOIN loy.LOY_RULESET_PROD lrp WITH (NOLOCK) ON mcm.ID = lrp.RID_MKT_CAM_MST AND lrp.FLAG = 1
+     LEFT OUTER JOIN loy.LOY_RULESET_PROD_PRD_REL ppr WITH (NOLOCK) ON ppr.RID_RULESET_PROD = lrp.RID AND ppr.FLAG = 1
+     WHERE mcm.FLAG = 1
+     AND lrp.RID_MKT_CAM_MST = #{camId}
+     AND ppr.RID IS NULL
+    </select>
+    
+  <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getLoyProdList)
+    ============================================
+    -   제목                  : 상품 목록 조회
+    -   설명                  : 상품 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.12
+    ***************************************/ -->
+    <select id="selectLoyProdList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyProdListReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyProdListResDto">
+        /* LOYRuleSet.selectTierList */
+
+        select ${strColumn},
+               t1.rid as rid
+             , t1.prod_id as prodId
+             , t1.prod_nm as prodNm
+             , t2.cat_id as catId
+             , t2.cat_nm as catNm
+             , t2.cat_desctxt as catDesctxt
+             , t3.rid    as brdRid /*브랜드 RID*/
+             , t3.brd_id as brdId  /*브랜드 ID*/
+             , t3.brd_nm as brdNm  /*브랜드 명*/
+             , CONVERT(varchar, t1.create_date, 120) as createDate
+             , e1.name as createByNm
+             /*, t1.price as price*/
+        from loy.loy_prod t1 WITH (NOLOCK)
+        join loy.loy_prod_category t2 WITH (NOLOCK) on t2.flag = 1 and t2.rid = t1.rid_prod_cat
+        left outer join loy.loy_brd_category t3 WITH (NOLOCK) on t1.rid_brd_cat = t3.rid
+        left outer join com.crm_user u1 WITH (NOLOCK) on u1.rid = t1.create_by
+        left outer join com.employee e1 WITH (NOLOCK) on e1.id = u1.id_employee
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and t1.flag = 1
+        <!-- and t1.accnt_id = #{accountId} -->
+        and t1.rid_pgm = #{loyProgramId}
+        <if test="ridBrdCat != null and ridBrdCat != ''">AND
+            t1.rid_brd_cat = #{ridBrdCat}
+        </if>
+        <if test="ridProdCat != null and ridProdCat != ''">AND
+            t1.rid_prod_cat = #{ridProdCat}
+        </if>
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+     <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getLoyProdCategoryList)
+    ============================================
+    -   제목                  : 상품 카테고리 목록 조회
+    -   설명                  : 상품 카테고리 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.12
+    ***************************************/ -->
+    <select id="selectLoyProdCategoryList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyProdCategoryListReqDto"
+     resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyProdCategoryListResDto">
+        /* LOYRuleSet.selectTierList */
+        select ${strColumn},
+               t1.rid as rid
+             , t1.cat_id as catId
+             , t1.cat_nm as catNm
+             , CONVERT(varchar, t1.create_date, 120) as createDate
+             , e1.name as createByNm
+        from loy.loy_prod_category t1 WITH (NOLOCK)
+        join loy.loy_prod t2 WITH (NOLOCK) on t2.flag = 1 and t2.rid_prod_cat = t1.rid
+        left outer join com.crm_user u1 WITH (NOLOCK) on u1.rid = t1.create_by
+        left outer join com.employee e1 WITH (NOLOCK) on e1.id = u1.id_employee
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and t1.flag = 1
+       <!--  and t1.accnt_id = #{accountId} -->
+        and t2.rid_pgm = #{loyProgramId}
+        <if test="ridBrdCat != null and ridBrdCat != ''">AND
+            t2.rid_brd_cat = #{ridBrdCat}
+        </if>
+        group by t1.rid, t1.cat_id, t1.cat_nm, t1.create_date, e1.name
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+     <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getLoyBrdCategoryList)
+    ============================================
+    -   제목                  : 브랜드 카테고리 목록 조회
+    -   설명                  : 브랜드 카테고리 목록 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.12
+    ***************************************/ -->
+    <select id="selectLoyBrdCategoryList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyBrdCategoryListReqDto"
+     resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyBrdCategoryListResDto">
+        /* LOYRuleSet.selectLoyBrdCategoryList */
+        select ${strColumn},
+               t1.rid as rid
+             , t1.brd_id as brdId
+             , t1.brd_nm as brdNm
+             , t1.brd_desctxt as brdDesctxt
+             , t1.par_rid as parRid
+             , CONVERT(varchar, t1.create_date, 120) as createDate
+             , e1.name as createByNm
+        from loy.loy_brd_category t1 WITH (NOLOCK)
+        left outer join com.crm_user u1 WITH (NOLOCK) on u1.rid = t1.create_by
+        left outer join com.employee e1 WITH (NOLOCK) on e1.id = u1.id_employee
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and t1.flag = 1
+       <!--  and t1.accnt_id = #{accountId} -->
+        and t1.rid_pgm = #{loyProgramId}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+     <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getLoyChannelList)
+    ============================================
+    -   제목                  : 채널 목록 조회
+    -   설명                  : 채널 목록 조회
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.12
+    ***************************************/ -->
+    <select id="selectLoyChannelList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyChannelListReqDto"
+     resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyChannelListResDto">
+        /* LOYRuleSet.selectLoyChannelList */
+        select ${strColumn},
+               t1.rid               			as rid
+             , t1.chnl_no          		as chnlNo
+             , t1.chnl_nm           		as chnlNm
+             , t1.chnl_type_cd      	as ouTypeCd
+             , c3.mark_name        	as ouTypeCdNm
+             , t1.chnl_stat_cd   		as mbrbsStatusCd
+             , c2.mark_name        	as mbrbsStatusCdNm
+        from LOY.LOY_CHNL t1 WITH (NOLOCK)
+        left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = t1.chnl_stat_cd      and c2.group_code = 'LOY_CHNL_STAT_CD'
+        left outer join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.lang = #{lang} and c3.code_name = t1.chnl_type_cd      and c3.group_code = 'LOY_CHNL_TYPE_CD'
+
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and t1.flag = 1
+        <!-- and t1.accnt_id = #{accountId} -->
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+    	<!-- 채널 최종수정일시 조회 -->
+	<select id="selectLastModiyDateChannel" resultType="java.lang.String">
+		/* LOYRuleSet.selectLastModiyDateChannel */
+		select 	
+			modify_date as modifyDate
+		from 
+			LOY.LOY_CHNL
+		where 	flag = 1
+		order by modify_date desc
+		OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY
+	</select>
+    
+    
+	<!-- 채널 전체목록 조회 -->
+	<select id="selectAllChannelList" resultType="java.util.HashMap">
+		/* LOYRuleSet.selectAllChannelList */
+		select 	
+			chnl_no 	as chnlNo
+			, chnl_nm 	as chnlNm
+		from 
+			LOY.LOY_CHNL
+		where 	flag = 1
+			and chnl_stat_cd = 'A'
+	</select>
+	
+	
+    <select id="selectAllTierList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyTierListReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyTierListResDto">
+    	select
+    		lt.tier_nm as tierNm
+    		,lt.tier_cd as tierCd
+    		,lt.rid as rid
+    	from loy.loy_tiers lt WITH (NOLOCK)
+    	join LOY.LOY_TIERS_GRP t1 WITH (NOLOCK) on t1.flag = 1 and t1.rid = lt.rid_tier_group
+    	where 1=1
+    	and lt.tier_cd_stat_cd = 'A'
+    	and lt.flag = 1
+    </select>
+    
+    <select id = "selectPromProdList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyPromProdListReqDto"
+     resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyPromProdListResDto">
+       /* LOYRuleSet.selectPromProdList */
+       SELECT   
+       			ppr.RID								AS rid,
+				ppr.DAISO_ETC_COD 			AS etcCod,
+				ppr.DAISO_ETC_SNAM 		AS etcSnam,
+				ppr.DAISO_GDS_NUM 		AS gdsNum,
+				ppr.DAISO_GDS_NAM 		AS gdsNam,
+				ppr.DAISO_SALE_PRC			AS salePrc,
+				ppr.RID_RULESET_PROD 	AS ruleSetProd,
+				${strColumn}
+		 FROM 	loy.LOY_RULESET_PROD_PRD_REL ppr WITH (NOLOCK)
+		 JOIN 	loy.LOY_RULESET_PROD lrp WITH (NOLOCK) ON ppr.RID_RULESET_PROD = lrp.RID and lrp.flag = 1
+		WHERE 	ppr.rid_ruleset_prod = #{ruleSetProdRid}
+		  AND   ppr.flag = 1
+		  AND 	${strCondWhere}
+    </select>
+    
+    <select id="selectPromProdPopList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyPromProdListReqDto" 
+    resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyPromProdListResDto">
+   		/* LOYRuleSet.selectPromProdPopList */
+    	SELECT A.GDS_NAM 		as gdsNam,
+    		   B.ETC_SNAM 			as etcSnam,
+    		   B.ETC_COD 			as etcCod,
+    		   A.GDS_NUM 			as gdsNum,
+    		   A.SALE_PRC 			as salePrc,
+    		   A.bar_cod				as barCod,
+    		   ${strColumn}
+		 FROM  MRTSTG.ERP_POSGDSM A WITH (NOLOCK)
+		INNER JOIN MRTSTG.ERP_VW_DIVETC B WITH (NOLOCK) ON A.DIV_MIN = B.ETC_COD
+        where ${strCondWhere}
+          and ${strWhere}
+		order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+     <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(insertPromProduct)
+    ============================================
+    -   제목                  : 프로모션 상품 등록
+    -   설명                  :
+    -   결과형태             :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum
+    -   작성일                : 2019.04.10
+    ***************************************/ -->
+    <insert id="insertPromProduct" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPromProductListReqDto">
+        /* LOYRuleSet.insertPromProduct */
+        insert into loy.LOY_RULESET_PROD_PRD_REL (
+            rid
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by
+            , flag
+            , country
+            , app_service_type
+            , rid_ruleset_prod
+            , daiso_gds_num
+            , daiso_gds_nam
+            , daiso_etc_cod
+            , daiso_etc_snam
+            , daiso_bar_cod
+            , daiso_sale_prc
+         )
+        values (
+            com.getNewId('')
+            , getDate()
+            , #{createBy}
+            , getDate()
+            , #{modifyBy}
+            , 1
+            , #{country}
+            , #{appServiceId}
+            , #{prodRId}
+            , #{gdsNum}
+            , #{gdsNam}
+            , #{etcCod}
+            , #{etcSnam}
+            , #{barCod}
+            , #{salePrc}
+            )
+    </insert>
+    
+     <select id ="selectProductPromValid" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPromProductListReqDto" 
+     resultType="java.lang.Integer">
+    	SELECT count(*)
+    	FROM loy.LOY_RULESET_PROD lrp WITH (NOLOCK)
+		JOIN loy.LOY_RULESET_PROD_PRD_REL ppr WITH (NOLOCK) ON lrp.RID = ppr.RID_RULESET_PROD AND ppr.FLAG = 1
+		WHERE lrp.FLAG = 1
+		AND lrp.RID_MKT_CAM_MST = #{camRid}
+		AND ppr.DAISO_ETC_COD = #{etcCod}
+    </select>
+    
+    <update id="removeProductPromValid" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetCondProdListReqDto">
+     /* LOYRuleSet.removeProductPromValid */
+        update loy.LOY_RULESET_PROD_PRD_REL
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = getDate()
+         where rid = #{rid}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(getTierList)
+    ============================================
+    -   제목                  : 등급 목록 조회
+    -   설명                  : 등급 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.12.12
+    ***************************************/ -->
+    <select id="selectTierList" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyTierListReqDto"
+     resultType="com.icignal.loyalty.promotion.ruleset.dto.response.LoyTierListResDto">
+        /* LOYRuleSet.selectTierList */
+        select COUNT(*) over () as totalCount
+            , t1.rid
+            , t1.tier_cd as tierCd
+            , t1.tier_nm as tierNm
+            , e1.name as createByNm
+            , CONVERT(varchar, t1.create_date, 120) as createDate
+            , t2.rid_pgm as ridPgm
+        from loy.loy_tiers t1 WITH (NOLOCK)
+        join LOY.LOY_TIERS_GRP t2 WITH (NOLOCK) on t2.flag = 1 and t2.rid = t1.rid_tier_group
+        left outer join com.crm_user u1 WITH (NOLOCK) on u1.rid = t1.create_by
+        left outer join com.employee e1 WITH (NOLOCK) on e1.id = u1.id_employee
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and t1.flag = 1
+        <!-- and t1.accnt_id = #{accountId} -->
+        and t2.rid_pgm = #{loyProgramId}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+    
+     <!-- /**************************************
+    -   관련 파일             : LOYRuleSetDao.java(addRulesetPrvBnf)
+    ============================================
+    -   제목                  : RuleSet 혜택수량 등록
+    -   설명                  : RuleSet 혜택수량 등록
+    -   결과형태              :
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.12.01
+    ***************************************/ -->
+    <insert id="insertRulesetPrvBnf" parameterType="com.icignal.loyalty.promotion.ruleset.dto.request.LoyRulesetPrvBnfDtlReqDto" 
+    useGeneratedKeys="false">
+
+        insert into loy.loy_ruleset_prv_bnf (
+              rid
+            , create_by
+            , modify_by
+            , create_date
+            , modify_date
+            , flag
+           <!--  , country
+            , currency
+            , app_service_type
+            , accnt_id -->
+            , ruleset_id
+            , min_mat
+            , max_amt
+            , acrl_type
+            , acrl_amt
+        )
+        values (
+              #{rid}
+            , #{createBy}
+            , #{modifyBy}
+            , getDate()
+            , getDate()
+            , 1
+          <!--   , #{country}
+            , (select currency from com.language where flag = 1 and lang = #{lang})
+            , #{appServiceId}
+            , #{accountId} -->
+            , #{rulesetId}
+            , #{minMat}
+            , #{maxAmt}
+            , #{acrlType}
+            , #{acrlAmt}
+        )
+
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select rid from loy.loy_ruleset_prv_bnf where rid = #{rid} limit 0, 1 -->
+<!--         </selectKey> -->
+
+    </insert>
+</mapper>

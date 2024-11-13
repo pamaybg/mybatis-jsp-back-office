@@ -1,0 +1,9 @@
+diff a/src/main/webapp/WEB-INF/views/loyalty/member/customer/include/custUseHistListNew.jsp b/src/main/webapp/WEB-INF/views/loyalty/member/customer/include/custUseHistListNew.jsp	(rejected hunks)
+@@ -62,7 +62,6 @@
+ 		alert('<spring:message code="I02051"/>');
+ 	} else {
+ 		var svrType = custSvrHistListGrid.opt.gridControl.getSelectedRecords()[0].svrTypeCd;
+-		if(svrType  == "WEB"){
+ 			var searchCond = { custRid: custRid };
+ 			$.fn.ifvmSearchHelpOpen(null, searchCond, 'popupContainer', '<ifvm:url name="custWebHistListPop"/>', '<spring:message code="이용내역"/>');
+ 	}

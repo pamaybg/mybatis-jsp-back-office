@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.banner.mapper.SystemBannerMapper">
+
+	<select id="getBannerList" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerReqDto" 
+										resultType="com.icignal.systemmanagement.banner.dto.response.SystemBannerListResDto">
+	/* SystemBannerMapper.getBannerList */
+		select  ${strColumn},
+				t1.*
+		from (
+			select
+				a.rid as rid,
+				a.banner_master_title as bannerNm,
+				substr(a.open_date,0, 4)||'-'||substr(a.open_date,5, 2)||'-'||substr(a.open_date,7, 2) as openDate,
+				a.EXPOSURE_YN as exposureYn,
+				e.name as createBy,
+				a.CREATE_DATE as createDate,
+				a.HIT_CNT as hitCnt,
+				a.banner_seq as bannerSeq,
+				case a.exposure_yn when 'Y' then '노출' when 'N' then '숨김' END as banner_status
+			from    loy.loy_banner_master a
+			left join com.crm_user us on a.create_by = us.rid
+			left outer join com.employee e on   	e.id = us.id_employee
+			where a.flag  = 1
+		) t1
+		where   ${strCondWhere}
+		and 	${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+	</select> 
+
+	<insert id="insertBanner" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerInsertReqDto">
+		<selectKey keyProperty="bannerId" resultType="java.lang.String" order="BEFORE">
+        	select com.getNewID('A') from dual
+    	</selectKey>
+    	/* SystemBannerMapper.insertBanner */
+		insert into loy.loy_banner
+			(
+				 rid
+				,banner_nm
+				,banner_detail
+				<!-- ,accnt_id -->
+				<!-- ,app_service_type -->
+				<!-- ,country -->
+				,flag
+				,mod_num
+				,create_date
+				,create_by
+				,modify_date
+				,modify_by
+				,lang
+				,banner_lang
+				,banner_master_rid
+			)
+		values(
+				 #{bannerId}
+				,#{bannerName}
+				,#{bannerDesc}
+				<!-- ,#{accountId} -->
+				<!-- ,#{appServiceId} -->
+				<!-- ,#{country} -->
+				,1
+				,0
+				,sysdate
+				,#{createBy}
+				,sysdate
+				,#{modifyBy}
+				,#{lang}
+				,#{bannerLang}
+				,#{bannerMasterId}
+		)
+	</insert>
+
+
+  	<resultMap id="bannerDetailResultMap" type="com.icignal.systemmanagement.banner.dto.response.SystemBannerDetailResDto">
+		<result property="bannerTitle" column="bannerTitle" />
+		<result property="bannerDesc" column="bannerDesc" />
+		<result property="bannerLang" column="bannerLang" />
+		<result property="bannerSubId" column="bannerSubId" />
+		<collection property="images" javaType="java.util.ArrayList" column="{parentId=bannerSubId, category=imageType, imageLang=imageLang}" select="com.icignal.common.base.mapper.CommonMapper.multiSelectImages" />
+	</resultMap>
+
+	<select id="getBannerDetail" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerReqDto" 
+											resultMap="bannerDetailResultMap">
+	/* SystemBannerMapper.getBannerDetail */
+		select  ln.banner_nm as bannerTitle
+				,ln.banner_detail as bannerDesc
+				,'com' as schemas
+				,'Banner' as imageType
+				,#{bannerId} as bannerId
+				,ln.lang as bannerLang
+				,#{bannerLang} as imageLang
+				,ln.rid as bannerSubId
+				,lnm.type	as type
+				,lnm.banner_seq 	as bannerSeq
+		from loy.loy_banner ln
+		JOIN loy.LOY_BANNER_MASTER lnm ON lnm.rid = LN.BANNER_MASTER_RID
+		where
+			${strSVCType}
+			and banner_master_rid = #{bannerId}
+			and banner_Lang = #{bannerLang}
+			AND rownum = 1
+	</select>
+
+	<update id="increaseBannerCount" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerReqDto">
+	/* SystemBannerMapper.increaseBannerCount */
+		update loy.loy_banner
+		set hit_cnt = hit_cnt + 1
+		where ${strSVCType}
+		and rid = #{bannerId}
+	</update>
+
+	<update id="updateBanner" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerInsertReqDto">
+	/* SystemBannerMapper.updateBanner */
+		update loy.loy_banner
+		set banner_nm = #{bannerName}
+			,banner_detail = #{bannerDesc}
+			,modify_by = #{modifyBy}
+			,modify_date = sysdate
+			,lang = #{lang}
+		where ${strSVCType}
+		and  banner_master_rid = #{bannerMasterId}
+		and banner_lang = #{bannerLang}
+	</update>
+
+
+
+	<insert id="insertBannerMaster" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerInsertReqDto">
+		<selectKey keyProperty="bannerId" resultType="java.lang.String" order="BEFORE">
+        	select com.getNewID('A') from dual
+    	</selectKey>
+    	/* SystemBannerMapper.insertBannerMaster */
+		insert into loy.loy_banner_master
+			(
+				rid
+				,banner_master_title
+				,exposure_yn
+				,open_date
+				<!-- ,accnt_id -->
+				<!-- ,app_service_type -->
+				<!-- ,country -->
+				,lang
+				,flag
+				,create_date
+				,create_by
+				,modify_date
+				,modify_by
+				,hit_cnt
+				,type
+				,banner_seq
+			)
+		values(
+		 	 #{bannerId}
+			,#{bannerName}
+			,#{bannerStatus}
+			,#{openDate}
+			<!-- ,#{accountId} -->
+			<!-- ,#{appServiceId} -->
+			<!-- ,#{country} -->
+			,#{lang}
+			,1
+			,sysdate
+			,#{createBy}
+			,sysdate
+			,#{modifyBy}
+			,0
+			,#{type}
+			,#{bannerSeq}
+		)
+	</insert>
+
+
+	<update id="updateBannerMaster" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerInsertReqDto">
+	/* SystemBannerMapper.updateBannerMaster */
+		update loy.loy_banner_master
+		set	banner_master_title = #{bannerName}
+			,exposure_yn = #{bannerStatus}
+			,open_date = #{openDate}
+			,modify_date = sysdate
+			,modify_by = #{modifyBy}
+			,type =#{type}
+			,banner_seq=#{bannerSeq}
+		where rid = #{bannerId}
+	</update>
+	
+  	<select id="getBannerMasterDetail" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerReqDto" 
+													resultType="com.icignal.systemmanagement.banner.dto.response.SystemBannerDetailResDto">
+	/* SystemBannerMapper.getBannerMasterDetail */
+		select lnm.banner_master_title as bannerTitle
+				,lnm.exposure_yn as bannerStatus
+				,substr(lnm.open_date,0, 4)||'-'||substr(lnm.open_date,5, 2)||'-'||substr(lnm.open_date,7, 2) as openDate
+				,lnm.type
+				,lnm.banner_seq as bannerSeq
+		from loy.loy_banner_master lnm
+		where ${strSVCType}
+		and rid = #{bannerId}
+	</select>
+
+
+  	<select id="getBannerId" parameterType="com.icignal.systemmanagement.banner.dto.request.SystemBannerReqDto" 
+										resultType="java.lang.String">
+	/* SystemBannerMapper.getBannerId */
+		select rid
+		from loy.loy_banner
+		where banner_master_rid = #{bannerId}
+		and banner_lang = #{bannerLang}
+		and ${strSVCType}
+	</select>
+</mapper>

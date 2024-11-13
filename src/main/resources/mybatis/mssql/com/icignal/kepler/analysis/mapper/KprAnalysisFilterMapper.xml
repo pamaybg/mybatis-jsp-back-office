@@ -1,0 +1,656 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:04:14 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.kepler.analysis.mapper.KprAnalysisFilterMapper">
+
+	<!-- 분석 필터 DTO -->
+	<!--
+		Sorry, I can`t migrate	com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto
+		See console output for further details 
+	-->
+	<!--
+		Sorry, I can`t migrate	com.icignal.kepler.analysis.dto.response.KprAnalysisFilterDetailResDto
+		See console output for further details 
+	-->
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (selectAnalysisFilterList)
+	============================================
+	-	제목					: 분석 필터 리스트 조회
+	-	설명					: 분석 필터 리스트 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisFilterList" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto" 
+													resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisFilterDetailResDto">
+		/* KprAnalysisFilterMapper.selectAnalysisFilterList */
+		SELECT	arf.ID					AS	filterId
+			,	arf.ANDOR				AS	andOrFlag
+			,	arf.LEFT_BRKT_YN		AS	leftBrktFlag
+			,	arf.RIGHT_BRKT_YN		AS	rightBrktFlag
+			,	arf.FILTER_VAL			AS	filterValue
+			,	arf.GROUP_FUNC_DTL		AS	groupFuncDetail
+			,	arf.ATRIB_GROUP_COL_ID	AS	atribGroupColumnId
+			,	arf.RPT_FIL_COL_ALIAS	AS	filterColumnAlias
+			,	arf.GROUP_FUNC_TYPE_CD	AS	groupFuncTypeCode
+			,	arf.OPRT_CD				AS	operationTypeCode
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			FROM	anl.anl_rpt_filter		arf
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			FROM	anl.anl_rpt_filter_inst	arf
+		</if>
+		
+		WHERE	${strSVCType}
+		AND		arf.FLAG		=	1
+		AND		arf.RPT_ID		=	#{analysisId}
+		ORDER BY arf.SEQ ASC
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (selectAnalysisFilterIdListInst)
+	============================================
+	-	제목					: 분석 필터 아이디 조회
+	-	설명					: 분석 필터 아이디 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisFilterIdListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto" resultType="java.lang.String">
+		/* KprAnalysisFilterMapper.selectAnalysisFilterIdListInst */
+		SELECT	ID	AS	filterId
+		FROM	anl.anl_rpt_filter_inst
+		WHERE	RPT_ID	=	#{analysisId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (selectAnalysisFilterCount)
+	============================================
+	-	제목					: 분석 필터 아이디 체크
+	-	설명					: 분석 필터 아이디 체크
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisFilterCount" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto" resultType="java.lang.Integer">
+		/* KPRAnalysisFilter.selectAnalysisFilterCount */
+		SELECT	COUNT(1)
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+			FROM	anl.anl_rpt_filter
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+			FROM	anl.anl_rpt_filter_inst
+		</if>
+		WHERE	FLAG	=	1
+		<if test="filterId == null or filterId == ''">
+			AND		RPT_ID	=	#{analysisId}
+		</if>
+		<if test="filterId != null and filterId != ''">
+			AND		ID		=	#{filterId}
+		</if>
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (selectAnalysisFilterCheckSql)
+	============================================
+	-	제목					: 분석 필터 유효성 체크 SQL
+	-	설명					: 분석 필터 유효성 체크 SQL
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisFilterCheckSql" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto" resultType="java.lang.String">
+		/* KprAnalysisFilterMapper.selectAnalysisFilterCheckSql */
+        select CONCAT('select count(1) from (select distinct '
+					 ,case when cal_col_yn = '1' then ac.cal_dtl else ac.tbl_alias_col_nm end 
+                     ,' as colValue'
+                     ,' ', replace(SUBSTRING(l.lgc_sql, instr(upper(l.lgc_sql), 'FROM')), ';', '')
+                     ,' ', coalesce(#{strWhere}, '')
+                     ,' ', coalesce(#{strGroupBy}, '')
+                     ,'  order by '
+                     ,case when cal_col_yn = '1' then ac.cal_dtl else ac.tbl_alias_col_nm end
+                     ,') t'
+                     ) as vSQL    
+        from anl.anl_atrib_group_column ac
+        join anl.anl_column_mst cm 			on cm.flag = 1 and cm.id = (case when LEN(ac.dim_col_id) &gt; 1 then ac.dim_col_id else ac.col_id end)
+        join anl.anl_atrib_group ag     	on ag.flag = 1 and ag.id = ac.atrib_group_id
+        join anl.anl_lgc_comp_mst l 		on l.flag = 1 and l.id = ag.lgc_comp_id
+        join anl.anl_table_mst tm 			on tm.flag = 1 and tm.id = cm.tbl_id
+        where ac.flag = 1
+        and ac.id = #{atribGroupColumnId}
+	</select>
+
+	<!-- /* Deprecated 쿼리 */ -->
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (selectAnalysisFilterDefault)
+	============================================
+	-	제목					: 분석 필터 기본 상세 조회
+	-	설명					: 분석 필터 기본 상세 조회
+								  로지컬 컴포넌트와 연결된 어트리뷰트 그룹 컬럼 중 DATE_KEY_YN 값이 1인 것이 존재한다면
+								  케이스 별로 나누어서 값을 자른다.
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisFilterDefault" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto" 
+															resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisFilterDetailResDto">
+		/* KprAnalysisFilterMapper.selectAnalysisFilterDefault */
+		SELECT	t.ID	AS	atribGroupColumnId
+			,	CASE	t.leftTblType
+					WHEN	'FACT'	THEN	t.leftSQL
+		            ELSE	t.rightSQL
+				END		AS	filterValue
+		FROM	(
+			SELECT	atml.TBL_TYPE_CD	AS	leftTblType
+				,	CASE
+						WHEN	acml.DATA_TYPE_CD	=	'VARCHAR'
+							AND	acml.LEN			=	'8'		
+							THEN	 CONCAT('''', com.TO_CHAR( ( GETDATE() -7 ), 'YYYYMMDD' ), ''' AND ''', com.TO_CHAR( GETDATE(), 'YYYYMMDD' ), '''') 
+						WHEN	acml.DATA_TYPE_CD	=	'VARCHAR'
+							AND acml.LEN			=	'6'		
+							THEN	CONCAT('''', com.TO_CHAR( add_months( GETDATE(),  -3  ), 'YYYYMMDD' ), ''' AND ''', com.TO_CHAR( GETDATE(), 'YYYYMMDD' ), '''')
+						WHEN	acml.DATA_TYPE_CD	=	'DATE'	
+							THEN	CONCAT('''', com.TO_CHAR( GETDATE() -7 , 'YYYY-MM-DD'), ''' AND ''', com.TO_CHAR( GETDATE(), 'YYYY-MM-DD'), '''')
+					END				AS	leftSQL
+				,	CASE
+						WHEN	acmr.DATA_TYPE_CD	=	'VARCHAR'
+							AND	acmr.LEN			=	'8'		
+							THEN	CONCAT('''', com.TO_CHAR(  GETDATE() -7, 'YYYYMMDD' ), ''' AND ''', com.TO_CHAR( GETDATE(), 'YYYYMMDD' ), '''')
+						WHEN	acmr.DATA_TYPE_CD	=	'VARCHAR'
+							AND acmr.LEN			=	'6'		
+							THEN	CONCAT('''', com.TO_CHAR( add_months( GETDATE(), -3 ), 'YYYYMMDD' ), ''' AND ''', com.TO_CHAR( GETDATE(), 'YYYYMMDD' ), '''')
+						WHEN	acmr.DATA_TYPE_CD	=	'DATE'	
+							THEN	CONCAT('''', com.TO_CHAR( ( GETDATE() -7 ), 'YYYY-MM-DD' ), ''' AND ''', com.TO_CHAR( GETDATE(), 'YYYY-MM-DD'), '''')
+					END				AS	rightSQL
+				,	agc.ID
+			FROM	anl.anl_lgc_comp_mst		lcm
+			JOIN	anl.anl_lgc_comp_table_rel	lcml	ON	lcm.ID			=	lcml.LGC_COMP_ID
+														AND	lcml.FLAG		=	1
+			JOIN	anl.anl_lgc_comp_table_rel	lcmr	ON	lcm.ID			=	lcmr.LGC_COMP_ID
+														AND	lcmr.FLAG		=	1
+			JOIN	anl.anl_lgc_join_column		ljc		ON	lcml.ID			=	ljc.LEFT_LGC_COMP_TBL_REL_ID
+														AND	lcmr.ID			=	ljc.RIGHT_LGC_COMP_TBL_REL_ID
+														AND	ljc.FLAG		=	1
+			JOIN	anl.anl_atrib_group			aag		ON	lcm.ID			=	aag.LGC_COMP_ID
+														AND	aag.FLAG		=	1
+			JOIN	anl.anl_atrib_group_column 	agc		ON	aag.ID			=	agc.ATRIB_GROUP_ID
+														AND	agc.FLAG		=	1
+			JOIN	anl.anl_rpt_mst_inst		arm		ON	lcm.ID			=	arm.LGC_COMP_ID
+														AND	arm.FLAG		=	1
+			JOIN	anl.anl_table_mst			atml	ON	atml.ID			=	lcml.TBL_ID
+														AND	atml.FLAG		=	1
+			JOIN	anl.anl_table_mst			atmr	ON	atmr.ID			=	lcmr.TBL_ID
+														AND	atmr.FLAG		=	1
+			JOIN	anl.anl_column_mst			acml	ON	acml.ID			=	ljc.LEFT_COL_ID
+														AND	acml.FLAG		=	1
+			JOIN	anl.anl_column_mst			acmr	ON	acmr.ID			=	ljc.RIGHT_COL_ID
+														AND	acmr.FLAG		=	1
+			WHERE	lcm.FLAG			=	1
+			AND		agc.DATE_KEY_YN		=	'1'
+			AND		(
+					ljc.LEFT_COL_ID		=	agc.COL_ID
+				OR	ljc.RIGHT_COL_ID	=	agc.COL_ID
+			)
+			AND		arm.ID				=	#{analysisId}
+		)	t
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (insertAnalysisFilterDetailMaster)
+	============================================
+	-	제목					: 분석 필터 임시 -> 마스터 등록
+	-	설명					: 분석 필터 임시 -> 마스터 등록
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisFilterDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.insertAnalysisFilterDetailMaster */
+		INSERT INTO anl.anl_rpt_filter (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	com.getNewID('A')
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	#{analysisId_New}
+		FROM	anl.anl_rpt_filter_inst
+		WHERE	FLAG	=	1
+		AND		RPT_ID	=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (insertAnalysisFilterDetailInst)
+	============================================
+	-	제목					: 분석 필터 등록
+	-	설명					: 분석 필터 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<insert id="insertAnalysisFilterDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.insertAnalysisFilterDetailInst */
+		INSERT INTO anl.anl_rpt_filter_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	RPT_ID
+		) VALUES (
+				#{filterId}
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	#{seq}
+			,	#{andOrFlag}
+			,	#{leftBrktFlag}
+			,	#{atribGroupColumnId}
+			,	#{rightBrktFlag}
+			,	#{groupFuncTypeCode}
+			,	#{operationTypeCode}
+			,	#{filterValue}
+			,	#{groupFuncDetail}
+			,	CONCAT('f', lpad(#{seq}, 4, 0))
+			,	#{analysisId}
+		)
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			SELECT	1
+		</selectKey>
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (insertAnalysisFilterDetailMasterToInst)
+	============================================
+	-	제목					: 분석 필터 마스터 -> 임시 등록
+	-	설명					: 분석 필터 마스터 -> 임시 등록
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisFilterDetailMasterToInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.insertAnalysisFilterDetailMasterToInst */
+		INSERT INTO anl.anl_rpt_filter_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	GETDATE()
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	RPT_ID
+		FROM	anl.anl_rpt_filter
+		WHERE	FLAG	=	1
+		AND		RPT_ID	=	#{analysisId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (insertAnalysisFilterDetailInstToMaster)
+	============================================
+	-	제목					: 분석 필터 임시 -> 마스터 등록
+	-	설명					: 분석 필터 임시 -> 마스터 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="insertAnalysisFilterDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.insertAnalysisFilterDetailInstToMaster */
+		INSERT INTO anl.anl_rpt_filter (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	RPT_ID
+		FROM	anl.anl_rpt_filter_inst
+		WHERE	FLAG	=	1
+		AND		ID		=	#{filterId}
+	</update>
+	
+	<update id="insertAnalysisFilterDetailCopy" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.insertAnalysisFilterCopy */
+		INSERT INTO anl.anl_rpt_filter_inst (
+				ID
+			,	CREATE_BY
+			,	MODIFY_BY
+			,	CREATE_DATE
+			,	MODIFY_DATE
+			,	FLAG
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	RPT_ID
+		)
+		SELECT	com.getNewID('A')
+			,	#{empId}
+			,	#{empId}
+			,	GETDATE()
+			,	GETDATE()
+			,	1
+			,	TYPE
+			,	STORE_ID
+			,	SEQ
+			,	ANDOR
+			,	LEFT_BRKT_YN
+			,	ATRIB_GROUP_COL_ID
+			,	RIGHT_BRKT_YN
+			,	GROUP_FUNC_TYPE_CD
+			,	OPRT_CD
+			,	FILTER_VAL
+			,	GROUP_FUNC_DTL
+			,	RPT_FIL_COL_ALIAS
+			,	#{analysisId_New}
+		FROM	anl.anl_rpt_filter
+		WHERE	FLAG	=	1
+		AND		RPT_ID	=	#{analysisId}
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (updateAnalysisFilterDetailInst)
+	============================================
+	-	제목					: 분석 필터 임시 수정
+	-	설명					: 분석 필터 임시 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisFilterDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.updateAnalysisFilterDetailInst */
+		UPDATE	anl.anl_rpt_filter_inst
+		SET		MODIFY_BY			=	#{empId}
+			,	MODIFY_DATE			=	GETDATE()
+			,	SEQ					=	#{seq}
+			,	ANDOR				=	#{andOrFlag}
+			,	LEFT_BRKT_YN		=	#{leftBrktFlag}
+			,	ATRIB_GROUP_COL_ID	=	#{atribGroupColumnId}
+			,	RIGHT_BRKT_YN		=	#{rightBrktFlag}
+			,	GROUP_FUNC_TYPE_CD	=	#{groupFuncTypeCode}
+			,	OPRT_CD				=	#{operationTypeCode}
+			,	FILTER_VAL			=	#{filterValue}
+			,	GROUP_FUNC_DTL		=	#{groupFuncDetail}
+			,	RPT_FIL_COL_ALIAS	=	CONCAT('f', lpad(#{seq}, 4, 0))
+		WHERE	ID	=	#{filterId}
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (updateAnalysisFilterDetailInstToMaster)
+	============================================
+	-	제목					: 분석 필터 마스터 수정
+	-	설명					: 분석 필터 마스터 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisFilterDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.updateAnalysisFilterDetailInstToMaster */
+		UPDATE	anl.anl_rpt_filter arf
+		SET (		arf.MODIFY_BY			
+			,	arf.MODIFY_DATE			
+			,	arf.SEQ					
+			,	arf.ANDOR				
+			,	arf.LEFT_BRKT_YN		
+			,	arf.ATRIB_GROUP_COL_ID	
+			,	arf.RIGHT_BRKT_YN		
+			,	arf.GROUP_FUNC_TYPE_CD	
+			,	arf.OPRT_CD				
+			,	arf.FILTER_VAL			
+			,	arf.GROUP_FUNC_DTL		
+			,	arf.RPT_FIL_COL_ALIAS	
+			)
+		=(select
+				 afi.MODIFY_BY	        
+				,afi.MODIFY_DATE	        
+				,afi.SEQ	                
+				,afi.ANDOR               
+				,afi.LEFT_BRKT_YN        
+				,afi.ATRIB_GROUP_COL_ID  
+				,afi.RIGHT_BRKT_YN       
+				,afi.GROUP_FUNC_TYPE_CD  
+				,afi.OPRT_CD             
+				,afi.FILTER_VAL          
+				,afi.GROUP_FUNC_DTL      
+				,afi.RPT_FIL_COL_ALIAS   
+		from anl.anl_rpt_filter_inst afi
+		where afi.ID	=	#{filterId}
+		)
+		WHERE	arf.ID	=	#{filterId}
+		
+	</update>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (deleteAnalysisFilterDetailMaster)
+	============================================
+	-	제목					: 분석 필터 마스터 삭제
+	-	설명					: 분석 필터 마스터 삭제
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="deleteAnalysisFilterDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.deleteAnalysisFilterDetailMaster */
+		UPDATE	anl.anl_rpt_filter
+		SET		MODIFY_BY	=	#{empId}
+			,	MODIFY_DATE	=	GETDATE()
+			,	FLAG		=	flag + 1
+		WHERE	RPT_ID	=	#{analysisId}
+		<if test="filterIdList != null and filterIdList.size() > 0">
+			AND		ID	NOT IN	 <foreach collection="filterIdList" item="item" separator="," close=")" open="(">
+									#{item}
+								</foreach>
+		</if>
+	</update>
+	
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (deleteAnalysisFilterListInst)
+	============================================
+	-	제목					: 분석 필터 리스트 삭제
+	-	설명					: 분석 필터 리스트 삭제
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<delete id="deleteAnalysisFilterListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.deleteAnalysisFilterListInst */
+		DELETE
+		FROM	anl.anl_rpt_filter_inst
+		WHERE	RPT_ID	=	#{analysisId}
+	</delete>
+
+	<!-- /**************************************
+	-	관련 파일				: KprAnalysisFilterMapper.java (deleteAnalysisFilterDetailInst)
+	============================================
+	-	제목					: 분석 필터 임시 삭제
+	-	설명					: 분석 필터 임시 삭제
+	-	결과형태				: 복수
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<delete id="deleteAnalysisFilterDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisFilterDetailReqDto">
+		/* KprAnalysisFilterMapper.deleteAnalysisFilterDetailInst */
+		DELETE
+		FROM	anl.anl_rpt_filter_inst
+		WHERE	RPT_ID	=	#{analysisId}
+		<if test="filterList.size() > 0">
+			AND		ID		NOT IN	 
+			<foreach collection="filterList" item="item" separator="," close=")" open="(">
+				#{item.filterId}
+			</foreach>
+		</if>
+	</delete>
+</mapper>

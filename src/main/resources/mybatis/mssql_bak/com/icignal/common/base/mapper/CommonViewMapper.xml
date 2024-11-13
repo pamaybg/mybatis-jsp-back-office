@@ -1,0 +1,767 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed Sep 16 14:06:40 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.common.base.mapper.CommonViewMapper">
+	
+	<!-- /**************************************
+    -   관련 파일            : CommonViewMapper.java (getTierGrpList)
+    ============================================
+    -   제목                   : 공통 팝업 (등급 그룹 마스터 조회)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.11.11
+    ***************************************/ -->
+    
+    <select id="selectTierGrpList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    										resultType="com.icignal.loyalty.common.dto.response.LoyTierGrpListResDto">
+    /* CommonViewMapper.selectTierGrpList */
+	SELECT a.RID 			AS tierGrpId
+		       ,a.TIER_GRP_NM 	AS tierGrpNm
+		       ,b.PGM_NM       	AS pgmNm
+		       ,a.CREATE_DATE  	AS createDate
+	FROM   LOY.LOY_TIERS_GRP a WITH (NOLOCK)
+	INNER JOIN LOY.LOY_PGM b WITH (NOLOCK) ON a.RID_PGM = b.RID
+	WHERE  ${strSVCType}
+	AND ${strWhere}
+	AND b.FLAG = 1
+	ORDER BY ${strOrderby}
+		${strEndPaging}	
+    </select>
+	
+	<!-- /**************************************
+    -   관련 파일       : CommonDAO.java(getCommCodeList)
+    ============================================
+    -   제목          : 공통코드 목록 조회
+    -   설명          : 1. CommonDAO에서 공통코드 목록을 조회
+                          2. 코드이름의 PROPERTY 값이 enableNA값이 같거나 'NA' 가 아니라면 공통코드 목록을 조회한다.
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+        groupCode       : 그룹 코드
+    -   출력
+        codeId          : 코드 Id
+        codeName        : 코드 이름
+        markName        : 표시 이름
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="getCommCodeList" parameterType="com.icignal.common.base.dto.request.CommonCodeReqDto" resultType="com.icignal.systemmanagement.commcode.dto.response.ICNCommonCodeResponseDTO">
+    /* CommonViewMapper.getCommCodeList */
+	SELECT
+	            id AS codeId,
+	            code_name AS codeName,
+	            mark_name AS markName,
+	            par_code_id AS parCodeId,
+	            ATTRIB01 AS attrib01,
+	            ATTRIB02 AS attrib02,
+	            ATTRIB03 AS attrib03,
+	            ATTRIB04 AS attrib04,
+	            ATTRIB05 AS attrib05,
+	            seq AS seq
+	FROM COM.COMM_CODE WITH (NOLOCK)
+	WHERE ${strSVCType}
+	AND FLAG = 1
+    <if test='groupCode != null and groupCode != ""'>AND
+      group_code = #{groupCode}
+    </if>
+    <if test='parCodeId != null and parCodeId != ""'>AND
+      par_code_id = #{parCodeId}
+    </if>
+    <if test="overSeq != null">AND<!-- knlee 추가 -->
+      seq <![CDATA[>]]> #{overSeq}
+    </if>
+    <if test="attrib01 != null">AND<!-- knlee 추가 -->
+      attrib01  = #{attrib01}
+    </if>
+    <if test="codeName != null">AND<!-- swlim 추가 -->
+      code_name  = #{codeName}
+    </if>
+    <if test='!enableNA'>and
+          code_name != 'NA'
+    </if>
+   		ORDER BY seq
+    </select>
+
+	<!-- /**************************************
+    -   관련 파일       : CommonDAO.java(getCommCodeList2)
+    ============================================
+    -   제목          : 공통코드 목록 조회
+    -   설명          : 1. CommonDAO에서 공통코드 목록을 조회( 빈값 포함)
+
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+        groupCode       : 그룹 코드
+    -   출력
+        codeId          : 코드 Id
+        codeName        : 코드 이름
+        markName        : 표시 이름
+    ============================================
+    -   작성자         : 이성원
+    -   작성일         : 2017. 11. 15.
+    ***************************************/ -->
+    <select id="getCommCodeList2" parameterType="com.icignal.common.base.dto.request.CommonCodeReqDto" resultType="com.icignal.systemmanagement.commcode.dto.response.ICNCommonCodeResponseDTO">
+    	/* CommonViewMapper.getCommCodeList2 */
+       select * from (
+		SELECT
+		    ' ' AS codeId,
+		    ' ' AS codeName,
+		    ' ' AS markName,
+		    ' ' AS parCodeId,
+		    ' ' AS attrib01,
+		    ' ' AS attrib02,
+		    ' ' AS attrib03,
+		    ' ' AS attrib04,
+		    ' ' AS attrib05,
+		    0 AS seq
+		    <!-- FROM dual -->
+
+			UNION
+
+	        SELECT
+		            id AS codeId,
+		            code_name AS codeName,
+		            mark_name AS markName,
+		            par_code_id AS parCodeId,
+		            ATTRIB01 AS attrib01,
+		            ATTRIB02 AS attrib02,
+		            ATTRIB03 AS attrib03,
+		            ATTRIB04 AS attrib04,
+		            ATTRIB05 AS attrib05,
+		            seq+1 AS seq
+	        FROM COM.COMM_CODE WITH (NOLOCK)
+	        WHERE FLAG = 1
+	          <if test="groupCode != null and groupCode != ''">AND
+	            group_code = #{groupCode}
+	          </if>
+	          <if test="parCodeId != null and parCodeId != ''">AND
+	            par_code_id = #{parCodeId}
+	          </if>
+	          <if test="overSeq != null">AND<!-- knlee 추가 -->
+	            seq &gt; #{overSeq}
+	          </if>
+	          <if test="attrib01 != null">AND<!-- knlee 추가 -->
+	            attrib01  = #{attrib01}
+	          </if>
+	          <if test="attrib01 != null">AND
+	            ATTRIB01 = #{attrib01}
+	          </if>
+	          <if test="attrib02 != null">AND
+	            ATTRIB02 = #{attrib02}
+	          </if>
+	          <if test="attrib03 != null">AND
+	            ATTRIB03 = #{attrib03}
+	          </if>
+	          <if test="!enableNA">and
+	                code_name != 'NA'
+	          </if>
+	          ) a
+          		ORDER BY seq
+    </select>
+    
+     <!-- /**************************************
+    -   관련 파일            : CommonViewMapper.java (getChnlList)
+    ============================================
+    -   제목                   : 공통 팝업 (채널마스터조회)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, pgm_rid
+    -	출력			  :	
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.11.16
+    ***************************************/ -->
+    
+    <select id="selectChnlList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    							resultType="com.icignal.common.base.dto.response.LoyChnlListResDto">
+	/* CommonViewMapper.selectChnlList */
+	SELECT lc1.CHNL_NM AS chnlNm ,
+			lc1.CHNL_NO AS chnlNo ,
+			lc1.CHNL_TYPE_CD AS chnlTypeCd ,
+			lc3.PAR_CHNL_NM AS parChnlNm ,
+			lc1.RID AS rid ,
+			${strColumn}
+		FROM
+		LOY.LOY_CHNL lc1 WITH (NOLOCK)
+		LEFT OUTER JOIN (
+			SELECT lc2.RID AS RID_PAR_CHNL,
+						lc2.CHNL_NM AS PAR_CHNL_NM
+			FROM LOY.LOY_CHNL lc2 WITH (NOLOCK) WHERE lc2.FLAG = 1) lc3 ON lc1.RID_PAR_CHNL = lc3.RID_PAR_CHNL
+		WHERE ${strWhere}
+		AND lc1.FLAG  = 1
+		<if test="chnlTypeCd != null">
+		AND lc1.CHNL_TYPE_CD = #{chnlTypeCd}
+		</if>
+		ORDER BY ${strOrderby}
+			${strEndPaging}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : CommonViewMapper.java (getCamMstListPop)
+    ============================================
+    -   제목                   : 공통 팝업 (캠페인마스터)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, pgm_rid
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.07
+    ***************************************/ -->
+    <select id="selectCamMstList" parameterType="com.icignal.loyalty.campaign.dto.request.LoyCamMstListReqDto" resultType="com.icignal.loyalty.channel.dto.response.LoyCamMstListResDto">
+    	/* CommonViewMapper.selectCamMstList */
+	SELECT mcm.ID            AS id
+		 		,mcm.RID_PGM       AS ridPgm
+				,mcm.CAM_STATUS_CD AS camStatusCd
+				,mcm.CAM_NM        AS camNm
+				,mcm.CAM_TYPE_CD   AS camTypeCd
+				,c1.MARK_NAME      AS camTypeNm
+				,mcor.CAM_ID       AS camId
+				,mcor.OFFER_ID     AS offerId
+				,mom.OFFER_NM      AS offerNm
+				,mcm.PROM_SUB_TYPE AS promSubType
+				,c2.MARK_NAME      AS promSubTypeNm
+				,CONVERT(VARCHAR, mcm.CAM_START_DD )  AS camStartDd
+				,CONVERT(VARCHAR, mcm.CAM_END_DD )    AS camEndDd
+	FROM mkt.mkt_cam_mst  mcm WITH (NOLOCK)
+	LEFT JOIN mkt.mkt_cam_offer_rel mcor WITH (NOLOCK) ON mcor.CAM_ID = mcm.ID AND mcor.FLAG = 1
+	LEFT JOIN mkt.mkt_offer_mst mom WITH (NOLOCK) ON mom.ID = mcor.OFFER_ID AND mom.FLAG = 1
+	LEFT JOIN com.comm_code c1 WITH (NOLOCK) ON c1.CODE_NAME = mcm.CAM_TYPE_CD AND c1.LANG = #{lang} AND c1.GROUP_CODE = 'MKT_CAM_TYPE_CD'
+	LEFT JOIN com.comm_code c2 WITH (NOLOCK) ON c2.CODE_NAME = mcm.PROM_SUB_TYPE AND c2.LANG = #{lang} AND c2.GROUP_CODE = 'LOY_PROM_SUB_TYPE'
+    WHERE ${strWhere}
+    AND mcm.FLAG = 1
+	AND mcm.CAM_STATUS_CD = 'A' 
+	AND mcm.RID_PGM IS NOT NULL
+	<if test="camType != null and camType != ''">
+	AND mcm.CAM_TYPE_CD = #{camType}
+	</if>
+    ORDER BY ${strOrderby}
+	   ${strEndPaging}
+   </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : CommonViewMapper.java (getCategoryListPop)
+    ============================================
+    -   제목                   : 공통 팝업 (카테고리 조회)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, pgm_rid
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.13
+    ***************************************/ -->
+    <select id="selectCategoryList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    												resultType="com.icignal.loyalty.product.dto.response.LoyCategoryListResDto">
+    /* CommonViewMapper.selectCategoryList */
+	SELECT 
+			  lpc1.RID          AS rid
+			, lpc1.RID_PGM      AS ridPgm
+			, lpc1.PAR_RID      AS parRid
+			, lpc2.CAT_ID       AS parCatId
+			, lpc2.CAT_NM       AS parCatNm
+			, lpc1.CAT_ID       AS catId
+			, lpc1.CAT_NM       AS catNm
+			, lpc1.CAT_DESCTXT  AS catDesctxt
+			, ${strColumn}
+	FROM LOY.LOY_PROD_CATEGORY lpc1WITH (NOLOCK)
+	LEFT JOIN LOY.LOY_PROD_CATEGORY lpc2 WITH (NOLOCK) ON lpc1.PAR_RID = lpc2.RID AND lpc2.FLAG = 1
+	WHERE ${strWhere}
+	AND lpc1.FLAG 	= 1
+	<!-- and lpc1.rid_pgm 	= #{loyProgramId} -->
+	ORDER BY ${strOrderby}
+		 ${strEndPaging}	
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일            : CommonViewMapper.java (getProdListPop)
+    ============================================
+    -   제목                   : 공통 팝업 (상품 조회)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId, pgm_rid
+    -	출력			  :	
+    ============================================
+    -   작성자                : 이원준
+    -   작성일                : 2016.12.13
+    ***************************************/ -->
+    <select id="selectProdList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" resultType="com.icignal.loyalty.product.dto.response.LoyProdListResDto">
+    /* CommonViewMapper.selectProdList */
+	SELECT 
+				   lp.RID AS rid
+			     , lp.PROD_ID AS prodId
+			     , lp.PROD_NM AS prodNm
+			     , lp.PROD_AMT AS prodAmt
+			     , lp.RID_BRD_CAT AS brdId
+			     , lbc.BRD_NM AS brdNm
+			     , lp.RID_PROD_CAT AS catId
+			     , lpc.CAT_NM AS catNm 
+			     , lp.RID_CHNL AS chnlId
+			     , lc.CHNL_NM AS chnlNm
+			     , ${strColumn}
+	FROM LOY.LOY_PROD lp WITH (NOLOCK)
+  	LEFT JOIN LOY.LOY_BRD_CATEGORY lbc WITH (NOLOCK) on lp.RID_BRD_CAT = lbc.RID and lbc.FLAG = 1
+  	LEFT JOIN LOY.LOY_PROD_CATEGORY lpc WITH (NOLOCK) on lp.RID_PROD_CAT = lpc.RID and lpc.FLAG = 1
+  	LEFT JOIN LOY.LOY_CHNL lc WITH (NOLOCK) on lp.RID_CHNL = lc.RID and lc.FLAG = 1
+  	WHERE ${strWhere}
+    AND lp.FLAG = 1
+    AND lp.RID_PGM = #{loyProgramId}
+ 	ORDER BY ${strOrderby}
+		 ${strEndPaging}	
+    </select>
+    
+     <!-- /**************************************
+    -   관련 파일            : CommonViewMapper.java (getPgmList)
+    ============================================
+    -   제목                   : 공통 팝업 (프로그램조회)
+    -   설명                   : 
+    -   결과형태             : 복수
+    ============================================
+    -   입력			  : accountId
+    -	출력			  :	
+    ============================================
+    -   작성자                : knlee
+    -   작성일                : 2016.12.25
+    ***************************************/ -->
+    
+    <select id="selectPgmList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    										resultType="com.icignal.loyalty.product.dto.response.LoyPgmListResDto">
+    /* CommonViewMapper.selectPgmList */
+    SELECT S.pgmNo AS pgmNo 
+				  , S.repYn AS repYn
+			      , S.rid AS rid
+			      , S.pgmNm AS pgmNm
+			      , S.pgmStat AS pgmStat
+			      , S.modifyDate AS modifyDate
+			      , S.modifyBy AS modifyBy
+			      , S.chnlNm AS  chnlNm
+			      , ${strColumn}
+	FROM (
+		SELECT DISTINCT lp.PGM_NO        AS    pgmNo 
+					  ,lp.REP_YN		AS repYn
+				      , lp.RID           		AS    rid   
+				      ,lp.PGM_NM        AS    pgmNm 
+				      ,lp.STAT_CD        AS    pgmStat 
+				      ,CONVERT(VARCHAR(10), lp.MODIFY_DATE, 23)  AS    modifyDate
+				      ,e.NAME    	  		AS    modifyBy
+				      ,lc.CHNL_NM      	AS    chnlNm  
+		FROM LOY.LOY_PGM lp WITH (NOLOCK)
+	    JOIN LOY.LOY_CHNL lc	WITH (NOLOCK) ON lp.RID_CHNL_PR = lc.RID AND lc.FLAG = 1
+	    LEFT OUTER JOIN COM.CRM_USER cu WITH (NOLOCK) ON lp.MODIFY_BY = cu.RID AND cu.FLAG = 1
+	    LEFT OUTER JOIN COM.EMPLOYEE e WITH (NOLOCK) ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1 
+		WHERE ${strWhere}
+		AND lp.FLAG  = 1
+		AND lp.STAT_CD = 'A'
+		<if test="repYn != null">
+		AND lp.REP_YN = #{repYn}
+		</if>
+		<if test="repYnCheck != null and repYnCheck != ''">
+		AND lp.REP_YN = #{repYnCheck}
+		<!-- AND rownum = 1 -->
+		</if>
+	) S		
+	ORDER BY ${strOrderby}
+	${strEndPaging}		 
+    </select>
+    
+    
+    <!-- /**************************************
+    -   관련 파일    : CommonViewMapper.java (selectPointDtlList)
+    ======================================
+    -   제목         : 공통 팝업 (포인트 상세 조회)
+    -   설명         : 
+    -   결과형태     : 복수
+    ======================================
+    -   입력		 : rid
+    -	출력		 : pointDtlListResponse
+    ======================================
+    -   작성자       : 이성원
+    -   작성일       : 2017.03.04
+    ======================================
+    -   수정자       : jh.kim
+    -   수정일       : 2017.06.28
+    ***************************************/ -->
+    <select id="selectPointDtlList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" resultType="com.icignal.loyalty.common.dto.response.LoyPointDtlListResDto">
+        /* CommonViewMapper.selectPointDtlList */ 
+        SELECT 
+              t2.CAM_NM              AS camNm           /* 캠페인명 */
+            , t3.OFFER_NM            AS offerNm         /* 오퍼명 */
+            , c1.MARK_NAME           AS offerTypeCdNm   /* 오퍼유형명 */
+            , t1.OFFER_TYPE_CD       AS offerTypeCd     /* 오퍼유형코드 */
+            , t1.VALID_START_DATE    AS validStartDate  /* 유효기간 시작일자 */
+            , t1.VALID_END_DATE      AS validEndDate    /* 유효기간 종료일자 */
+            , CONVERT(round(t1.acrl_amt,0),'FM999,999,999,999') as acrlAmt /* 포인트 */
+            , t1.GIFT_PNT_YN         AS giftPntYn       /* 선물가능여부 */
+		    , c9.MARK_NAME AS pntAccntBigTypeCdNm
+		    , c10.MARK_NAME AS pntAccntMidTypeCdNm
+		    , c11.MARK_NAME AS pntAccntSmlTypeCdNm
+		    , c12.MARK_NAME AS pntAccntDetailTypeCdNm
+		    , CASE WHEN ISNULL(t1.VALID_START_DATE,'') IS NOT NULL THEN CONVERT(VARCHAR, t1.VALID_START_DATE) || ' ~ ' || CONVERT(VARCHAR, t1.VALID_END_DATE) ELSE '' end as validDate
+		    , ${strColumn}
+        FROM loy.loy_pnt_acrl  		  t1 WITH (NOLOCK)
+        INNER JOIN mkt.mkt_cam_mst    t2  WITH (NOLOCK)  ON t1.cam_no = t2.disp_no
+        INNER JOIN mkt.mkt_offer_mst  t3 WITH (NOLOCK) ON t1.offer_no = t3.offer_no
+        LEFT OUTER JOIN com.comm_code c1 WITH (NOLOCK) ON c1.flag = 1 AND c1.lang = #{lang} AND c1.group_code = 'OFFER_TYPE_CD' AND c1.code_name = t1.offer_type_cd
+		left outer join com.comm_code c9 WITH (NOLOCK) on c9.flag = 1 and c9.lang = #{lang} and c9.code_name = t2.PNT_ACCNT_BIG_TYPE_CD and c9.group_code = 'PNT_TXN_TYPE'
+		left outer join com.comm_code c10 WITH (NOLOCK)	on c10.flag = 1 and c10.lang = #{lang} and c10.code_name = t2.PNT_ACCNT_MID_TYPE_CD and c10.group_code = 'PNT_TXN_DTL_TYPE'
+		left outer join com.comm_code c11 WITH (NOLOCK)	on c11.flag = 1 and c11.lang = #{lang} and c11.code_name = t2.PNT_ACCNT_SML_TYPE_CD and c11.group_code = 'DA_PNT_ACCNT_SML_TYPE'
+		left outer join com.comm_code c12 WITH (NOLOCK)	on c12.flag = 1 and c12.lang = #{lang} and c12.code_name = t2.PNT_ACCNT_DETAIL_TYPE_CD and c12.group_code = 'DA_PNT_ACCNT_DETAIL_TYPE'
+        WHERE t1.rid_pnt_txn = #{rid}
+        AND ${strWhere}
+		ORDER BY ${strOrderby}
+				${strEndPaging}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일    : CommonViewMapper.java (getPurItemList)
+    ======================================
+    -   제목         : 공통 팝업 (항목 상세 조회)
+    -   설명         : 
+    -   결과형태     : 복수
+    ======================================
+    -   입력         : rid
+    -   출력         : purItemListResponse
+    ======================================
+    -   작성자       : jh.kim
+    -   작성일       : 2017.06.29
+    ***************************************/ -->
+    <select id="selectPurItemList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+   												resultType="com.icignal.loyalty.common.dto.response.LoyPurItemListResDto">
+	/* CommonViewMapper.selectPurItemList */
+    SELECT t1.item_num as itemNum       /* 항목번호 */
+            , t2.brd_nm   as brdNm         /* 브랜드명 */
+            , t3.cat_nm   as catNm         /* 카테고리명 */
+            , t4.prod_nm  as prodNm        /* 상품명 */
+            , t4.prod_id  as prodId        /* 상품코드 */
+            , t1.amt      as amt           /* 구매금액 */
+            , t1.vol      as vol           /* 구매수량 */
+        FROM loy.loy_intact_pur_item as t1 WITH (NOLOCK)
+        LEFT JOIN loy.loy_brd_category as t2 WITH (NOLOCK) ON 1=1
+        	AND t1.brd_id   = t2.brd_id
+        LEFT JOIN loy.loy_prod_category as t3 WITH (NOLOCK)
+         	 ON 1=1
+         	 AND t1.cat_id   = t3.cat_id
+        LEFT JOIN loy.loy_prod as t4 WITH (NOLOCK)       
+        	 ON 1=1
+        	 AND t1.rid_prod = t4.prod_id
+        WHERE t1.flag = 1     
+          AND t1.rid_intact_pur = #{rid}
+        order by ${strOrderby}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일    : CommonViewMapper.java (getPurPayList)
+    ======================================
+    -   제목         : 공통 팝업 (결제 상세 목록 조회)
+    -   설명         : 
+    -   결과형태     : 복수
+    ======================================
+    -   입력         : rid
+    -   출력         : purPayListResponse
+    ======================================
+    -   작성자       : jh.kim
+    -   작성일       : 2017.06.29
+    ***************************************/ -->
+    <select id="selectPurPayList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" resultType="com.icignal.loyalty.common.dto.response.LoyPurPayListResDto"> 
+    /* CommonViewMapper.selectPurPayList */
+    SELECT t1.rid            as rid          /* 일련번호 */ 
+            , t1.pay_methd_cd   as payMethdCd   /* 결제방법 */
+            , c2.mark_name      as payMethdCdNm /* 결제방법명 */
+            , t1.amt            as amt          /* 결제금액 */ 
+            , t1.channel_cd     as channelCd    /* 카드유형 */
+            , c1.mark_name      as cardNm       /* 카드유형명 */
+            , t1.card_no 		as cardNo /* 카드번호 */ 
+     FROM loy.loy_intact_pur_pay as t1 WITH (NOLOCK)
+     LEFT JOIN com.comm_code as c1 WITH (NOLOCK) ON c1.flag = true AND c1.lang = #{lang} AND c1.group_code = 'LOY_CARD_TYPE'         AND c1.code_name = t1.channel_cd
+     LEFT JOIN com.comm_code as c2 WITH (NOLOCK) ON c2.flag = true AND c2.lang = #{lang} AND c2.group_code = 'LOY_INTACT_PUR_PAY_CD' AND c2.code_name = t1.pay_methd_cd
+     WHERE t1.flag = 1 
+       AND t1.rid_intact_pur = #{rid} 
+     ORDER BY ${strOrderby}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일    : CommonViewMapper.java (getPurPayList)
+    ======================================
+    -   제목         : 마스킹이 해제된 결제 상세 정보 조회 
+    -   설명         : 마스킹이 해제된 결제 상세 정보 조회 
+    -   결과형태     : 
+    ======================================
+    -   입력         : rid
+    -   출력         : purPayListResponse
+    ======================================
+    -   작성자       : jh.kim
+    -   작성일       : 2017.07.11
+    ***************************************/ -->
+    <select id="clearMaskPurPayDtl" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" resultType="com.icignal.loyalty.common.dto.response.LoyPurPayListResDto">
+        
+        /* CommonViewMapper.clearMaskPurPayDtl */
+    SELECT t1.rid            AS rid          /* 일련번호 */ 
+            , t1.pay_methd_cd   AS payMethdCd   /* 결제방법 */
+            , c2.mark_name      AS payMethdCdNm /* 결제방법명 */
+            , t1.amt            AS amt          /* 결제금액 */ 
+            , t1.channel_cd     AS channelCd    /* 카드유형 */
+            , c1.mark_name      AS cardNm       /* 카드유형명 */
+            , t1.card_no 		AS cardNo /* 카드번호 */ 
+    FROM LOY.LOY_INTACT_PUR_PAY AS t1 WITH (NOLOCK)
+    LEFT JOIN COM.COMM_CODE AS c1 WITH (NOLOCK) ON c1.flag = true AND c1.lang = #{lang} AND c1.group_code = 'LOY_CARD_TYPE'         AND c1.code_name = t1.channel_cd
+    LEFT JOIN COM.COMM_CODE AS c2 WITH (NOLOCK) ON c2.flag = true AND c2.lang = #{lang} AND c2.group_code = 'LOY_INTACT_PUR_PAY_CD' AND c2.code_name = t1.pay_methd_cd
+    WHERE t1.RID = #{rid}
+    </select>
+    
+    <insert id="insertVocActyHist" parameterType="com.icignal.loyalty.membership.dto.request.LoyMbrChnlHistListReqDto">
+    INSERT INTO voc.voc_atvy_hist
+      (RID,
+      CREATE_BY,
+      MODIFY_BY,
+      CREATE_DATE,
+      MODIFY_DATE,
+      FLAG,
+      ATVY_TYPE,
+      ATVY_SUB_TYPE,
+      CREATOR_LOGIN,
+      RID_CUST,
+      CHNL_SEND_DT,
+      <if test="chnlType == &quot;email&quot;">
+      EMAIL_TRM_DT,
+      MSG_SUBJECT,
+      </if>
+      <if test="chnlType == &quot;sms&quot;">
+      SMS_TRM_DT,
+      </if>
+      CALL_ID,
+      COMMENTS_LONG,
+      RID_SVCREQ
+      )
+    VALUES
+      ( #{rid},
+          #{createBy},
+          #{modifyBy},
+          GETDATE(),
+          GETDATE(),
+          1,
+      #{atvyType},
+      #{atvySubType},
+      #{creatorLogin},
+      #{ridCust},
+      GETDATE(),
+      <if test="chnlType == &quot;email&quot;">
+      GETDATE(),
+      #{msgSubject},
+      </if>
+      <if test="chnlType == &quot;sms&quot;">
+      GETDATE(),
+      </if>
+      #{callId},
+      #{comments},
+      #{ridSvcreq}
+      #{smsRpyMsg},
+      )
+    </insert>
+    
+    <insert id="insertComCondLog" parameterType="com.icignal.common.base.dto.request.ComCondLogInsertReqDto">
+	/* CommonViewMapper.getHierarchyCommCodeList */
+	insert into com.com_cond_log (
+		rid
+		, create_by
+		, create_date
+		, srch_dt
+		, page_rid
+		, srch_user_rid
+		, srch_cond_rid
+		, rslt_cnt
+	) values (
+		com.getNewID('')
+		, #{createBy}
+		, GETDATE()
+		, CONVERT(datetime, #{srchDt})
+		, #{pageRid}
+		, #{createBy}
+		, #{srchCondRid}
+		, #{rsltCnt}
+	)
+	</insert>
+	
+	<select id="selectOfferListPop" parameterType="com.icignal.loyalty.club.dto.request.LoyClubOfferDetailReqDto"
+													resultType="com.icignal.loyalty.club.dto.response.LoyClubOfferListResDto">
+	/* CommonViewMapper.selectOfferListPop */
+	SELECT lo.RID AS rid
+			, lo.OFR_NO AS ofrNo
+			, lo.OFR_NM AS ofrNm
+			, lo.STAT_CD AS statCd
+			, lo.OFR_TYPE AS ofrTypeCd
+			, lo.OFR_SUB_TYPE AS ofrSubTypeCd
+			, ${strColumn}
+	FROM loy.loy_ofr lo WITH (NOLOCK)
+	WHERE ${strCondWhere}
+		AND ${strWhere}
+		AND lo.FLAG = 1
+		AND lo.STAT_CD = 'A'
+		<if test="ofrType != null and ofrType != null">
+		AND lo.OFR_TYPE = #{ofrType}
+		</if>
+	ORDER BY ${strOrderby}
+		  		${strEndPaging}
+	</select>
+	
+	<select id="selectSelectBoxList" parameterType="com.icignal.systemmanagement.commcode.dto.request.CommonSelectBoxListReqDto"
+													resultType="com.icignal.systemmanagement.commcode.dto.response.CommonSelectBoxListResDto">
+	/* CommonViewMapper.selectSelectBoxList */
+	SELECT
+		     '' AS codeName
+		   , '' AS markName
+		   , ${strColumn}
+	  FROM ${tblSchma}.${tableNm}
+
+			UNION ALL
+	
+	SELECT DISTINCT CONVERT(VARCHAR,${ddlVwCnCol})  AS codeName
+				  ,	CONVERT(VARCHAR,${ddlVwMnCol})  AS markName
+				  , ${strColumn}
+	FROM   ${tblSchma}.${tableNm} WITH (NOLOCK)
+	WHERE  FLAG = 1
+	</select>
+
+	<select id="selectTierList" parameterType="com.icignal.loyalty.tiers.tiermaster.dto.request.LoyTierNewPageReqDto"
+											resultType="com.icignal.loyalty.tiers.tiermaster.dto.response.LoyTierListNewPageResDto" >
+	/*LoyTiersMapper.selectTierList*/
+	SELECT 	  lt.SEQ_NO			AS seqNo
+			, lt.TIER_NM		AS tierNm
+			, lt.TIER_TYPE_CD	AS tierTypeCd
+			, lt.BASE_TIER_YN	AS baseTierYn
+			, em.NAME			AS createBy
+			, CONVERT(VARCHAR, lt.create_date) as createDate
+			, lt.RID			AS rid
+			, ${strColumn}
+		FROM	 LOY.LOY_TIERS lt WITH (NOLOCK)
+		LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) ON lt.create_by = us.rid AND us.FLAG = 1
+		LEFT OUTER JOIN com.employee em  WITH (NOLOCK) ON us.id_employee = em.id AND em.FLAG = 1
+		WHERE    lt.FLAG = 1
+			AND      ${strCondWhere}
+			AND      ${strWhere}
+			<if test="tierGrpRid != null">
+			AND  lt.RID_TG = #{tierGrpRid}
+			</if>
+		ORDER BY ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<select id="selectChnlMultiList" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    												resultType="com.icignal.common.base.dto.response.LoyChnlListResDto">
+	/* CommonViewMapper.selectChnlList */
+	SELECT  lc1.LVL_CD							    AS dept
+				  , lc1.CHNL_NM								AS chnlNm
+				  , lc1.CHNL_NO								AS chnlNo
+			      , lc1.CHNL_TYPE_CD						AS chnlTypeCd
+				  , lc1.RID									AS rid			
+				  , ${strColumn}
+	FROM loy.loy_chnl lc1 WITH (NOLOCK)
+	WHERE lc1.FLAG = 1
+	AND   ${strWhere}
+	AND   ${strCondWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+    </select>
+    
+    <select id="selectChnlMulitExcPopup" parameterType="com.icignal.loyalty.common.dto.request.LoyCommonReqDto" 
+    														resultType="com.icignal.common.base.dto.response.LoyChnlListResDto">
+	/* CommonViewMapper.selectChnlMulitExcPopup */
+	SELECT  lc1.LVL_CD							    AS dept
+				  , lc1.CHNL_NM								AS chnlNm
+				  , lc1.CHNL_NO								AS chnlNo
+			      , lc1.CHNL_TYPE_CD						AS chnlTypeCd
+				  , lc1.RID									AS rid			
+				  , ${strColumn}
+	FROM loy.loy_chnl lc1 WITH (NOLOCK)
+	WHERE lc1.FLAG = 1
+	AND   lc1.LVL_CD = '4LV'
+	AND   ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+    </select>
+	
+	<select id="selectEmpList" parameterType="com.icignal.systemmanagement.auth.dto.request.SystemAuthGroupEmployeeModalReqDto" resultType="com.icignal.systemmanagement.auth.dto.response.SystemAuthGroupEmployeeModalResDto">
+	/* CommonViewMapper.selectEmpList */
+	SELECT DISTINCT u.rid as ridUser
+			, e.id as empId
+			, e.name as empName
+			<!-- , e.email as empEmail -->
+			, e.email as empEmail
+			, cc.mark_name as empType
+			, u.user_id as userId
+			, e.rid_division as orgId
+			, ${strColumn}
+	FROM COM.CRM_USER u WITH (NOLOCK)
+	JOIN COM.EMPLOYEE e WITH (NOLOCK) on e.id = u.id_employee
+	LEFT OUTER JOIN COM.COMM_CODE cc WITH (NOLOCK) on cc.CODE_NAME = e.work_status  and cc.group_code='WORK_STATUS' and cc.lang = #{lang}
+	LEFT OUTER JOIN COM.AUTH_USER_REL aur WITH (NOLOCK) on e.id = aur.emp_id
+	WHERE u.FLAG = 1
+		AND 1=1
+		AND ${strWhere}
+	ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectSystemMgtListPop" parameterType="com.icignal.systemmanagement.systemmgt.dto.request.SystemMgtListReqDto"
+														resultType="com.icignal.systemmanagement.systemmgt.dto.response.SystemMgtListResDto">
+	/* CommonViewMapper.selectSystemMgtListPop */
+	SELECT RID AS rid
+			, SYSTEM_NM AS systemNm
+			, SYSTEM_TYPE_CD AS systemTypeCd
+			, HOST_NM AS host
+			, PORT AS port
+			, PURPOSE_CD AS purposeCd
+			, STAT_CD AS statCd
+			, COMPANY AS company
+			, SYSTEM_DESC AS systemDesc
+			, CREATE_DATE AS createDate
+			, ${strColumn}
+	FROM com.SYSTEM_MGT WITH (NOLOCK)
+	WHERE FLAG = 1
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+			${strEndPaging}
+	</select>
+	
+	<select id="selectMbrListPop" parameterType="com.icignal.loyalty.club.dto.request.LoyClubListReqDto" 
+												resultType="com.icignal.common.base.dto.response.LoyMbrListPopResDto">
+	/* CommonViewMapper.selectMbrListPop */
+	SELECT lmm.MBR_NO AS mbrNo
+			, lc.CUST_NM AS custNm
+			, lc.HHP AS unMaskHhp
+			, lc.EMAIL AS unMaskEmail
+			, lc.CUST_NM AS unMaskCustNm
+			, lc.HHP AS hhp
+			, lc.EMAIL AS email
+			, lmm.MBR_TYPE_CD AS mbrTypeCd
+			, lmm.MBR_STAT_CD AS mbrStatCd
+			, CONVERT(VARCHAR(10), lc.SBSC_DATE, 120<!-- 'YYYY-MM-DD' -->) AS sbscDate
+			, lc.RID_SBSC_CHNL AS ridSbscChnl
+			, lchnl.CHNL_NM AS chnlNm
+			, CONVERT(VARCHAR(10), lmm.CREATE_DATE, 120<!-- 'YYYY-MM-DD' -->) AS createDate
+			, lmm.RID AS rid
+			, lc.RID	AS custRid
+			, ${strColumn}
+	FROM loy.LOY_MBR lmm WITH (NOLOCK)
+	JOIN loy.LOY_CUST lc WITH (NOLOCK) ON lmm.RID_CUST = lc.RID AND lc.FLAG = 1
+	LEFT OUTER JOIN loy.LOY_CHNL lchnl WITH (NOLOCK) ON lc.RID_SBSC_CHNL = lchnl.RID AND lchnl.FLAG = 1
+	WHERE ${strWhere}
+		AND ${strCondWhere}
+		AND lmm.FLAG = 1
+		<if test="ridPgm != null and ridPgm != ''">
+		AND lmm.RID_PGM = #{ridPgm}
+		</if>
+	ORDER BY ${strOrderby}
+		  			${strEndPaging} 
+	</select>
+	
+</mapper>

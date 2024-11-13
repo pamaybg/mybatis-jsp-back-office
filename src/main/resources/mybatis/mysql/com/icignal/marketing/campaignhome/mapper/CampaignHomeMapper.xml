@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.campaignhome.mapper.CampaignHomeMapper">
+    
+    <!-- /**************************************
+	-	관련 파일			: CampaignHomeMapper(getCampaignPrchaseRec)
+	============================================
+	-	제목				: 캠페인 구매 반응률 조회
+	-	설명				: 캠페인 구매 반응률 조회
+	-	결과형태			: 복수
+	============================================
+	-	입력		
+		  변수명			: 설명
+	-	결과
+		  변수명			: 설명
+	============================================
+	-	작성자			: wjlee
+	-	작성일			: 2016. 11. 28.
+	============================================
+	-	수정자			: wjlee
+	-	수정일			: 2016. 11. 28.
+	-	수정내용			: 
+	***************************************/ -->
+    <select id="selectCampaignPrchaseRec" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto" 
+    																resultType="com.icignal.marketing.campaignhome.dto.response.CampignPrchaseRecResDto">
+		select z1.id			as camId       
+		    , z1.cam_nm        as camNm
+		    , z1.cam_type_cd as camTypeCd
+			, z1.cam_start_dd   as camStartDd
+			, z1.cam_end_dd     as camEndDd
+			, sum(z1.test_grp)  as testGrp
+			, sum(z1.ctrl_grp)  as ctrlGrp
+		from (
+		      select t1.id,
+		             t1.cam_nm, 
+		             t1.cam_type_cd,
+		             TO_CHAR(t1.cam_start_dd, 'YYYY-MM-DD') as cam_start_dd, 
+		             TO_CHAR(t1.cam_end_dd, 'YYYY-MM-DD') as cam_end_dd,
+		             d1.mark_name as tgt_group_nm,
+		             round(case when d1.mark_name = '대상군' then nvl(sum(round((t2.rspns_cust_cnt / t2.tgt_cust_cnt) * 100, 1)), 0)
+		                  else 0 end, 0) as test_grp,
+		             round(case when d1.mark_name = '비교군' then nvl(sum(round((t2.rspns_cust_cnt / t2.tgt_cust_cnt) * 100, 1)), 0)
+		                  else 0 end, 0) as ctrl_grp ,
+		             max(t1.modify_date) as modify_date
+		      from mkt.mkt_cam_mst t1
+		        left join mkt.mkt_roi_rtn t2 on t1.id = t2.cam_id and t2.cam_data_div_cd = 'AFTR'
+		        left join com.comm_code d1 on t2.tgt_base_group_cd = d1.code_name and d1.group_code = 'MKT_ROI_GRP' and d1.flag = 1 and d1.lang = #{lang}
+		      where ${strSVCType} 
+		        and t1.cam_status_cd in ('E','A') 
+		        and t1.cam_end_dd &gt;= ADD_MONTHS(SYSDATE, -6)
+		      group by t1.id,
+		               t1.cam_nm, 
+		               t1.cam_type_cd,
+		               TO_CHAR(t1.cam_start_dd, 'YYYY-MM-DD'), 
+		               TO_CHAR(t1.cam_end_dd, 'YYYY-MM-DD'),
+		               d1.mark_name,
+		               t1.modify_date
+		     ) z1
+		group by z1.id,
+		         z1.cam_nm,
+		         z1.cam_type_cd,
+		         z1.cam_start_dd, 
+		         z1.cam_end_dd
+    </select>
+    
+    <!-- /**************************************
+	-	관련 파일			: CampaignHomeMapper(getHomePromList)
+	============================================
+	-	제목				: 전체 프로모션
+	-	설명				: 전체 프로모션
+	-	결과형태			: 복수
+	============================================
+	-	입력		
+		  변수명			: 설명
+	-	결과
+		  변수명			: 설명
+	============================================
+	-	작성자			: wjlee
+	-	작성일			: 2016. 11. 28.
+	============================================
+	-	수정자			: 노형래
+	-	수정일			: 2020. 07. 29.
+	-	수정내용			: 
+	***************************************/ -->
+    <select id="selectHomePromList" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto" 
+    														resultType="com.icignal.marketing.campaignhome.dto.response.CampigPromotionResDto">
+    /* CampaignHomeMapper.selectHomePromList */
+	SELECT RID AS promId
+			, PROM_NO AS promNo
+			, PROM_NM promNm
+			, TO_CHAR(CREATE_DATE, 'YYYY-MM-DD') AS createDate
+	FROM LOY.LOY_PROM
+	WHERE 1=1
+	AND PROM_STAT_CD = 'A'
+	ORDER BY CREATE_DATE DESC
+    </select>
+    
+
+    <!-- /**************************************
+	-	관련 파일			: CampaignHomeMapper(CampigNoticeResDto)
+	============================================
+	-	제목				: 공지사항 (BO)
+	-	설명				: 공지사항 (BO)
+	-	결과형태			: 복수
+	============================================
+	-	입력		
+		  변수명			: 설명
+	-	결과
+		  변수명			: 설명
+	============================================
+	-	작성자			: wjlee
+	-	작성일			: 2016. 11. 28.
+	============================================
+	-	수정자			: 노형래
+	-	수정일			: 2020. 07. 20.
+	-	수정내용			: 
+	***************************************/ -->
+    <select id="selectHomeNoticeList" parameterType="com.icignal.systemmanagement.noticebo.dto.request.SystemNoticeBoListReqDto" 
+    													resultType="com.icignal.systemmanagement.noticebo.dto.response.SystemNoticeBoListResDto">
+	/* CampaignHomeMapper.selectHomeNoticeList */
+		SELECT nb.RID AS rid
+					, nb.NOTICE_NM AS noticeNm
+					, TO_CHAR( nb.MODIFY_DATE, 'YYYY-MM-DD') AS modifyDate
+					, e.NAME AS modifyBy
+		FROM COM.NOTICE_BO nb
+		LEFT OUTER JOIN COM.CRM_USER cu ON nb.MODIFY_BY = cu.RID AND cu.FLAG = 1
+	   	LEFT OUTER JOIN COM.EMPLOYEE e ON cu.ID_EMPLOYEE = e.ID AND e.FLAG = 1 
+		WHERE nb.FLAG = 1
+		ORDER BY nb.MODIFY_DATE DESC
+    </select>
+    
+    <select id="selectTotalCust" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    											resultType="com.icignal.marketing.campaignhome.dto.response.CampignCustTypeCdResDto">
+    /* CampaignHomeMapper.selectTotalCust */
+<!--     SELECT COUNT(*)  -->
+<!-- 	FROM LOY.LOY_CUST T1 -->
+<!-- 	WHERE CUST_STAT_CD IN ('A', 'D') -->
+    SELECT 
+ 		 NVL(SUM(CASE WHEN CUST_TYPE_CD = 'I' THEN 1 END), 0) AS countsI
+        ,NVL(SUM(CASE WHEN CUST_TYPE_CD = 'C' THEN 1 END), 0) AS countsC
+        , NVL(SUM(CASE WHEN CUST_TYPE_CD = 'E' THEN 1 END), 0) AS countsE
+  	FROM loy.LOY_MBR lm
+         JOIN loy.LOY_CUST lc ON lc.rid = lm.RID_CUST AND lc.FLAG = 1
+	WHERE 1 = 1
+  		AND lm.FLAG = 1
+  		AND lm.MBR_TYPE_CD = 'M3'
+  		AND lm.MBR_STAT_CD = 'A'
+    </select>
+    
+    <select id="selectNewCustOfMonth" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+    /* CampaignHomeMapper.selectNewCustOfMonth */
+	SELECT COUNT(*) AS currCnt
+	FROM LOY.LOY_MBR lm
+         JOIN loy.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+	WHERE 1 = 1
+  		AND lm.FLAG = 1
+  		AND lm.MBR_STAT_CD = 'A'
+  		AND lm.MBR_TYPE_CD = 'M3'
+  		AND lm.SBSC_TYPE_CD = '01'
+  		AND (lm.SBSC_DATE <![CDATA[ >= ]]> TRUNC(SYSDATE, 'MM')
+    	AND lm.SBSC_DATE <![CDATA[ <= ]]> SYSDATE)
+    </select>
+    
+    
+     <select id="selectNewCustOfLastMonth" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+    SELECT COUNT(*) as lastCnt
+		FROM LOY.LOY_MBR lm
+         JOIN loy.LOY_CUST lc ON lc.RID = lm.RID_CUST AND lc.FLAG = 1
+	WHERE 1 = 1
+  	AND lm.FLAG = 1
+  	AND lm.MBR_STAT_CD = 'A'
+  	AND lm.MBR_TYPE_CD = 'M3'
+  	AND lm.SBSC_TYPE_CD = '01'
+  	AND (lm.SBSC_DATE  <![CDATA[ >= ]]> TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
+  	AND lm.SBSC_DATE  <![CDATA[ < ]]>TRUNC(SYSDATE, 'MM')) 
+    </select>
+    
+    <select id="selectPromotionOfMonth" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="java.lang.Integer">
+    /* CampaignHomeMapper.selectPromotionOfMonth */
+    SELECT COUNT(*) 
+	FROM LOY.LOY_PROM
+	WHERE 1=1
+	AND PROM_STAT_CD = 'A'
+	AND ((VALID_START_DATE <![CDATA[ >= ]]> TRUNC(sysdate,'MM') 
+	AND VALID_START_DATE <![CDATA[ <= ]]> LAST_DAY(sysdate)) OR (VALID_END_DATE <![CDATA[ >= ]]> TRUNC(sysdate,'MM') 
+	AND VALID_END_DATE <![CDATA[ <= ]]>LAST_DAY(sysdate)))
+    </select>
+    
+    <select id="selectHomeVolatility" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampaignValatilityResDto">
+    /*CampaignHomeMapper.selectHomeVolatility */
+	SELECT NVL(R.total,0) AS total
+		,R2.TODAY		  AS sbscDate
+		,NVL(R.camNm,'진행된 캠페인 없음') AS camNm
+		,TO_CHAR(SYSDATE,'MM') || '월' AS mmDate
+	FROM (
+	    SELECT TO_CHAR (FIRST_DAY + LEVEL - 1, 'YYYYMMDD') TODAY
+		FROM (
+			SELECT TRUNC(SYSDATE, 'MM') FIRST_DAY FROM DUAL)
+			CONNECT BY FIRST_DAY + LEVEL - 1 <![CDATA[ <= ]]> TRUNC(SYSDATE)) R2
+			LEFT OUTER JOIN (
+			    		SELECT T2.total
+							  ,T2.SBSC_DATE AS sbscDate
+							  ,LISTAGG(T2.CAM_NM,', <![CDATA[<br/>]]>') WITHIN GROUP(ORDER BY T2.SBSC_DATE) AS camNm
+						FROM
+						(SELECT count(lm.RID) 				   AS total
+						  	   ,TO_CHAR(SBSC_DATE ,'YYYYMMDD') AS SBSC_DATE
+						  	   ,T.CAM_NM 					   AS CAM_NM
+						FROM LOY.LOY_MBR lm
+						JOIN (SELECT EXE_DT     AS EXE_DT
+								  ,  S2.CAM_NM  AS CAM_NM
+						FROM
+						(
+							SELECT
+							DISTINCT TO_CHAR(EXE_DT ,'YYYYMMDD') AS EXE_DT
+							,CAM_ID AS CAM_ID
+							FROM MKT.MKT_EXE_INFO_ITEM
+							WHERE EXE_INFO_STATUS_CD ='E' AND FLAG = 1) S
+							LEFT OUTER JOIN MKT.MKT_CAM_MST S2 ON S.CAM_ID = S2.ID AND S2.CAM_STATUS_CD IN('E','A') AND FLAG = 1
+						) T ON T.EXE_DT = TO_CHAR(lm.SBSC_DATE ,'YYYYMMDD')
+						WHERE MBR_TYPE_CD ='M3'
+						AND   lm.SBSC_DATE >= TRUNC(SYSDATE,'MM') AND lm.SBSC_DATE   <![CDATA[ < ]]>   last_day(TRUNC(SYSDATE))+1
+						GROUP BY TO_CHAR(SBSC_DATE ,'YYYYMMDD'),T.CAM_NM) T2
+						GROUP BY T2.total,T2.SBSC_DATE
+						ORDER BY T2.SBSC_DATE) R ON R.sbscDate = R2.TODAY
+	ORDER BY R2.TODAY
+    </select>
+    
+    <select id="selectHomeApprovalList" parameterType="com.icignal.onlineapproval.dto.request.ApprovalListReqDto" 
+															resultType="com.icignal.onlineapproval.dto.response.ApprovalListResDto">
+    /* CampaignHomeMapper.selectHomeApprovalList */
+	SELECT 
+		  a.ID																AS id
+		, a.ELEC_APRV_NO      										AS elecAprvNo  
+		, a.ELEC_APRV_TITLE   										AS elecAprvTitle
+		, TO_CHAR(a.CREATE_DATE,'YYYY-MM-DD')		AS createDate
+		, f.APV_DD		     		 									AS lastApvDd
+		, a.ELEC_APRV_TYPE_CD 									AS aprvType
+		, a.CAM_ID 			  											AS recordRid
+		, a.ELEC_APRV_TYPE_CD         							AS elecAprvTypeCode
+		, a.ELEC_APRV_STATUS_CD         						AS elecAprvStatusCode
+		, e.NAME 	          												AS elecAprvRqtrId 
+		, g.NAME 	          												AS lastApvrId
+		, h.ID				  												AS itemId    
+		, h.ELEC_APRV_SEQ     										AS seq 
+		, h.APVR_TYPE_CD 	  										AS apvrTypeCd       
+        , ${strColumn}
+	FROM COM.COM_ELEC_APRV a
+	LEFT OUTER JOIN COM.COM_ELEC_APRV_ITEM h ON h.ELEC_APRV_ID = a.ID AND h.FLAG = '1'
+	LEFT OUTER JOIN COM.EMPLOYEE  e ON a.ELEC_APRV_RQTR_ID  = e.ID	
+	LEFT OUTER JOIN COM.COM_ELEC_APRV_ITEM  f ON f.ELEC_APRV_ID = a.ID AND f.FLAG = '1' AND f.APVR_TYPE_CD='9'
+	LEFT OUTER JOIN COM.EMPLOYEE  g ON f.APVR_ID = g.ID
+	WHERE a.FLAG = '1'
+	AND  a.ELEC_APRV_STATUS_CD = '010'
+	AND  h.ELEC_APRV_STATUS_CD = '013'
+	AND  h.APVR_ID = #{memId}
+	ORDER BY a.CREATE_DATE DESC
+    
+    </select>
+    
+    <select id="selectHomeApprovalReqList" parameterType="com.icignal.onlineapproval.dto.request.ApprovalListReqDto" 
+								    							resultType="com.icignal.onlineapproval.dto.response.ApprovalListResDto">
+    /* CampaignHomeMapper.selectHomeApprovalReqList */
+    SELECT 
+			 a.ID																	AS id
+			,a.ELEC_APRV_TYPE_CD  									AS elecAprvTypeCode
+			,a.ELEC_APRV_NO 											AS elecAprvNo
+			,a.ELEC_APRV_TITLE 										AS elecAprvTitle
+			,e.NAME 															AS elecAprvRqtrId
+			,TO_CHAR(a.CREATE_DATE,'YYYY-MM-DD') 		AS createDate
+			,a.ELEC_APRV_STATUS_CD 								AS elecAprvStatusCode
+			,g.NAME 															AS lastApvrId     
+			,TO_CHAR(a.LAST_APV_DD,'YYYY-MM-DD')	 	AS lastApvDd
+			,a.ELEC_APRV_TYPE_CD    								AS  aprvType
+			,a.CAM_ID 														AS recordRid
+			,${strColumn}
+	FROM COM.COM_ELEC_APRV a		 
+	LEFT OUTER JOIN COM.EMPLOYEE  e ON a.ELEC_APRV_RQTR_ID = e.ID	
+	LEFT OUTER JOIN COM.COM_ELEC_APRV_ITEM  f ON f.ELEC_APRV_ID = a.ID AND f.FLAG = '1' AND f.APVR_TYPE_CD='9'
+	LEFT OUTER JOIN COM.EMPLOYEE  g ON a.LAST_APVR_ID = g.ID
+	WHERE a.FLAG = 1 
+	AND a.ELEC_APRV_RQTR_ID = #{memId}
+	<if test="searchType == &quot;A&quot;"> </if>
+	<if test="searchType != &quot;A&quot;">
+	AND a.ELEC_APRV_STATUS_CD NOT IN ('091', '001', '002') 
+	</if> 	       
+	ORDER BY a.CREATE_DATE DESC
+    </select>
+    
+      <select id="selectNewCustOfDay" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+    /* CampaignHomeMapper.selectNewCustOfDay */
+   SELECT 
+   		COUNT(*) as cuurCntDay
+   FROM 
+   		loy.LOY_MBR lm
+   JOIN loy.LOY_CUST lc ON lc.rid = lm.RID_CUST
+	WHERE 1 = 1
+  	AND lm.MBR_TYPE_CD = 'M3'
+  	AND lm.MBR_STAT_CD = 'A'
+  	AND lm.SBSC_TYPE_CD = '01'
+    AND (lm.SBSC_DATE <![CDATA[ >= ]]> TRUNC(SYSDATE)
+    AND lm.SBSC_DATE <![CDATA[ <= ]]> SYSDATE)
+    </select>
+    
+    <select id="selectNewCustOfLastDay" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+    /* CampaignHomeMapper.selectNewCustOfDay */
+   SELECT COUNT(*) as lastCnt
+	FROM loy.LOY_MBR lm
+         JOIN loy.LOY_CUST lc ON lc.rid = lm.RID_CUST
+	WHERE 1 = 1
+  	AND lm.MBR_TYPE_CD = 'M3'
+  	AND lm.MBR_STAT_CD = 'A'
+  	AND lm.SBSC_TYPE_CD = '01'
+  	AND (lm.SBSC_DATE <![CDATA[ >= ]]> TRUNC(SYSDATE - 1)
+    AND lm.SBSC_DATE <![CDATA[ < ]]>  TRUNC(SYSDATE))
+    </select>
+    
+    <select id="selectCampaignOfMonth" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+     /* CampaignHomeMapper.selectCampaignOfMonth */	
+    	SELECT 
+    		COUNT(CASE WHEN mcm.CAM_STATUS_CD = 'A' THEN mcm.ID END) AS totProgCnt
+     		, COUNT(CASE WHEN mcm.CAM_STATUS_CD = 'E' THEN mcm.ID END) AS totExtCnt
+     		, COUNT(CASE
+                 WHEN mcm.CAM_STATUS_CD = 'A' AND TO_CHAR(mcm.CAM_START_DD, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM')
+                     THEN mcm.ID END)                           AS monthProgCnt
+     		, COUNT(CASE
+                 WHEN mcm.CAM_STATUS_CD = 'E' AND TO_CHAR(mcm.CAM_START_DD, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM')
+                     THEN mcm.ID END)                           AS monthExtCnt
+		FROM 
+			mkt.mkt_cam_mst mcm
+		WHERE 1 = 1
+  		AND FLAG = 1
+  		AND mcm.type = 'MKT'
+ 	 </select>
+
+    
+    <select id="selectBasePnt" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+      /* CampaignHomeMapper.selectBasePnt */		
+    	SELECT COALESCE(SUM(CASE
+                        WHEN lpa.VALID_START_DATE <![CDATA[ <=]]> SYSDATE
+                            AND lpa.VALID_END_DATE<![CDATA[ >= ]]> TRUNC(SYSDATE + 1) THEN lpa.BALNC
+                        ELSE 0 END), 0) AS basePnt
+		FROM LOY.LOY_PNT_ACRL lpa		
+		WHERE lpa.FLAG = 1											
+    </select>
+    
+    
+    <select id="selectAcrlMonth" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+     /* CampaignHomeMapper.selectAcrlMonth */		
+    SELECT 
+    	COALESCE(SUM(T1.PNT_AMT), 0) AS acrlMonth
+	FROM 
+		LOY.LOY_PNT_TXN T1
+	WHERE T1.TXN_STAT_CD = 'A'
+		AND T1.FLAG = 1
+ 	 	AND T1.PNT_TXN_TYPE_1_CD = '100'
+  		AND T1.PNT_TXN_TYPE_2_CD NOT IN ('210', '211')
+  		AND (T1.APPR_DT  <![CDATA[ >=]]> TRUNC(SYSDATE, 'MM')
+    	AND T1.APPR_DT  <![CDATA[ <=]]> SYSDATE)											
+    </select>
+    
+    
+    <select id="selectRdm" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+     /* CampaignHomeMapper.selectRdm */		
+    SELECT 
+       	NVL(SUM(T1.PNT_AMT),0) AS rdmPnt
+	FROM 
+		LOY.LOY_PNT_TXN T1
+	WHERE 
+		T1.TXN_STAT_CD = 'A'
+		AND T1.FLAG = 1
+  		AND T1.PNT_TXN_TYPE_1_CD = '200'
+  		AND T1.PNT_TXN_TYPE_2_CD NOT IN ('130', '131')
+  		AND (T1.APPR_DT <![CDATA[ >=]]>TRUNC(SYSDATE, 'MM')
+    	AND T1.APPR_DT  <![CDATA[ <=]]> SYSDATE)													
+    </select>
+    
+     <select id="acrlBeforeDay" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+    	 /* CampaignHomeMapper.acrlBeforeDay */														
+    	SELECT 
+    		COALESCE(SUM(T1.PNT_AMT), 0) AS acrlBeforeDay
+		FROM 
+			LOY.LOY_PNT_TXN T1
+		WHERE T1.TXN_STAT_CD = 'A'
+		AND T1.FLAG = 1
+  		AND T1.PNT_TXN_TYPE_1_CD = '100'
+  		AND T1.PNT_TXN_TYPE_2_CD NOT IN ('210', '211')
+ 		AND T1.APPR_DATE = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+     </select>
+
+     <select id="usePntBeforeDay" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+    /* CampaignHomeMapper.usePntBeforeDay */
+    SELECT 
+    	COALESCE(SUM(T1.PNT_AMT), 0) AS usePntBeforeDay
+	FROM 
+		LOY.LOY_PNT_TXN T1
+	WHERE 
+		T1.TXN_STAT_CD = 'A'
+		AND T1.FLAG = 1
+  		AND PNT_TXN_TYPE_1_CD = '200'
+  		AND PNT_TXN_TYPE_2_CD NOT IN ('130', '131')
+		AND T1.APPR_DATE = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')	
+	    </select>
+	    
+	<select id="selectCurrFirstDayCnt" parameterType="com.icignal.marketing.campaignhome.dto.request.CampaignHomeReqDto"
+    													resultType="com.icignal.marketing.campaignhome.dto.response.CampignBaseResDto">
+    	    /* CampaignHomeMapper.selectCurrFirstDayCnt */
+    	SELECT COUNT(*)  as currFirstDayCnt
+		FROM LOY.LOY_ORD T1
+		WHERE 1 = 1
+  		AND T1.SELL_TYPE_CD = '01' 
+ 		AND T1.RID_MBR IS NOT NULL 
+  		AND T1.CONFIRM_DATE <![CDATA[ >=]]> TRUNC(SYSDATE)
+  		AND T1.CONFIRM_DATE <![CDATA[ < ]]> TRUNC(SYSDATE + 1)
+  		AND NOT EXISTS(
+        	SELECT 1
+        		FROM LOY.LOY_ORD T2
+        		WHERE 1 = 1
+          AND T2.SELL_TYPE_CD = '01'
+          AND T2.CONFIRM_DATE <![CDATA[ < ]]> TRUNC(SYSDATE)
+          AND T1.RID_MBR = T2.RID_MBR
+    )    
+    </select>
+    
+</mapper>

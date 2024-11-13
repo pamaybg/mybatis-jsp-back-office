@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.stampbingo.mapper.LoyStampBingoMapper">
+
+    <select id="selectStampBingoList"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoResDto">
+        /* StampBingoMapper.selectStampBingoList */
+        SELECT
+            A.RID               AS  rid
+            ,A.STBG_NO          AS 	stbgNo
+            ,A.STBG_NM          AS 	stbgNm
+            ,A.DESC_TEXT        AS 	descText
+            ,convert(varchar(10),A.VALID_START_DATE,120)  AS 	validStartDate
+            ,convert(varchar(10),A.VALID_END_DATE,120)    AS 	validEndDate
+            ,A.STAT_CD          AS 	statCd
+            ,A.PROM_TYPE_CD     AS 	promTypeCd
+            ,A.JOIN_TYPE_CD     AS 	joinTypeCd
+            ,A.CHNL_TYPE_CD     AS 	chnlTypeCd
+            ,A.ROW_SIZE         AS 	rowSize
+            ,A.COL_SIZE         AS 	colSize
+            ,A.MBR_TYPE         AS 	mbrType
+            ,A.ACRL_DESC_TEXT   AS 	acrlDescText
+            ,A.BNFT_DESC_TEXT   AS 	bnftDescText
+            ,A.ETC_DESC_TEXT    AS 	etcDescText
+            ,convert(varchar(10),A.CREATE_DATE,120) 	AS  createDate
+            ,EM.NAME    	  						AS  createBy
+            ,${strColumn}
+        FROM LOY.LOY_STBG A WITH (NOLOCK)  
+        LEFT OUTER JOIN COM.CRM_USER US  WITH (NOLOCK)  ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK)  ON US.ID_EMPLOYEE = EM.ID
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        ORDER BY ${strOrderby}
+            ${strEndPaging}
+    </select>
+
+    <select id="selectStampBingoDetail"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoResDto">
+        /* StampBingoMapper.selectStampBingoDetail */
+        SELECT
+            A.RID               AS  rid
+            ,A.STBG_NO          AS 	stbgNo
+            ,A.STBG_NM          AS 	stbgNm
+            ,A.DESC_TEXT        AS 	descText
+            ,convert(varchar(10),A.VALID_START_DATE,120)  AS 	validStartDate
+            ,convert(varchar(10),A.VALID_END_DATE,120)    AS 	validEndDate
+            ,A.STAT_CD          AS 	statCd
+            ,A.PROM_TYPE_CD     AS 	promTypeCd
+            ,A.JOIN_TYPE_CD     AS 	joinTypeCd
+            ,A.CHNL_TYPE_CD     AS 	chnlTypeCd
+            ,A.ROW_SIZE         AS 	rowSize
+            ,A.COL_SIZE         AS 	colSize
+            ,A.MBR_TYPE         AS 	mbrType
+            ,A.ACRL_DESC_TEXT   AS 	acrlDescText
+            ,A.BNFT_DESC_TEXT   AS 	bnftDescText
+            ,A.ETC_DESC_TEXT    AS 	etcDescText
+            ,convert(varchar(10),A.CREATE_DATE,120) 	AS  createDate
+            ,EM.NAME    	  						AS  createBy
+        FROM LOY.LOY_STBG A WITH (NOLOCK)  
+        LEFT OUTER JOIN COM.CRM_USER US  WITH (NOLOCK)  ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK)  ON US.ID_EMPLOYEE = EM.ID
+        WHERE 1=1
+        AND A.RID = #{rid}
+        AND A.FLAG  = 1
+    </select>
+
+    <insert id="insertStampBingo"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoReqDto">
+        /* StampBingoMapper.insertStampBingo */
+        INSERT INTO LOY.LOY_STBG (
+            RID,
+            CREATE_BY,
+            MODIFY_BY,
+            STBG_NO,
+            STBG_NM,
+            DESC_TEXT,
+            VALID_START_DATE,
+            VALID_END_DATE,
+            STAT_CD,
+            PROM_TYPE_CD,
+            JOIN_TYPE_CD,
+            CHNL_TYPE_CD,
+            ROW_SIZE,
+            COL_SIZE,
+            MBR_TYPE,
+            ACRL_DESC_TEXT,
+            BNFT_DESC_TEXT,
+            ETC_DESC_TEXT
+        ) VALUES (
+            #{rid},
+            #{createBy},
+            #{modifyBy},
+            ${stbgNo},
+            #{stbgNm},
+            #{descText},
+            convert(date,#{validStartDate}),
+            TO_DATE(date,#{validEndDate}),
+            #{statCd},
+            #{promTypeCd},
+            #{joinTypeCd},
+            #{chnlTypeCd},
+            #{rowSize},
+            #{colSize},
+            #{mbrType},
+            #{acrlDescText},
+            #{bnftDescText},
+            #{etcDescText}
+        )
+    </insert>
+
+    <update id="updateStampBingo"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoReqDto">
+        /* StampBingoMapper.updateStampBingo */
+        UPDATE
+            LOY.LOY_STBG
+        SET
+            MODIFY_BY = #{ modifyBy },
+            MODIFY_DATE = getdate(),
+            STBG_NO = #{ stbgNo },
+            STBG_NM = #{ stbgNm },
+            DESC_TEXT = #{ descText },
+            VALID_START_DATE = convert(date,#{validStartDate}),
+            VALID_END_DATE = TO_DATE(date,#{validEndDate}),
+            STAT_CD = #{ statCd },
+            PROM_TYPE_CD = #{ promTypeCd },
+            JOIN_TYPE_CD = #{ joinTypeCd },
+            CHNL_TYPE_CD = #{ chnlTypeCd },
+            ROW_SIZE = #{ rowSize },
+            COL_SIZE = #{ colSize },
+            MBR_TYPE = #{ mbrType },
+            ACRL_DESC_TEXT = #{	acrlDescText },
+            BNFT_DESC_TEXT = #{ bnftDescText },
+            ETC_DESC_TEXT = #{ etcDescText }
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateStampBingoDel"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoReqDto">
+        /* StampBingoMapper.updateStampBingoDel */
+        UPDATE LOY.LOY_STBG
+        SET MODIFY_DATE	= getdate()
+            , MODIFY_BY	= #{modifyBy}
+            , FLAG		= 0
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateStampBingoStop"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoReqDto">
+        /* StampBingoMapper.updateStampBingoStop */
+        UPDATE LOY.LOY_STBG
+        SET STAT_CD	= 'E'
+            , MODIFY_BY	= #{modifyBy}
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <select id="selectStampBingoStepList"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoStepReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoStepResDto">
+        /* StampBingoStepMapper.selectStampBingoStepList */
+        SELECT
+            A.RID 									AS rid,
+            A.ROW_NO 								AS rowNo,
+            A.COL_NO 								AS colNo,
+            A.RC_LOC 								AS rcLoc,
+            A.TITLE 								AS title,
+            A.TITLE_DESC 							AS titleDesc,
+            B.OFR_NM 								AS ofrNm,
+            A.OFR_CNT 								AS ofrCnt,
+            convert(varchar(10),A.CREATE_DATE,120) 	AS createDate,
+            EM.NAME    	  							AS createBy,
+            ${strColumn}
+        FROM LOY.LOY_STBG_STEP A WITH (NOLOCK)  
+        INNER JOIN LOY.LOY_OFR B WITH (NOLOCK)  ON A.RID_OFR = B.RID AND B.FLAG = 1
+        LEFT OUTER JOIN COM.CRM_USER US  WITH (NOLOCK)  ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK)  ON US.ID_EMPLOYEE = EM.ID
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        AND A.RID_STBG = #{ridStbg}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectStampBingoStepDetail"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoStepReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoStepResDto">
+        /* StampBingoStepMapper.selectStampBingoStepDetail */
+        SELECT
+            A.ROW_NO			AS	rowNo,
+            A.COL_NO			AS	colNo,
+            A.RID_OFR			AS	ridOfr,
+            B.OFR_NM 			AS  ofrNm,
+            A.TITLE				AS	title,
+            A.TITLE_DESC		AS	titleDesc,
+            A.IMG_COMP_URL		AS	imgCompUrl,
+            A.IMG_WAIT_URL		AS	imgWaitUrl,
+            A.STEP_JUMP_YN		AS	stepJumpYn,
+            A.RID_COMP_OFR		AS	ridCompOfr,
+            C.OFR_NM			AS  compOfrNm,
+            A.OFR_CNT			AS	ofrCnt,
+            A.VALID_ST_DD		AS	validStDd
+        FROM LOY.LOY_STBG_STEP A WITH (NOLOCK)  
+        INNER JOIN LOY.LOY_OFR B WITH (NOLOCK)  ON A.RID_OFR = B.RID AND B.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_OFR C WITH (NOLOCK)  ON A.RID_COMP_OFR = C.RID AND C.FLAG = 1
+        WHERE 1=1
+        AND A.RID = #{rid}
+        AND A.FLAG  = 1
+    </select>
+
+    <insert id="insertStampBingoStep"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoStepReqDto">
+        /* StampBingoStepMapper.insertStampBingoStep */
+        INSERT INTO LOY.LOY_STBG_STEP (
+            RID,
+            CREATE_BY,
+            MODIFY_BY,
+            RID_STBG,
+            ROW_NO,
+            COL_NO,
+            RID_OFR,
+            TITLE,
+            TITLE_DESC,
+            IMG_COMP_URL,
+            IMG_WAIT_URL,
+            STEP_JUMP_YN,
+            RID_COMP_OFR,
+            OFR_CNT,
+            VALID_ST_DD
+        ) VALUES (
+            #{rid},
+            #{createBy},
+            #{modifyBy},
+            #{ridStbg},
+            #{rowNo},
+            #{colNo},
+            #{ridOfr},
+            #{title},
+            #{titleDesc},
+            #{imgCompUrl},
+            #{imgWaitUrl},
+            #{stepJumpYn},
+            #{ridCompOfr},
+            #{ofrCnt},
+            #{validStDd}
+        )
+    </insert>
+
+    <update id="updateStampBingoStep"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoStepReqDto">
+        /* StampBingoStepMapper.updateStampBingoStep */
+        UPDATE LOY.LOY_STBG_STEP
+        SET
+            MODIFY_DATE = getdate(),
+            MODIFY_BY = #{modifyBy},
+            ROW_NO = #{rowNo},
+            COL_NO = #{colNo},
+            RID_OFR = #{ridOfr},
+            TITLE = #{title},
+            TITLE_DESC = #{titleDesc},
+            IMG_COMP_URL = #{imgCompUrl},
+            IMG_WAIT_URL = #{imgWaitUrl},
+            STEP_JUMP_YN = #{stepJumpYn},
+            RID_COMP_OFR = #{ridCompOfr},
+            OFR_CNT = #{ofrCnt},
+            VALID_ST_DD = #{validStDd}
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateStampBingoStepDel"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoStepReqDto">
+        /* StampBingoStepMapper.updateStampBingoStepDel */
+        UPDATE LOY.LOY_STBG_STEP
+        SET MODIFY_DATE	= getdate()
+            ,MODIFY_BY	= #{modifyBy}
+            ,FLAG		= 0
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <select id="selectStampBingoMbrList"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoMbrReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoMbrResDto">
+        /* StampBingoMapper.selectStampBingoMbrList */
+        SELECT
+            A.RID                                   AS rid,
+            G.CUST_NO 					            AS custNo,
+            G.CUST_NM 					            AS custNm,
+            D.ROW_NO + '*' + D.COL_NO             AS currStep,
+            D.TITLE						            AS currStepTitle,
+            convert(varchar(10),C.CREATE_DATE,120) 	AS recentDate,
+            convert(varchar(10),A.JOIN_DATE,120) 	    AS joinDate,
+            A.INVIT_MRB_YN				            AS invitMrbYn,
+            E.OFR_NM					            AS ofrNm,
+            convert(varchar(10), C.COMP_DATE,120) 	    AS compDate,
+            H.CHNL_NM					            AS chnlNm,
+            ${strColumn}
+            FROM LOY.LOY_STBG_MBR A
+            INNER JOIN (
+                SELECT
+                    RID_STBG_STEP,
+                    RID_STBG_MBR,
+                    CREATE_DATE,
+                    COMP_DATE,
+                    FLAG
+                FROM (
+                    SELECT
+                        B.RID_STBG_STEP,
+                        B.RID_STBG_MBR,
+                        B.CREATE_DATE,
+                        B.COMP_DATE,
+                        B.FLAG,
+                        ROW_NUMBER() OVER (PARTITION BY B.RID_STBG_MBR ORDER BY B.SEQ_NO DESC) RN
+                    FROM
+                        LOY.LOY_STBG_MBR_HIST B WITH (NOLOCK)  WHERE B.FLAG = 1
+            ) a WHERE 1 = 1 AND RN = 1) C ON A.RID = C.RID_STBG_MBR
+        INNER JOIN LOY.LOY_STBG_STEP D ON C.RID_STBG_STEP = D.RID AND D.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_OFR E ON D.RID_COMP_OFR = E.RID AND E.FLAG = 1
+        INNER JOIN LOY.LOY_MBR F ON A.RID_MBR = F.RID AND F.FLAG = 1
+        INNER JOIN LOY.LOY_CUST G ON F.RID_CUST = G.RID AND G.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_CHNL H ON A.RID_CHNL = H.RID AND H.FLAG = 1
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        AND A.RID_STBG = #{ridStbg}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectStampBingoMbrHistList"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoMbrHistReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoMbrHistResDto">
+        /* StampBingoMapper.selectStampBingoMbrHistList */
+        SELECT
+            B.ROW_NO + '*' + B.COL_NO AS stepNo
+            ,B.TITLE 					AS stepTitle
+            ,D.PROM_NM   				AS promNm
+            ,convert(varchar(10),A.CREATE_DATE,120) 	AS createDate
+            ,E.OFR_NM					AS ofrNm
+            ,B.OFR_CNT					AS ofrCnt
+            ,convert(varchar(10),A.COMP_DATE,120) 	AS compDate
+            ,A.CANL_RSN					AS canlRsn
+            ,${strColumn}
+        FROM LOY.LOY_STBG_MBR_HIST A WITH (NOLOCK)  
+        INNER JOIN LOY.LOY_STBG_STEP B WITH (NOLOCK)  ON A.RID_STBG_STEP = B.RID AND B.FLAG = 1
+        INNER JOIN LOY.LOY_OFR C WITH (NOLOCK)  ON B.RID_OFR = C.RID AND C.FLAG = 1
+        INNER JOIN LOY.LOY_PROM D WITH (NOLOCK)  ON C.RID = D.RID_OFR AND D.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_OFR E WITH (NOLOCK)  ON B.RID_COMP_OFR = E.RID AND E.FLAG = 1
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        AND A.RID_STBG_MBR = #{ridStbgMbr}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectStampBingoChnlList"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoChnlReqDto"
+            resultType="com.icignal.loyalty.channel.dto.response.LoyChnlResDto">
+        /* StampBingoMapper.selectStampBingoChnlList */
+        SELECT
+            A.RID                                   AS rid,
+            B.CHNL_NO 								AS chnlNo,
+            B.CHNL_NM 								AS chnlNm,
+            convert(varchar(10),A.CREATE_DATE,120) 	AS createDate,
+            EM.NAME       	  						AS createBy,
+            ${strColumn}
+        FROM LOY.LOY_STBG_CHNL A WITH (NOLOCK)  
+        INNER JOIN LOY.LOY_CHNL B WITH (NOLOCK)  ON A.RID_CHNL = B.RID AND B.FLAG = 1
+        LEFT OUTER JOIN COM.CRM_USER US  WITH (NOLOCK)  ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK)  ON US.ID_EMPLOYEE = EM.ID
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        AND A.RID_STBG = #{ridStbg}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <insert id="insertStampBingoChnl"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoChnlReqDto">
+        /* StampBingoStepMapper.insertStampBingoChnl */
+        INSERT INTO LOY.LOY_STBG_CHNL (
+            RID,
+            CREATE_BY,
+            MODIFY_BY,
+            RID_STBG,
+            RID_CHNL
+        ) VALUES(
+            #{rid},
+            #{createBy},
+            #{modifyBy},
+            #{ridStbg},
+            #{ridChnl}
+        )
+    </insert>
+
+    <update id="updateStampBingoChnlDel"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoChnlReqDto">
+        /* StampBingoStepMapper.updateStampBingoChnlDel */
+        UPDATE LOY.LOY_STBG_CHNL
+        SET MODIFY_DATE	= getdate()
+        ,MODIFY_BY	= #{modifyBy}
+        ,FLAG		= 0
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <select id="selectStampBingoChnlHistList"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoChnlReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoMbrResDto">
+        /* StampBingoMapper.selectStampBingoChnlHistList */
+        SELECT
+        A.RID                                   AS rid,
+        G.CUST_NO 					            AS custNo,
+        G.CUST_NM 					            AS custNm,
+        D.ROW_NO + '*' + D.COL_NO             AS currStep,
+        D.TITLE						            AS currStepTitle,
+        convert(varchar(10),C.CREATE_DATE,120) 	AS recentDate,
+        convert(varchar(10),A.JOIN_DATE,120) 	    AS joinDate,
+        A.INVIT_MRB_YN				            AS invitMrbYn,
+        E.OFR_NM					            AS ofrNm,
+        convert(varchar(10),C.COMP_DATE,120) 	    AS compDate,
+        H.CHNL_NM					            AS chnlNm,
+        ${strColumn}
+        FROM LOY.LOY_STBG_MBR A WITH (NOLOCK)  
+        INNER JOIN (
+            SELECT
+                RID_STBG_STEP,
+                RID_STBG_MBR,
+                CREATE_DATE,
+                COMP_DATE,
+                FLAG
+            FROM (
+                SELECT
+                    B.RID_STBG_STEP,
+                    B.RID_STBG_MBR,
+                    B.CREATE_DATE,
+                    B.COMP_DATE,
+                    B.FLAG,
+                    ROW_NUMBER() OVER (PARTITION BY B.RID_STBG_MBR ORDER BY B.SEQ_NO DESC) RN
+                FROM LOY.LOY_STBG_MBR_HIST B WITH (NOLOCK)   WHERE B.FLAG = 1
+        ) a WHERE 1 = 1 AND RN = 1) C ON A.RID = C.RID_STBG_MBR
+        INNER JOIN LOY.LOY_STBG_STEP D WITH (NOLOCK)  ON C.RID_STBG_STEP = D.RID AND D.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_OFR E WITH (NOLOCK) ON D.RID_COMP_OFR = E.RID AND E.FLAG = 1
+        INNER JOIN LOY.LOY_MBR F WITH (NOLOCK) ON A.RID_MBR = F.RID AND F.FLAG = 1
+        INNER JOIN LOY.LOY_CUST G WITH (NOLOCK) ON F.RID_CUST = G.RID AND G.FLAG = 1
+        LEFT OUTER JOIN LOY.LOY_CHNL H WITH (NOLOCK) ON A.RID_CHNL = H.RID AND H.FLAG = 1
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        AND A.RID_STBG = #{ridStbg}
+        AND A.RID_CHNL = #{ridChnl}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectStampBingoBenfList"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoBenfReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoBenfResDto">
+        /* StampBingoBenfMapper.selectStampBingoBenfList */
+        SELECT
+            A.RID             AS 	rid,
+            A.BNF_TYPE_CD     AS 	bnfTypeCd,
+            A.TITLE           AS 	title,
+            B.OFR_NM          AS 	ofrNm,
+            A.OFR_CNT         AS 	ofrCnt,
+            A.VALID_ST_DD     AS 	validStDd,
+            convert(varchar(10),A.CREATE_DATE,120) 	AS createDate,
+            EM.NAME    	  							AS createBy,
+            ${strColumn}
+        FROM LOY.LOY_STBG_BENF A WITH (NOLOCK)  
+        LEFT OUTER JOIN LOY.LOY_OFR B WITH (NOLOCK)  ON A.RID_OFR = B.RID AND B.FLAG = 1
+        LEFT OUTER JOIN COM.CRM_USER US WITH (NOLOCK)   ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK)  ON US.ID_EMPLOYEE = EM.ID
+        WHERE  ${strCondWhere}
+        AND ${strWhere}
+        AND A.FLAG  = 1
+        AND A.RID_STBG = #{ridStbg}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <select id="selectStampBingoBenfDetail"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoBenfReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoBenfResDto">
+        /* StampBingoBenfMapper.selectStampBingoBenfDetail */
+        SELECT
+            A.RID_OFR		  AS	ridOfr,
+            A.RID             AS 	rid,
+            A.BNF_TYPE_CD     AS 	bnfTypeCd,
+            A.TITLE           AS 	title,
+            A.RID_OFR         AS 	ridOfr,
+            B.OFR_NM          AS 	ofrNm,
+            A.OFR_CNT         AS 	ofrCnt,
+            A.VALID_ST_DD     AS 	validStDd
+        FROM LOY.LOY_STBG_BENF A WITH (NOLOCK)  
+        LEFT OUTER JOIN LOY.LOY_OFR B WITH (NOLOCK)  ON A.RID_OFR = B.RID AND B.FLAG = 1
+        WHERE 1=1
+        AND A.RID = #{rid}
+        AND A.FLAG  = 1
+    </select>
+
+    <insert id="insertStampBingoBenf"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoBenfReqDto">
+        /* StampBingoBenfMapper.insertStampBingoBenf */
+        INSERT INTO LOY.LOY_STBG_BENF (
+            RID,
+            CREATE_BY,
+            MODIFY_BY,
+            RID_STBG,
+            BNF_TYPE_CD,
+            TITLE,
+            RID_OFR,
+            OFR_CNT,
+            VALID_ST_DD
+        ) VALUES (
+            #{rid},
+            #{createBy},
+            #{modifyBy},
+            #{ridStbg},
+            #{bnfTypeCd},
+            #{title},
+            #{ridOfr},
+            #{ofrCnt},
+            #{validStDd}
+        )
+    </insert>
+
+    <update id="updateStampBingoBenf"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoBenfReqDto">
+        /* StampBingoBenfMapper.updateStampBingoBenf */
+        UPDATE LOY.LOY_STBG_BENF
+        SET
+            MODIFY_DATE  = getdate(),
+            MODIFY_BY    = #{modifyBy},
+            RID_STBG     = #{ridStbg},
+            BNF_TYPE_CD  = #{bnfTypeCd},
+            TITLE        = #{title},
+            RID_OFR      = #{ridOfr},
+            OFR_CNT      = #{ofrCnt},
+            VALID_ST_DD  = #{validStDd}
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+
+    <update id="updateStampBingoBenfDel"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoBenfReqDto">
+        /* StampBingoBenfMapper.updateStampBingoBenfDel */
+        UPDATE LOY.LOY_STBG_BENF
+        SET MODIFY_DATE	= getdate()
+            , MODIFY_BY	= #{modifyBy}
+            , FLAG		= 0
+        WHERE 1 = 1
+        AND RID = #{rid}
+    </update>
+    
+    <select id="selectStampListPop"
+            parameterType="com.icignal.loyalty.stampbingo.dto.request.LoyStampBingoReqDto"
+            resultType="com.icignal.loyalty.stampbingo.dto.response.LoyStampBingoResDto">
+        /* StampBingoMapper.selectStampListPop */
+        SELECT
+             A.STBG_NO          AS 	stbgNo
+            ,A.STBG_NM          AS 	stbgNm
+            ,convert(varchar(10),A.VALID_START_DATE,120)  AS 	validStartDate
+            ,convert(varchar(10),A.VALID_END_DATE,120)    AS 	validEndDate
+            ,A.STAT_CD          AS 	statCd
+            ,A.PROM_TYPE_CD     AS 	promTypeCd
+            ,A.JOIN_TYPE_CD     AS 	joinTypeCd
+            ,A.CHNL_TYPE_CD     AS 	chnlTypeCd
+            ,A.ROW_SIZE         AS 	rowSize
+            ,A.COL_SIZE         AS 	colSize
+            ,A.MBR_TYPE         AS 	mbrType
+            ,A.ACRL_DESC_TEXT   AS 	acrlDescText
+            ,A.BNFT_DESC_TEXT   AS 	bnftDescText
+            ,A.ETC_DESC_TEXT    AS 	etcDescText
+            ,A.RID               AS  rid
+            ,${strColumn}
+        FROM LOY.LOY_STBG A WITH (NOLOCK)  
+        LEFT OUTER JOIN COM.CRM_USER US  WITH (NOLOCK)  ON A.CREATE_BY = US.RID
+        LEFT OUTER JOIN COM.EMPLOYEE EM  WITH (NOLOCK)  ON US.ID_EMPLOYEE = EM.ID
+        WHERE A.FLAG  = 1
+        AND  A.STAT_CD = 'A'
+        AND ${strCondWhere}
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+            ${strEndPaging}
+    </select>
+
+</mapper>

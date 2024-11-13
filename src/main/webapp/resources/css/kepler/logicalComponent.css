@@ -1,0 +1,13 @@
+
+/* �뼱�듃由щ럭�듃 洹몃９ �듃由� CSS */
+.atrib_tree {height:100%; width:100%; }
+#attributeTree > ul.e-ul{width:320px};
+
+/* +, - 踰꾪듉 */
+.lgc_flex_btn_area{display: inline-block; float: left; margin-right: 10px;}
+.lgcItemPlusBtn{width:26px; height:27px; border:1px solid #c6c6c6; background-color:#fff;}
+.lgcItemMinusBtn{width:26px; height:27px; border:1px solid #c6c6c6; background-color:#fff;}
+
+.btn_field_white{border:1px solid #cccccc; background:#fff; color:#555; border-radius:3px; height: 27px; padding: 0 10px; line-height:27px;}  
+.btn_field_white:hover{border:1px solid #cccccc; background:#fff; color:#555;}
+.btn_field_white:disabled{background:#dbdbdb;}

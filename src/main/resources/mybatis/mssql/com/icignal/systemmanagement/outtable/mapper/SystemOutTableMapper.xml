@@ -1,0 +1,890 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 18:26:12 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.outtable.mapper.SystemOutTableMapper">
+    
+    
+	<update id="updateTgtLevel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemEditOutTgtLvlReqDto">
+	/* SystemOutTableMapper.updateTgtLevel */
+	    update COM.COM_EXTR_TARGET_LEVEL set 
+	 		  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, TARGET_LEVEL_NM = #{targetLevelNm}
+			, DB_NM = #{dbNm}
+			, CON_IP = #{conIp}
+			, CON_PORT = #{conPort}
+			, CON_ID = #{conId}
+			, CON_PW = #{conPw}
+			, CON_DB_TYPE = #{conDbType}
+			, TARGET_DESC = #{targetDesc}
+		where ${strSVCType} 
+        and id = #{id}
+	</update>
+    
+	<update id="updateTable" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemEditOutTableReqDto">
+	/* SystemOutTableMapper.updateTable */
+	    update COM.COM_EXTR_TBL set
+			  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, TYPE = #{type}
+			, TBL_SCHEMA_NM = #{tblSchemaNm}
+			, TBL_ENG_NM = #{tblEngNm}
+			, TBL_KOR_NM = #{tblKorNm}
+			, TBL_DESC = #{tblDesc}
+		where ${strSVCType} 
+        and id = #{id}
+	</update>
+	
+	<update id="updateColumn" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemEditOutColumnReqDto">
+	/* SystemOutTableMapper.updateColumn */
+	    update COM.COM_EXTR_COL set
+			  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, COL_ENG_NM = #{colEngNm}
+			, COL_KOR_NM = #{colKorNm}
+			, COL_TYPE_CD = #{colTypeCd}
+			, COL_SIZE = #{colSize}
+			, COL_DESC = #{colDesc}
+			, FLAG_ATRIB_VAL = #{flagAtribVal}
+			, WHERE_SCH_MEMID = #{whereSchMemid}
+			, WHERE_SCH_HP = #{whereSchHp}  
+			, WHERE_SCH_EMAIL = #{whereSchEmail}
+			, COND_CALMT = #{attrib01}
+			, MKT_COL_MAPPG = #{prmsItemMappgCol}
+			, COL_ATRIB_DEF_CD_ID = #{colTypeDefine}
+			, ENC_COL_YN = #{encColYn}
+		where ${strSVCType} 
+        and id = #{id}
+	</update>
+
+	<insert id="insertTgtLevel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemSetOutTgtLvlReqDto">
+	/* SystemOutTableMapper.insertTgtLevel */
+	    insert into COM.COM_EXTR_TARGET_LEVEL (
+			  id
+	        , create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			<!-- , ACCNT_ID -->
+			, TARGET_LEVEL_NM
+			, DB_NM  
+			, CON_IP 
+			, CON_PORT
+			, CON_ID
+			, CON_PW 
+			, CON_DB_TYPE
+			, TARGET_DESC
+			, AWS_SECRET_NM
+			, SERVICE_NM
+		) 
+		values(
+		 	   #{id}  
+	     	 , #{memId}
+			 , #{memId} 
+			 , GETDATE()   
+			 , GETDATE()
+			 , '1'
+			 <!-- , #{country} -->
+			 <!-- , #{appServiceId} -->
+			 <!-- , #{accntId} -->
+			 , #{targetLevelNm}
+			 , #{dbNm}
+			 , #{conIp}
+			 , #{conPort}
+			 , #{conId}
+			 , #{conPw}
+			 , #{conDbType}
+			 , #{targetDesc}
+			 , #{secretNm}
+			 , #{serviceNm}
+		)
+	</insert>
+	
+	<insert id="insertTable" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemSetOutTableReqDto">
+	/* SystemOutTableMapper.insertTable */
+	    insert into COM.COM_EXTR_TBL (
+			  id
+	        , create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			<!-- , ACCNT_ID -->
+			, TYPE
+			, TARGET_LEVEL_ID
+			, TBL_SCHEMA_NM 
+			, TBL_ENG_NM
+			, TBL_KOR_NM
+			, TBL_DESC
+		) 
+		values(
+		 	   #{id}  
+	     	 , #{memId}
+			 , #{memId} 
+			 , GETDATE()   
+			 , GETDATE()
+			 , '1'
+			 <!-- , #{country} -->
+			 <!-- , #{appServiceId} -->
+			 <!-- , #{accntId} -->
+			 , #{type}
+			 , #{targetLevelId} 
+			 , #{tblSchemaNm}
+			 , #{tblEngNm}
+			 , #{tblKorNm}
+			 , #{tblDesc}
+		)
+
+	</insert>
+	
+	<insert id="insertColumn" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemSetOutColumnReqDto">
+	/* SystemOutTableMapper.insertColumn */
+	    insert into COM.COM_EXTR_COL (
+			 id
+	        , create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, EXTR_TBL_ID 
+			, COL_ENG_NM 
+			, COL_KOR_NM
+			, COL_TYPE_CD
+			, COL_SIZE 
+			, COL_DESC 
+			, FLAG_ATRIB_VAL  
+			, WHERE_SCH_MEMID  
+			, WHERE_SCH_HP  
+			, WHERE_SCH_EMAIL 
+			, cond_calmt 
+			, MKT_COL_MAPPG 
+			, COL_ATRIB_DEF_CD_ID
+			, ENC_COL_YN
+			) 
+		values(
+		 	   #{id}  
+	     	 , #{memId}
+			 , #{memId} 
+			 , GETDATE()   
+			 , GETDATE()
+			 , '1'
+			 , #{extrTblId}
+			 , #{colEngNm}
+			 , #{colKorNm}
+			 , #{colTypeCd}
+			 , #{colSize}
+			 , #{colDesc}
+			 , #{flagAtribVal}
+			 , #{whereSchMemid}
+			 , #{whereSchHp}
+			 , #{whereSchEmail}
+			 , #{attrib01}
+			 , #{prmsItemMappgCol}
+			 , #{colTypeDefine}
+			 , #{encColYn}
+		)
+	</insert>
+	
+	<insert id="insertChnlRel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemSetChnlRelReqDto">
+	/* SystemOutTableMapper.insertChnlRel */
+	insert into COM.COM_EXTR_COL_CHNL_REL(
+			  id
+	        , create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, CHNL_TYPE
+			, EXTR_COL_ID
+	)
+	values(
+			   #{id}  
+	     	 , #{memId}
+			 , #{memId} 
+			 , GETDATE()   
+			 , GETDATE()
+			 , '1'
+			 , #{chnlId}
+			 , #{columnId}
+	)	
+	</insert>
+	
+	<select id="selectDtlTgtLevel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetDetailOutTgtLvlReqDto" 
+											resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetDetailOutTgtLvllResDto">
+	/* SystemOutTableMapper.selectDtlTgtLevel */
+	SELECT
+		  met.id as id
+		, TARGET_LEVEL_NM as targetLevelNm
+		, DB_NM as dbNm
+		, CON_IP as conIp
+		, CON_PORT as conPort
+		, CON_ID as conId
+		, CON_PW as conPw
+		<!-- , c1.code_name as conDbType -->
+		, met.CON_DB_TYPE as conDbTypeCdNm
+		, TARGET_DESC as targetDesc
+		, AWS_SECRET_NM as secretNm
+		, SERVICE_NM as serviceNm
+		<!-- , CREATE_BY AS createBy -->
+		, CREATE_DATE AS createDate
+	FROM COM.COM_EXTR_TARGET_LEVEL met
+	<!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.CON_DB_TYPE and c1.lang = #{lang} and c1.group_code = 'CHNL_CON_DB_TYPE' -->
+	WHERE 1=1
+	<!-- and met.accnt_id = #{accntId} -->
+	AND ${strSVCType} AND met.FLAG = 1
+	AND met.ID = #{id}
+	</select>
+	
+	<select id="selectDtlTable" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetDetailOutTableReqDto" 
+										resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetDetailOutTalbleResDto">
+	/* SystemOutTableMapper.selectDtlTable */
+	SELECT
+		  met.ID as id
+		, metl.TARGET_LEVEL_NM  AS targetLevelNm
+		, met.TBL_SCHEMA_NM AS tblSchemaNm
+		, met.TBL_ENG_NM AS tblEngNm
+		, met.TBL_KOR_NM AS tblKorNm
+		, met.TBL_DESC AS tblDesc
+		<!-- , c1.code_name as type -->
+		, met.TYPE AS typeCdNm
+	FROM COM.COM_EXTR_TBL met 
+	JOIN COM.COM_EXTR_TARGET_LEVEL metl ON metl.id = met.TARGET_LEVEL_ID
+	<!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.type and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE' -->
+	WHERE 1=1
+	<!-- and met.accnt_id = #{accntId} -->
+	AND ${strSVCType} and met.flag = 1
+	AND met.ID = #{id}
+	</select>
+	
+	<select id="selectDtlColumn" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetDetailOutColumnReqDto" 
+											resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetDetailOutColumnlResDto">
+	/* SystemOutTableMapper.selectDtlColumn */
+	SELECT  
+	  	  met.ID as id
+		, EXTR_TBL_ID as extrTblId
+		, COL_ENG_NM as colEngNm
+		, COL_KOR_NM as colKorNm
+		<!-- , c1.code_name as colTypeCd -->
+		, met.COL_TYPE_CD as colTypeCd
+		, COL_SIZE as colSize
+		, COL_DESC as colDesc
+		, FLAG_ATRIB_VAL as flagAtribVal
+		, WHERE_SCH_MEMID as whereSchMemid
+		, WHERE_SCH_HP as whereSchHp
+		, WHERE_SCH_EMAIL as whereSchEmail
+		, cond_calmt as attrib01
+		, MKT_COL_MAPPG as prmsItemMappgCol
+		<!-- , c2.code_name as colTypeDefine -->
+		, met.COL_ATRIB_DEF_CD_ID as colTypeDefineCdNm
+		, met.ENC_COL_YN as encColYn
+	FROM COM.COM_EXTR_COL met
+<!-- 	left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.COL_TYPE_CD and c1.lang = #{lang} and c1.group_code = 'MKT_SEG_COLUMN_TYPE'
+	left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = met.COL_ATRIB_DEF_CD_ID and c2.lang = #{lang} and c2.group_code = 'MKT_CAM_CHNL_TYPE_CD' -->
+	WHERE 1=1
+	<!-- and met.accnt_id = #{accntId} -->
+	AND ${strSVCType} AND met.flag = 1
+	AND met.id = #{id}  
+	</select>
+	
+	    
+                
+    <!-- /**************************************
+	-	관련 파일				: SystemOutTableMapper.java(selectListOffer)
+	============================================
+	-	제목					: 오퍼 목록 조회
+	-	설명					: 조건 조회를 통한 오퍼 목록 조회
+	-	결과형태				: 복수
+	============================================
+	-	입력      
+	-	출력
+	============================================
+	-	작성자					: 박지열
+	-	작성일					: 2015.09.23
+    ***************************************/ -->
+	<select id="selectTgtLevelList" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetOutTgtLvllListReqDto" 
+												resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetOutTgtLvllListResDto">
+	/* SystemOutTableMapper.selectTgtLevelList */
+	SELECT met.id as id
+		, TARGET_LEVEL_NM as targetLevelNm
+		, AWS_SECRET_NM	as secretNm
+		, SERVICE_NM AS serviceNm
+		, DB_NM as dbNm
+		, CON_IP as conIp
+		, CON_PORT as conPort
+		, CON_ID as conId
+		, CON_PW as conPw
+		, c1.mark_name as conDbType
+		, TARGET_DESC as targetDesc
+		, ${strColumn}
+	FROM COM.COM_EXTR_TARGET_LEVEL met
+	JOIN com.comm_code c1 on c1.flag =1 and c1.code_name = met.CON_DB_TYPE and c1.lang = #{lang} and c1.group_code = 'CHNL_CON_DB_TYPE'
+	WHERE 1=1
+	AND ${strSVCType} and met.flag = 1
+	AND ${strWhere}
+	ORDER BY ${strOrderby}		
+	${strEndPaging}	
+	</select>
+	
+	<select id="selectTableList" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetOutTableListReqDto" 
+											resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetOutTalbleListResDto">
+	/* SystemOutTableMapper.selectTableList */
+	select met.id as id
+		, met.TARGET_LEVEL_ID as targetLevelId
+		, metl.TARGET_LEVEL_NM as targetLevelNm
+		, met.TBL_SCHEMA_NM as tblSchemaNm
+		, met.TBL_ENG_NM as tblEngNm
+		, met.TBL_KOR_NM as tblKorNm
+		, met.TBL_DESC as tblDesc
+		<!-- , c1.mark_Name as type
+		, c1.code_name as typeCode -->
+		, met.type as typeCode
+		, ${strColumn}
+	from COM.COM_EXTR_TBL met 
+	join COM.COM_EXTR_TARGET_LEVEL metl on metl.id = met.TARGET_LEVEL_ID
+	<!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.type and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE' -->
+	where 1=1
+	<if test='targetLevelId != null and targetLevelId != ""'>and
+			met.target_level_id = #{targetLevelId} 
+	</if>	
+	and ${strSVCType} and met.flag = 1
+  	ORDER BY ${strOrderby}		
+	${strEndPaging}	
+    </select>
+    
+    <select id="selectcolumnList" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetOutColumnListReqDto" 
+    										resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetOutColumnListResDto">
+    /* SystemOutTableMapper.selectcolumnList */
+    select met.id as id
+		, EXTR_TBL_ID as extrTblId
+		, COL_ENG_NM as colEngNm
+		, COL_KOR_NM as colKorNm
+		, c1.mark_name as colTypeCd
+		, COL_SIZE as colSize
+		, COL_DESC as colDesc
+		, FLAG_ATRIB_VAL as flagAtribVal
+		, WHERE_SCH_MEMID as whereSchMemid
+		, WHERE_SCH_HP as whereSchHp
+		, WHERE_SCH_EMAIL as whereSchEmail
+		, met.cond_calmt as attrib01
+		, MKT_COL_MAPPG as prmsItemMappgCol
+		<!-- , c2.mark_name as colTypeDefine -->
+		, met.COL_ATRIB_DEF_CD_ID as colTypeDefineCdNm
+		, met.ENC_COL_YN as encColYn
+		, ${strColumn}
+	from COM.COM_EXTR_COL met
+	join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.COL_TYPE_CD and c1.lang = #{lang} and c1.group_code = 'MKT_SEG_COLUMN_TYPE' 
+	<!-- left outer join com.comm_code c2 on c2.flag = 1 and c2.code_name = met.COL_ATRIB_DEF_CD_ID and c2.lang = #{lang}  and c2.group_code = 'MKT_CAM_CHNL_TYPE_CD' -->
+	where 1=1
+	<!-- and met.accnt_id = #{accntId} -->
+	<if test='extrTblId != null and extrTblId != " "'>
+	and	met.EXTR_TBL_ID = #{extrTblId} 
+	</if>
+	and ${strSVCType} and met.flag = 1	    
+	ORDER BY ${strOrderby}		
+	${strEndPaging}	
+    </select>
+    
+     <select id="selectchannel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetChannelListReqDto" 
+     									resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetChannelListResDto">
+     /* SystemOutTableMapper.selectchannel */
+     select distinct mark_name as markNm,
+            id as id,
+            code_name as codeNm,
+     		create_date
+     from com.comm_code 
+     where flag = 1
+     and group_code = 'MKT_CAM_CHNL_TYPE_CD' 
+     and lang = #{lang}
+--      and CODE_NAME != 'LMS'
+--      and CODE_NAME != 'MMS'
+--      and CODE_NAME != 'KAKAONOTI'
+     and ${strSVCType}
+	 ORDER BY ${strOrderby}		
+	 ${strEndPaging}	
+     </select>
+     
+     <select id="selectchannelrel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetChannelRelListReqDto" 
+     										resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetChannelRelListResDto">
+     /* SystemOutTableMapper.selectchannelrel */
+     select meccr.id as id
+		, mec.COL_ENG_NM as colEngNm
+		, mec.COL_KOR_NM as colKorNm
+		<!-- , c1.mark_name as colTypeCd -->
+		,mec.COL_TYPE_CD as colTypeCdNm
+		, mec.FLAG_ATRIB_VAL as flagAtribVal
+		, ${strColumn}
+	 from COM.COM_EXTR_COL_CHNL_REL meccr
+	 join COM.COM_EXTR_COL mec on mec.id =  meccr.extr_col_id and mec.flag = 1
+	 <!-- left outer join com.comm_code c1 on c1.flag = 1 and c1.code_name = mec.COL_TYPE_CD and c1.lang = #{lang} and c1.group_code = 'MKT_SEG_COLUMN_TYPE' -->
+	 where 1=1
+	 <!-- and  meccr.accnt_id = #{accntId} --> 
+	 and  chnl_type = #{chnlId}
+	 and ${strSVCType}
+	 and meccr.flag = 1
+	 ORDER BY ${strOrderby}		
+	${strEndPaging}	
+     </select>
+     
+      <!-- 퍼미션 목록 가져오기  -->
+     <select id="selectpermissionList" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetPermissionListReqDto" 
+     												resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetPermissionListResDto">
+     /* SystemOutTableMapper.selectpermissionList */
+     select mec.id as id
+		, mec.COL_ENG_NM as colEngNm
+		, mec.COL_KOR_NM as colKorNm
+		, c2.mark_name as colTypeCd
+		, mec.FLAG_ATRIB_VAL as flagAtribVal
+		, ${strColumn}
+     from COM.COM_EXTR_COL mec
+	 join COM.COM_EXTR_TBL met on met.id = mec.EXTR_TBL_ID and met.flag = 1 and mec.flag = 1 
+	 join com.comm_code c2 on c2.flag = 1 and c2.code_name = 'PERMISSION' and c2.lang =  #{lang} and met.type = c2.code_name and c2.group_code = 'EXTERNAL_TABLE_TYPE'
+	 where mec.id not in(
+		select mec2.id 
+		from COM.COM_EXTR_COL mec2 
+		join COM.COM_EXTR_COL_CHNL_REL meccr on mec2.id = meccr.extr_col_id and meccr.chnl_type = #{chnlId}
+		where mec2.flag = 1)
+	 and ${strSVCType} and mec.flag = 1
+	 and ${strWhere}
+	 ORDER BY ${strOrderby}		
+	 ${strEndPaging}	
+     </select>
+
+      <!-- 테이블 타입 가져오기  -->
+     <select id="selectTblTypeChk" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemTableTypeCheckReqDto" resultType="java.lang.String">
+     /* SystemOutTableMapper.selectTblTypeChk */
+         select 
+         	met.id 
+         from COM.COM_EXTR_TBL met
+         join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.type and c1.code_name = #{type} and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE'
+         where 1=1 and met.flag=1
+         and  ${strSVCType} and met.flag = 1
+         order by id asc
+         offset 0 ROWS  FETCH NEXT 1 ROWS ONLY
+     </select>
+    
+    <!-- 컬럼 타입 가져오기  -->
+     <select id="selectColTypeChk" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemColTypeReqDto" resultType="java.lang.String">
+     /* SystemOutTableMapper.selectColTypeChk */
+         select top 1 * from COM.COM_EXTR_COL mec
+		 join COM.COM_EXTR_TBL met on met.id = mec.extr_tbl_id and met.flag = 1
+		 join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.type and c1.code_name = #{type} and c1.lang = #{lang} and c1.group_code = 'EXTERNAL_TABLE_TYPE'
+		 join com.comm_code c2 on c2.flag = 1 and c2.code_name = mec.COL_ATRIB_DEF_CD_ID and c2.code_name = #{colTypeDefine} and c2.lang = #{lang} and c2.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+		 where 1=1 
+		 and  ${strSVCType} and mec.flag = 1
+     </select>
+     
+     <!-- 타겟 레벨 하위 테이블 삭제  -->
+     <delete id="deleteTvlConTable" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemDeleteTvlConTableReqDto">
+     /* SystemOutTableMapper.deleteTvlConTable */
+         update COM.COM_EXTR_TBL set 
+	 		  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, flag = flag + 1
+		 where ${strSVCType} and flag = 1
+		 <if test="tgtLvlId.size() != 0">
+         and target_level_id in 
+         <foreach collection="tgtLvlId" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>  
+        </if>
+     </delete> 
+     
+     <!-- 테이블 하위 컬럼 삭제  -->
+     <!-- <delete id="deleteTblConCol" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemDeleteTblConColReqDto">
+     /* SystemOutTableMapper.deleteTblConCol */
+         update COM.COM_EXTR_COL set 
+	 		  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, flag = flag + 1
+		 where ${strSVCType} and flag = 1
+		 <if test="tblid.size() != 0">
+         and extr_tbl_id in 
+	         <foreach collection="tblid" item="item" separator="," close=")" open="(">
+	           #{item}
+	        </foreach>  
+		</if>
+		  
+     </delete>  -->
+     
+     <!-- 테이블 하위 컬럼 삭제  -->
+     <delete id="deleteColConChnlRel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemDeleteColConChnlRelReqDto">
+     /* SystemOutTableMapper.deleteColConChnlRel */
+         where ${strSVCType} and flag = 1 -->
+         update COM.COM_EXTR_COL_CHNL_REL set 
+	 		  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, flag = flag + 1
+		 where ${strSVCType} and flag = 1
+		 <if test="colid.size() !=0">
+         and extr_col_id in <foreach collection="colid" item="item" separator="," close=")" open="(">
+           #{item}
+           </foreach>  
+           </if>
+     </delete> 
+     
+     
+     <update id="deleteTgtLevel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemDeleteOutTgtLvlReqDto">
+     /* SystemOutTableMapper.deleteTgtLevel */
+	    update COM.COM_EXTR_TARGET_LEVEL set 
+	 		  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, flag = flag + 1
+		where id in <foreach collection="targetLevelId" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>  
+	</update>
+	
+	<select id="getDbinfromSecretNms" parameterType="java.util.List" resultType="java.lang.String">
+	/* SystemOutTableMapper.getDbinfromSecretNms */
+		select aws_secret_nm as secretNm
+		,service_nm as serviceNm
+		from COM.COM_EXTR_TARGET_LEVEL
+		where id in 
+		<foreach collection="list" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+	</select>
+	
+	<select id="getDbInfromServiceNms" parameterType="java.util.List" resultType="java.lang.String">
+	/* SystemOutTableMapper.getDbInfromServiceNms */
+		select aws_secret_nm as secretNm
+		,service_nm as serviceNm
+		from COM.COM_EXTR_TBL
+		where id in 
+		<foreach collection="list" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>
+	</select>
+	
+	
+	<update id="deleteTable" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemDeleteOutTableReqDto">
+	 /* SystemOutTableMapper.deleteTable */
+	    update COM.COM_EXTR_TBL set
+			  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, flag = flag + 1
+		where id in <foreach collection="outTableId" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>  
+	</update>
+	
+	<update id="deleteColumn" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemDeleteOutColumnReqDto">
+	 /* SystemOutTableMapper.deleteColumn */
+	    update COM.COM_EXTR_COL set
+			  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, flag = flag + 1
+		where id in <foreach collection="outColumnId" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>  
+	</update>
+	
+	<delete id="deleteChnlRel" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemDeleteChnlRelReqDto">
+	 /* SystemOutTableMapper.deleteChnlRel */
+	    delete from COM.COM_EXTR_COL_CHNL_REL 
+		where id in <foreach collection="chnlRelId" item="item" separator="," close=")" open="(">
+           #{item}
+        </foreach>  
+	</delete>
+     
+     
+	<select id="getFtpConnect" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetFtpConnectListReqDto" 
+											resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetFtpConnectListResDto">
+	 /* SystemOutTableMapper.getFtpConnect */
+	SELECT 
+		met.*
+	FROM (
+		select 
+			met.ID ,
+			c1.mark_name AS FTP_PRPS_CD_NM ,
+			c2.mark_name AS FTP_PROT_CD_NM , 
+			met.FTP_PRPS_CD_ID,
+			met.FTP_PROT_CD_ID,
+			met.CON_ID,
+			met.CON_PW,
+			met.CON_IP,
+			met.CON_PORT,
+			met.CON_FOLDR_PATH,
+			met.FTP_DESC,
+			${strColumn}
+		from COM.COM_EXTR_FTP met
+        join com.comm_code c1 on c1.flag = 1 and c1.code_name = met.FTP_PRPS_CD_ID and c1.lang = #{lang} and c1.group_code = 'MKT_FTP_PURPOSE'
+        join com.comm_code c2 on c2.flag = 1 and c2.code_name = met.FTP_PROT_CD_ID and c2.lang = #{lang} and c2.group_code = 'MKT_FTP_PROTOCAL'
+		WHERE 1 = 1
+		and ${strSVCType} 
+		and met.flag = 1
+	) met  
+	WHERE 1 = 1
+	<if test='id != null and id != ""'>
+	and ID = #{id}
+	</if>
+	and ${strWhere}
+	ORDER BY ${strOrderby}		
+	${strEndPaging}
+	</select>
+	
+	<insert id="setFtpConnect" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetFtpConnectListReqDto">
+	 /* SystemOutTableMapper.setFtpConnect */
+	insert into COM.COM_EXTR_FTP(
+			  id
+	        , create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			<!-- , ACCNT_ID -->
+			, FTP_PRPS_CD_ID
+			, FTP_PROT_CD_ID
+			, CON_ID
+			, CON_PW
+			, CON_IP
+			, CON_PORT
+			, CON_FOLDR_PATH
+			, FTP_DESC
+	)
+	values(
+			   com.getNewID('A')  
+	     	 , #{memId}
+			 , #{memId} 
+			 , GETDATE()   
+			 , GETDATE()
+			 , '1'
+			 <!-- , #{country} -->
+			 <!-- , #{appServiceId} -->
+			 <!-- , #{accntId} -->
+			 , #{ftp_prps_cd_id}
+			 , #{ftp_prot_cd_id}
+			 , #{con_id}
+			 , #{con_pw}
+			 , #{con_ip}
+			 , #{con_port}
+			 , #{con_foldr_path}
+			 , #{ftp_desc}
+	)	
+	<selectKey keyProperty="" resultType="java.lang.String">
+		SELECT 1
+	</selectKey> 
+	</insert>
+	
+	<update id="editFtpConnect" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetFtpConnectListReqDto">
+	 /* SystemOutTableMapper.editFtpConnect */
+	    update COM.COM_EXTR_FTP set
+			  modify_by = #{memId}
+			, modify_date = GETDATE()
+			, FTP_PRPS_CD_ID = #{ftp_prps_cd_id}
+			, FTP_PROT_CD_ID = #{ftp_prot_cd_id}
+			, CON_ID = #{con_id}
+			, CON_PW = #{con_pw}
+			, CON_IP = #{con_ip}
+			, CON_PORT = #{con_port}
+			, CON_FOLDR_PATH = #{con_foldr_path}
+			, FTP_DESC = #{ftp_desc}
+		where id = #{id}
+	</update>
+	
+	<delete id="removeFtpConnect" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetFtpConnectListReqDto">
+	 /* SystemOutTableMapper.removeFtpConnect */
+	    delete from COM.COM_EXTR_FTP 
+		where id = #{id}
+	</delete>
+	
+	<select id="selectEmailHost" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetEmailHostListReqDto" 
+											resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetEmailHostListResDto">
+	 /* SystemOutTableMapper.selectEmailHost */
+		select  ceh.HOST		AS host
+			  , ceh.PORT		AS port
+			  , ceh.email		AS email
+			  , ceh.ID			AS id
+			  , ${strColumn}
+		from COM.COM_EMAIL_HOST ceh
+		WHERE    ceh.FLAG = 1
+		AND      ${strWhere}
+		ORDER BY ${strOrderby}		
+		${strEndPaging}
+	</select>
+	
+	<select id="selectDetailEmailHost" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetEmailHostListReqDto" 
+											resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetEmailHostListResDto">
+	 /* SystemOutTableMapper.selectDetailEmailHost */
+		select  ceh.HOST		AS host
+			  , ceh.PORT		AS port
+			  , ceh.email		AS email
+			  , ceh.pwd			AS pwd
+			  , ceh.ID			AS id
+			  , e.name			AS createBy
+			  , com.TO_CHAR(ceh.CREATE_DATE,'YYYY-MM-DD') AS createDate
+			  , AWS_USERNAME	AS awsName
+		from COM.COM_EMAIL_HOST ceh
+		LEFT JOIN com.crm_user 		cu ON cu.rid = ceh.CREATE_BY
+    	LEFT JOIN com.employee 		e  ON cu.ID_EMPLOYEE = e.id
+		WHERE    ceh.FLAG = 1
+		AND      ceh.ID   = #{id}
+	</select>
+	
+	<insert id="insertEmailHost" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetEmailHostListReqDto">
+	 /* SystemOutTableMapper.insertEmailHost */
+	insert into COM.COM_EMAIL_HOST(
+			  id
+	        , create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, HOST
+			, PORT
+			, email
+			, pwd
+			, AWS_USERNAME
+	)
+	values(
+			   #{id}  
+	     	 , #{createBy}
+			 , #{modifyBy} 
+			 , GETDATE()   
+			 , GETDATE()
+			 , '1'
+			 , #{host}
+			 , #{port}
+			 , #{email}
+			 , #{pwd}
+			 , #{awsName}
+	)	
+	</insert>
+	
+	<update id="updateEmailHost" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetEmailHostListReqDto">
+	 /* SystemOutTableMapper.updateEmailHost */
+	UPDATE COM.COM_EMAIL_HOST
+	SET		  modify_by   = #{modifyBy}
+			, modify_date = GETDATE()
+			, HOST		  = #{host}
+			, PORT		  = #{port}
+			, email		  = #{email}
+			, AWS_USERNAME = #{awsName}
+	<if test="pwChk">
+			, pwd         = #{pwd}
+	</if>
+	WHERE     id = #{id}
+	</update>
+	
+	<update id="deleteEmailHost" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetEmailHostListReqDto">
+	 /* SystemOutTableMapper.deleteEmailHost */
+	UPDATE COM.COM_EMAIL_HOST
+	SET		  modify_by   = #{modifyBy}
+			, modify_date = GETDATE()
+			, flag        = flag + 1
+			WHERE     id = #{id}
+	</update>
+	
+	   <select id="getwebService" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetWebServiceListReqDto" 
+                                            resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetWebServiceListResDto">
+     /* SystemOutTableMapper.getwebService */
+       SELECT   
+            cw.ID                                           AS id 
+            ,cw.CREATE_BY                           AS createBy 
+            ,cw.HOST                                     AS host 
+            ,cw.PORT                                     AS port 
+            ,cw.ACCESS_TOKEN                     AS accessToken 
+            ,cw.REFRESH_TOKEN                    AS refreshToken 
+            ,cw.MALL_ID                                   AS mallId 
+            ,cw.CLIENT_ID                                 AS clientId 
+            ,cw.CLIENT_SECRET_ID                 AS clientSecretId
+            ,cw.SITENAME                                AS siteName
+            ,cw.TITLE	as title
+            , ${strColumn}
+        FROM  COM.COM_WEBSERVICE cw 
+        WHERE 1=1   
+        AND cw.FLAG = 1
+        AND      ${strWhere}
+        ORDER BY ${strOrderby}      
+        ${strEndPaging}
+    </select>
+       <select id="getwebServiceDetailPop" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetWebServiceListReqDto" 
+                                            resultType="com.icignal.systemmanagement.outtable.dto.response.SystemGetWebServiceListResDto">
+     /* SystemOutTableMapper.getwebServiceDetailPop */
+       SELECT   
+            cw.ID                                           AS id 
+            ,cw.CREATE_BY                           AS createBy 
+            ,cw.HOST                                     AS host 
+            ,cw.PORT                                     AS port 
+            ,cw.ACCESS_TOKEN                     AS accessToken 
+            ,cw.REFRESH_TOKEN                    AS refreshToken 
+            ,cw.MALL_ID                                   AS mallId 
+            ,cw.CLIENT_ID                                 AS clientId 
+            ,cw.CLIENT_SECRET_ID                 AS clientSecretId
+            ,cw.SITENAME                                AS siteName
+       		,cw.title							as title
+        FROM  COM.COM_WEBSERVICE cw 
+        WHERE 1=1   
+        AND cw.FLAG = 1
+        AND cw.ID = #{webServiceId}
+    </select>
+        <insert id="insertWebService" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetWebServiceListReqDto">
+     /* SystemOutTableMapper.insertWebService */
+    insert into COM.COM_WEBSERVICE(
+             ID
+             ,CREATE_BY
+             ,MODIFY_BY
+             ,CREATE_DATE
+             ,MODIFY_DATE
+             ,FLAG
+             ,HOST
+             ,PORT
+             ,ACCESS_TOKEN
+             ,REFRESH_TOKEN
+             ,MALL_ID
+             ,CLIENT_ID
+             ,CLIENT_SECRET_ID
+             ,SITENAME
+             ,title
+    )
+    values(
+               #{webServiceId}  
+             , #{createBy}
+             , #{modifyBy} 
+             , GETDATE()   
+             , GETDATE()
+             , 1
+             , #{host}
+             , #{port}
+             , #{accessToken}
+             , #{refreshToken}
+             , #{mallId}
+             , #{clientId}
+             , #{clientSecretId}
+             , #{siteName}
+             , #{title}
+    )   
+    </insert>
+        <update id="updateWebService" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetWebServiceListReqDto">
+        /* SystemOutTableMapper.updateWebService */
+		    UPDATE COM.COM_WEBSERVICE
+		    SET  modify_by                        = #{modifyBy}
+		            , modify_date                 = GETDATE()
+		            , HOST                            = #{host}
+		            , PORT                            = #{port}
+                    , ACCESS_TOKEN           = #{accessToken}
+                    , REFRESH_TOKEN         = #{refreshToken}
+                    , MALL_ID                       = #{mallId}
+                    , CLIENT_ID                     = #{clientId}
+                    , CLIENT_SECRET_ID        = #{clientSecretId}
+                    , SITENAME                      =#{siteName}
+		    		, TITLE						= #{title}
+		    WHERE     id = #{webServiceId}
+    </update>
+        <update id="deleteWebService" parameterType="com.icignal.systemmanagement.outtable.dto.request.SystemGetWebServiceListReqDto">
+     /* SystemOutTableMapper.deleteWebService */
+        update COM.COM_WEBSERVICE set
+              modify_by = #{modifyBy}
+            , modify_date = GETDATE()
+            , flag = flag + 1
+        where id = #{webServiceId}
+    </update>
+    
+</mapper>

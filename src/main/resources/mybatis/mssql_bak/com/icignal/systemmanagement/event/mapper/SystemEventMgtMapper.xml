@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.systemmanagement.event.mapper.SystemEventMgtMapper">
+
+	<select id="getEventList" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventListReqDto" 
+										resultType="com.icignal.systemmanagement.event.dto.response.SystemEventListResDto">
+	/* SystemEventMgtMapper.getEventList */
+		select  ${strColumn}
+				,t1.*
+		from (
+			select
+				lv.rid as rid
+				,case when lv.close_date > convert(varchar, getdate(), 112) then '진행 중' else '종료' end as eventStatus
+				,les.event_nm as eventName
+				,CASE WHEN (convert(varchar(10), CLOSE_DATE, 120))>getdate() THEN lv.seq	ELSE null	end		as seq
+				,convert(varchar(10), convert(datetime, open_date), 120) + '~'
+						+ convert(varchar(10), convert(datetime, close_date, open_date), 120) as eventPeriod
+				,convert(varchar, lv.hit_cnt) as eventShowCnt
+				,convert(varchar, lv.join_cnt) as eventPartiCnt
+				,e.name as eventWriter
+				,convert(varchar(10), lv.create_date, 120) as eventRegDate
+				,convert(varchar(10), lv.modify_date, 120) as eventModDate
+				,convert(datetime, lv.winner_notice_date) as eventPrizewinnerDate
+				,case when lv.exposure_yn = 'Y' then '활성' when lv.exposure_yn = 'N' then '일시중지' end as eventShowStatus
+				,case when les.lang = 'ko' then '국문' when les.lang = 'en' then '영문' when les.lang = 'zh' then '중문'
+						when les.lang = 'all' then '전체' else '' end as event_lang
+				,case when lv.APP_POP_FLAG = 'Y' then '활성' when lv.APP_POP_FLAG = 'N' then '일시중지' end as appPopYn
+			from loy.loy_event lv with(nolock)
+				left outer join loy.loy_event_sub les with(nolock)
+					on les.event_rid = lv.rid
+				left join com.crm_user us with(nolock)
+					on lv.create_by = us.rid
+				left outer join com.employee e with(nolock)
+					on   e.id = us.id_employee
+			where 1=1
+			<!-- and lv.accnt_id = #{accountId} -->
+			and lv.flag = 1
+			) t1
+		where ${strCondWhere}
+			and ${strWhere}
+		order by ${strOrderby}
+			${strEndPaging}
+	</select>
+
+	<insert id="insertEventInfo" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventInsertReqDto">
+    	/* SystemEventMgtMapper.insertEventInfo */
+		insert into loy.loy_event
+		(
+			rid
+			,open_date
+			,close_date
+			,winner_notice_date
+			,event_join_yn
+			,exposure_yn
+			,hit_cnt
+			,join_cnt
+			,create_by
+			,modify_by
+			,create_date
+			,modify_date
+			<!-- ,app_service_type -->
+			<!-- ,accnt_id -->
+			,APP_POP_FLAG
+			,seq
+		)
+		values(
+			#{eventId}
+			,#{startDate}
+			,#{endDate}
+			,#{win_notice_date}
+			,#{win_notice_exposure}
+			,case when #{eventStatus} = 'true' then 'Y' when #{eventStatus} = 'false' then 'N' end
+			,0
+			,0
+			,#{createBy}
+			,#{modifyBy}
+			,getdate()
+			,getdate()
+			<!-- ,#{appServiceId} -->
+			<!-- ,#{accountId} -->
+			,#{appPopYn}
+			,#{seq}
+		)
+	</insert>
+
+	<update id="updateEventInfo" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventInsertReqDto">
+	/* SystemEventMgtMapper.updateEventInfo */
+		update loy.loy_event
+		set exposure_yn = case when #{eventStatus} = 'true' then 'Y' when #{eventStatus} = 'false' then 'N' end
+			,open_date = #{startDate}
+			,close_date = #{endDate}
+			,event_join_yn = #{win_notice_exposure}
+			,winner_notice_date = #{win_notice_date}
+			,APP_POP_FLAG=#{appPopYn}
+			,seq=#{seq}
+		where ${strSVCType}
+			and rid = #{eventId}
+	</update>
+
+
+	<select id="getEventParti" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventPartiListReqDto" 
+										resultType="com.icignal.systemmanagement.event.dto.response.SystemEventPartiListResDto">
+	/* SystemEventMgtMapper.getEventParti */
+		select ${strColumn}
+				,t1.*
+		from(
+			select
+				lem.rid as rid
+				,lem.create_date as partiDate
+				,m.email as partiId
+				,m.name as partiName
+				,(select count(rid) from loy.loy_event_mbr where rid_mbr = lem.rid_mbr) as partiHistory
+				,lt1.tier_nm as memberGrade
+				,(select count(rid) from loy.loy_event_mbr where rid_mbr = lem.rid_mbr and winner_yn = 'y') as prizewinnerHistory
+				,lem.winner_yn as prizewinnerFlag
+			from loy.loy_event_mbr lem with(nolock)
+				join LOGS.loy_tier_hist lth1 with(nolock)
+					on lth1.rid_mbr = lem.rid_mbr
+				join loy.loy_tiers lt1 with(nolock)
+					on lt1.rid = lth1.rid_cur_tier
+				join com.member m with(nolock)
+					on m.id = lem.rid_mbr
+			where 1=1
+			<!-- and lem.accnt_id = #{accountId} -->
+				and ${strSVCType}
+				and lem.flag = 1
+				and lem.rid_event = #{eventId}
+		)t1
+		where ${strCondWhere}
+			and ${strWhere}
+		order by ${strOrderby}
+			${strEndPaging}
+	</select>
+
+
+	<update id="updateWinnerFlag" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventPartiListReqDto">
+	/* SystemEventMgtMapper.updateWinnerFlag */
+		update loy.loy_event_mbr
+		set		winner_yn = #{check_yn}
+				,modify_date = getdate()
+				,modify_by = #{modifyBy}
+		where rid = #{event_mbr_id}
+	</update>
+
+
+
+	<update id="updateAnnounce" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventAnnounceUpdateReqDto">
+	/* SystemEventMgtMapper.updateAnnounce */
+		update loy.loy_event_sub
+		set	winner_notice_title = #{announceTitle}
+			,winner_notice_desc = #{announceDesc}
+			,modify_by = #{modifyBy}
+			,modify_date = getdate()
+		where event_rid = #{eventId}
+			and lang = #{winnerLang}
+			and ${strSVCType}
+	</update>
+
+    <select id="getEventInfoDetail" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventListReqDto" 
+    											resultType="com.icignal.systemmanagement.event.dto.response.SystemEventDetailResDto">
+    /* SystemEventMgtMapper.getEventInfoDetail */
+		select
+			le.exposure_yn as eventStatus
+			, convert(datetime, le.open_date) as startDate
+			, convert(datetime, le.close_date) as endDate
+			, convert(datetime, le.winner_notice_date) as win_notice_date
+			, le.event_join_yn as win_notice_exposure
+			, le.APP_POP_FLAG	as appPopYn
+			, le.seq			as seq
+		from loy.loy_event le
+		where
+			le.rid = #{eventId}
+			and ${strSVCType}
+	</select>
+
+	<resultMap id="eventDetailResultMap" type="com.icignal.systemmanagement.event.dto.response.SystemEventDetailResDto">
+		<result property="eventName" column="eventName" />
+		<result property="eventLandingPage" column="eventLandingPage" />
+		<result property="eventDesc" column="eventDesc" />
+		<result property="eventSubId" column="eventSubId" />
+		<collection property="images" javaType="java.util.ArrayList" column="{parentId=eventSubId, category=MainImageType, imageLang=imageLang}" select="com.icignal.common.base.mapper.CommonMapper.multiSelectImages" />
+		<collection property="imagesEvent" javaType="java.util.ArrayList" column="{parentId=eventSubId, category=BannerImageType, imageLang=imageLang}" select="com.icignal.common.base.mapper.CommonMapper.multiSelectImages" />
+	</resultMap>
+
+	<select id="getEventSubInfoDetail" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventListReqDto"
+													resultMap="eventDetailResultMap">
+	/* SystemEventMgtMapper.getEventSubInfoDetail */
+		select
+			les.event_nm as eventName
+			, les.event_url as eventLandingPage
+			, les.event_detail as eventDesc
+			, 'com' as schemas
+			, les.event_detail_url	as eventDetailPage
+			, 'EVENT_MAIN_BANNER' as MainImageType
+			, 'EVENT_BANNER' as BannerImageType
+			, 'EVENT_DETAIL' as EventImageType
+			, #{eventSubId} as eventSubId
+			, #{eventLang} as imageLang
+		from
+			loy.loy_event_sub les
+		where
+			les.event_rid = #{eventId}
+			and les.lang = #{eventLang}
+			and ${strSVCType}
+			AND rownum = 1
+	</select>
+
+	<select id="getCheckEvent" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventListReqDto" 
+											resultType="com.icignal.systemmanagement.event.dto.response.SystemEventDetailResDto">
+	/* SystemEventMgtMapper.getCheckEvent */
+		select
+			rid as eventSubId
+		from loy.loy_event_sub
+		where
+			event_rid = #{eventId}
+			and lang = #{eventLang}
+			and ${strSVCType}
+			AND rownum = 1
+	</select>
+
+	<insert id="insertEventSubInfo" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventSubInfoInsertReqDto">
+    	/* SystemEventMgtMapper.insertEventSubInfo */
+		insert into loy.loy_event_sub
+		(
+			rid
+			,event_rid
+			,event_nm
+			,event_detail
+			,event_url
+			<!-- ,app_service_type -->
+			<!-- ,country -->
+			,lang
+			,flag
+			<!-- ,accnt_id -->
+			,create_date
+			,create_by
+			,modify_date
+			,modify_by
+			,event_detail_url
+		)
+		values(
+			#{eventSubId}
+			,#{eventId}
+			,#{eventName}
+			,#{eventDesc}
+			,#{eventLandingPage}
+			<!-- ,#{appServiceId} -->
+			<!-- ,#{country} -->
+			,#{eventLang}
+			,1
+			<!-- ,#{accountId} -->
+			,getdate()
+			,#{createBy}
+			,getdate()
+			,#{modifyBy}
+			,#{eventDetailPage}
+		)
+	</insert>
+
+	<update id="updateEventSubInfo" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventSubInfoInsertReqDto">
+	/* SystemEventMgtMapper.updateEventSubInfo */
+		update loy.loy_event_sub
+		set	event_nm = #{eventName}
+			,event_detail = #{eventDesc}
+			,event_url = #{eventLandingPage}
+			,event_detail_url = #{eventDetailPage}
+		where rid = #{eventSubId}
+			and ${strSVCType}
+	</update>
+
+	<update id="updateMasterAnnounce" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventAnnounceUpdateReqDto">
+	/* SystemEventMgtMapper.updateMasterAnnounce */
+		update loy.loy_event
+		set	winner_notice_exposure_yn = case when #{announceStatus} = 'true' then 'Y' when #{announceStatus}= 'false' then 'N' end
+			,modify_date = getdate()
+			,modify_by = #{modifyBy}
+		where rid = #{eventId}
+			and ${strSVCType}
+	</update>
+
+	<select id="getAnnounceDetail" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventListReqDto" 
+												resultType="com.icignal.systemmanagement.event.dto.response.SystemEventAnnounceDetailResDto">
+	/* SystemEventMgtMapper.getAnnounceDetail */
+		select le.winner_notice_exposure_yn as  exposure_yn
+				,les.winner_notice_title as announceTitle
+				,les.winner_notice_desc as announceDesc
+				,#{eventLang} as announceLang
+		from loy.loy_event_sub les with(nolock)
+			join loy.loy_event le with(nolock)
+				on le.rid = les.event_rid and les.lang = #{eventLang}
+		where event_rid = #{eventId}
+			and lang = #{eventLang}
+			and ${strSVCType}
+	</select>
+
+	<select id="getLangList" parameterType="com.icignal.systemmanagement.event.dto.request.SystemEventListReqDto" 
+										resultType="java.lang.String">
+	/* SystemEventMgtMapper.getLangList */
+		select lang
+		from loy.loy_event_sub
+		where event_rid = #{eventId}
+			and ${strSVCType}
+	</select>
+</mapper>

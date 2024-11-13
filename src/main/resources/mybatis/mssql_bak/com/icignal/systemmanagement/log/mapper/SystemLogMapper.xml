@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Apr 30 16:05:05 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.systemmanagement.log.mapper.SystemLogMapper">
+	
+    <!-- /**************************************
+    -   관련 파일             : SystemLogMapper.java (addExcelDownloadLog)
+    ============================================
+    -   제목                  : 엑셀 다운로드 로그 등록
+    -   설명                  : 엑셀 다운로드 로그 등록
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2017.06.07
+    ***************************************/ -->
+    <insert id="addExcelDownloadLog" parameterType="com.icignal.systemmanagement.log.dto.request.SystemExcelDownloadLogReqDto">
+        /* SystemLogMapper.addExcelDownloadLog */
+		insert into com.com_excel_downl_log (
+			 id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, req_dt
+			, req_type_cd
+			, req_url
+			, req_ip
+			, req_sessn_id
+			, req_login_id
+			, target_id )
+		values (
+			 #{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, getdate()
+			, getdate()
+			, 1
+			, #{lang} 
+			, getdate()
+			, #{reqTypeCd} 
+			, #{reqUrl} 
+			, #{reqIp} 
+			, #{reqSessnId} 
+			, #{reqLoginId} 
+			, #{targetId} )
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from com.com_excel_downl_log where id = #{id} limit 0, 1
+        </selectKey> 
+	</insert>
+	
+    <!-- /**************************************
+    -   관련 파일             : SystemLogMapper.java (getExcelDownloadLogList)
+    ============================================
+    -   제목                  : 엑셀 다운로드 로그 목록
+    -   설명                  : 엑셀 다운로드 로그 목록
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2017.06.07
+    ***************************************/ -->
+	<select id="getExcelDownloadLogList" parameterType="com.icignal.systemmanagement.log.dto.request.SystemExcelDownloadLogReqDto" 
+														resultType="com.icignal.systemmanagement.log.dto.response.SystemExcelDownloadLogResDto">
+		/* SystemLogMapper.getExcelDownloadLogList */
+		SELECT 
+			t1.id AS id
+			, t1.req_dt AS reqDt
+			, t1.req_type_cd AS reqTypeCd
+			, c1.mark_name AS reqTypeNm
+			, c1.attrib01 AS reqDtlLink
+			, t1.req_url AS reqUrl
+			, t1.req_ip AS reqIp
+			, t1.req_sessn_id AS reqSessnId
+			, t1.req_login_id AS reqLoginId
+			, t1.target_id AS targetId
+			, u1.rid AS userRid
+			, u1.user_id AS userId
+			, u1.user_stat AS userStatCd
+			, c2.mark_name AS userStatNm
+			, e1.name AS empNm
+			<!-- , secu.fn_getDecrypt(#{cipherKey} , e1.email , NULL) as email -->
+			, e1.email AS email
+			, d1.div_no AS divNo
+			, d1.div_nm AS divNm
+			, c3.code_name AS workStatusCd
+            , c3.mark_name AS workStatusNm
+            , ${strColumn}
+		FROM COM.COM_EXCEL_DOWNL_LOG t1 WITH (NOLOCK)
+			JOIN COM.CRM_USER u1 WITH (NOLOCK) ON u1.RID = t1.REQ_LOGIN_ID
+			JOIN COM.EMPLOYEE e1 WITH (NOLOCK) ON e1.ID = u1.ID_EMPLOYEE
+			JOIN COM.CRM_DIVISION d1 WITH (NOLOCK) ON d1.rid = e1.rid_division
+			JOIN COM.COMM_CODE c1 WITH (NOLOCK) ON c1.FLAG = 1 and c1.lang = #{lang} AND c1.GROUP_CODE = 'EXCEL_DOWNL_TYPE' and c1.code_name = t1.req_type_cd
+			JOIN COM.COMM_CODE c2 WITH (NOLOCK) ON c2.FLAG = 1 and c2.lang = #{lang} AND c2.GROUP_CODE = 'CRM_USER_STATUS' and c2.code_name = u1.user_stat
+			JOIN COM.COMM_CODE c3 WITH (NOLOCK) ON c3.FLAG = 1 and c3.lang = #{lang} AND c3.GROUP_CODE = 'WORK_STATUS' and c3.code_name = e1.work_status
+		WHERE t1.FLAG = 1
+			AND ${strCondWhere}
+			AND ${strSVCType}
+			AND	${strWhere}
+		ORDER BY ${strOrderby}		
+			${strEndPaging}
+	</select>
+	
+    <!-- /**************************************
+    -   관련 파일             : SystemLogMapper.java (getLoginHistoryList)
+    ============================================
+    -   제목                  : 로그인 이력 목록
+    -   설명                  : 로그인 이력 목록
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu   
+    -   작성일                : 2017.06.07
+    ***************************************/ -->
+	<select id="getLoginHistoryList" parameterType="com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto" 
+												resultType="com.icignal.systemmanagement.log.dto.response.SystemLoginHistoryResDto">
+		/* SystemLogMapper.getLoginHistoryList */
+		select 
+			t1.id as id
+			, t1.create_date as loginDt
+			, t1.type as type
+			, t1.channel as channel
+			, t1.device as device
+			, t1.area as area
+			, t1.server as server
+			, t1.target_id as targetId
+			, t1.ip as ip
+			, t1.sessn_id as sessnId
+			, u1.rid as userRid
+			, u1.user_id as userId
+			, u1.user_stat as userStatCd
+			<!-- , c2.mark_name as userStatNm -->
+			, e1.name as empNm
+			<!-- , secu.fn_getDecrypt(#{cipherKey} , e1.email , NULL) as email -->
+			, e1.email as email
+			, d1.div_no as divNo
+			, d1.div_nm as divNm
+ 			<!-- , c3.code_name as workStatusCd
+            , c3.mark_name as workStatusNm -->
+            , e1.work_status as workStatusCd
+            , t1.LOGIN_SUCCESS_YN as loginSuccessYn
+            <!-- , c4.mark_name AS markName -->
+            , t1.login_success_yn as markNameCd
+             , ${strColumn}
+		from com.login_history t1 WITH (NOLOCK)
+	        left outer join com.crm_user u1 WITH (NOLOCK) on u1.rid = t1.target_id
+            left outer join com.employee e1 WITH (NOLOCK) on e1.id = u1.id_employee
+            left outer join com.crm_division d1 WITH (NOLOCK)  on d1.rid = e1.rid_division
+           <!--  left outer join com.comm_code c1 on c1.flag = 1 and c1.lang = #{lang} and c1.group_code = 'ACCOUNT_DATA_TYPE' and c1.code_name = t1.type
+            left outer join com.comm_code c2 on c2.flag = 1 and c2.lang = #{lang} and c2.group_code = 'CRM_USER_STATUS' and c2.code_name = u1.user_stat
+            left outer join com.comm_code c3 on c3.flag = 1 and c3.lang = #{lang} and c3.group_code = 'WORK_STATUS' and c3.code_name = e1.work_status
+        	left outer join com.comm_code c4 on c4.flag = 1 and c4.lang = #{lang} and c4.group_code = 'LOGIN_SUCCESS_YN' and c4.code_name = t1.login_success_yn -->
+        where 
+            t1.flag = 1
+            and ${strCondWhere}
+            and ${strSVCType}
+            and    ${strWhere}
+            <if test="loginUserId != null and loginUserId != ''">
+            	and t1.LOGIN_USER_ID = #{loginUserId}
+            </if>
+		order by ${strOrderby}		
+			${strEndPaging}
+	</select>
+	
+	<select id="excelDownLoginHistoryList" parameterType="com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto" 
+												resultType="com.icignal.systemmanagement.log.dto.response.SystemLoginHistoryResDto">
+		/* SystemLogMapper.excelDownLoginHistoryList */
+		select 
+			t1.id as id
+			, t1.create_date as loginDt
+			, t1.type as type
+			, t1.channel as channel
+			, t1.device as device
+			, t1.area as area
+			, t1.server as server
+			, t1.target_id as targetId
+			, t1.ip as ip
+			, t1.sessn_id as sessnId
+			, u1.rid as userRid
+			, u1.user_id as userId
+			<!-- , u1.user_stat as userStatCd -->
+			, c2.mark_name as userStatNm
+			, e1.name as empNm
+			, e1.email as email
+			<!-- , e1.email as email -->
+			, d1.div_no as divNo
+			, d1.div_nm as divNm
+ 			, c3.code_name as workStatusCd
+            , c3.mark_name as workStatusNm
+            <!-- , e1.work_status as workStatusCd -->
+            , t1.LOGIN_SUCCESS_YN as loginSuccessYn
+            , c4.mark_name AS markName
+            <!-- , t1.login_success_yn as markNameCd -->
+		from com.login_history t1 WITH (NOLOCK)
+	        left outer join com.crm_user u1 WITH (NOLOCK) on u1.rid = t1.target_id
+            left outer join com.employee e1 WITH (NOLOCK) on e1.id = u1.id_employee
+            left outer join com.crm_division d1 WITH (NOLOCK) on d1.rid = e1.rid_division
+           	left outer join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.lang = #{lang} and c1.group_code = 'ACCOUNT_DATA_TYPE' and c1.code_name = t1.type
+            left outer join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.lang = #{lang} and c2.group_code = 'CRM_USER_STATUS' and c2.code_name = u1.user_stat
+            left outer join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.lang = #{lang} and c3.group_code = 'WORK_STATUS' and c3.code_name = e1.work_status
+        	left outer join com.comm_code c4 WITH (NOLOCK) on c4.flag = 1 and c4.lang = #{lang} and c4.group_code = 'LOGIN_SUCCESS_YN' and c4.code_name = t1.login_success_yn
+        where t1.flag = 1
+		and ${strCondWhere}
+		and ${strSVCType}
+		and    ${strWhere}
+		<if test="loginUserId != null and loginUserId != ''">
+			and t1.LOGIN_USER_ID = #{loginUserId}
+		</if>
+		order by t1.create_date DESC
+	</select>
+	
+	
+	 <!-- /**************************************
+    -   관련 파일             : SystemLogMapper.java (getCondLogHistoryList)
+    ============================================
+    -   제목                  : 공통조회조건 이력 조회
+    -   설명                  : 공통조회조건 이력 조회
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum   
+    -   작성일                : 2019.01.28.
+    ***************************************/ -->
+	
+	<select id ="getCondLogHistoryList" parameterType = "com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto" 
+													resultType = "com.icignal.systemmanagement.log.dto.response.SystemCondLogHistoryResDto" fetchSize="3000">
+	/* SystemLogMapper.getCondLogHistoryList */
+		SELECT    
+			ccl.rid AS rid 
+			<!-- , m.MENU_NM AS menuNm  -->
+			, pgm.PGM_NM AS menuNm
+			<!-- , nvl(ms.SRCH_COND_DP_VAL, ccl.SRCH_COND_RID) srchCondDpVal  -->
+			, ccl.SRCH_COND_RID AS custRid
+			, ccl.RSLT_CNT AS rsltCnt 
+			, emp.name AS name 
+			, cu.USER_ID AS userId 
+			, CONVERT(varchar, ccl.srch_dt, 120) AS srchDt
+			, ccl.CREATE_DATE AS createDate
+			, lc.CUST_NM 	AS custNm
+			, lc.HHP				AS hhp
+			, ${strColumn}
+		FROM    com.COM_COND_LOG ccl WITH (NOLOCK)
+			LEFT JOIN com.crm_user cu WITH (NOLOCK) ON cu.rid = ccl.SRCH_USER_RID
+			LEFT JOIN com.EMPLOYEE emp WITH (NOLOCK) ON cu.ID_EMPLOYEE = emp.id
+			LEFT JOIN COM.COM_SRCH ms WITH (NOLOCK) ON ms.id = ccl.SRCH_COND_RID AND ms.flag = 1
+			LEFT JOIN com.PROGRAM pgm WITH (NOLOCK) ON pgm.PGM_NO = ccl.PAGE_RID AND pgm.flag = 1
+			<!-- LEFT JOIN com.MENU_PGM_REL mpr ON mpr.PGM_ID = pgm.ID AND mpr.flag = 1
+			LEFT JOIN com.MENU m ON m.id = mpr.MENU_ID AND m.flag = 1 -->
+			JOIN loy.LOY_CUST lc WITH (NOLOCK) ON ccl.SRCH_COND_RID = lc.RID AND lc.FLAG = 1
+		where ${strCondWhere} 
+			AND   ${strWhere}
+		order by ${strOrderby}		
+			${strEndPaging}
+	</select>
+	
+	<select id="clearMaskCondLogHistList" parameterType = "com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto" 
+													resultType = "com.icignal.systemmanagement.log.dto.response.SystemCondLogHistoryResDto">
+	/* SystemLogMapper.clearMaskCondLogHistList */
+		SELECT	lc.CUST_NM		AS noneMskCustNm
+				, lc.HHP					AS noneMskHhp
+		FROM	LOY.LOY_CUST lc WITH (NOLOCK)
+			JOIN  com.COM_COND_LOG ccl WITH (NOLOCK) ON ccl.SRCH_COND_RID = lc.RID
+		WHERE lc.FLAG = 1
+			AND   ccl.RID = #{rid}
+	</select>
+	
+	<select id ="selectCondLogTestList" parameterType = "com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto" 
+													resultType = "com.icignal.systemmanagement.log.dto.response.SystemCondLogHistoryResDto" fetchSize="5000">
+	/* SystemLogMapper.selectCondLogTestList */
+		SELECT    
+			ccl.rid AS rid 
+			, m.MENU_NM AS menuNm 
+			, ccl.SRCH_COND_RID AS custRid
+			, ccl.RSLT_CNT AS rsltCnt 
+			, emp.name AS name 
+			, ccl.srch_dt AS srchDt
+			, lc.CUST_NM 	AS noneMskCustNm
+			, lc.HHP				AS noneMskHhp
+			, ${strColumn}
+		FROM    com.COM_COND_LOG ccl WITH (NOLOCK)
+			LEFT JOIN com.crm_user cu WITH (NOLOCK) ON cu.rid = ccl.SRCH_USER_RID
+			LEFT JOIN com.EMPLOYEE emp WITH (NOLOCK) ON cu.ID_EMPLOYEE = emp.id
+			LEFT JOIN COM.COM_SRCH ms WITH (NOLOCK) ON ms.id = ccl.SRCH_COND_RID AND ms.flag = 1
+			LEFT JOIN com.PROGRAM pgm WITH (NOLOCK) ON pgm.PGM_NO = ccl.PAGE_RID AND pgm.flag = 1
+			LEFT JOIN com.MENU_PGM_REL mpr WITH (NOLOCK) ON mpr.PGM_ID = pgm.ID AND mpr.flag = 1
+			LEFT JOIN com.MENU m WITH (NOLOCK) ON m.id = mpr.MENU_ID AND m.flag = 1
+			JOIN loy.LOY_CUST lc WITH (NOLOCK) ON ccl.SRCH_COND_RID = lc.RID AND lc.FLAG = 1
+		WHERE 1=1
+		ORDER BY srchDt DESC
+	</select>
+	
+	 <!-- /**************************************
+    -   관련 파일             : SystemLogMapper.java (getAuthLogHistoryList)
+    ============================================
+    -   제목                  : 권한 변경 이력 조회
+    -   설명                  : 권한 변경 이력 조회
+    -   결과형태              : 
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dw.keum   
+    -   작성일                : 2019.01.28.
+    ***************************************/ -->
+	<select id="getAuthLogHistoryList" parameterType="com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto" 
+													resultType="com.icignal.systemmanagement.log.dto.response.SystemAuthLogHistoryResDto">
+	/* SystemLogMapper.getAuthLogHistoryList */
+		SELECT cal.rid AS rid
+			 <!-- , c1.MARK_NAME AS authLogTypeCdNm  -->
+			 , cal.AUTH_LOG_TYPE_CD as authLogTypeCdNm
+			 <!-- , c2.MARK_NAME AS logTypeDtlNm  -->
+			 , cal.LOG_TYPE_DTL as logTypeDtlCdNm
+			 , cal.TARGET_RID AS targetRid
+			 , cal.TARGET_NM AS targetNm
+			 , cal.OBJ_RID AS objRid
+			 , cal.OBJ_NM AS objNm
+			 , emp.name AS name
+			 , cu.USER_ID AS userId
+			 , cal.srch_dt AS srchDt
+			 , ${strColumn}
+		FROM    com.com_auth_log cal WITH (NOLOCK)
+			LEFT JOIN com.crm_user cu WITH (NOLOCK) ON cu.RID = cal.WORK_USER_RID
+			LEFT JOIN com.EMPLOYEE emp WITH (NOLOCK) ON cu.ID_EMPLOYEE = emp.id
+		<!-- LEFT JOIN com.comm_code c1 ON c1.group_code = 'COM_AUTH_LOG_TYPE_CD' AND c1.CODE_NAME = cal.AUTH_LOG_TYPE_CD AND c1.lang = 'ko' AND c1.flag = 1
+		LEFT JOIN com.comm_code c2 ON c2.group_code = 'LOG_TYPE_DTL' AND c2.CODE_NAME = cal.LOG_TYPE_DTL AND c2.lang = 'ko' AND c2.flag = 1 -->
+		where ${strCondWhere}
+			AND   ${strWhere}
+		order by ${strOrderby}
+			 ${strEndPaging}
+	</select>
+	
+	<!-- 서비스 요청 로그 등록 -->
+    <insert id="addServiceReqLog" parameterType="com.icignal.systemmanagement.log.dto.request.SystemServiceReqLogReqDto">
+    /* SystemLogMapper.addServiceReqLog */
+		insert into com.com_service_req_log (
+			 id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			, lang
+			, req_dt
+			, req_type_cd
+			, req_url
+			, req_ip
+			, req_sessn_id
+			, req_login_id
+			, req_params )
+		values (
+			 #{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, getdate()
+			, getdate()
+			, 1
+			, #{lang} 
+			, getdate()
+			, #{reqTypeCd} 
+			, #{reqUrl} 
+			, #{reqIp} 
+			, #{reqSessnId} 
+			, #{reqLoginId} 
+			, #{reqParams} )
+			
+        <selectKey keyProperty="" resultType="java.lang.String">
+            select id from com.com_service_req_log where id = #{id} limit 0, 1
+        </selectKey> 
+	</insert>
+	
+	<select id="getPiMaskDecList" parameterType="com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto" 
+												resultType="com.icignal.systemmanagement.log.dto.response.SystemPiMaskDecListResDto">
+	/*SystemLogMapper.getPiMaskDecList*/
+		SELECT CONVERT(varchar, lcm.CREATE_DATE, 120) AS createDate
+			 , lcm.PAGE_INFO AS pageInfo
+			 , e.NAME AS name
+			 , lcm.INFO_TYPE AS infoType
+			 , lcm.INFO_RID AS rid
+			 , lcm.REAS_DESCTXT AS reason
+			 , ${strColumn}
+		  FROM LOY.LOY_CUST_MASK_RELEA_LOG  lcm WITH (NOLOCK)
+		  JOIN com.CRM_USER cu WITH (NOLOCK) ON cu.FLAG = 1 AND cu.RID = lcm.CREATE_BY
+		  JOIN com.EMPLOYEE e WITH (NOLOCK) ON e.FLAG = 1 AND e.ID = cu.ID_EMPLOYEE
+		WHERE ${strCondWhere}
+		   and ${strWhere}
+		   and lcm.flag = 1
+		order by ${strOrderby}
+				   ${strEndPaging}
+	</select>
+	
+	<select id="getPiMaskDecExcelDn" parameterType="com.icignal.systemmanagement.log.dto.request.SystemLoginHistoryReqDto"
+												resultType="com.icignal.systemmanagement.log.dto.response.SystemPiMaskDecListResDto">
+	/*SystemLogMapper.getPiMaskDecExcelDn*/
+		SELECT CONVERT(varchar, lcm.CREATE_DATE, 120) AS createDate
+			 , lcm.PAGE_INFO AS pageInfo
+			 , e.NAME AS name
+			 , lcm.INFO_TYPE AS infoType
+			 , lcm.INFO_RID AS rid
+			 , lcm.REAS_DESCTXT AS reason
+			 , ${strColumn}
+	  	FROM LOY.LOY_CUST_MASK_RELEA_LOG  lcm WITH (NOLOCK)
+			JOIN com.CRM_USER cu WITH (NOLOCK) ON cu.FLAG = 1 AND cu.RID = lcm.CREATE_BY
+			JOIN com.EMPLOYEE e WITH (NOLOCK) ON e.FLAG = 1 AND e.ID = cu.ID_EMPLOYEE
+	 	WHERE ${strCondWhere}
+		   and ${strWhere}
+		   and lcm.flag = 1
+	  	order by ${strOrderby}
+	   		${strEndPaging}
+	</select>
+</mapper>

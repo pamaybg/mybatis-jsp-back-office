@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+
+JAR_HOME='/app/tomcat_Descente/webapps'
+DEPLOY_TO_ROOT='true'
+
+TEMP_STAGING_DIR='/app/codedeploy-deployment-staging-area20'
+JAR_STAGED_LOCATION="$TEMP_STAGING_DIR/icignalT10Bo_Descente.war"
+
+if [[ "$DEPLOY_TO_ROOT" = 'true' ]]; then
+    CONTEXT_PATH='ROOT'
+fi
+
+if [[ -f $JAR_HOME/$CONTEXT_PATH.war ]]; then
+    rm $JAR_HOME/$CONTEXT_PATH.war
+fi
+if [[ -d $JAR_HOME/$CONTEXT_PATH ]]; then
+    rm -rfv $JAR_HOME/$CONTEXT_PATH
+fi
+
+# Copy the jar file to the webapps directory
+cp $JAR_STAGED_LOCATION $JAR_HOME/$CONTEXT_PATH.war
+chown -R quintet:quintet $JAR_HOME/$CONTEXT_PATH.war
+
+#sudo systemctl start iCignalMkt
+sudo systemctl start tomcat_Descente
+#sh /app/tomcat/bin/startup.sh

@@ -1,0 +1,240 @@
+@charset "utf-8";
+
+#sideMenu .ymAdminLogo {
+    background-image: url(../../../images/t10/common/leftmenu/descente-logo.png);
+}
+
+#sideMenu:before {
+	content: '';
+	background: #fff;
+}
+
+#sideMenu .side-logo {
+	height: 70px;
+	border-bottom: 0 none;
+}
+
+/* #sideMenu .leftMenu > li:nth-child(1) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm1.png);}
+#sideMenu .leftMenu > li:nth-child(2) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm2.png);}
+#sideMenu .leftMenu > li:nth-child(3) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm5.png);}
+#sideMenu .leftMenu > li:nth-child(4) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm4.png);}
+#sideMenu .leftMenu > li:nth-child(5) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm3.png);}
+#sideMenu .leftMenu > li:nth-child(6) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm6.png);}
+#sideMenu .leftMenu > li:nth-child(7) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm7.png);}
+#sideMenu .leftMenu > li:nth-child(8) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm4.png);}
+#sideMenu .leftMenu > li:nth-child(9) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm9.png);}
+#sideMenu .leftMenu > li:nth-child(10) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm10.png);}
+#sideMenu .leftMenu > li:nth-child(11) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm11.png);}
+#sideMenu .leftMenu > li:nth-child(12) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm12.png);}
+#sideMenu .leftMenu > li:nth-child(13) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm13.png);}
+#sideMenu .leftMenu > li:nth-child(14) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm14.png);}
+#sideMenu .leftMenu > li:nth-child(15) > a{background-image:url(../../../images/t10/common/leftmenu/ico_left_crm15.png);}  */
+
+nav#navTag>ul>li {
+	border-bottom: 0 none;
+	border-top: 0 none;
+}
+
+#sideMenu .leftMenu > li > a, #sideMenu .leftMenu > li.open > a, #sideMenu .leftMenu > li.active > a, #sideMenu .leftMenu > li > a.active {
+	background-position: 9% 55%;
+}
+
+#sideMenu .leftMenu > li > a {
+    padding-left: 45px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#sideMenu .leftMenu a {
+	background-color: #fff;
+	color: #000;
+	height: 43px;
+	line-height: 43px;
+}
+
+nav#navTag>ul>li:hover span {
+	color: #000;
+}
+
+nav#navTag>ul>li:hover {
+	background: initial;
+	color: #000;
+}
+
+#sideMenu .leftMenu > li.open > a, #sideMenu .leftMenu > li.active > a, #sideMenu .leftMenu > li > a.active {
+    background-color: #fff;
+    color: #000 !important;
+}
+
+nav > ul.leftMenu li.open > a:first-child::before, nav > ul.leftMenu li.open > a:first-child::after {
+	content: initial;
+}
+
+#sideMenu .leftMenu .sub {
+	background: #fff;
+	padding: 0;
+}
+
+#sideMenu .leftMenu .sub a {
+    padding: 7px 10px 7px 12px;
+    background: transparent;
+    border-left: 2px solid #d1e2ff;
+    margin-left: 32px;
+    font-weight: 400;
+    color: #000;
+    font-size: 14px;
+}
+
+#sideMenu .leftMenu .sub a:hover {
+	color: #000 !important;
+}
+
+#sideMenu .leftMenu .sub li:hover {
+	background-color: #f1f1f1;
+}
+
+#sideMenu .leftMenu .sub li:hover a {
+	border-color: #f1f1f1;
+}
+
+.minified #sideMenu .leftMenu .sub a {
+	margin-left: 0;
+    border-left: 0 none;
+    opacity: 0;
+}
+
+.minified #sideMenu .sub li:hover {
+	background-color: initial;
+}
+
+.minified #sideMenu .sub li:hover a {
+	border-left: 0 none;
+	color: transparent;
+}
+
+#sideMenu .leftMenu .sub .active a {
+	color: #3d81f0!important;
+    border-left: 3px solid #3d81f0;
+}
+
+.minified #sideMenu .leftMenu > li > a  {
+	padding-left: 0px;
+}
+
+#sideMenu .minifyme {
+	top: 50px;
+    background: url(../../../images/t10/common/leftmenu/btn_menu.png) center center no-repeat;
+    color: initial;
+    width: 20px;
+    height: 20px;
+    right: 0px;
+    border-radius: 0px;
+    margin: 0px;
+    border-bottom: 0px none;
+    transition: none;
+}
+
+.minified #sideMenu .ymAdminLogo {
+	width: 100%;
+	height: 70px;
+	background: url(../../../images/t10/common/leftmenu/DESCENTE_logo_BI.png) center 48% no-repeat;
+}
+
+#sideMenu .minifyme:hover {
+	background: url(../../../images/t10/common/leftmenu/btn_menu.png) center center no-repeat;
+	background-color: unset;
+	transition: none;
+}
+
+#sideMenu .minifyme .fa-arrow-circle-left:before,
+.minified #sideMenu .minifyme .fa:before {
+	content: initial;
+}
+
+.minified #sideMenu .minifyme {
+	height: 20px;
+	width: 20px;
+	right: 0;
+	top: 50px;
+	position: absolute;
+	background: url(../../../images/t10/common/leftmenu/btn_menu_open.png) center center no-repeat;
+}
+
+.minified #navTag {
+	padding-top: 30px;
+}
+
+.minified #sideMenu li:hover {
+	background-color: #3d81f0;
+}
+
+.minified #navTag>ul>li>a { background-position: 60% 45%!important; }
+.minified #navTag>ul>li:nth-child(7) > a { background-position: 70% 45%!important; }
+.minified #navTag>ul>li:nth-child(11) > a { background-position: 70% 45%!important; }
+
+.fa-plus-square-o:before,
+.fa-minus-square-o:before {
+	content: '';
+}
+
+#sideMenu ul.leftMenu>li>a .collapse-sign {
+	background: url(../../../images/t10/common/icons/arr_icon_down.png) center no-repeat;
+	width: 12px;
+    height: 100%;
+}
+
+#sideMenu ul.leftMenu>li.open>a .collapse-sign {
+	background: url(../../../images/t10/common/icons/arr_icon_up.png) center no-repeat;
+}
+
+#sideMenu ul.leftMenu>li>a b {
+	right: 20px;
+    top: 2px;
+}
+
+#sideMenu .leftMenu .sub li.open > a:first-child {
+    color: #000 !important;
+    border-left: 3px solid #3d81f0;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #fff;
+    
+}
+
+#sideMenu .leftMenu .sub li.open:hover,
+#sideMenu .leftMenu .sub li.open:hover > a,
+#sideMenu .leftMenu .sub li.open:hover > a:hover {
+	background-color: #f1f1f1;
+	border-color: #f1f1f1;
+}
+
+#sideMenu .leftMenu .sub li.open:hover .sub.sub2 a {
+	border-left: 2px solid #d1e2ff;
+}
+
+#sideMenu .leftMenu .sub li.open .sub.sub2 a:hover {
+	background-color: #fff;
+	border-color: #f1f1f1;
+}
+
+#sideMenu .leftMenu .sub li.open:hover .sub.sub2 a:hover {
+	background-color: #f1f1f1;
+	border-color: #f1f1f1;
+}
+
+#sideMenu .leftMenu .sub li.hasSub > a:first-child {
+	padding-left: 35px;
+}
+
+#sideMenu .leftMenu .sub.sub2, #sideMenu .leftMenu .sub.sub2 a:hover, #sideMenu .leftMenu .sub.sub2 .active a:hover {
+	background-color: #fff;
+	border-color: #3d81f0;
+}
+
+#sideMenu .leftMenu .sub.sub2 .active, #sideMenu .leftMenu .sub.sub2 .active a {
+	color: #000 !important;
+}
+
+nav>ul ul ul li::before {
+	content: '';
+}

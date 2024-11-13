@@ -1,0 +1,945 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:52:45 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.common.base.mapper.CommonMapper">
+	
+	<!-- 
+	공통코드를 캐시화 하기 위해 전체를 가져온다.	2020.03.04 knlee	 
+	-->
+ 	<select id="selectCommCodeAll" resultType="com.icignal.common.base.dto.response.CommCodeResDto">
+ 	/* CommonMapper.selectCommCodeAll */
+		SELECT GROUP_CODE AS groupCode
+			 , CODE_NAME	AS codeName
+			 , MARK_NAME AS markName
+			 , LANG AS lang
+		FROM COM.COMM_CODE cc WITH (NOLOCK)
+		WHERE FLAG = 1
+			AND GROUP_CODE IS NOT NULL
+			AND CODE_NAME IS NOT NULL
+			AND LANG IS NOT NULL
+	</select> 
+	
+    
+	<!-- /**************************************
+	-	관련 파일				: BEWorkflowDAO.java(setWorkflowChartList)
+	============================================
+	-	제목					: 이미지 조회
+	-	설명					: 
+	-	결과형태				: 단일
+	============================================
+	-	입력
+	============================================
+	-	작성자					: 이보라	
+	-	작성일					: 2015.03.09
+	***************************************/ -->
+	<select id="getParentImagesMulti"  resultType="com.icignal.common.base.dto.response.MultiImage">
+		SELECT i.id as imageId
+		    , isnull((i.image_folder + i.image_file_name + i.image_file_type), '') as imgOrgUrl
+	    	, i.seq
+		FROM ${schemas}.image i WITH (NOLOCK)
+		WHERE i.parent_id = #{parentId} and i.image_type = #{category}
+	</select>
+	
+	<select id="selectParentImages"  resultType="java.lang.String">
+	   <choose>
+	      <when test="category.name() == 'Product'">
+	          SELECT isnull((i.image_folder + i.image_file_name + i.image_file_type), '') as img
+				FROM ${schemas}.product_image i WITH (NOLOCK)
+			   WHERE ${strSVCType} 
+			     AND parent_id = #{parentId} 
+			     AND i.image_type = #{category}
+	      </when>
+	      <otherwise>
+	      	SELECT isnull((i.image_folder + i.image_file_name + i.image_file_type), '') as img
+			  FROM com.image i WITH (NOLOCK)
+			 WHERE i.parent_id = #{parentId} 
+			   AND i.image_type = #{category}
+	      </otherwise>
+	   </choose>
+	</select>
+	
+	<select id="getParentImages" parameterType="com.icignal.common.base.dto.request.UploadImageReqDto" resultType="java.lang.String">
+	   <choose>
+	      <when test="category.name() == 'Product'">
+	          SELECT isnull((i.image_folder + i.image_file_name + i.image_file_type), '') as img
+				FROM ${schemas}.product_image i WITH (NOLOCK)
+			   WHERE ${strSVCType} 
+			     AND parent_id = #{parentId} 
+			     AND i.image_type = #{category}
+	      </when>
+	      <otherwise>
+	      	SELECT isnull((i.image_folder + i.image_file_name + i.image_file_type), '') as img
+			  FROM com.image i WITH (NOLOCK)
+			 WHERE i.parent_id = #{parentId} 
+			   AND i.image_type = #{category}
+	      </otherwise>
+	   </choose>
+	</select>
+	
+	<select id="multiSelectImages" parameterType="java.util.HashMap"  resultType="com.icignal.common.base.dto.response.MultiImage">
+		SELECT 
+			i.id as imageId
+		    , isnull((i.image_folder + i.image_file_name + i.image_file_type), '') as imgOrgUrl
+	    	, i.seq
+	    	, (i.ori_img_file_nm + i.image_file_type) as oriName
+	    	, (i.image_file_name + i.image_file_type) as imgFileName
+		FROM com.image i WITH (NOLOCK)
+		WHERE 
+			i.parent_id = #{parentId} 
+			and i.image_type = #{category}
+			<if test="imageLang != '' and imageLang != null">
+			and img_lang = #{imageLang}
+			</if>
+		order by seq asc
+	</select>	
+	
+	<!-- /**************************************
+	-	관련 파일				: BEWorkflowDAO.java(setWorkflowChartList)
+	============================================
+	-	제목					: 이미지 삭제
+	-	설명					: 1.BeaconLiteTaskDAO의 setWorkflowChartList 함수에서 이미지 삭제
+						 	 	  2.등록한 이미지 삭제
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		parentId				: 부모 Id
+		category				: 카테고리
+	============================================
+	-	작성자					: 이보라	
+	-	작성일					: 2015.03.09
+	***************************************/ -->
+	<delete id="deleteParentImages" parameterType="com.icignal.common.base.dto.request.MultiUploadReqDto">
+		<choose>
+		    <when test="category.name() == 'Product'">
+		     DELETE FROM ${schemas}.product_image
+					WHERE ${strSVCType} and parent_id = #{parentId} and image_type = #{category}
+		    </when>   
+		    <otherwise>
+		         	DELETE FROM com.image
+					WHERE 
+						${strSVCType} 
+						and parent_id = #{parentId} 
+						and image_type = #{category}
+		    </otherwise>
+		  </choose>
+		
+	</delete>
+	
+	<!-- /**************************************
+	-	관련 파일				: BeaconLiteTaskDAO.java(setWorkflowChartList)
+	============================================
+	-	제목					: 이미지 업데이트
+	-	설명					: 1.BeaconLiteTaskDAO의 setWorkflowChartList함수에서 이미지 업데이트
+						 	 	  2.이미지 업데이트
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id					: 부모 Id
+	   	imageFolder			: 이미지 폴더
+	    imageFileName		: 이미지 파일 이름
+	    imageFileType		: 이미지 파일 유형
+	    imageFlag			: 이미지 FLAG 값
+	    seq					: 실시간 알림 Id
+	    imageType			: 이미지 유형
+	    parentId			: 부모 Id
+	============================================
+	-	작성자				: 이보라	
+	-	작성일				: 2015.03.09
+	***************************************/ -->
+	<insert id="multiUploadImage" parameterType="com.icignal.common.base.dto.request.UploadImageReqDto">
+		/* CommonMapper.multiUploadImage */
+		<selectKey keyProperty="id" resultType="java.lang.String" order="BEFORE">
+			SELECT com.getNewID('A') <!-- FROM DUAL -->
+		</selectKey>
+		INSERT INTO ${schemas}.${multiTableName}
+		(
+		    id
+		    , image_folder
+		    , image_file_name
+		    , image_file_type
+		    , image_flag
+		    , seq
+			<if test="multiTableName == &quot;image&quot;">
+			, image_type
+			</if>
+		    , parent_id
+		    , create_by
+		    , modify_by
+		    , modify_date
+		    , create_date
+		    <!-- , app_service_type -->
+		    <!-- , country -->
+		    , lang
+		    , img_size
+		    , img_desc
+		    , ori_img_file_nm
+		    , img_lang
+		)VALUES(
+		    #{id}
+		    , #{imageFolder}
+		    , #{imageFileName}
+		    , #{imageFileType}
+		    , #{imageFlag}
+		    , #{seq}
+		    <if test="multiTableName == &quot;image&quot;">
+		    , #{imageType} 
+			</if>
+		    , #{parentId}
+		    ,  #{empId}
+		    ,  #{empId}
+		    , getdate()
+		    , getdate()
+		    <!-- , #{appServiceId} -->
+		    <!-- , #{country} -->
+		    , #{lang}
+		    , #{size}
+		    , #{description}
+		    , #{oriImageFileName}
+		    , #{imageLang}
+		)
+	</insert>
+	
+	
+	<!-- /**************************************
+	-	관련 파일		: MKTBaseDAO.java(addMessageSendLog)
+		============================================
+	-	제목					: Message Send Log 등록
+	-	설명					: Message Send Log 등록
+	-	결과형태				: 단일
+	============================================
+	-	입력
+		id                   : 아이디
+		create_by            : 생성자
+		modify_by            : 수정자
+		create_date          : 생성일시z
+		modify_date          : 수정일시
+		flag                 : 삭제여부
+		country              : 국가코드
+		currency             : 화폐단위
+		app_service_type     : APP 서비스 ID
+		type                 : 유형
+		accnt_id             : 어카운트 ID
+		cam_id               : 캠페인 ID
+		mkt_exe_info_item_id : 캠페인 실행 아이템 ID
+		conts_id             : 콘텐츠 ID
+		item_seq             : 항목 SEQ
+		agent_user_id        : 회원사 아이디
+		schedule_type        : 발송시점 구분
+		input_dt             : DB 입력 시간
+		send_plan_dt         : 발송 희망 시간
+		to_callback_no       : 회신번호
+		callback_url         : 전송할 CALLBACK URL
+		msg_send_type        : 메시지 발송 유형
+		msg_type             : 메시지 형태
+		msg_subject          : 메시지 제목
+		msg_sbst             : 메시지 내용
+		vender_office_code   : 전송업체 유통망코드
+		cdr_id               : 과금ID
+		recv_call_no         : 수신전화번호
+		recv_mem_id          : 수신자 회원ID
+		recv_nm              : 수신자 명
+		file_cnt             : 전송 파일 개수
+		file_type1           : 파일 타입 1
+		file_type2           : 파일 타입 2
+		file_type3           : 파일 타입 3
+		file_type4           : 파일 타입 4
+		file_type5           : 파일 타입 5
+		file_path1           : MMS 파일경로1
+		file_path2           : MMS 파일경로2
+		file_path3           : MMS 파일경로3
+		file_path4           : MMS 파일경로4
+		file_path5           : MMS 파일경로5
+		file_path_filename1  : 파일경로1 파일명
+		file_path_filename2  : 파일경로2 파일명
+		file_path_filename3  : 파일경로3 파일명
+		file_path_filename4  : 파일경로4 파일명
+		file_path_filename5  : 파일경로5 파일명
+		attrib1              : 여분 필드 1
+		attrib2              : 여분 필드 2
+		attrib3              : 여분 필드 3
+		attrib4              : 여분 필드 4
+		attrib5              : 여분 필드 5
+		bat_send_status      : 배치 처리 상태
+		bat_send_proc_time   : 배치 전송 처리완료 시간
+		bat_send_fail_cd     : 배치 전송 실패 사유 코드
+		bat_send_fail_reason : 배치 전송실패사유
+		bat_send_tgt_id      : 배치 대상 ID
+		cam_tgt_dtl_id       : 캠페인 대상자 상세 ID
+	============================================
+	-	작성자				: 류동균	
+	-	작성일				: 2016.11.14
+	***************************************/ -->
+	<insert id="insertMessageSendLog" >
+		/* CommonMapper.insertMessageSendLog */
+		insert into mkt.mkt_msg_send_log ( 
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			, type
+			<!-- , accnt_id -->
+			, cam_id
+			, mkt_exe_info_item_id
+			, conts_id
+			, item_seq
+			, agent_user_id
+			, schedule_type
+			, input_dt
+			, send_plan_dt
+			, to_callback_no
+			, callback_url
+			, msg_send_type
+			, msg_type
+			, msg_subject
+			, msg_sbst
+			, vender_office_code
+			, cdr_id
+			, recv_call_no
+			, recv_mem_id
+			, recv_nm
+			, file_cnt
+			, file_type1
+			, file_type2
+			, file_type3
+			, file_type4
+			, file_type5
+			, file_path1
+			, file_path2
+			, file_path3
+			, file_path4
+			, file_path5
+			, file_path_filename1
+			, file_path_filename2
+			, file_path_filename3
+			, file_path_filename4
+			, file_path_filename5
+			, attrib1
+			, attrib2
+			, attrib3
+			, attrib4
+			, attrib5
+			, bat_send_status
+			, bat_send_proc_time
+			, bat_send_fail_cd
+			, bat_send_fail_reason
+			, bat_send_tgt_id
+			, cam_tgt_dtl_id )
+		values ( 
+			#{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, getdate()
+			, getdate()
+			, 1 
+			<!-- , #{country} --> 
+			<!-- , #{appServiceId}  -->
+			, #{type} 
+			<!-- , #{accountId}  -->
+			, #{camId} 
+			, #{mktExeInfoItemId} 
+			, #{contsId} 
+			, #{itemSeq} 
+			, #{agentUserId} 
+			, #{scheduleType} 
+			, #{inputDt} 
+			, #{sendPlanDt} 
+			, #{toCallbackNo} 
+			, #{callbackUrl} 
+			, #{msgSendType} 
+			, #{msgType} 
+			, #{msgSubject} 
+			, #{msgSbst} 
+			, #{venderOfficeCode} 
+			, #{cdrId} 
+			, #{recvCallNo} 
+			, #{recvMemId} 
+			, #{recvNm} 
+			, #{fileCnt} 
+			, #{fileType1} 
+			, #{fileType2} 
+			, #{fileType3} 
+			, #{fileType4} 
+			, #{fileType5} 
+			, #{filePath1} 
+			, #{filePath2} 
+			, #{filePath3} 
+			, #{filePath4} 
+			, #{filePath5} 
+			, #{filePathFilename1} 
+			, #{filePathFilename2} 
+			, #{filePathFilename3} 
+			, #{filePathFilename4} 
+			, #{filePathFilename5} 
+			, #{attrib1} 
+			, #{attrib2} 
+			, #{attrib3} 
+			, #{attrib4} 
+			, #{attrib5} 
+			, #{batSendStatus}
+			, #{batSendProcTime} 
+			, #{batSendFailCd} 
+			, #{batSendFailReason} 
+			, #{batSendTgtId} 
+			, #{camTgtDtlId} )
+			
+		
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일		: MKTBaseDAO.java(addEmailSendLog)
+	============================================
+	-	제목			: email send log 등록
+	-	설명			: email send log 등록
+	-	결과형태		: 단일
+	============================================
+	-	입력
+	id                   : 아이디
+	create_by            : 생성자
+	modify_by            : 수정자
+	create_date          : 생성일시
+	modify_date          : 수정일시
+	flag                 : 삭제여부
+	country              : 국가코드
+	currency             : 화폐단위
+	app_service_type     : APP 서비스 ID
+	type                 : 유형
+	accnt_id             : 어카운트 ID
+	cam_id               : 캠페인 ID
+	mkt_exe_info_item_id : 캠페인 실행 아이템 ID
+	conts_id             : 콘텐츠 ID
+	item_seq             : 항목 SEQ
+	agent_user_id        : 회원사 아이디
+	schedule_type        : 발송시점 구분
+	input_dt             : DB 입력 시간
+	send_plan_dt         : 발송 희망 시간
+	sender_nm            : 발신자 이름
+	sender_email         : 발신 이메일
+	recv_email           : 수신자 이메일
+	recv_mem_id          : 수신자 회원ID
+	recv_nm              : 수신자 이름
+	msg_subject          : 메시지 제목
+	msg_sbst             : 이메일 내용
+	file_cnt             : 전송 파일 개수
+	file_type1           : 파일 타입 1
+	file_type2           : 파일 타입 2
+	file_type3           : 파일 타입 3
+	file_path1           : 파일 경로 1
+	file_path2           : 파일 경로 2
+	file_path3           : 파일 경로 3
+	attrib1              : 여분 필드 1
+	attrib2              : 여분 필드 2
+	attrib3              : 여분 필드 3
+	attrib4              : 여분 필드 4
+	attrib5              : 여분 필드 5
+	bat_send_status      : 배치 처리 상태
+	bat_send_proc_time   : 배치 전송 처리완료 시간
+	bat_send_fail_cd     : 배치 전송 실패 사유 코드
+	bat_send_fail_reason : 배치 전송실패사유
+	bat_send_tgt_id      : 배치 대상 ID
+	cam_tgt_dtl_id       : 캠페인 대상자 상세 ID
+	============================================
+	-	작성자				: 류동균	
+	-	작성일				: 2016.11.14
+	***************************************/ -->
+	<insert id="insertEmailSendLog" >
+		/* CommonMapper.insertEmailSendLog */
+		insert into mkt.mkt_email_send_log ( 
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			, type
+			<!-- , accnt_id -->
+			, cam_id
+			, mkt_exe_info_item_id
+			, conts_id
+			, item_seq
+			, agent_user_id
+			, schedule_type
+			, input_dt
+			, send_plan_dt
+			, sender_nm
+			, sender_email
+			, recv_email
+			, recv_mem_id
+			, recv_nm
+			, msg_subject
+			, msg_sbst
+			, file_cnt
+			, file_type1
+			, file_type2
+			, file_type3
+			, file_path1
+			, file_path2
+			, file_path3
+			, attrib1
+			, attrib2
+			, attrib3
+			, attrib4
+			, attrib5
+			, bat_send_status
+			, bat_send_proc_time
+			, bat_send_fail_cd
+			, bat_send_fail_reason
+			, bat_send_tgt_id
+			, cam_tgt_dtl_id )
+		values ( 
+			#{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, getdate()
+			, getdate()
+			, 1 
+			<!-- , #{country} --> 
+			<!-- , #{appServiceId}  -->
+			, #{type} 
+			<!-- , #{accountId}  -->
+			, #{camId} 
+			, #{mktExeInfoItemId} 
+			, #{contsId} 
+			, #{itemSeq} 
+			, #{agentUserId} 
+			, #{scheduleType} 
+			, #{inputDt} 
+			, #{sendPlanDt} 
+			, #{senderNm} 
+			, #{senderEmail} 
+			, #{recvEmail} 
+			, #{recvMemId} 
+			, #{recvNm} 
+			, #{msgSubject} 
+			, #{msgSbst} 
+			, #{fileCnt} 
+			, #{fileType1} 
+			, #{fileType2} 
+			, #{fileType3} 
+			, #{filePath1} 
+			, #{filePath2} 
+			, #{filePath3} 
+			, #{attrib1} 
+			, #{attrib2} 
+			, #{attrib3} 
+			, #{attrib4} 
+			, #{attrib5} 
+			, #{batSendStatus}
+			, #{batSendProcTime} 
+			, #{batSendFailCd} 
+			, #{batSendFailReason} 
+			, #{batSendTgtId} 
+			, #{camTgtDtlId} )
+
+		<selectKey keyProperty="" resultType="java.lang.String">
+	        select id from mkt.mkt_email_send_log where id = #{id}
+	    </selectKey>
+	</insert>
+	
+	<!-- /**************************************
+	-	관련 파일		: MKTBaseDAO.java(addEmailSendLog)
+	============================================
+	-	제목			: email send log 등록
+	-	설명			: email send log 등록
+	-	결과형태		: 단일
+	============================================
+	-	입력
+	id                   : 아이디
+	create_by            : 생성자
+	modify_by            : 수정자
+	create_date          : 생성일시
+	modify_date          : 수정일시
+	flag                 : 삭제여부
+	country              : 국가코드
+	currency             : 화폐단위
+	app_service_type     : APP 서비스 ID
+	type                 : 유형
+	accnt_id             : 어카운트 ID
+	cam_id               : 캠페인 ID
+	mkt_exe_info_item_id : 캠페인 실행 아이템 ID
+	conts_id             : 콘텐츠 ID
+	item_seq             : 항목 SEQ
+	agent_user_id        : 회원사 아이디
+	schedule_type        : 발송시점 구분
+	input_dt             : DB 입력 시간
+	send_plan_dt         : 발송 희망 시간
+	accnt_app_key        : 어카운트별 앱 키값
+	msg_subject          : 메시지 제목
+	msg_sbst             : 메시지 내용
+	puth_sound           : 사운드
+	recv_device_id       : 수신자 디바이스 ID
+	recv_mem_id          : 수신자 회원ID
+	recv_device_type     : 수신자 디바이스 유
+	attrib1              : 여분 필드 1
+	attrib2              : 여분 필드 2
+	attrib3              : 여분 필드 3
+	attrib4              : 여분 필드 4
+	attrib5              : 여분 필드 5
+	bat_send_status      : 배치 처리 상태
+	bat_send_proc_time   : 배치 전송 처리완료 시간
+	bat_send_fail_cd     : 
+	bat_send_fail_reason : 배치 전송실패사유
+	bat_send_tgt_id      : 배치 대상 ID
+	cam_tgt_dtl_id       : 캠페인 대상자 상세 ID
+	push_type_cd         : PUSH유형코
+	============================================
+	-	작성자				: 류동균	
+	-	작성일				: 2016.11.14
+	***************************************/ -->
+	<insert id="insertPushSendLog" >
+		insert into mkt.mkt_push_send_log (
+			 id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			<!-- , app_service_type -->
+			, type
+			<!-- , accnt_id -->
+			, cam_id
+			, mkt_exe_info_item_id
+			, conts_id
+			, item_seq
+			, agent_user_id
+			, schedule_type
+			, input_dt
+			, send_plan_dt
+			, accnt_app_key
+			, msg_subject
+			, msg_sbst
+			, puth_sound
+			, recv_device_id
+			, recv_mem_id
+			, recv_device_type
+			, attrib1
+			, attrib2
+			, attrib3
+			, attrib4
+			, attrib5
+			, bat_send_status
+			, bat_send_proc_time
+			, bat_send_fail_cd
+			, bat_send_fail_reason
+			, bat_send_tgt_id
+			, cam_tgt_dtl_id
+			, push_type_cd )
+		values (
+			 #{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, getdate()
+			, getdate()
+			, 1
+			<!-- , #{country} --> 
+			<!-- , #{appServiceId} -->
+			, #{type} 
+			<!-- , #{accountId} -->
+			, #{camId} 
+			, #{mktExeInfoItemId} 
+			, #{contsId} 
+			, #{itemSeq} 
+			, #{agentUserId} 
+			, #{scheduleType} 
+			, #{inputDt} 
+			, #{sendPlanDt} 
+			, #{accntAppKey} 
+			, #{msgSubject} 
+			, #{msgSbst} 
+			, #{puthSound} 
+			, #{recvDeviceId} 
+			, #{recvMemId} 
+			, #{recvDeviceType} 
+			, #{attrib1} 
+			, #{attrib2} 
+			, #{attrib3} 
+			, #{attrib4} 
+			, #{attrib5} 
+			, #{batSendStatus} 
+			, #{batSendProcTime} 
+			, #{batSendFailCd} 
+			, #{batSendFailReason} 
+			, #{batSendTgtId} 
+			, #{camTgtDtlId} 
+			, #{pushTypeCd} )
+			
+		<selectKey keyProperty="" resultType="java.lang.String">
+	        select id from mkt.mkt_push_send_log where id = #{id}
+	    </selectKey>
+	</insert>
+	
+	<insert id="insertFile" >
+		/* CommonMapper.insertFile */
+		insert into com.com_file (
+			id
+			, create_by
+			, modify_by
+			, create_date
+			, modify_date
+			, flag
+			<!-- , country -->
+			, lang
+			<!-- , app_service_type -->
+			, file_path
+			, file_name
+			, file_type
+			, file_size
+			, ori_file_name
+			, seq
+			, parent_id
+			, description )
+		values (
+			#{id}
+			, #{createBy} 
+			, #{modifyBy} 
+			, getdate()
+			, getdate()
+			, 1
+			<!-- , #{country} --> 
+			, #{lang} 
+			<!-- , #{appServiceId} -->
+			, #{filePath} 
+			, #{fileName} 
+			, #{fileType} 
+			, #{fileSize} 
+			, #{oriFileName} 
+			, #{seq} 
+			, #{parentId} 
+			, #{description} )
+			
+		<selectKey keyProperty="" resultType="java.lang.String">
+	        select id from com.com_file where id = #{id}
+	    </selectKey>
+	</insert>
+	
+	<delete id="deleteFile" >
+		/* CommonMapper.deleteFile */
+		DELETE FROM com.com_file
+		WHERE
+			parent_id = #{conid}
+	</delete>
+	
+<!-- 	<parameterMap id="getTransNoMap" type="java.util.Map">
+    	<parameter property="TranSerialNum" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT"/>
+    	<parameter property="TranDate" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT"/>
+    	<parameter property="TranTime" javaType="java.lang.String" jdbcType="VARCHAR" mode="OUT"/>
+    
+  	</parameterMap>  
+	  
+	<update id="getTransNo" parameterMap="getTransNoMap" statementType="CALLABLE">
+		{ call ifl.proc_if_ifl_tranSerialNo_sel( ?, ?, ?,'N') }
+	</update> -->
+	
+	<select id="selectExcelMetaData" parameterType="java.lang.String"
+												resultType="com.icignal.common.base.dto.response.ExcelMetaDataResDto">
+	/* CommonMapper.selectExcelMetaData */
+		SELECT h.RID AS id
+				, h.PGM_ID AS progrmaId
+				, h.TEMPLETE_FILE AS filePath
+				, h.TITLE AS title
+				, d.DATA_FIELD AS field
+				, d.EXCEL_CELL AS colrow
+				, d.HEAD_NM AS text
+				, h.EXCEL_CREATE_TYPE as excelType
+				, h.EXCEL_SEQ as excelSeq
+				, h.TEMPLETE_FILE as tempFilePath
+		FROM COM.EXCEL_DOWN_H h WITH (NOLOCK)
+			JOIN COM.EXCEL_DOWN_D d WITH (NOLOCK) ON h.RID = d.RID_EXCEL_H AND d.FLAG = 1
+		WHERE h.FLAG = 1
+		<if test="programId != null">
+		AND h.PGM_ID = #{programId}
+		</if>
+		AND h.OBJCODE = #{objCode}
+		ORDER BY colrow
+	</select>
+
+    	
+   <!-- /**************************************
+	-	관련 파일				: ImageManageDAO.java(selectImageId)
+	============================================
+	-	제목					: 이미지 업로드 타입 가져오기 이미지 업로드 타입으로 가져오기
+	-	설명					: 이미지 업로드 타입 가져오기 이미지 업로드 타입으로 가져오기
+	-	결과형태				: 복수
+	============================================
+	-	작성자				: 금동우
+	-	작성일				: 2018.09.19
+    ***************************************/ -->
+	<select id="selectImgUpType" parameterType="com.icignal.marketing.contents.dto.request.MktImgOptionReqDto" 
+	resultType="com.icignal.marketing.contents.dto.response.MktImgOptionResDto">
+	/*MKTContents.selectImgUpType*/
+		SELECT distinct c1.CODE_NAME as name
+			, mcc.img_resol_h as height
+			, mcc.img_resol_w as width
+		from mkt.mkt_chnl_capa mcc WITH (NOLOCK)
+			join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = mcc.UPLD_ETSION_CD and c1.lang = #{lang} and c1.group_code = 'CHNL_UPLOAD_TYPE' and c1.ATTRIB01 = 'IMAGE'
+			join com.comm_code c2 WITH (NOLOCK) on c2.flag = 1 and c2.code_name = 'IMGMSG' and c2.lang = #{lang} and c2.group_code = 'MKT_CONTENTS_TYPE_CD'
+			join mkt.mkt_chnl c3 WITH (NOLOCK) on c3.id = mcc.mkt_chnl_id
+		<!-- and c3.accnt_id = #{accntId} -->
+		where mcc.type = 'ATTACH_USAGE'
+			and mcc.flag = 1
+			and ${strSVCType}
+	</select>
+
+	
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(selectImageUpType)
+	============================================
+	-	제목					: 이미지 업로드 타입 가져오기 콘텐츠 채널에 설정된 아이디 가져오기
+	-	설명					: 이미지 업로드 타입 가져오기 콘텐츠 채널에 설정된 아이디 가져오기
+	-	결과형태				: 복수
+	============================================
+	-	작성자				: 금동우
+	-	작성일				: 2015.09.23
+    ***************************************/ -->
+	<select id="selectImageUpType" parameterType="com.icignal.common.base.dto.request.ImageManageContentReqDto" 
+	resultType="com.icignal.common.base.dto.response.ImageCondResDto">
+	/* IMGManage.selectImageUpType */
+		SELECT
+			  c1.CODE_NAME as name
+			, mcc.max_vol as maxVol
+			, mcc.img_resol_h as imgResolH
+			, mcc.img_resol_w as imgResolW
+			, c4.chnl_type_cd as chnlTypeCd
+		from mkt.mkt_chnl_capa mcc WITH (NOLOCK)
+			join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = mcc.UPLD_ETSION_CD
+				and c1.lang = #{lang} and c1.group_code = 'CHNL_UPLOAD_TYPE'
+			join mkt.mkt_conts_mst c2 WITH (NOLOCK) on c2.id = #{id}  and c1.ATTRIB01 = 'IMAGE'
+			join com.comm_code c3 WITH (NOLOCK) on c3.flag = 1 and c3.code_name = c2.exe_chnl_type_cd
+					and c3.lang = #{lang} and c3.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+			join mkt.mkt_chnl c4 WITH (NOLOCK) on c4.chnl_type_cd = c2.exe_chnl_type_cd
+		<!-- and c4.accnt_id = #{accntId} -->
+		where mcc.type = 'ATTACH_USAGE'
+			and mcc.mkt_chnl_id = c4.id
+			and mcc.flag = 1
+			and ${strSVCType}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(deleteContentFile)
+	============================================
+	-	제목					: 파일 리스트 가져오기(싱크 퓨전용)
+	-	설명					: 파일 리스트 가져오기
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    Path				: 경로
+	============================================
+	-	작성자				: 금동우
+	-	작성일				: 2018.09.19
+    ***************************************/ -->
+	<select id="selectFileList" parameterType="com.icignal.common.base.dto.request.ImageFileUploadReqDto" 
+	resultType="com.icignal.common.base.dto.response.ImageFileUploadResDto">
+	/* IMGManage.selectFileList */
+		select
+			 ci.id
+		  ,  ci.MODIFY_DATE as dateModified
+		  ,  c2.NAME as memId
+		  , 'File' as type
+		  ,  ci.img_size as imgSize
+		  ,  ci.img_desc as description
+		  , convert (numeric, '0') as hasChild
+		  , convert (numeric, '1') as isFile
+		  , (ci.ORI_IMG_FILE_NM + ci.IMAGE_FILE_TYPE) as name
+		from com.image ci WITH (NOLOCK)
+			join com.comm_code c1 WITH (NOLOCK) on c1.flag = 1 and c1.code_name = ci.image_type
+					and c1.group_code = 'MKT_CONT_IMG_TYPE' and c1.CODE_NAME = 'USERCONTS' and c1.lang = #{lang}
+			join com.crm_user  u1 WITH (NOLOCK) on u1.rid = ci.create_by
+			join com.employee  c2 WITH (NOLOCK) on c2.id = u1.id_employee
+		where  SUBSTRING(image_folder,24,8) = 'CAMPAIGN'
+		 <!-- and c2.accnt_id = #{accountId} -->
+		 	and ci.flag =1 and ${strSVCType}
+	</select>
+	
+	<select id="selectFileListS3" parameterType="com.icignal.common.base.dto.request.ImageFileUploadReqDto"
+	 resultType="com.icignal.common.base.dto.response.ImageFileUploadResDto">
+	/* CommonMapper.selectFileListS3 */
+		select
+			 ci.id
+		  ,  ci.MODIFY_DATE as dateModified
+		  ,  c2.NAME as memId
+		  , 'File' as type
+		  ,  ci.img_size as imgSize
+		  ,  ci.img_desc as description
+		  , convert (numeric, '0') as hasChild
+		  , convert (numeric, '1') as isFile
+		  , (ci.ORI_IMG_FILE_NM + ci.IMAGE_FILE_TYPE) as name
+		from com.image ci WITH (NOLOCK)
+			join com.crm_user  u1 WITH (NOLOCK) on u1.rid = ci.create_by
+			join com.employee  c2 WITH (NOLOCK) on c2.id = u1.id_employee
+		where 1=1
+			and ci.image_folder is null
+			and ci.flag =1
+			and ci.image_type = #{imageType}
+	</select>
+	
+	
+	<!-- /**************************************
+	-	관련 파일				: MKTContentDAO.java(deleteImageFile)
+	============================================
+	-	제목					: 이미지 파일 삭제
+	-	설명					: 이미지 파일 삭제
+	-	결과형태				: 복수
+	============================================
+	-   입력
+	    id					: 고유 아이디
+	    memId				: 접속자 아이디
+	============================================
+	-	작성자				:금동우
+	-	작성일				: 2018.09.19
+    ***************************************/ -->
+    <update id="deleteImageFile" parameterType="com.icignal.common.base.dto.request.ImageFileUploadReqDto">
+    /* IMGManage.deleteImageFile */
+		update com.image SET
+			  modify_by = #{memId}
+			, modify_date = getdate()
+			, flag = flag + 1
+		where id = #{id} and flag= 1
+	</update>
+	
+	
+  <!-- /**************************************
+    -    관련 파일             : MKTContentDAO.java(updateDescFile)
+    ============================================
+    -    제목                    : 이미지 설명 저장
+    -    설명                    : 이미지 설명 저장
+    -    결과형태              : 복수
+    ============================================
+    -   입력
+        id           : 고유 아이디
+        description  : 설명
+    ============================================
+    -	작성자                   : 금동우
+	-	작성일		 : 2018.09.19
+    ***************************************/ -->
+    <update id="updateDescFile" parameterType="com.icignal.common.base.dto.request.ImageFileUploadReqDto">
+    /*MKTContents.updateDescFile*/
+		update com.image SET
+			  modify_by = #{memId}
+			, modify_date = getdate()
+			, img_desc = #{description}
+		where id = #{id}
+    </update>
+    
+    <select id="selectImagePath" parameterType="com.icignal.common.base.dto.request.ImageFileUploadReqDto" resultType="java.lang.String">
+    /*MKTContents.selectImagePath*/
+		select 	image_folder + ORI_IMG_FILE_NM + IMAGE_FILE_TYPE
+		from 	com.image
+		where 	id = #{id}
+    </select>
+    
+    <select id="selectImagePathContentsManager" parameterType="com.icignal.common.base.dto.request.ImageFileUploadReqDto" resultType="java.lang.String">
+    /*MKTContents.selectImagePathContentsManager*/
+		select 	image_folder + image_file_name + IMAGE_FILE_TYPE
+		from 	com.image
+		where 	id = #{id}
+    </select>
+
+	
+</mapper>

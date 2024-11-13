@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:35:55 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.dataset.mapper.SystemDatasetMapper">
+
+    <select id="selectDataSetMasterList" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+            resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetListResDto">
+        /* SystemDatasetMapper.selectDataSetMasterList */
+        SELECT ld.CATE_CD                                AS cateCd
+             , ld.DS_NM                                  AS dsNm
+             , ld.OBJ_NM                                 AS objNm
+             , em.NAME                                   AS name
+             , com.TO_CHAR(ld.CREATE_DATE, 'YYYY-MM-DD') As createDate
+             , ld.RID                                    AS rid
+             , ${strColumn}
+        FROM LOY.LOY_DATASET ld
+                 LEFT OUTER JOIN com.crm_user us ON ld.create_by = us.rid AND us.FLAG = 1
+                 LEFT OUTER JOIN com.employee em ON us.id_employee = em.id AND em.FLAG = 1
+        WHERE ${strCondWhere}
+          AND ${strWhere}
+          AND ld.FLAG = 1
+        ORDER BY ${strOrderby} ${strEndPaging}
+    </select>
+
+    <update id="deleteDataSet" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">
+        /* SystemDatasetMapper.deleteDataSet */
+        update LOY.LOY_DATASET
+        set modify_date = GETDATE() , modify_by = #{modifyBy}
+            , flag = flag + 1
+            where rid = #{rid}
+    </update>
+
+    <select id="selectDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+            resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetItemListResDto">
+        /* SystemDatasetMapper.selectDataSetItem */
+        SELECT ldi.FIELD_NM                                          AS fieldNm
+             , ldi.FIELD_DESC                                        AS fieldDesc
+             , em.NAME                                               AS name
+             , com.TO_CHAR(ldi.CREATE_DATE, 'YYYY-MM-DD HH24:Mi:SS') As createDate
+             , ldi.RID                                               AS rid
+             , ${strColumn}
+        FROM LOY.LOY_DATASET_ITEM ldi
+                 LEFT OUTER JOIN com.crm_user us ON ldi.create_by = us.rid AND us.FLAG = 1
+                 LEFT OUTER JOIN com.employee em ON us.id_employee = em.id AND em.FLAG = 1
+        WHERE ldi.FLAG = 1
+          AND ldi.RID_DS = #{dataSetRid}
+          AND ${strCondWhere}
+          AND ${strWhere}
+        ORDER BY ${strOrderby} ${strEndPaging}
+    </select>
+
+    <select id="selectDataSetDetail" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+            resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetListResDto">
+        /* SystemDatasetMapper.selectDataSetDetail */
+        SELECT ld.DS_NM   AS dsNm
+             , ld.OBJ_NM  AS objNm
+             , ld.CATE_CD AS cateCd
+             , ld.RID     AS rid
+        FROM LOY.LOY_DATASET ld
+        WHERE ld.RID = #{rid}
+          AND ld.FLAG = 1
+    </select>
+
+    <insert id="insertDataSet" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">
+        /* SystemDatasetMapper.selectDataSetDetail */
+        INSERT INTO LOY.LOY_DATASET
+        ( RID
+        , CREATE_BY
+        , MODIFY_BY
+        , DS_NM
+        , OBJ_NM
+        , CATE_CD)
+        VALUES ( #{rid}
+               , #{createBy}
+               , #{modifyBy}
+               , #{dsNm}
+               , #{objNm}
+               , #{cateCd})
+    </insert>
+
+    <insert id="updateDataSet" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">
+        /* SystemDatasetMapper.updateDataSet */
+        UPDATE LOY.LOY_DATASET
+        SET DS_NM       = #{dsNm}
+          , OBJ_NM      = #{objNm}
+          , MODIFY_BY   = #{modifyBy}
+          , MODIFY_DATE = GETDATE()
+          , CATE_CD     = #{cateCd}
+        WHERE rid = #{rid}
+    </insert>
+
+    <select id="selectDataSetItemDetail" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+            resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetItemListResDto">
+        /* SystemDatasetMapper.selectDataSetItemDetail */
+        SELECT ldi.FIELD_NM   AS fieldNm
+             , ldi.FIELD_DESC AS fieldDesc
+             , ldi.RID        AS rid
+        FROM LOY.LOY_DATASET_ITEM ldi
+        WHERE ldi.RID = #{rid}
+          AND ldi.FLAG = 1
+    </select>
+
+    <insert id="insertDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetItemReqDto">
+        /* SystemDatasetMapper.insertDataSetItem */
+        INSERT INTO LOY.LOY_DATASET_ITEM
+        ( RID
+        , CREATE_BY
+        , MODIFY_BY
+        , RID_DS
+        , FIELD_NM
+        , FIELD_DESC)
+        VALUES ( #{rid}
+               , #{createBy}
+               , #{modifyBy}
+               , #{dataSetRid}
+               , #{fieldNm}
+               , #{fieldDesc})
+    </insert>
+
+    <insert id="updateDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">
+        /* SystemDatasetMapper.updateDataSetItem */
+        UPDATE LOY.LOY_DATASET_ITEM
+        SET RID_DS      = #{dataSetRid}
+          , FIELD_NM    = #{fieldNm}
+          , FIELD_DESC  = #{fieldDesc}
+          , MODIFY_BY   = #{modifyBy}
+          , MODIFY_DATE = GETDATE()
+        WHERE rid = #{rid}
+    </insert>
+
+    <update id="deleteDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetItemReqDto">
+        /* SystemDatasetMapper.deleteDataSetItem */
+        update LOY.LOY_DATASET_ITEM
+        set modify_date = GETDATE()
+          , modify_by   = #{modifyBy}
+          , flag        = flag + 1
+        where rid = #{rid}
+    </update>
+
+    <select id="getDataSetList" resultType="com.icignal.systemmanagement.dataset.dto.response.SystemGetDatasetListResDto">
+        /* SystemDatasetMapper.getDataSetList */
+        SELECT  F.NAME AS owner
+             , A.NAME AS objectName
+             , CASE
+                   WHEN A.TYPE = 'U' THEN 'TABLE'
+                   WHEN A.TYPE = 'V' THEN 'VIEW'
+                   ELSE '' END AS objectType
+             , CASE
+                   WHEN LEN(CAST(C.value AS NVARCHAR(MAX))) > 0
+                       THEN SUBSTRING(CAST(C.value AS NVARCHAR(MAX)), 0, 50)
+                   ELSE '' END AS comments
+             , ${strColumn}
+        FROM SYSOBJECTS A
+        LEFT OUTER JOIN SYS.EXTENDED_PROPERTIES C ON A.ID = C.MAJOR_ID AND C.NAME = 'MS_Description'
+        INNER JOIN sys.views E ON A.ID = E.OBJECT_ID
+        INNER JOIN sys.schemas F ON E.SCHEMA_ID = F.SCHEMA_ID AND F.NAME = 'LOY'
+        WHERE ${strCondWhere}
+        AND A.XTYPE = 'V'
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+            ${strEndPaging}
+        /*SELECT (LEFT(CAST(td.value AS VARCHAR(MAX)), CHARINDEX('.', CAST(td.value AS VARCHAR(MAX)) + '.') - 1)) AS owner
+        , CAST(t.name AS VARCHAR(MAX)) AS objectName
+        , 'VIEW' AS objectType
+        , (CASE
+        WHEN LEN(CAST(td_NAME.value AS VARCHAR(MAX))) > 0
+        THEN SUBSTRING(CAST(td_NAME.value AS VARCHAR(MAX)), 0, 50)
+        ELSE ''
+        END) AS comments
+        , ${strColumn}
+        FROM sys.sysobjects t
+        LEFT OUTER JOIN sys.extended_properties td ON td.major_id = t.id
+        AND td.minor_id = 0
+        AND TD.NAME <![CDATA[<>]]> 'MS_Description'
+        LEFT OUTER JOIN sys.extended_properties td_NAME ON td_NAME.major_id = t.id
+        AND td_NAME.minor_id = 0
+        AND td_NAME.NAME = 'MS_Description'
+        WHERE ${strCondWhere}
+        AND t.type = 'v'
+        AND (LOWER(LEFT(CAST(td.value AS VARCHAR), CHARINDEX('.', CAST(td.value AS VARCHAR)) - 1))) IN ('loy')
+        AND ${strWhere}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}*/
+    </select>
+
+    <select id="getDataItemSetList" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+            resultType="com.icignal.systemmanagement.dataset.dto.response.SystemGetDatasetListResDto">
+        /* SystemDatasetMapper.getDataItemSetList */
+
+        SELECT A.TABLE_SCHEMA
+             , A.TABLE_NAME
+             , A.COLUMN_NAME AS columnName
+             , (CASE
+                    WHEN LEN(CAST(C.VALUE AS VARCHAR(MAX))) <![CDATA[>]]> 0
+                        THEN SUBSTRING(CAST(C.VALUE AS VARCHAR(MAX)), 0, 50)
+                    ELSE CAST(A.COLUMN_NAME AS VARCHAR(MAX))
+            END)
+             , (CASE
+                    WHEN CHARACTER_MAXIMUM_LENGTH IS NULL
+                        THEN A.DATA_TYPE
+                    ELSE CONCAT(CAST(A.DATA_TYPE AS VARCHAR), '(', CAST(CHARACTER_MAXIMUM_LENGTH AS VARCHAR), ')')
+            END)
+             , SUBSTRING(CAST(C.VALUE AS VARCHAR(MAX)), 0, 100) AS comments
+             , ${strColumn}
+        FROM INFORMATION_SCHEMA.COLUMNS A
+                 INNER JOIN sys.columns AS B ON B.object_id = object_id(A.table_schema + '.' + A.table_name)
+            AND B.NAME = A.COLUMN_NAME
+                 LEFT JOIN sys.extended_properties C ON C.major_id = B.object_id
+            AND C.minor_id = B.column_id
+            AND C.NAME = 'MS_Description'
+        WHERE ${strCondWhere}
+          AND LOWER(A.TABLE_SCHEMA) IN ('anl', 'mkt', 'loy', 'com', 'voc', 'qim', 'batch', 'dor', 'logs')
+          AND A.TABLE_NAME = #{objectName}
+          AND ${strWhere}
+        ORDER BY ${strOrderby} ${strEndPaging}
+
+    </select>
+
+    <!-- [데이터셋 > 상세] 화면에서 '소스보기' 시 해당 소스쿼리를 조회하는 쿼리 -->
+    <select id="getSrcQuery" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+            resultType="com.icignal.systemmanagement.dataset.dto.response.SystemGetDatasetListResDto">
+        SELECT VIEW_DEFINITION AS srcQuery
+        FROM INFORMATION_SCHEMA.VIEWS
+        WHERE TABLE_NAME =#{tblNm}
+    </select>
+
+
+</mapper>

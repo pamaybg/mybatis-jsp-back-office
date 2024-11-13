@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:57:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.intact.mapper.SystemIntactMapper">  
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemIntactMapper.java(selectLoyIntactList)
+    ============================================
+    -   제목                  : 인터렉션 유형 목록 조회
+    -   설명                  : 인터렉션 유형 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.23
+    ***************************************/ -->
+    <select id="selectLoyIntactList" parameterType="com.icignal.systemmanagement.intact.dto.request.SystemIntactListReqDto" 
+    											resultType="com.icignal.systemmanagement.intact.dto.response.SystemIntactListResDto">
+        /* SystemIntactMapper.selectLoyIntactList */
+        SELECT ${strColumn}
+            , em.name                 as createrName
+            , t1.rid                as rid
+            , t1.rid_pgm            as ridPgm
+            , t1.intact_type_1_cd   as intactType1Cd
+            , t1.intact_type_2_cd   as intactType2Cd
+            , t1.save_tbl_nm        as saveTblNm
+            <!-- , t1.accnt_id           as accntId -->
+            <!-- , t1.app_service_type   as appServiceType -->
+            <!-- , t1.country            as country -->
+            , t1.flag               as flag
+            , t1.mod_num            as modNum
+            , convert(varchar, t1.create_date, 120) as createDate
+            , t1.create_by          as createBy
+            , convert(varchar, t1.modify_date, 120) as modifyDate
+            , t1.modify_by          as modifyBy
+           <!--  , t2.mark_name          as typeName -->
+           , t1.INTACT_TYPE_1_CD AS typeNameCd
+            <!-- , t3.mark_name          as subTypeName -->
+            , t1.INTACT_TYPE_2_CD as subTypeNameCd
+        FROM mkt.mkt_intact_type t1 with(nolock)
+        <!-- LEFT JOIN com.comm_code t2 ON t2.flag = 1 AND t1.INTACT_TYPE_1_CD = t2.code_name AND t1.country = t2.country AND t2.group_code = 'LOY_INTACT_TYPE'
+        LEFT JOIN com.comm_code t3 ON t3.flag = 1 AND t1.INTACT_TYPE_2_CD = t3.code_name AND t1.country = t3.country AND t3.group_code = 'LOY_INTACT_DTL_TYPE' -->
+            LEFT JOIN com.crm_user c1 with(nolock) ON t1.create_by = c1.rid
+            LEFT JOIN com.employee em with(nolock) ON c1.id_employee = em.id
+        WHERE t1.flag = 1
+          AND ${strCondWhere} 
+          AND ${strWhere}
+          <!-- AND t1.accnt_id = #{accountId} -->
+          AND t1.rid_pgm = #{loyProgramId}
+        ORDER BY ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemIntactMapper.java(selectLoyIntactItem)
+    ============================================
+    -   제목                  : 인터력션 유형 상세 조회
+    -   설명                  : 인터력션 유형 상세 조회
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.23
+    ***************************************/ -->
+    <select id="selectLoyIntactItem" parameterType="com.icignal.systemmanagement.intact.dto.request.SystemIntactDetailReqDto" 
+    											resultType="com.icignal.systemmanagement.intact.dto.response.SystemIntactDetailResDto">
+        /* SystemIntactMapper.selectLoyIntactItem */
+        SELECT 
+            t1.rid                      as rid
+            , t1.rid_pgm                as ridPgm
+            , t1.intact_type_1_cd       as intactType1Cd
+            , t1.intact_type_2_cd       as intactType2Cd
+            , t1.save_tbl_nm            as saveTblNm
+            <!-- , t1.accnt_id               as accntId -->
+            <!-- , t1.app_service_type       as appServiceType -->
+            <!-- , t1.country                as country -->
+            , t1.flag                   as flag
+            , t1.mod_num                as modNum
+            , convert(varchar, t1.create_date, 120) as createDate
+            , t1.create_by              as createBy
+            , convert(varchar, t1.modify_date, 120) as modifyDate
+            , t1.modify_by              as modifyBy
+        FROM mkt.mkt_intact_type t1 
+        WHERE t1.flag = 1
+          and t1.rid  = #{rid}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemIntactMapper.java(checkCampaignsUsingIntect)
+    ============================================
+    -   제목                  : 인터력션 유형을 사용중인 캠페인이 존재하는지 확인
+    -   설명                  : 인터력션 유형을 사용중인 캠페인이 존재하는지 확인
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.23
+    ***************************************/ -->
+    <select id="checkCampaignsUsingIntect" parameterType="com.icignal.systemmanagement.intact.dto.request.SystemIntactCheckReqDto" 
+    														resultType="com.icignal.systemmanagement.intact.dto.response.SystemIntactCheckResDto">
+        /* SystemIntactMapper.checkCampaignsUsingIntect */
+        SELECT count(*) chkCount
+        FROM mkt.mkt_cam_mst t1
+        WHERE t1.flag = 1
+          AND t1.rid_intact_type = #{rid}
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemIntactMapper.java(checkDuplicationIntactType)
+    ============================================
+    -   제목                  : 인터력션 유형 중복체크 
+    -   설명                  : 인터력션 유형 중복체크 
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.23
+    ***************************************/ -->
+    <select id="checkDuplicationIntactType" parameterType="com.icignal.systemmanagement.intact.dto.request.SystemIntactCheckReqDto" 
+    														resultType="com.icignal.systemmanagement.intact.dto.response.SystemIntactCheckResDto">
+        /* SystemIntactMapper.checkDuplicationIntactType */
+        SELECT count(*) chkCount
+        FROM mkt.mkt_intact_type t1 
+        WHERE t1.flag       = 1
+          <!-- AND t1.accnt_id   = #{accountId} -->
+          AND t1.rid_pgm    = #{loyProgramId}
+          AND t1.intact_type_1_cd = #{intactType1Cd}
+          AND t1.intact_type_2_cd = #{intactType2Cd}
+       <if test="rid != null and rid != ''">
+          AND t1.rid != #{rid}
+       </if>
+    </select>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemIntactMapper.java(insertIntactItem)
+    ============================================
+    -   제목                  : 인터력션 유형 등록 
+    -   설명                  : 인터력션 유형 등록 
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.23
+    ***************************************/ -->
+    <insert id="insertIntactItem" parameterType="com.icignal.systemmanagement.intact.dto.request.SystemIntactDetailReqDto"> 
+        /* SystemIntactMapper.insertIntactItem */
+        INSERT INTO mkt.mkt_intact_type (
+             rid
+            , rid_pgm
+            , intact_type_1_cd
+            , intact_type_2_cd
+            , save_tbl_nm
+            <!-- , accnt_id -->
+            <!-- , app_service_type -->
+            <!-- , country -->
+            , flag
+            , mod_num
+            , create_date
+            , create_by
+            , modify_date
+            , modify_by 
+        )
+        values (
+             #{rid}
+            , #{loyProgramId} 
+            , #{intactType1Cd} 
+            , #{intactType2Cd} 
+            , #{saveTblNm} 
+            <!-- , #{accountId} -->
+            <!-- , #{appServiceId} -->
+            <!-- , #{country} --> 
+            , 1
+            , 0
+            , getdate()
+            , #{createBy} 
+            , getdate()
+            , #{modifyBy} 
+        )
+    </insert>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemIntactMapper.java(updateIntactItem)
+    ============================================
+    -   제목                  : 인터력션 유형 수정 
+    -   설명                  : 인터력션 유형 수정 
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.23
+    ***************************************/ -->
+    <update id="updateIntactItem" parameterType="com.icignal.systemmanagement.intact.dto.request.SystemIntactDetailReqDto">
+        /* SystemIntactMapper.updateIntactItem */
+        UPDATE mkt.mkt_intact_type SET
+             rid_pgm            = #{loyProgramId}
+            , intact_type_1_cd  = #{intactType1Cd}
+            , intact_type_2_cd  = #{intactType2Cd}
+            , save_tbl_nm       = #{saveTblNm}
+            , mod_num           = mod_num + 1
+            , modify_date       = getdate()
+            , modify_by         = #{modifyBy}
+        WHERE rid = #{rid}
+    </update>
+    
+    <!-- /**************************************
+    -   관련 파일             : SystemIntactMapper.java(deleteIntactItem)
+    ============================================
+    -   제목                  : 인터력션 유형 삭제
+    -   설명                  : 인터력션 유형 삭제
+    -   결과형태              : 단일
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : jh.kim
+    -   작성일                : 2017.06.23
+    ***************************************/ -->
+    <update id="deleteIntactItem" parameterType="com.icignal.systemmanagement.intact.dto.request.SystemIntactDetailReqDto">
+        /* SystemIntactMapper.deleteIntactItem */
+        UPDATE mkt.mkt_intact_type SET 
+            flag = flag + 1
+            , MODIFY_BY     = #{modifyBy}
+            , MODIFY_DATE   = getdate()
+        WHERE rid = #{rid}
+    </update>
+    
+</mapper>

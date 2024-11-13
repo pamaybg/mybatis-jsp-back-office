@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Thurs Sep 18 15:04:13 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.icignal.kepler.analysis.mapper.KprAnalysisChartSettingMapper">
+
+
+	<!-- /**************************************
+	-	관련 파일				: KPRAnalysisDAO.java (selectAnalysisChartLabelDetail)
+	============================================
+	-	제목					: 분석 차트 레이블 상세 조회
+	-	설명					: 분석 차트 레이블 상세 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisChartLabelDetail" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto" 
+																	resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisChartLabelDetailResDto">
+	/* KprAnalysisChartSettingMapper.selectAnalysisChartSettingDetail */
+	SELECT CHART_TYPE_CD	AS chartTypeCode
+			 , CHART_LABEL_CD_1	AS leftLabelTypeCode
+			 , CHART_LABEL_CD_2	AS rightLabelTypeCode
+			 , CHART_DP_TYPE	AS displayTypeCode
+			 , CHART_HORI_NM	AS horizontalName
+			 , CHART_VERTI_1_NM	AS leftVerticalName
+			 , CHART_VERTI_2_NM	AS rightVerticalName
+			 , LEGEND_POS_CD	AS legendPositionTypeCode
+	FROM ANL.ANL_RPT_MST_INST WITH (NOLOCK)
+	WHERE FLAG	= 1
+	AND ID	= #{analysisId}
+	</select>
+	
+	<select id="selectAnalysisChartLabelFontDetailList" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto" 
+																				resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisChartLabelDetailResDto">
+	/* KprAnalysisChartSettingMapper.selectAnalysisChartLabelFontDetailList */
+	SELECT ID					AS fontId
+			 , CHART_LABEL_TYPE_CD	AS chartLabelTypeCode
+			 , FONT_TYPE_CD			AS fontTypeCode
+			 , FONT_STYLE_CD		AS fontStyleTypeCode
+			 , FONT_COLOR			AS fontColor
+			 , FONT_SIZE			AS fontSize
+	FROM ANL.ANL_RPT_CHART_FONT_INST WITH (NOLOCK)
+	WHERE FLAG		= 1
+	AND RPT_ID	= #{analysisId}
+	</select>
+	
+	<!-- /**************************************
+	-	관련 파일				: KPRAnalysisDAO.java (selectAnalysisChartSetupDetail)
+	============================================
+	-	제목					: 분석 차트 설정 상세 조회
+	-	설명					: 분석 차트 설정 상세 조회
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<select id="selectAnalysisChartLabelDetailList" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto" 
+																	resultType="com.icignal.kepler.analysis.dto.response.KprAnalysisChartLabelDetailResDto">
+		/* KprAnalysisChartSettingMapper.selectAnalysisChartLabelDetailList */
+		select acf.ID					AS fontId
+			 , acf.CHART_LABEL_TYPE_CD	AS chartLabelTypeCode
+			 , acf.FONT_TYPE_CD			AS fontTypeCode
+			 , acf.FONT_STYLE_CD		AS fontStyleTypeCode
+			 , acf.FONT_COLOR			AS fontColor
+			 , acf.FONT_SIZE			AS fontSize
+			 , fcd.ATTRIB01				AS fontTypeAttrib01
+			 , scd.ATTRIB01				AS fontStyleAttrib01
+			 , scd.ATTRIB02				AS fontStyleAttirb02
+		<if test="analysisMasterFlag == &quot;Y&quot;">
+		  FROM ANL.ANL_RPT_CHART_FONT		acf WITH (NOLOCK)
+		</if>
+		<if test="analysisMasterFlag != &quot;Y&quot;">
+		  FROM ANL.ANL_RPT_CHART_FONT_INST	acf WITH (NOLOCK)
+		</if>
+		  LEFT JOIN COM.COMM_CODE	fcd WITH (NOLOCK) ON acf.FONT_TYPE_CD = fcd.CODE_NAME AND fcd.GROUP_CODE = 'FONT_TYPE_CD' AND fcd.FLAG = 1 AND fcd.LANG = #{lang}
+		  LEFT JOIN COM.COMM_CODE	scd WITH (NOLOCK) ON acf.FONT_STYLE_CD = scd.CODE_NAME AND scd.GROUP_CODE = 'FONT_STYLE_TYPE_CD' AND scd.FLAG = 1 AND scd.LANG = #{lang}
+		 WHERE acf.FLAG		= 1
+		   AND acf.RPT_ID	= #{analysisId}
+	</select>
+	
+	<select id="selectAnalysisChartLabelIdListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto" resultType="java.lang.String">
+	/* KprAnalysisChartSettingMapper.selectAnalysisChartLabelIdListInst */
+	SELECT ID
+	FROM ANL.ANL_RPT_CHART_FONT_INST WITH (NOLOCK)
+	WHERE FLAG		= 1
+	AND RPT_ID	= #{analysisId}
+	</select>
+	
+	<select id="selectAnalysisColumnIdCheckMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto" resultType="java.lang.Integer">
+	/* KprAnalysisChartSettingMapper.selectAnalysisColumnIdCheckMaster */
+	SELECT COUNT(1)
+	FROM ANL.ANL_RPT_CHART_FONT WITH (NOLOCK)
+	WHERE FLAG	= 1
+	AND ID	= #{fontId}
+	</select>
+
+	<!-- /**************************************
+	-	관련 파일				: KPRAnalysisDAO.java (updateAnalysisChartLabelDetail)
+	============================================
+	-	제목					: 분석 차트 레이블 수정
+	-	설명					: 분석 차트 레이블 수정
+	-	결과형태				: 단일
+	============================================
+	-	입력					: accountId
+	-	출력					:	
+	============================================
+	-	작성자					: 이기오
+	-	작성일					: 2016.09.29
+	***************************************/ -->
+	<update id="updateAnalysisChartLabelDetail" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+		/* KprAnalysisChartSettingMapper.updateAnalysisChartLabelDetail */
+		UPDATE ANL.ANL_RPT_MST_INST
+		   SET MODIFY_BY		= #{modifyBy}
+		     , MODIFY_DATE		= GETDATE()
+		     , CHART_HORI_NM	= #{horizontalName}
+		     , CHART_VERTI_1_NM	= #{leftVerticalName}
+			<if test="rightVerticalName != null and rightVerticalName != ''">
+			 , CHART_VERTI_2_NM	= #{rightVerticalName}
+			</if>
+			<if test="leftChartLabelTypeCode == null or leftChartLabelTypeCode == ''">
+			 , CHART_LABEL_CD_1	= 'DEFAULT'
+			</if>
+			<if test="leftChartLabelTypeCode != null and leftChartLabelTypeCode != ''">
+			 , CHART_LABEL_CD_1	= #{leftChartLabelTypeCode}
+			</if>
+			<if test="rightChartLabelTypeCode == null or rightChartLabelTypeCode == ''">
+			 , CHART_LABEL_CD_2	= 'DEFAULT'
+			</if>
+			<if test="rightChartLabelTypeCode != null and rightChartLabelTypeCode != ''">
+			 , CHART_LABEL_CD_2	= #{rightChartLabelTypeCode}
+			</if>
+			<if test="dataDisplayTypeCode == null or dataDisplayTypeCode == ''">
+			 , CHART_DP_TYPE	= 'NM_AND_VAL'
+			</if>
+			<if test="dataDisplayTypeCode != null and dataDisplayTypeCode != ''">
+			 , CHART_DP_TYPE	= #{dataDisplayTypeCode}
+			</if>
+			 , LEGEND_POS_CD	= #{chartLegendPositionTypeCode}
+		 WHERE ID = #{analysisId}
+	</update>
+	
+	<insert id="insertAnalysisChartLabelDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+		/* KprAnalysisChartSettingMapper.insertAnalysisChartLabelDetailMaster */
+		INSERT INTO ANL.ANL_RPT_CHART_FONT (
+			  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, STORE_ID
+			, TYPE
+			, CHART_LABEL_TYPE_CD
+			, FONT_TYPE_CD
+			, FONT_STYLE_CD
+			, FONT_COLOR
+			, FONT_SIZE
+			, RPT_ID
+		)
+		SELECT com.getNewID('A')
+			 , #{createBy}
+			 , #{modifyBy}
+			 , GETDATE()
+			 , GETDATE()
+			 , 1
+			 , STORE_ID
+			 , TYPE
+			 , CHART_LABEL_TYPE_CD
+			 , FONT_TYPE_CD
+			 , FONT_STYLE_CD
+			 , FONT_COLOR
+			 , FONT_SIZE
+			 , #{analysisId_New}
+		  FROM ANL.ANL_RPT_CHART_FONT_INST
+		 WHERE FLAG		= 1
+		   AND RPT_ID	= #{analysisId}
+		   
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertAnalysisChartLabelDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+		/* KprAnalysisChartSettingMapper.insertAnalysisChartLabelDetailInst */
+		INSERT INTO ANL.ANL_RPT_CHART_FONT_INST (
+			  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, CHART_LABEL_TYPE_CD
+			, FONT_TYPE_CD
+			, FONT_STYLE_CD
+			, FONT_COLOR
+			, FONT_SIZE
+			, RPT_ID
+		) values (
+			  #{fontId}
+			, #{createBy}
+			, #{modifyBy}
+			, GETDATE()
+			, GETDATE()
+			, 1
+			, #{chartLabelTypeCode}
+			, #{fontTypeCode}
+			, #{fontStyleTypeCode}
+			, #{fontColor}
+			, #{fontSize}
+			, #{analysisId}
+		)
+		   
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertAnalysisChartLabelDetailMasterToInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+		/* KprAnalysisChartSettingMapper.insertAnalysisChartLabelDetailMasterToInst */
+		INSERT INTO ANL.ANL_RPT_CHART_FONT_INST (
+			  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, CHART_LABEL_TYPE_CD
+			, FONT_TYPE_CD
+			, FONT_STYLE_CD
+			, FONT_COLOR
+			, FONT_SIZE
+			, RPT_ID
+		)
+		SELECT ID
+			 , CREATE_BY
+			 , MODIFY_BY
+			 , CREATE_DATE
+			 , GETDATE()
+			 , 1
+			 , CHART_LABEL_TYPE_CD
+			 , FONT_TYPE_CD
+			 , FONT_STYLE_CD
+			 , FONT_COLOR
+			 , FONT_SIZE
+			 , RPT_ID
+		  FROM ANL.ANL_RPT_CHART_FONT
+		 WHERE FLAG		= 1
+		   AND RPT_ID	= #{analysisId}
+		   
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertAnalysisChartLabelDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+		/* KprAnalysisChartSettingMapper.insertAnalysisChartLabelDetailInstToMaster */
+		INSERT INTO ANL.ANL_RPT_CHART_FONT (
+			  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, CHART_LABEL_TYPE_CD
+			, FONT_TYPE_CD
+			, FONT_STYLE_CD
+			, FONT_COLOR
+			, FONT_SIZE
+			, RPT_ID
+		)
+		SELECT ID
+			 , CREATE_BY
+			 , MODIFY_BY
+			 , CREATE_DATE
+			 , GETDATE()
+			 , 1
+			 , CHART_LABEL_TYPE_CD
+			 , FONT_TYPE_CD
+			 , FONT_STYLE_CD
+			 , FONT_COLOR
+			 , FONT_SIZE
+			 , RPT_ID
+		  FROM ANL.ANL_RPT_CHART_FONT_INST
+		 WHERE FLAG	= 1
+		   AND ID	= #{fontId}
+		   
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<insert id="insertAnalysisChartLabelDetailCopy" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+	/* KprAnalysisChartSettingMapper.insertAnalysisChartLabelDetailCopy */
+	INSERT INTO ANL.ANL_RPT_CHART_FONT_INST (
+			  ID
+			, CREATE_BY
+			, MODIFY_BY
+			, CREATE_DATE
+			, MODIFY_DATE
+			, FLAG
+			, CHART_LABEL_TYPE_CD
+			, FONT_TYPE_CD
+			, FONT_STYLE_CD
+			, FONT_COLOR
+			, FONT_SIZE
+			, RPT_ID
+	)
+	SELECT com.getNewID('A')
+			 , #{createBy}
+			 , #{modifyBy}
+			 , GETDATE()
+			 , GETDATE()
+			 , 1
+			 , chart_label_type_cd
+			 , font_type_cd
+			 , font_style_cd
+			 , font_color
+			 , font_size
+			 , #{analysisId_New}
+	  FROM ANL.ANL_RPT_CHART_FONT
+	 WHERE FLAG		= 1
+	   AND RPT_ID	= #{analysisId}
+		<selectKey keyProperty="" resultType="java.lang.Integer">
+			select 1
+		</selectKey>
+	</insert>
+	
+	<update id="updateAnalysisChartLabelDetailInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+		/* KprAnalysisChartSettingMapper.updateAnalysisChartLabelDetailInst */
+		update anl.anl_rpt_chart_font_inst
+		   set modify_by			= #{modifyBy}
+		     , modify_date			= GETDATE()
+			<if test="chartLabelTypeCode != null and chartLabelTypeCode != ''">
+			 , CHART_LABEL_TYPE_CD	= #{chartLabelTypeCode}
+			</if>
+			<if test="fontTypeCode != null and fontTypeCode != ''">
+			 , FONT_TYPE_CD			= #{fontTypeCode}
+			</if>
+			<if test="fontStyleTypeCode != null and fontStyleTypeCode != ''">
+			 , FONT_STYLE_CD		= #{fontStyleTypeCode}
+			</if>
+			<if test="fontColor != null and fontColor != ''">
+			 , FONT_COLOR			= #{fontColor}
+			</if>
+			<if test="fontSize != null and fontSize != ''">
+			 , FONT_SIZE			= #{fontSize}
+			</if>
+		 WHERE ID = #{fontId}
+	</update>
+	
+	<update id="updateAnalysisChartLabelDetailInstToMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+		/* KprAnalysisChartSettingMapper.updateAnalysisChartLabelDetailInstToMaster */
+		UPDATE anl.ANL_RPT_CHART_FONT mst
+		   SET 
+		   	   mst.MODIFY_BY			= #{modifyBy}
+			 , mst.MODIFY_DATE			= GETDATE()
+			 <!--  , mst.country				= ins.country
+			 , mst.app_service_type		= ins.app_service_type
+			 , mst.accnt_id				= ins.accnt_id -->
+			 , mst.CHART_LABEL_TYPE_CD	= #{chartLabelTypeCode}
+			 , mst.FONT_TYPE_CD			= #{fontTypeCode}
+			 , mst.FONT_STYLE_CD		= #{fontStyleTypeCode}
+			 , mst.FONT_COLOR			= #{fontColor}
+			 , mst.FONT_SIZE			= #{fontSize}
+		 WHERE mst.ID	= #{fontId}
+	</update>
+	
+	<update id="deleteAnalysisChartLabelDetailMaster" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+	/* KprAnalysisChartSettingMapper.deleteAnalysisChartLabelDetailMaster */
+		UPDATE ANL.ANL_RPT_CHART_FONT
+		   SET MODIFY_BY	= #{modifyBy}
+			 , MODIFY_DATE	= GETDATE()
+			 , FLAG			= flag + 1
+		 WHERE RPT_ID	= #{analysisId}
+		<if test="fontIdList != null and fontIdList.size() >0">
+		   AND ID		NOT IN (
+						 <foreach collection="fontIdList" item="item" separator=", ">
+							#{item}
+						</foreach>
+		)
+		</if>
+	</update>
+	
+	<delete id="deleteAnalysisChartLabelDetailListInst" parameterType="com.icignal.kepler.analysis.dto.request.KprAnalysisChartLabelDetailReqDto">
+	/* KprAnalysisChartSettingMapper.deleteAnalysisChartLabelDetailListInst */
+	DELETE FROM ANL.ANL_RPT_CHART_FONT_INST
+	WHERE RPT_ID = #{analysisId}
+	</delete>
+	
+</mapper>

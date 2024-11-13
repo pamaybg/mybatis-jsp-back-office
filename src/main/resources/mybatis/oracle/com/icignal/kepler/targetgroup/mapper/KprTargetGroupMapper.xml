@@ -1,0 +1,699 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 15:52:45 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.kepler.targetGroup.targetGroup.mapper.KprTargetGroupMapper">
+
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupList)
+    ============================================
+    -   제목            : 타겟그룹 목록 조회
+    -   설명            : 타겟그룹 목록 조회
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGroupList" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupListReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupListResDto">
+        /* KPRTargetGroup.selectTargetGroupList */
+        select ${strColumn}
+             , tg.id as targetGroupId
+             , e.name as createByName
+             , tg.create_date as createDate
+             , tg.seg_filter_id as segFilterId
+             , sm.seg_nm as segmentName
+             , tg.tgt_group_nm as targetGroupName
+             , tg.tgt_group_desc as targetGroupDesc
+             , c.code_name as comprGroupTypeCode
+             , c.mark_name as comprGroupTypeName
+             , tg.compr_group_dtl as comprGroupDtl
+             , sm.id as segmentId
+             , tg.TGT_GROUP_NO as tgtGroupNo
+             , tg.type		   	   as type
+             , c2.mark_name	   	   as typeNm
+             , tg.IMP_FILE_NM AS fileNm
+             , tg.EXTR_YN AS extrYn 
+        from anl.anl_tgt_group tg
+        left outer join com.crm_user u on tg.create_by = u.rid
+        left outer join com.employee e on u.id_employee = e.id
+        left outer join anl.anl_seg_filter sf on sf.id = tg.seg_filter_id
+        left outer join anl.anl_seg_mst sm on sm.flag = 1 and sm.id = sf.seg_id
+        left outer join com.comm_code c on c.flag = 1 and tg.compr_group_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_COMPR_TYPE_CD'
+        left outer join com.comm_code   c2 on c2.flag = 1  and tg.type = c2.code_name and c2.lang = #{lang} and c2.group_code = 'MKT_TGT_TYPE'
+        where ${strCondWhere}
+        and ${strSVCType}
+        and ${strWhere}
+        and tg.flag = 1
+        and c2.code_name NOT LIKE 'CSSEG'
+        <if test='@com.icignal.common.util.StringUtil@isNotEmpty(workflowFlag) and workflowFlag == "Y"'>
+        and tg."TYPE" = 'SEG'
+        </if>
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupImportList)
+    ============================================
+    -   제목            : 타겟그룹 목록 조회
+    -   설명            : 타겟그룹 목록 조회
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자          : jh.kim
+    -   작성일          : 2018.03.07.
+    ***************************************/ -->
+    <select id="selectTargetGroupImportList" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupListReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupListResDto">
+        /* KPRTargetGroup.selectTargetGroupImportList */
+
+		select ${strColumn}
+		    , targetGroupId
+		    , createByName
+		    , createDate
+		    , segFilterId
+		    , segmentName
+		    , targetGroupName
+		    , targetGroupDesc
+		    , comprGroupTypeCode
+		    , comprGroupTypeName
+		    , comprGroupDtl
+		    , segmentId
+		    , fileTypeCd
+		    , type
+		    , typeNm
+		    , fileNm
+		    , camId
+		    , camStatusCd
+		from (
+		    select
+		          target_group_id       as targetGroupId
+		        , name			        as createByName
+		        , create_date           as createDate
+		        , seg_filter_id         as segFilterId
+		        , seg_nm          		as segmentName
+		        , tgt_group_nm     		as targetGroupName
+		        , target_group_desc     as targetGroupDesc
+		        , compr_group_type_code as comprGroupTypeCode
+		        , compr_group_type_name as comprGroupTypeName
+		        , TO_CHAR(compr_group_dtl)       as comprGroupDtl
+		        , segment_id            as segmentId
+		        , file_type_cd          as fileTypeCd
+		        , type		            as type
+		        , type_nm               as typeNm
+		        , file_nm               as fileNm
+		        , cam_id 				as camId
+		        , cam_status_cd    		as camStatusCd
+		    from (
+		            select
+		                   tg.id               as target_group_id
+		                 , e.name              as name
+		                 , tg.create_date      as create_date
+		                 , tg.seg_filter_id    as seg_filter_id
+		                 , sm.seg_nm           as seg_nm
+		                 , tg.tgt_group_nm     as tgt_group_nm
+		                 , tg.tgt_group_desc   as target_group_desc
+		                 , c.code_name         as compr_group_type_code
+		                 , c.mark_name         as compr_group_type_name
+		                 , tg.compr_group_dtl  as compr_group_dtl
+		                 , sm.id               as segment_id
+		                 , ''                  as file_type_cd
+		                 , tg.type		   	   as type
+		                 , c2.mark_name	   	   as type_nm
+		                 , ''      	           as file_nm
+		                 , ''                  as cam_id
+		                 , ''                  as cam_status_cd
+		            from anl.anl_tgt_group tg
+		            left outer join com.crm_user    u  on tg.create_by = u.rid
+		            left outer join com.employee    e  on u.id_employee = e.id
+		            left outer join com.comm_code   c  on c.flag = 1  and tg.compr_group_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_COMPR_TYPE_CD'
+		            left outer join com.comm_code   c2 on c2.flag = 1  and tg.type = c2.code_name and c2.lang = #{lang} and c2.group_code = 'MKT_TGT_TYPE'
+		            left outer join anl.anl_seg_filter         sf on sf.id = tg.seg_filter_id
+		            left outer join anl.anl_seg_mst            sm on sm.flag = 1 and sm.id = sf.seg_id
+		            where 1=1  
+		            <!--  고객 세그먼트 룰 제외 한 목록 출력 -->
+		            AND tg.COMPR_GROUP_TYPE_CD NOT LIKE 'CS' OR tg.COMPR_GROUP_TYPE_CD IS NULL
+		            AND tg.flag = 1
+		    ) t
+		    where ${strCondWhere}
+	          and ${strSVCType}
+	          and ${strWhere}
+		    union
+		    select
+		          target_group_id       as targetGroupId
+		        , name       			as createByName
+		        , create_date           as createDate
+		        , seg_filter_id         as segFilterId
+		        , seg_nm          		as segmentName
+		        , tgt_group_nm    		as targetGroupName
+		        , target_group_desc     as targetGroupDesc
+		        , compr_group_type_code as comprGroupTypeCode
+		        , compr_group_type_name as comprGroupTypeName
+		        , compr_group_dtl       as comprGroupDtl
+		        , segment_id            as segmentId
+		        , file_type_cd          as fileTypeCd
+		        , type		            as type
+		        , type_nm               as typeNm
+		        , file_nm               as fileNm
+		        , cam_id 				as camId
+		        , cam_status_cd    		as camStatusCd
+		    from (
+		            select DISTINCT
+		                  ''                  as target_group_id
+		                , e.name              as name
+		                , t1.create_date      as create_date
+		                , ''                  as seg_filter_id
+		                , t1.SEG_NM           as seg_nm
+		                , ''                  as tgt_group_nm
+		                , ''                  as target_group_desc
+		                , ''                  as compr_group_type_code
+		                , ''                  as compr_group_type_name
+		                , ''                  as compr_group_dtl
+		                , t1.id               as segment_id
+		                , t2.file_type_cd     as file_type_cd
+		                , t1.cam_tgt_type_cd  as type
+		                , c2.mark_name		  as type_nm
+		                , t2.file_nm      	  as file_nm
+		                , t1.cam_id           as cam_id
+		                , t4.cam_status_cd    as cam_status_cd
+		            from mkt.mkt_tgt_had t1
+		            left outer join mkt.mkt_upload_tgt_had t2 on t2.flag = 1 and t1.id = t2.cam_tgt_had_id
+		            left outer join mkt.mkt_cam_mst        t4 on t4.flag = 1 and t4.id = t1.cam_id
+		            left outer join com.comm_code          c1 on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = t2.file_type_cd    and c1.group_code = 'MKT_FILE_TYPE'
+		            left outer join com.comm_code  		   c2 on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = t1.cam_tgt_type_cd and c2.group_code = 'MKT_TGT_TYPE'
+		            left outer join com.crm_user           u  on u.rid = t1.create_by
+		            left outer join com.employee           e  on e.id = u.id_employee
+		            where t1.flag = 1
+		              and t1.cam_tgt_file_nm is not null
+		    ) t
+		    where ${strCondWhere}
+	          and ${strSVCType}
+	          and ${strWhere}
+		) t
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroup)
+    ============================================
+    -   제목            : 타겟그룹 상세 조회
+    -   설명            : 타겟그룹 상세 조회
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGroup" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupResDto">
+        /* KPRTargetGroup.selectTargetGroup */
+        select tg.id as targetGroupId
+             , e.name as createByName
+             , tg.create_date as createDate
+             , tg.seg_filter_id as segFilterId
+             , tg.filter_sql_count as filterSqlCount
+             , tg.tgt_group_nm as targetGroupName
+             , tg.tgt_group_desc as targetGroupDesc
+             , c.code_name as comprGroupTypeCode
+             , c.mark_name as comprGroupTypeName
+             , tg.compr_group_dtl as comprGroupDtl
+             , tg.dp_cond as dpCond
+             , sm.id as segmentId
+             , db.con_db_type as conDbType
+             , tg.cnt as targetCount
+        from anl.anl_tgt_group tg
+        left outer join com.crm_user u on tg.create_by = u.rid
+        left outer join com.employee e on u.id_employee = e.id
+        join com.comm_code c on c.flag = 1 and tg.compr_group_type_cd = c.code_name and c.lang = #{lang} and c.group_code = 'ANL_COMPR_TYPE_CD'
+        join anl.anl_seg_filter sf on sf.id = tg.seg_filter_id
+        join anl.anl_seg_mst sm on sm.flag = 1 and sm.id = sf.seg_id
+        join anl.anl_lgc_comp_mst lc on lc.ID = tg.LGC_COMP_ID
+        join anl.anl_db_inform db on db.ID = lc.DB_INFORM_ID
+        where tg.id = #{targetGroupId}
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(addTargetGroupList)
+    ============================================
+    -   제목            : 타겟그룹 등록
+    -   설명            : 타겟그룹 등록
+    -   결과형태        :
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <insert id="insertTargetGroup" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprSetTargetGroupReqDto">
+        /* KPRTargetGroup.insertTargetGroup */
+        insert into anl.anl_tgt_group
+        ( id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , type
+        , lgc_comp_id
+        , seg_filter_id
+        , filter_sql
+        , filter_sql_count
+        , tgt_group_nm
+        , tgt_group_desc
+        , dp_cond
+        , compr_group_type_cd
+        , compr_group_dtl )
+        values ( #{targetGroupId}
+        , #{createBy}
+        , #{modifyBy}
+        , SYSDATE
+        , SYSDATE
+        , 1
+        , 'SEG'
+        , #{logicalCompId}
+        , #{segFilterId}
+        , (select filter_sql from anl.anl_seg_filter where id = #{segFilterId})
+        , (select filter_sql_count from anl.anl_seg_filter where id = #{segFilterId})
+        , #{targetGroupName}
+        , #{targetGroupDesc}
+        , #{dpCond}
+        , #{comprGroupTypeCode}
+        , #{comprGroupDtl} )
+
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_tgt_group where id = #{targetGroupId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupList)
+    ============================================
+    -   제목            : 타겟그룹 목록 조회
+    -   설명            : 타겟그룹 목록 조회
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <update id="updateTargetGroup" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprSetTargetGroupReqDto">
+        /* KPRTargetGroup.updateTargetGroup */
+        update anl.anl_tgt_group tg
+        set
+        tg.modify_by = #{modifyBy}
+        , tg.modify_date = SYSDATE
+        , tg.tgt_group_nm = #{targetGroupName}
+        , tg.tgt_group_desc = #{targetGroupDesc}
+        , tg.compr_group_type_cd = #{comprGroupTypeCode}
+        , tg.compr_group_dtl = #{comprGroupDtl}
+        where tg.id = #{targetGroupId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupColumnList)
+    ============================================
+    -   제목            : 타겟그룹 컬럼 목록 조회
+    -   설명            : 타겟그룹 컬럼 목록 조회
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGroupColumnList" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupColumnListReqDto"
+resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupColumnListResDto">
+        /* KPRTargetGroup.selectTargetGroupColumnList */
+        select t1.id as targetGroupId
+             , t6.id as atribGroupColId
+             , t6.TBL_ALIAS_COL_NM as aliasColumnName
+             , t6.col_alias as columnName
+             , (case when length(t6.dim_col_id) <![CDATA[>]]> 1 then t7.dp_nm else t6.dp_nm end) as displayName
+        	 , (case when length(t9.id) <![CDATA[>]]> 1 then 1 else 0 end) as targetGroupColUseFlag
+             , t9.id as targetGroupColId
+        from anl.anl_tgt_group t1
+        join anl.anl_lgc_comp_mst t4 on t4.flag = 1 and t4.id in (
+        	select CASE WHEN t1.EXTR_YN ='N' OR t1.EXTR_YN IS NULL THEN attrib02 
+			        	when t1.extr_yn ='Y' and t1."TYPE" ='SQL' then attrib03
+			        	ELSE attrib02 END 
+        	from com.comm_code 
+        	where flag = 1 and lang = #{lang} and code_name = 'MBR_NO' and group_code = 'TGT_MBR_BASIC_LC'
+        )
+        join anl.anl_atrib_group t5 on t5.flag = 1 and t5.lgc_comp_id = t4.id
+        join anl.anl_atrib_group_column t6 on t6.flag = 1 and t6.atrib_group_id = t5.id
+        join anl.anl_column_mst t7 on t7.flag = 1 and t7.col_type_cd='DIMENSION' and t7.id = (case when length(t6.dim_col_id) &gt; 1 then t6.dim_col_id else t6.col_id end)
+        join anl.anl_tgt_group_column t9 on t9.flag = 1 and t9.tgt_group_id = t1.id and t9.atrib_group_col_id = t6.id
+        where t1.id = #{targetGroupId}
+        order by t6.seq, t7.seq
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupColumnAllList)
+    ============================================
+    -   제목            : 타겟그룹 컬럼 목록 모두 조회
+    -   설명            : 타겟그룹 컬럼 목록 모두 조회
+    -   결과형태        : 복수
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGroupColumnAllList" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupColumnListReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupColumnListResDto">
+        /* KPRTargetGroup.selectTargetGroupColumnAllList */
+        select t1.id as targetGroupId
+             , t6.id as atribGroupColId
+             , t6.tbl_alias_col_nm as aliasColumnName
+             , t6.col_alias as columnName
+             , (case when nvl(length(t6.dim_col_id), 0) <![CDATA[>]]> 1 then t7.dp_nm else t6.dp_nm end) as displayName
+        	 , (case when nvl(length(t9.id), 0) <![CDATA[>]]> 1 then 1 else 0 end) as targetGroupColUseFlag
+             , t9.id as targetGroupColId
+        from anl.anl_tgt_group t1
+        join anl.anl_lgc_comp_mst t4 on t4.flag = 1 and t4.id in (
+        	select case when t1.type = 'SQL' and t1.extr_yn = 'Y'  then attrib03 
+        	else attrib02 end from com.comm_code where flag = 1 and lang = #{lang} and code_name = 'MBR_NO' and group_code = 'TGT_MBR_BASIC_LC'
+        )
+        join anl.anl_atrib_group t5 on t5.flag = 1 and t5.lgc_comp_id = t4.id
+        join anl.anl_atrib_group_column t6 on t6.flag = 1 and t6.atrib_group_id = t5.id
+        join anl.anl_column_mst t7 on t7.flag = 1 and t7.col_type_cd='DIMENSION' and t7.id = (case when nvl(length(t6.dim_col_id),0) &gt; 1 then t6.dim_col_id else t6.col_id end)
+        left outer join anl.anl_tgt_group_column t9 on t9.flag = 1 and t9.tgt_group_id = t1.id and t9.atrib_group_col_id = t6.id
+        where t1.id = #{targetGroupId}
+        order by t6.seq, t7.seq
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupTargetList)
+    ============================================
+    -   제목            : 타겟그룹 대상자 조회
+    -   설명            : 타겟그룹 대상자 조회
+    -   결과형태        : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGroupTargetList" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupTargetListReqDto"
+resultType="java.lang.String">
+        /* KPRTargetGroup.selectTargetGroupTargetList */
+        select group_concat(vsql separator ' ') || group_concat(vsql2 separator ' ') as listSql
+        from (
+	        select 'select ' || group_concat(t2.tbl_alias_col_nm, ' as ', t2.col_alias) || '\n' || replace(substr(t6.lgc_sql, instr(t6.lgc_sql, 'from')), ';', '') || '\ninner join (' as vsql
+	        	 , ' t1 on t1.' || substr(t7.tbl_alias_col_nm, instr(t7.tbl_alias_col_nm, '.') + 1) || ' = ' || t7.tbl_alias_col_nm || '\ngroup by ' || t7.tbl_alias_col_nm || ', ' || group_concat(t2.tbl_alias_col_nm) as vsql2
+	        from anl.anl_tgt_group_column t1
+	        join anl.anl_atrib_group_column t2 on t2.flag = 1 and t2.id = t1.atrib_group_col_id
+	        join anl.anl_atrib_group t3 on t3.flag = 1 and t3.id = t2.atrib_group_id
+	        join anl.anl_column_mst t4 on t4.flag = 1 and (case when length(t2.dim_col_id) <![CDATA[>]]> 1 then t2.dim_col_id else t2.col_id end = t4.id)
+	        join anl.anl_lgc_comp_table_rel t5 on t5.flag = 1 and t5.lgc_comp_id = t3.lgc_comp_id and t5.tbl_id = t4.tbl_id
+	        join anl.anl_lgc_comp_mst t6 on t6.flag = 1 and t6.id = t3.lgc_comp_id
+	        join anl.anl_atrib_group_column t7 	on t7.flag = 1 and t7.atrib_group_id in (select id from anl.anl_atrib_group where lgc_comp_id = t6.id) and t7.seg_key_yn = '1'
+	        where t1.flag = 1
+	        and t1.tgt_group_id = #{targetGroupId} 
+
+	        union
+
+	        select
+	        	t1.filter_sql || ')' as vsql, '' as vsql2
+	        from anl.anl_tgt_group t1
+	        where t1.flag = 1
+	        and t1.id = #{targetGroupId}
+	        and t1.id in (select tgt_group_id from anl.anl_tgt_group_column where flag = 1 and tgt_group_id = #{targetGroupId})
+        ) t
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetMemberNumListSql)
+    ============================================
+    -   제목            : 타겟 그룹 대상자 member num 을 조회할 수 있는 쿼리
+    -   설명            : 타겟 그룹 대상자 member num 을 조회할 수 있는 쿼리
+    -   결과형태        : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자          : jh.kim
+    -   작성일          : 2018. 2. 23.
+    ***************************************/ -->
+	<select id="selectTargetMemberNumListSql" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupTargetListReqDto" 
+	resultType="java.lang.String">
+		/* KPRTargetGroup.selectTargetMemberNumListSql */
+	    select
+	    	t1.filter_sql as vsql
+	    from anl.anl_tgt_group t1
+	    where t1.flag = 1
+	    and t1.id = #{targetGroupId}
+	    and t1.id in (select tgt_group_id from anl.anl_tgt_group_column where flag = 1 and tgt_group_id = #{targetGroupId})
+
+	</select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupDBInfo)
+    ============================================
+    -   제목            : 타겟그룹 세그먼트 필터 DB 정보 조회
+    -   설명            : 타겟그룹 세그먼트 필터 DB 정보 조회
+    -   결과형태        : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGroupDBInfo" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupDBInfoReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupDBInfoResDto">
+        /* KPRTargetGroup.selectTargetGroupDBInfo */
+        select di.id as dbId
+        	 , di.con_ip as conIp
+        	 , di.con_port as conPort
+        	 , di.con_id as conId
+        	 , di.con_pw as conPassword
+        	 , di.con_url as conUrl
+        	 , c.code_name as conDbType
+        	 , c.attrib01 as conDbClass
+        	 , di.AWS_SECRET_NM as secretNm
+        from anl.anl_lgc_comp_mst t1
+                 join anl.anl_db_inform di ON t1.DB_INFORM_ID  = di.ID AND di.FLAG =1
+                 join com.comm_code c on c.flag = 1 and c.code_name = di.con_db_type and c.lang = 'ko' and c.group_code = 'ANL_DB_TYPE_CD'
+                 join anl.anl_tgt_group tg on tg.flag = 1 and tg.lgc_comp_id = t1.id
+        where di.flag = 1
+          and tg.id = #{targetGroupId}
+        offset 0 rows fetch next 1 rows ONLY
+    </select>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(addTargetGroupColumn)
+    ============================================
+    -   제목            : 타겟그룹 컬럼 등록
+    -   설명            : 타겟그룹 컬럼 등록
+    -   결과형태        :
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <insert id="insertTargetGroupColumn" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprSetTargetGroupColumnReqDto">
+        /* KPRTargetGroup.insertTargetGroupColumn */
+        insert into anl.anl_tgt_group_column
+        ( id
+        , create_by
+        , modify_by
+        , create_date
+        , modify_date
+        , flag
+        , tgt_group_id
+        , seg_filter_id
+        , atrib_group_col_id )
+        values
+        ( #{targetGroupColId}
+        , #{createBy}
+        , #{modifyBy}
+        , SYSDATE
+        , SYSDATE
+        , 1
+        , #{targetGroupId}
+        , #{segFilterId}
+        , #{atribGroupColId} )
+
+<!--         <selectKey keyProperty="" resultType="java.lang.String"> -->
+<!--             select id from anl.anl_tgt_group_column where id = #{targetGroupColId} limit 0, 1 -->
+<!--         </selectKey> -->
+    </insert>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(removeTargetGroupColumn)
+    ============================================
+    -   제목            : 타겟그룹 컬럼 삭제
+    -   설명            : 타겟그룹 컬럼 삭제
+    -   결과형태        :
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <update id="deleteTargetGroupColumn" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprSetTargetGroupColumnReqDto">
+        /* KPRTargetGroup.deleteTargetGroupColumn */
+        update anl.anl_tgt_group_column
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = SYSDATE
+         where id = #{targetGroupColId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(removeTargetGroupColumnByTargetGroupId)
+    ============================================
+    -   제목            : 타겟그룹 컬럼 삭제 By 타겟그룹 아이디
+    -   설명            : 타겟그룹 컬럼 삭제 By 타겟그룹 아이디
+    -   결과형태        :
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <update id="deleteTargetGroupColumnByTargetGroupId" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprSetTargetGroupColumnReqDto">
+        /* KPRTargetGroup.deleteTargetGroupColumnByTargetGroupId */
+        update anl.anl_tgt_group_column
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = SYSDATE
+         where tgt_group_id = #{targetGroupId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(removeTargetGroupByTargetGroupId)
+    ============================================
+    -   제목            : 타겟그룹 삭제 By 타겟그룹 아이디
+    -   설명            : 타겟그룹 삭제 By 타겟그룹 아이디
+    -   결과형태        :
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <update id="deleteTargetGroupByTargetGroupId" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprSetTargetGroupReqDto">
+        /* KPRTargetGroup.deleteTargetGroupColumnByTargetGroupId */
+        update anl.anl_tgt_group
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = SYSDATE
+         where id = #{targetGroupId}
+    </update>
+
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getConnectCampaignCheckCount)
+    ============================================
+    -   제목            : 캠페인 연결 확인 Count
+    -   설명            : 캠페인 연결 확인 Count
+    -   결과형태        :
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectConnectCampaignCheckCount" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupReqDto" resultType="java.lang.Integer">
+        /* KPRTargetGroup.selectConnectCampaignCheckCount */
+        select count(*)
+        from mkt.mkt_tgt_had th
+        join mkt.mkt_cam_mst mcm on th.cam_id = mcm.id and mcm.flag =1
+        where th.flag = 1
+        and th.tgt_group_id = #{targetGroupId}
+    </select>
+    
+	<!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(getTargetGroupDBInfo)
+    ============================================
+    -   제목            : 타겟그룹 세그먼트 필터 DB 정보 조회
+    -   설명            : 타겟그룹 세그먼트 필터 DB 정보 조회
+    -   결과형태        : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : 류동균
+    -   작성일         : 2015. 9. 22.
+    ***************************************/ -->
+    <select id="selectTargetGroupLcDBInfo" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupDBInfoReqDto" 
+    resultType="com.icignal.kepler.targetGroup.targetGroup.dto.response.KprTargetGroupDBInfoResDto">
+        /* KPRTargetGroup.selectTargetGroupLcDBInfo */
+		select di.id as dbId
+			 , di.con_ip as conIp
+			 , di.con_port as conPort
+			 , di.con_id as conId
+			 , di.con_pw as conPassword
+			 , di.con_url as conUrl
+			 , c.code_name as conDbType
+			 , c.attrib01 as conDbClass
+			 , t1.lgc_sql as lgcSql
+			 , t3.tbl_alias_col_nm as segKeyCol
+			 , t3.col_alias as segKeyColAlias
+			 , di.AWS_SECRET_NM as secretNm
+		  from anl.anl_lgc_comp_mst t1
+		  join anl.anl_atrib_group t2 on t2.flag = 1 and t2.lgc_comp_id = t1.id
+		  join anl.anl_atrib_group_column t3 on t3.flag = 1 and t3.atrib_group_id = t2.id and seg_key_yn = '1'
+		  join anl.anl_db_inform di on di.flag = 1 and di.id = t1.db_inform_id
+		  join com.comm_code c on c.flag = 1 and c.code_name = di.con_db_type and c.lang = #{lang} and c.group_code = 'ANL_DB_TYPE_CD'
+		 where t1.id = #{lgcCompId}
+    </select>
+	
+	<!-- 타겟그룹 건수 업데이트 -->    
+    <update id="updateTagetGroupCount" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprTargetGroupReqDto">
+    	/* KPRTargetGroup.updateTagetGroupCount */
+        update anl.anl_tgt_group
+           set
+               MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = SYSDATE
+               , CNT = #{cnt}
+         where id = #{targetGroupId}
+    </update>
+    <!-- /**************************************
+    -   관련 파일       : KPRTargetGroupDAO.java(removeTargetGroupByTargetGroupId)
+    ============================================
+    -   제목            : 심플 타겟팅 삭제
+    -   설명            : 
+    -   결과형태        :
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자         : LEE GYEONG YOUNG
+    -   작성일         : 2020. 07. 16.
+    ***************************************/ -->
+    <update id="deleteSimpleTargeting" parameterType="com.icignal.kepler.targetGroup.targetGroup.dto.request.KprSetTargetGroupReqDto">
+        /* KPRTargetGroup.deleteSimpleTargeting */
+        update anl.ANL_TGT_GROUP_COND
+           set
+               flag = flag + 1
+               , MODIFY_BY = #{modifyBy}
+               , MODIFY_DATE = SYSDATE
+         where TGT_GROUP_ID = #{targetGroupId}
+    </update>
+</mapper>

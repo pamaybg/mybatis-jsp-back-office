@@ -1,0 +1,788 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 13:32:29 KST 2018 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.marketing.realtime.mapper.MktRealTimeCampaignMapper">
+   <!-- /**************************************
+    -   관련 파일             : 
+    ============================================
+    -   제목                  : 실시간 캠페인 실행 현황 
+    -   설명                  : 실시간 캠페인 실행 현황
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : 
+    -   작성일                : 2020.6.3
+    ***************************************/ -->
+    <select id="selectRealTimeCampExeList" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto" 
+    resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampaignResDto">
+        /* MktRealTimeCampaignMapper.selectRealTimeCampExeList */
+
+        select ${strColumn}
+               , c.id           as id
+               , c.create_by 	as createBy
+               , c.modify_by 	as modifyBy
+               , c.create_date 	as createDate
+               , c.modify_date 	as modifyDate
+               , c.offer_id 	as offerId
+               , o.offer_nm 	as offerName
+               , c.disp_no 		as dispNo
+               , c.cam_nm 		as campaignName
+               , c.cam_desc		as description
+               , TO_CHAR(c.cam_start_dd,'YYYY-MM-DD') as campaignStartDate
+               , TO_CHAR(c.cam_end_dd,'YYYY-MM-DD') 	as campaignEndDate
+
+               , c.cam_plan_org_cd 	    as planOrgCode
+               , d1.div_nm 			    as planOrgCodeName
+               , c.cam_plner 		    as campaignPlanner
+               , e.name 			    as campaignPlannerName
+
+               , c1.mark_name			as offerTypeName
+               , c.cam_status_cd 		as campaignStatusCode
+               , c2.mark_name 			as campaignStatusCodeName
+               , c.exe_org_lvl_cd 		as exeOrgLvlCode
+               , c4.MARK_NAME 			as exeOrgLvlCodeName
+               , c.cam_prps_cd 		    as campaignPurposeCode
+               , c5.mark_name 		    as campaignPurposeCodeName
+               , c.cam_meth_cd 		    as campaignMethodCode
+               , c6.mark_name 		    as campaignMethodCodeName
+               , c.chnl_type_cd 	    as channelTypeCode
+               , c7.mark_name 		    as channelTypeCodeName
+               , c.cam_type_cd 		    as campaignTypeCode
+               , c8.mark_name 		    as campaignTypeCodeName
+               , ea.elec_aprv_status_cd as campaignApprovalStatusCode
+               , c9.mark_name 			as campaignApprovalStatusCodeName
+
+               , c.cam_meth_desc 	    as campaignMethodDesc
+               , c.par_cam_id 		    as parCampaignId
+               , c.program_id 		    as programId
+               , c.plan_id 			    as planId
+               , c.cam_scope_type_cd    as camScopeTypeCd
+               , c10.mark_name          as camScopeTypeNm
+               , c.plan_group_cd        as planGroupCd
+               , c11.mark_name          as planGroupNm
+               , c.type 				as type
+          from mkt.mkt_cam_mst                  c
+          left outer join mkt.mkt_cam_offer_rel r   on r.flag = 1 and r.cam_id = c.id
+          left outer join mkt.mkt_offer_mst     o   on r.offer_id = o.id
+          left outer join com.employee			e   on e.id = c.CAM_PLNER
+          left outer join com.crm_division  	d1  on d1.rid = e.rid_division
+          left outer join com.com_elec_aprv 	ea  on ea.flag = 1 and ea.cam_id = c.id
+
+          left outer join com.comm_code c1 on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = o.offer_type_cd 		  and c1.group_code = 'OFFER_TYPE_CD'
+          left outer join com.comm_code c2 on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = c.cam_status_cd 		  and c2.group_code = 'MKT_CAM_STAT'
+          left outer join com.comm_code c4 on c4.flag = 1 and c4.lang = #{lang} and c4.code_name = c.exe_org_lvl_cd 		  and c4.group_code = 'ORG_LEVEL_CD'
+          left outer join com.comm_code c5 on c5.flag = 1 and c5.lang = #{lang} and c5.code_name = c.cam_prps_cd 		  and c5.group_code = 'MKT_CAM_GOAL_CD'
+          left outer join com.comm_code c6 on c6.flag = 1 and c6.lang = #{lang} and c6.code_name = c.cam_meth_cd 		  and c6.group_code = 'MKT_CAM_SUB_GOAL_CD'
+          left outer join com.comm_code c7 on c7.flag = 1 and c7.lang = #{lang} and c7.code_name = c.chnl_type_cd 		  and c7.group_code = 'MKT_CAM_CHNL_TYPE_CD'
+          left outer join com.comm_code c8 on c8.flag = 1 and c8.lang = #{lang} and c8.code_name = c.cam_type_cd 		  and c8.group_code = 'MKT_CAM_TYPE_CD'
+          left outer join com.comm_code c9 on c9.flag = 1 and c9.lang = #{lang} and c9.code_name = ea.elec_aprv_status_cd  and c9.group_code = 'EL_APPROVAL_STATUS_CD'
+
+          left outer join com.comm_code c10 on c10.flag = 1 and c10.lang = #{lang} and c10.code_name = c.cam_scope_type_cd and c10.group_code = 'CAM_SCOPE_TYPE_CD'
+          left outer join com.comm_code c11 on c11.flag = 1 and c11.lang = #{lang} and c11.code_name = c.plan_group_cd     and c11.group_code = 'PLAN_GROUP_CD'
+
+         where ${strCondWhere}
+           and ${strSVCType}
+           and ${strWhere}
+           and c.flag = 1
+           and c.type = 'MKT'
+           and c.cam_status_cd in ('A', 'E', 'S')
+           and c.CAM_TYPE_CD ='TRIGGER'
+           <if test="camId != null">
+           	and c.id = #{camId}
+           </if>
+         order by ${strOrderby}
+         ${strEndPaging}
+
+    </select>
+    
+<select id="selectEvtCnt" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto" 
+  		resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampaignResDto">
+/* MktRealTimeCampaignMapper.selectEvtCnt */
+SELECT count(*) AS eventDataCnt 
+FROM mkt.MKT_INTACT_DATA_CAMP t1 
+WHERE t1.CAMP_ID=#{camId}
+</select>
+   		
+ <select id="selectOfferCnt" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto" 
+  		resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampaignResDto">
+/* MktRealTimeCampaignMapper.selectOfferCnt */
+
+SELECT
+  	  NVL(sum(CASE WHEN t2.TYPE='E.POINT' THEN 1 ELSE 0 END),0) AS epntCnt, 
+	  NVL(sum(CASE WHEN t2.TYPE='RETAIL-OFFER' THEN 1 ELSE 0 END),0) AS retailOfferCnt, 
+	  NVL(sum(CASE WHEN t2.TYPE='FOOD-OFFER' THEN 1 ELSE 0 END),0) AS foodOfferCnt
+FROM mkt.MKT_ET_TGT_DTL t1 INNER JOIN mkt.MKT_CAM_NODE t2 ON t1.RID_CAM_NODE=t2.RID 
+where t1.CAM_ID=#{camId}
+</select>
+
+   		
+<select id="selectChnlCnt" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto" 
+  		resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampaignResDto">
+/* MktRealTimeCampaignMapper.selectChnlCnt */
+SELECT 
+		NVL(sum(CASE WHEN t1.chnl_type_cd='SMS' THEN 1 ELSE 0 END),0) AS smsCnt, 
+		NVL(sum(CASE WHEN t1.chnl_type_cd='LMS' THEN 1 ELSE 0 END),0) AS lmsCnt, 
+		NVL(sum(CASE WHEN t1.chnl_type_cd='MMS' THEN 1 ELSE 0 END),0) AS mmsCnt, 
+		NVL(sum(CASE WHEN t1.chnl_type_cd='KAKAO' THEN 1 ELSE 0 END),0) AS kakaoCnt, 
+		NVL(sum(CASE WHEN t1.chnl_type_cd='PUSH' THEN 1 ELSE 0 END),0) AS pushCnt, 
+		NVL(sum(CASE WHEN t1.chnl_type_cd='EMAIL' THEN 1 ELSE 0 END),0) AS emailCnt, 
+		NVL(sum(CASE WHEN t1.chnl_type_cd='KCHATBOT' THEN 1 ELSE 0 END),0) AS  kkoChatBotCnt
+FROM 
+	mkt.MKT_ET_TGT_DTL t1 
+WHERE t1.CAM_ID=#{camId}
+</select>
+ 		
+<select id="selectCampInfo" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto" 
+  		resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampaignResDto">
+/* MktRealTimeCampaignMapper.selectCampInfo */
+select c.CAM_NM AS camNm
+ 	  ,c.DISP_NO AS dispNo
+from mkt.MKT_CAM_MST c 
+where c.id=#{camId}
+</select>
+   		
+   		
+ <select id="selectRTCampErrorHist" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto" 
+  		resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampaignResDto">
+/* MktRealTimeCampaignMapper.selectRTCampErrorHist */
+
+        select
+              m.batch_status      as batchStatus
+            , m.batch_status_nm   as batchStatusNm
+            , m.batch_modul_cd    as batchModulCd
+            , m.batch_modul_nm    as batchModulNm
+            , m.err_cd            as errCd
+            , m.err_sbst          as errSbst
+            , m.start_dt          as startDt
+            , m.end_dt            as endDt
+            , ${strColumn}
+        from (
+            select
+                  a.batch_status    as batch_status
+                , c4.mark_name      as batch_status_nm
+                , b.batch_modul_cd  as batch_modul_cd
+                , c3.mark_name      as batch_modul_nm
+                , b.err_cd          as err_cd
+                , b.err_sbst        as err_sbst
+                , b.start_dt        as start_dt
+                , b.end_dt          as end_dt
+            from mkt.mkt_batch_exe_log_had       a
+            inner join mkt.mkt_batch_exe_log_dtl b  on b.flag = 1  and a.id = b.batch_exe_log_had_id
+            left outer join com.comm_code        c3 on c3.flag = 1 and c3.lang = #{lang} and c3.code_name = b.batch_modul_cd     and c3.group_code = 'MKT_CAM_BATCH_MODULE_CODE'
+            left outer join com.comm_code        c4 on c4.flag = 1 and c4.lang = #{lang} and c4.code_name = a.batch_status       and c4.group_code = 'BATCH_STATUS_CD'
+            where 1 = 1
+              and b.cam_id = #{camId}
+              and a.flag = 1
+              and b.flag = 1
+        ) m
+        where ${strWhere}
+		order by ${strOrderby}
+		${strEndPaging}
+
+</select>
+
+<select id="selectRTCampTargetReact" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto" 
+  		resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampaignResDto">
+        /* MktRealTimeCampaignMapper.selectRTCampTargetReact */
+        select
+        	<if test="chnlTypeCd == &quot;SMS&quot;">
+        	/*+ index(t4 mkt_tgt_dtl_rmv_ix02) index(t5 mkt_msg_send_log_ix05) */
+        	</if>
+        	<if test="chnlTypeCd == &quot;LMS&quot;">
+        	/*+ index(t4 mkt_tgt_dtl_rmv_ix02) index(t5 mkt_msg_send_log_ix05) */
+        	</if>
+        	<if test="chnlTypeCd == &quot;MMS&quot;">
+        	/*+ index(t4 mkt_tgt_dtl_rmv_ix02) index(t5 mkt_msg_send_log_ix05) */
+        	</if>
+        	<if test="chnlTypeCd == &quot;EMAIL&quot;">
+        	/*+ index(t4 mkt_tgt_dtl_rmv_ix02) index(t5 mkt_email_send_log_ix05) */
+        	</if>
+        	<if test="chnlTypeCd == &quot;KAKAO&quot;">
+        	/*+ index(t4 mkt_tgt_dtl_rmv_ix02) index(t5 mkt_kakao_send_log_ix05) */
+        	</if>
+        	<if test="chnlTypeCd == &quot;PUSH&quot;">
+        	/*+ index(t4 mkt_tgt_dtl_rmv_ix02) index(t5 mkt_push_send_log_ix05) */
+        	</if>
+        	${strColumn}
+        	, t1.id 				as camId
+        	, t3.id 				as tgtDtlId
+        	, t3.mem_id				as memId
+        	<if test="chnlTypeCd == &quot;SMS&quot;">
+        	, t5.msg_send_type 		as msgSendType
+        	</if>
+        	<if test="chnlTypeCd == &quot;LMS&quot;">
+        	, t5.msg_send_type 		as msgSendType
+        	</if>
+        	<if test="chnlTypeCd == &quot;MMS&quot;">
+        	, t5.msg_send_type 		as msgSendType
+        	</if>
+        	<if test="chnlTypeCd == &quot;EMAIL&quot;">
+        	, t5.open_suces_yn 		as openSucesYn
+        	</if>
+        	<if test="chnlTypeCd == &quot;KAKAO&quot;">
+        	, t5.msg_type 			as kakaoMsgType
+        	</if>
+        	<if test="chnlTypeCd == &quot;PUSH&quot;">
+        	, t5.push_type_cd 		as pushTypeCd
+        	, t5.rev_suces_yn		as revSucesYn
+        	, t5.read_suces_yn		as readSucesYn
+        	</if>
+        	<if test=" chnlTypeCd != null and chnlTypeCd != '' ">
+        	, TO_CHAR(t6.chnl_send_dt, 'YYYY-MM-DD HH24:MI') as chnlSendDt
+        	, t6.exe_info_status_cd as exeInfoStatusCd
+        	, c1.mark_name 			as exeInfoStatusNm
+        	, t5.bat_send_status	as batSendStatus
+        	, c2.mark_name			as batSendStatusNm
+        	, t5.bat_send_proc_time as batSendProcTime
+        	, t5.send_suces_yn		as sendSucesYn
+        	, t5.send_fail_yn		as sendFailYn
+        	, t5.send_fail_cd		as sendFailCd
+        	, t5.send_fail_rsn		as sendFailRsn
+        	, t5.send_plan_dt  		as sendPlanDt
+            </if>
+            , case when t3.ctrl_group_yn = '1' 	then 'Y' else 'N' end as conYn
+           	, case when t3.mem_yn = '1' 		then 'Y' else 'N' end as userYn
+           	, t3.item_seq as itemSeq
+        from mkt.mkt_cam_mst       			t1
+        join mkt.mkt_tgt_dtl       			t3 on t3.flag = 1 and t3.exe_info_item_id = #{exeInfoItemId}
+        <if test=" chnlTypeCd != null and chnlTypeCd != '' ">
+        left outer join mkt.mkt_exe_info_chnl t6 	on t6.flag = 1 and t6.id = #{exeInfoChnlId}
+        
+        	<if test="chnlTypeCd == &quot;SMS&quot;">
+		left outer join mkt.mkt_msg_send_log 	t5 	on t5.flag = 1 and t5.cam_tgt_dtl_id = t3.id and t5.mkt_exe_info_chnl_id = #{exeInfoChnlId}
+        	</if>
+        	<if test="chnlTypeCd == &quot;LMS&quot;">
+		left outer join mkt.mkt_msg_send_log 	t5 	on t5.flag = 1 and t5.cam_tgt_dtl_id = t3.id and t5.mkt_exe_info_chnl_id = #{exeInfoChnlId}
+        	</if>
+        	<if test="chnlTypeCd == &quot;MMS&quot;">
+		left outer join mkt.mkt_msg_send_log 	t5 	on t5.flag = 1 and t5.cam_tgt_dtl_id = t3.id and t5.mkt_exe_info_chnl_id = #{exeInfoChnlId}
+        	</if>
+        	<if test="chnlTypeCd == &quot;EMAIL&quot;">
+		left outer join mkt.mkt_email_send_log 	t5 	on t5.flag = 1 and t5.cam_tgt_dtl_id = t3.id and t5.mkt_exe_info_chnl_id = #{exeInfoChnlId}
+        	</if>
+        	<if test="chnlTypeCd == &quot;KAKAO&quot;">
+		left outer join mkt.mkt_kakao_send_log 	t5 	on t5.flag = 1 and t5.cam_tgt_dtl_id = t3.id and t5.mkt_exe_info_chnl_id = #{exeInfoChnlId}
+        	</if>
+        	<if test="chnlTypeCd == &quot;PUSH&quot;">
+		left outer join mkt.mkt_push_send_log 	t5 	on t5.flag = 1 and t5.cam_tgt_dtl_id = t3.id and t5.mkt_exe_info_chnl_id = #{exeInfoChnlId}
+        	</if>
+        left outer join com.comm_code c1 			on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = t6.exe_info_status_cd and c1.group_code = 'MKT_EXEC_STATUS'
+		left outer join com.comm_code c2 			on c2.flag = 1 and c2.lang = #{lang} and c2.code_name = t5.bat_send_status and c2.group_code = 'BATCH_STATUS_CD'
+        </if>
+        where t1.flag = 1
+          and t1.id = #{camId}
+          and ${strWhere}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+    
+     <!-- /**************************************
+    -   관련 파일              : MKTEventExecutionDAO.java
+    ============================================
+    -   제목                   : 실시간 캠페인 제어 조회 
+    -   설명                   :
+    -   결과형태               : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자                 : sh.park
+    -   작성일                 : 2019.09.09
+    ***************************************/ -->
+	
+	<select id="selectRealTimeCampaignExcutionList" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampExecReqDto" 
+	resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampExecResDto">
+	 /* MktRealTimeCampaignMapper.selectRealTimeCampaignExcutionList */
+		select t1.rid 			as rid
+		     , t1.process_nm 	as processNm
+			 , t1.process_cd 	as processcd
+			 , d1.mark_name		as processstatus
+			 , t1.svc_status_cd as serviceStatus
+			 , d2.mark_name		as serviceStatusName
+			 , c1.mark_name 	as triggertype
+			 , t1.hndl_mq 		as hndlmq
+			 , t1.wait_mq 		as waitmq
+			 , t1.err_mq		as errmq
+			 , t1.svc_exe_mq    as svcExeMq
+			 , t1.cache_port    as cachePort
+			 , t1.svc_start_dt 	as startdt
+			 , t1.svc_stop_dt  	as stopdt
+			 , t1.min_worker    as minworker
+			 , t1.max_worker 	as maxworker
+			 , ${strColumn}
+	      from mkt.EVT_EXE_ADM t1
+	 left join com.comm_code c1 on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = t1.trigger_type and c1.group_code = 'MKT_INTACT_TYPE'
+	 left join com.comm_code d1 on d1.flag = 1 and d1.lang = #{lang} and d1.code_name = t1.process_status and d1.group_code = 'EVT_PROCESS_STATUS'
+	 left join com.comm_code d2 on d2.flag = 1 and d2.lang = #{lang} and d2.code_name = t1.svc_status_cd and d2.group_code = 'EVT_PROCESS_STATUS'
+		 where ${strCondWhere}
+		   and t1.flag = 1
+		   and ${strSVCType}
+		   and ${strWhere}
+	  order by ${strOrderby}
+			   ${strEndPaging}
+	</select>
+    
+    <!-- /**************************************
+    -   관련 파일              : MKTEventExecutionDAO.java
+    ============================================
+    -   제목                   : 실시간 캠페인 제어 상세화면
+    -   설명                   :
+    -   결과형태               : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자                 : sh.park
+    -   작성일                 : 2019.09.09
+    ***************************************/ -->
+
+	<select id="selectRealTimeCampaignExecutionDetail" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampExecReqDto" 
+	resultType="com.icignal.marketing.realtime.dto.response.MktRealTimeCampExecResDto">
+			 /* MktRealTimeCampaignMapper.selectRealTimeCampaignExecutionDetail */
+		select t1.rid 				as rid
+		     , t1.process_nm 		as processNm
+			 , t1.process_cd 	    as processCd
+			 , t1.process_status	as processStatus
+			 , t1.svc_status_cd     as serviceStatus
+			 , t1.trigger_type 		as triggerType
+			 , t1.hndl_mq 			as hndlMq
+			 , t1.wait_mq 			as waitMq
+			 , t1.err_mq			as errMq
+			 , t1.svc_start_dt 		as startDt
+			 , t1.svc_stop_dt  		as stopDt
+			 , t1.svc_exe_mq    	as svcExeMq
+			 , t1.cache_port    	as cachePort
+			 , t1.min_worker     	as minWorker
+			 , t1.max_worker 		as maxWorker
+		from mkt.EVT_EXE_ADM t1
+		left outer join mkt.MKT_INTACT_type it on it.flag = 1 and it.rid = t1.trigger_type
+		left outer join com.comm_code       c1 on c1.flag = 1 and c1.lang = #{lang} and c1.code_name = it.INTACT_TYPE_2_CD and c1.group_code = 'MKT_INTACT_DTL_TYPE'
+		where t1.rid = #{rid}
+	</select>	
+	
+	
+		
+	<select id="selectExecutorCachePortCheck" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampExecReqDto" 
+	 resultType="java.lang.Integer">
+		select count(1)
+		  from mkt.evt_exe_adm
+		 where cache_port = #{cachePort}
+		<if test="rid != null and rid != ''">
+			and rid != #{rid}
+		</if>
+	</select>
+	
+	  <!-- /**************************************
+    -   관련 파일              : MKTEventExecutionDAO.java
+    ============================================
+    -   제목                   : 실시간 캠페인 제어 수정 
+    -   설명                   :
+    -   결과형태               : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자                 : sh.park
+    -   작성일                 : 2019.09.09
+    ***************************************/ -->
+                  
+		<update id="editRealCampaigExecution" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampExecReqDto">
+		UPDATE 
+			MKT.EVT_EXE_ADM
+		SET
+			 process_nm 	 = #{processNm}
+			, process_cd     = #{processCd}
+			, process_status = #{processStatus}
+			, trigger_Type 	 = #{triggerType}
+			, min_Worker     = #{minWorker}
+			, max_Worker     = #{maxWorker}
+			, hndl_Mq 		 = #{hndlMq}
+			, wait_Mq        = #{waitMq}
+			, err_Mq         = #{errMq}
+            , svc_exe_mq     = #{svcExeMq}
+            , cache_port     = #{cachePort}
+		WHERE
+			 rid = #{rid}
+	</update>
+	
+	
+	<!-- /**************************************
+    -   관련 파일              : MKTEventExecutionDAO.java
+    ============================================
+    -   제목                   : 실시간 캠페인 제어 신규 저장
+    -   설명                   :
+    -   결과형태               : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자                 : sh.park
+    -   작성일                 : 2019.09.09
+    ***************************************/ -->
+
+	<insert id="insertRealCampaigExecution" parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampExecReqDto">
+         /* MktRealTimeCampaignMapper.insertRealCampaigExecution */
+        insert into MKT.EVT_EXE_ADM(
+              rid
+            , create_date
+            , modify_date
+            , create_by
+            , modify_by
+            , type
+            , flag
+            , comment_
+            , process_nm
+            , process_status
+            , orderby
+            , process_int
+            , process_cnt
+            , process_ref
+            , use_yn
+            , trigger_type
+            , threads_cnt
+            , process_cd
+            , svc_start_dt
+            , svc_stop_dt
+            , hndl_mq
+            , err_mq
+            , wait_mq
+            , min_worker
+            , max_worker
+            , svc_exe_mq
+            , cache_port
+             )
+        values (
+              #{rid}
+            , SYSDATE
+            , SYSDATE
+            , #{createBy}
+            , #{modifyBy}
+            , #{type}
+            , 1
+            , #{comment}
+            , #{processNm}
+            , #{processStatus}
+            , #{orderby}
+            , #{processInt}
+            , #{processCnt}
+            , #{processRef}
+            , #{useYn}
+            , #{triggerType}
+            , #{threadsCnt}
+            , #{processCd}
+            , #{startDt}
+            , #{stopDt}
+            , #{hndlMq}
+            , #{errMq}
+            , #{waitMq}
+            , #{minWorker}
+            , #{maxWorker}
+            , #{svcExeMq}
+            , #{cachePort}
+        )
+        </insert>
+		    <!-- /**************************************
+    -   관련 파일              : MKTEventExecutionDAO.java
+    ============================================
+    -   제목                   : 실시간 캠페인 제어 삭제
+    -   설명                   :
+    -   결과형태               : 단일
+    ============================================
+    -   입력
+    -   출력
+    ============================================
+    -   작성자                 : sh.park
+    -   작성일                 : 2019.09.09
+    ***************************************/ -->
+	
+	<update id="removeRealTimeCampaign"  parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto">
+		 /* MktRealTimeCampaignMapper.removeRealTimeCampaign */
+		UPDATE 
+			MKT.EVT_EXE_ADM
+		SET
+			  modify_date 	 = SYSDATE
+			, modify_by 	 = #{modifyBy}
+			, flag 			 = flag + 1
+		where rid = #{rid}
+	</update>
+	
+	 <!-- /**************************************
+    -   관련 파일             : MktRealTimeCampaignMapperDAO.java (getETIntactTypeList)
+    ============================================
+    -   제목                  : et 인터랙션 유형 목록 조회
+    -   설명                  : et 인터랙션 유형 목록 조회
+    -   결과형태              : 목록
+    ============================================
+    -   입력
+    ============================================
+    -   작성자                : dg.ryu
+    -   작성일                : 2016.11.16
+    ***************************************/ -->
+    <select id="selectETIntactTypeList"  parameterType="com.icignal.marketing.realtime.dto.request.MktRealTimeCampaignReqDto"
+     resultType="com.icignal.marketing.realtime.dto.response.MktRTIntactTypeListResDto">
+        /* MktRealTimeCampaignMapper.selectETIntactTypeList */
+        select  t1.rid as rid
+                , t1.rid_pgm as ridPgm
+                , t1.intact_type_1_cd as intactType_1Cd
+                , c1.mark_name as intactType_1CdNm
+                , t1.intact_type_2_cd as intactType_2Cd
+                , c2.mark_name as intactType_2CdNm
+                , t1.save_tbl_nm as saveTblNm
+                , t1.lgcl_cmpnt_id_intact as lgclCmpntIdIntact
+                , t1.lgcl_cmpnt_id_mbr as lgclCmpntIdMbr
+                , t1.lgcl_cmpnt_id_cam as lgclCmpntIdCam
+                , e.name as createByNm
+                , t1.create_date as createDate
+                , ${strColumn}
+        from mkt.MKT_INTACT_type t1
+        left outer join com.comm_code c1 on c1.flag = 1 and c1.lang = #{lang} and c1.group_code ='MKT_INTACT_TYPE' and c1.code_name = t1.intact_type_1_cd
+        left outer join com.comm_code c2 on c2.flag = 1 and c2.lang = #{lang} and c2.group_code ='MKT_INTACT_DTL_TYPE' and c2.code_name = t1.intact_type_2_cd
+        left outer join com.crm_user u on u.rid = t1.create_by
+        left outer join com.employee e on e.flag = 1 and e.id = u.id_employee
+        where ${strSVCType}
+        and t1.flag = 1
+        and t1.rid_pgm = #{loyProgramId}
+        and ${strWhere}
+        order by ${strOrderby}
+        ${strEndPaging}
+    </select>
+    
+    <update id="saveCampaignStore" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignStoreReqDto">
+		<foreach collection="storeList" item="item" open="insert all" close="select 1 from dual" separator=" ">
+		    into mkt.mkt_cam_store(
+		    	id
+			,	create_by
+			,	modify_by
+			,	create_date
+			,	modify_date
+			,	flag
+			,	type
+			,	cam_id
+			,	store_id
+			,	snd_chnl_id
+			) values (
+				com.getnewid('')
+			,	#{createBy}
+			,	#{modifyBy}
+			,	sysdate
+			,	sysdate
+			,	1
+			,	#{type}
+			,	#{camId}
+			,	#{item.rid}
+			,	#{item.rid}
+			)
+		</foreach>
+	</update>
+	
+	<update id="editCampaignStore" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignStoreReqDto">
+	/* MktRealTimeCampaignMapper.editCampaignStore */
+		UPDATE mkt.mkt_cam_store
+		SET    STORE_ID = #{storeId}
+			   ,SND_CHNL_ID = #{sndChnlId}
+			   ,MODIFY_DATE = sysdate
+	   		   ,MODIFY_BY = #{modifyBy}
+		WHERE	id=#{rid}
+	</update>
+	
+	<update id="removeCampaignStore" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignStoreReqDto">
+	    	/* MktRealTimeCampaignMapper.removeCampaignStore */
+	    delete from mkt.mkt_cam_store where id=#{rid}
+    </update> 
+	    
+    <select id="selectStoreTreeList" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignStoreReqDto" 
+    resultType="com.icignal.marketing.realtime.dto.response.MktCampaignStoreResDto">
+	/* MktRealTimeCampaignMapper.selectStoreTreeList */
+<!-- 		SELECT t.storeId, t.storeNm, t.upperStoreId, t.storeTypeCd, t.chnlNo
+	FROM 
+	(
+	select t.RID AS storeId,
+		   CASE WHEN t.CHNL_NM IS NULL THEN t.CHNL_NO ELSE t.CHNL_NM END AS storeNm,
+		   decode(t.CHNL_TYPE_SUB_CD,'M1','',t.PAR_RID) AS upperStoreId,
+		   t.CHNL_TYPE_SUB_CD AS storeTypeCd,
+		   t.CHNL_NO AS chnlNo,
+      	level as lvl
+	from loy.loy_chnl t
+	where t.del_yn = 'N'
+	start with t.CHNL_TYPE_CD = 'S' and t.CHNL_TYPE_SUB_CD = 'M1'
+	connect by prior t.rid = t.PAR_RID
+	order by lvl desc
+		) t
+	order by t.storeNm -->
+	
+SELECT t.RID AS storeId
+ 	 , NVL(t.CHNL_NM, t.CHNL_NO) AS storeNm
+	 , NVL(RID_PAR_CHNL, '') AS upperStoreId
+	 , t.CHNL_TYPE_CD AS storeTypeCd
+	 , t.CHNL_NO AS chnlNo
+  FROM loy.LOY_CHNL t
+ WHERE t.FLAG = 1 
+   AND t.STAT_CD = 'A'
+   and not EXISTS(select rid from MKT.MKT_CAM_STORE where cam_id = #{camId} and store_id = t.RID and flag=1)
+ORDER BY storeNm
+    </select>
+    
+      <select id="selectStoreTreeSearchList" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignStoreReqDto" 
+    resultType="com.icignal.marketing.realtime.dto.response.MktCampaignStoreResDto">
+	/* MktRealTimeCampaignMapper.selectStoreTreeSearchList */
+	SELECT
+		DISTINCT t1.RID AS storeId,
+	CASE
+			WHEN to_nchar(t1.CHNL_NM) IS NULL THEN to_nchar(t1.CHNL_NO)
+			ELSE to_nchar(t1.CHNL_NM)
+		END AS storeNm,
+		decode(t1.CHNL_TYPE_CD, 'M1', '', t1.RID_PAR_CHNL) AS upperStoreId,
+		t1.CHNL_TYPE_CD AS storeTypeCd,
+		t1.CHNL_NO AS chnlNo,
+		LEVEL AS lvl
+	FROM
+		LOY.loy_chnl t1
+	WHERE
+		t1.flag = 1
+		<!-- AND t1.RID_PAR_CHNL IS NOT NULL -->
+	START WITH
+	<if test="chnlNo != null and chnlNo != ''">
+	  t1.CHNL_NO = #{chnlNo}
+	</if>
+	<if test="storeNm != null and storeNm != ''">
+	  t1.CHNL_NM LIKE '%' || #{storeNm} || '%'
+	</if> 
+	connect BY PRIOR t1.RID_PAR_CHNL  = t1.rid
+	order by lvl desc
+    </select>
+    
+    
+    <select id="selectStoreList" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignStoreReqDto" 
+    resultType="com.icignal.marketing.realtime.dto.response.MktCampaignStoreResDto">
+        /* MktRealTimeCampaignMapper.selectStoreList */
+select  mcs.id			as id,
+		mcs.store_id	as storeId,
+		mcs.snd_chnl_id as sndChnlId,
+		mcs.create_by	as createBy,
+		mcs.modify_by	as modifyBy,
+		mcs.type		as type,
+		mcs.cam_id		as camId,
+		evtchnl1.chnl_nm 	as storeNm,
+		lc3.chnl_nm		as sndStoreNm,
+		evtchnl1.rid	as evtStoreId,
+		evtchnl2.rid 	as evtBrandId,
+		evtchnl3.rid 	as evtSubsidryId,
+		sndchnl1.rid	as sndStoreId,
+		sndchnl2.rid	as sndBrandId,
+		sndchnl3.rid	as sndSubsidryId,
+		${strColumn}
+from mkt.mkt_cam_store mcs
+        left join loy.loy_chnl evtchnl1 on mcs.store_id = evtchnl1.rid
+        left join loy.loy_chnl evtchnl2 on evtchnl1.RID_PAR_CHNL = evtchnl2.rid
+        left join loy.loy_chnl evtchnl3 on evtchnl2.RID_PAR_CHNL = evtchnl3.rid
+        left join loy.loy_chnl sndchnl1 on mcs.snd_chnl_id = sndchnl1.rid
+        left join loy.loy_chnl sndchnl2 on sndchnl1.RID_PAR_CHNL = sndchnl2.rid
+        left join loy.loy_chnl sndchnl3 on sndchnl2.RID_PAR_CHNL = sndchnl3.rid
+        left join loy.loy_chnl lc3 on mcs.snd_chnl_id = lc3.rid
+where ${strWhere}
+           and ${strSVCType}
+           and mcs.flag = 1
+           and mcs.cam_id = #{camId}
+         order by ${strOrderby}
+         ${strEndPaging}
+    </select>
+    
+    
+    <select id="getChnlCd" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" 
+    resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+	/* MktRealTimeCampaignMapper.getChnlCd */
+	SELECT 
+		RID		as rid,
+		CHNL_NO as chnlNo, 
+		CHNL_NM as subSid
+	FROM 
+		loy.loy_chnl 
+	order by CHNL_NM asc
+	</select>
+    
+    	
+	<select id="getBrdCd" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" 
+    resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+	  	/* MktRealTimeCampaignMapper.getBrdCd */
+	  SELECT 	  
+			  t1.RID		as rid,
+			  t1.CHNL_NO as chnlNo, 
+	          t1.CHNL_NM as brdCd
+		FROM
+			 loy.loy_chnl t1 INNER JOIN loy.loy_chnl t2 ON t1.RID_PAR_CHNL=t2.rid and t2.flag =1
+		WHERE 
+		    t2.CHNL_NO=#{subSid}
+	 		and t1.CHNL_NM IS NOT NULL
+	 		and t1.flag = 1
+			order by t1.CHNL_NM asc
+	</select>
+	
+    
+    <select id="getStoreCd" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" 
+    resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+ 	/* MktRealTimeCampaignMapper.getStoreCd */
+		SELECT  
+			t1.RID		as rid,
+			t1.CHNL_NO as chnlNo, 
+		 	t1.CHNL_NM as storeCd 
+		 FROM
+		  	loy.loy_chnl t1 INNER JOIN loy.loy_chnl t2 ON t1.RID_PAR_CHNL=t2.rid and t2.flag =1
+		 WHERE
+		   t2.CHNL_NO=#{brdCd}
+		 order by t1.CHNL_NM asc
+	</select>
+	
+	
+	<select id="getBrdCdByRid" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+	select 	  t1.RID		as rid,
+			  t1.CHNL_NO as chnlNo, 
+	          decode(t1.CHNL_NM,'',t1.CHNL_NO,t1.CHNL_NM) as brdCd
+	from loy.loy_chnl t1 INNER JOIN loy.loy_chnl t2 ON t1.RID_PAR_CHNL=t2.rid AND t2.flag =1
+	where t2.rid=#{subSid}
+	and t1.flag =1
+	order by t1.CHNL_NM asc
+	</select>
+	
+	<select id="getStoreCdByRid" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+		select 
+		 t1.RID		as rid,
+		 t1.CHNL_NO as chnlNo, 
+		 t1.CHNL_NM as storeCd 
+		from loy.loy_chnl t1 INNER JOIN loy.loy_chnl t2 ON t1.RID_PAR_CHNL=t2.rid AND t2.flag = 1
+		where t2.rid=#{brdCd}
+		 and t1.flag=1
+		order by t1.CHNL_NM asc
+	</select>
+	
+	<select id="getSndChnlCd" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+	select 
+		RID		as rid,
+		CHNL_NO as sndChnlNo, 
+		CHNL_NM as sndSubSid
+	from loy.loy_chnl 
+	<!-- where chnl_type_cd='S' 
+	and CHNL_type_sub_cd='M1' -->
+	</select>
+	
+	
+		<select id="getSndBrdCd" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+	select t1.RID		as rid,
+			t1.CHNL_NO as sndChnlNo, 
+	        decode(t1.CHNL_NM,'',t1.CHNL_NO,t1.CHNL_NM) as sndBrdCd
+	from loy.loy_chnl t1 INNER JOIN loy.loy_chnl t2 ON t1.RID_PAR_CHNL=t2.rid 
+	where t2.rid=#{sndSubSid} and t2.flag =1
+	</select>
+	
+	<select id="getSndStoreCd" parameterType="com.icignal.marketing.realtime.dto.request.MktCampaignChnlReqDto" resultType="com.icignal.marketing.realtime.dto.response.MktCampaignChnlResDto">
+	select t1.RID		as rid, 
+		 t1.CHNL_NO as sndChnlNo, 
+		 t1.CHNL_NM as sndStoreCd 
+	 from loy.loy_chnl t1 INNER JOIN loy.loy_chnl t2 ON t1.RID_PAR_CHNL=t2.rid 
+	 where t2.rid=#{sndBrdCd}
+	</select>
+    
+    
+    
+</mapper>

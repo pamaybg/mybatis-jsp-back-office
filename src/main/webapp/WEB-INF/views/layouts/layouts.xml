@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE tiles-definitions PUBLIC
+        "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+        "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+    <!-- 기본 레이아웃 -->
+    <definition name="default-tiles" template="/WEB-INF/views/layouts/default/layouts-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="header" value="/WEB-INF/views/layouts/default/header.jsp"/>
+        <put-attribute name="content" value=""/>
+        <put-attribute name="left" value="/WEB-INF/views/layouts/default/leftMenu.jsp"/>
+    </definition>
+
+    <!-- 기본 풀 레이아웃 -->
+    <definition name="defaultFull-tiles" template="/WEB-INF/views/layouts/defaultFull/layoutsFull-tiles.jsp">
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <!-- 기본 풀 메인 레이아웃 -->
+    <definition name="defaultFull-Main-tiles" template="/WEB-INF/views/layouts/defaultFull/layoutsFull-Main-tiles.jsp">
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <definition name="modal-tiles" template="/WEB-INF/views/layouts/default/modal-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <definition name="spa-tiles" template="/WEB-INF/views/layouts/default/spa-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <definition name="popup-tiles" template="/WEB-INF/views/layouts/default/popup-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <definition name="include-tiles" template="/WEB-INF/views/layouts/default/include-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <!-- VOC 계정용 레이아웃 -->
+    <definition name="voc-tiles" template="/WEB-INF/views/layouts/default/voc-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="header" value="/WEB-INF/views/layouts/default/header.jsp"/>
+        <put-attribute name="content" value=""/>
+        <put-attribute name="left" value="/WEB-INF/views/layouts/default/leftMenu.jsp"/>
+    </definition>
+
+    <!-- 외부 레이아웃 -->
+    <definition name="external-tiles" template="/WEB-INF/views/layouts/external/external-tiles.jsp">
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <!-- 외부 컨텐츠 레이아웃 -->
+    <definition name="contents-tiles" template="/WEB-INF/views/layouts/external/contents-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <definition name="*.default-tiles" extends="default-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+        <put-attribute name="uid" value="{1}"/>
+    </definition>
+    <definition name="*/*.default-tiles" extends="default-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}"/>
+    </definition>
+    <definition name="*/*/*.default-tiles" extends="default-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}"/>
+    </definition>
+    <definition name="*/*/*/*.default-tiles" extends="default-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}"/>
+    </definition>
+    <definition name="*/*/*/*/*.default-tiles" extends="default-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.default-tiles" extends="default-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}{6}"/>
+    </definition>
+
+    <definition name="*.defaultFull-tiles" extends="defaultFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+    </definition>
+    <definition name="*/*.defaultFull-tiles" extends="defaultFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+    </definition>
+    <definition name="*/*/*.defaultFull-tiles" extends="defaultFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*.defaultFull-tiles" extends="defaultFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*/*.defaultFull-tiles" extends="defaultFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+    </definition>
+
+    <definition name="*.defaultFull-Main-tiles" extends="defaultFull-Main-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+    </definition>
+    <definition name="*/*.defaultFull-Main-tiles" extends="defaultFull-Main-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+    </definition>
+    <definition name="*/*/*.defaultFull-Main-tiles" extends="defaultFull-Main-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*.defaultFull-Main-tiles" extends="defaultFull-Main-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*/*.defaultFull-Main-tiles" extends="defaultFull-Main-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+    </definition>
+
+    <definition name="*.modal-tiles" extends="modal-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+        <put-attribute name="uid" value="{1}"/>
+    </definition>
+    <definition name="*/*.modal-tiles" extends="modal-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}"/>
+    </definition>
+    <definition name="*/*/*.modal-tiles" extends="modal-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}"/>
+    </definition>
+    <definition name="*/*/*/*.modal-tiles" extends="modal-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}"/>
+    </definition>
+    <definition name="*/*/*/*/*.modal-tiles" extends="modal-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.modal-tiles" extends="modal-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}{6}"/>
+    </definition>
+
+
+    <definition name="*.spa-tiles" extends="spa-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+        <put-attribute name="uid" value="{1}"/>
+    </definition>
+    <definition name="*/*.spa-tiles" extends="spa-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}"/>
+    </definition>
+    <definition name="*/*/*.spa-tiles" extends="spa-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}"/>
+    </definition>
+    <definition name="*/*/*/*.spa-tiles" extends="spa-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}"/>
+    </definition>
+    <definition name="*/*/*/*/*.spa-tiles" extends="spa-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.spa-tiles" extends="spa-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}{6}"/>
+    </definition>
+
+
+    <definition name="*.popup-tiles" extends="popup-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+        <put-attribute name="uid" value="{1}"/>
+    </definition>
+    <definition name="*/*.popup-tiles" extends="popup-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}"/>
+    </definition>
+    <definition name="*/*/*.popup-tiles" extends="popup-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}"/>
+    </definition>
+    <definition name="*/*/*/*.popup-tiles" extends="popup-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}"/>
+    </definition>
+    <definition name="*/*/*/*/*.popup-tiles" extends="popup-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.popup-tiles" extends="popup-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}{6}"/>
+    </definition>
+
+    <definition name="*.voc-tiles" extends="voc-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+        <put-attribute name="uid" value="{1}"/>
+    </definition>
+    <definition name="*/*.voc-tiles" extends="voc-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}"/>
+    </definition>
+    <definition name="*/*/*.voc-tiles" extends="voc-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}"/>
+    </definition>
+    <definition name="*/*/*/*.voc-tiles" extends="voc-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}"/>
+    </definition>
+    <definition name="*/*/*/*/*.voc-tiles" extends="voc-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.voc-tiles" extends="voc-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}{6}"/>
+    </definition>
+
+    <definition name="*.external-tiles" extends="external-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+    </definition>
+    <definition name="*/*.external-tiles" extends="external-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+    </definition>
+    <definition name="*/*/*.external-tiles" extends="external-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*.external-tiles" extends="external-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*/*.external-tiles" extends="external-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.external-tiles" extends="external-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+    </definition>
+
+
+    <definition name="*.contents-tiles" extends="contents-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+    </definition>
+    <definition name="*/*.contents-tiles" extends="contents-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+    </definition>
+    <definition name="*/*/*.contents-tiles" extends="contents-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*.contents-tiles" extends="contents-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*/*.contents-tiles" extends="contents-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.contents-tiles" extends="contents-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+    </definition>
+
+    <definition name="*.include-tiles" extends="include-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+        <put-attribute name="uid" value="{1}"/>
+    </definition>
+    <definition name="*/*.include-tiles" extends="include-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}"/>
+    </definition>
+    <definition name="*/*/*.include-tiles" extends="include-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}"/>
+    </definition>
+    <definition name="*/*/*/*.include-tiles" extends="include-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}"/>
+    </definition>
+    <definition name="*/*/*/*/*.include-tiles" extends="include-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.include-tiles" extends="include-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+    </definition>
+
+    <!-- 기본 풀 레이아웃 -->
+    <definition name="mobileFull-tiles" template="/WEB-INF/views/layouts/mobile/mobileFull-tiles.jsp">
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <definition name="*.mobileFull-tiles" extends="mobileFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+    </definition>
+    <definition name="*/*.mobileFull-tiles" extends="mobileFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+    </definition>
+    <definition name="*/*/*.mobileFull-tiles" extends="mobileFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*.mobileFull-tiles" extends="mobileFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+    </definition>
+    <definition name="*/*/*/*/*.mobileFull-tiles" extends="mobileFull-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+    </definition>
+
+    <!-- 기본 레이아웃 -->
+    <definition name="mobileDefault-tiles" template="/WEB-INF/views/layouts/mobile/mobileLayouts-tiles.jsp">
+        <put-attribute name="uid" value=""/>
+        <put-attribute name="header" value="/WEB-INF/views/layouts/mobile/mobile-header.jsp"/>
+        <put-attribute name="content" value=""/>
+    </definition>
+
+    <definition name="*.mobileDefault-tiles" extends="mobileDefault-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}.jsp"/>
+        <put-attribute name="uid" value="{1}"/>
+    </definition>
+    <definition name="*/*.mobileDefault-tiles" extends="mobileDefault-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}"/>
+    </definition>
+    <definition name="*/*/*.mobileDefault-tiles" extends="mobileDefault-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}"/>
+    </definition>
+    <definition name="*/*/*/*.mobileDefault-tiles" extends="mobileDefault-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}"/>
+    </definition>
+    <definition name="*/*/*/*/*.mobileDefault-tiles" extends="mobileDefault-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}"/>
+    </definition>
+    <definition name="*/*/*/*/*/*.mobileDefault-tiles" extends="mobileDefault-tiles">
+        <put-attribute name="content" value="/WEB-INF/views/{1}/{2}/{3}/{4}/{5}/{6}.jsp"/>
+        <put-attribute name="uid" value="{1}{2}{3}{4}{5}{6}"/>
+    </definition>
+
+
+</tiles-definitions>

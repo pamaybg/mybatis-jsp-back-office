@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed May 02 14:06:40 KST 2018-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.loyalty.faq.mapper.LoyFaqMapper">
+
+	<select id="selectFAQList" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqListReqDto" resultType="com.icignal.loyalty.faq.dto.response.LoyFaqListResDto">
+		/*LoyFaqMapper.selectFAQList*/
+		select  lf.rid as rid,
+				lf.faq_master_name as faqNm,
+				substring(lf.open_date,0, 4)+'-'+substring(lf.open_date,5, 2)+'-'+substring(lf.open_date,7, 2) as openDate,
+				lf.EXPOSURE_YN as exposureYn,
+				e.name as createBy,
+				lf.CREATE_DATE as createDate,
+				lf.HIT_CNT as hitCnt,
+				c2.MARK_NAME			as faq_status,
+				c1.MARK_NAME			as faqType,
+				lf.seq					as seq,
+				${strColumn}
+		from    loy.loy_faq_master lf WITH (NOLOCK) 
+		LEFT OUTER JOIN loy.LOY_FAQ lfm WITH (NOLOCK) 
+  		ON lfm.FAQ_MASTER_RID = lf.RID
+		left join com.crm_user us WITH (NOLOCK) 
+		on lf.create_by = us.rid
+		left outer join com.employee e WITH (NOLOCK) 
+		on   	e.id = us.id_employee
+		LEFT OUTER JOIN com.comm_code c1 WITH (NOLOCK) ON lf.FAQ_TYPE = c1.code_name and c1.flag = 1 and c1.group_code = 'FAQ_TYPE'and c1.lang = #{lang}  <!-- and c1.country = #{country} -->
+		LEFT OUTER JOIN com.comm_code c2 WITH (NOLOCK) ON lf.exposure_yn = c2.code_name and c2.flag = 1 and c2.group_code = 'LOY_FAQ_EXP_TYPE' and c2.lang = #{lang}  <!-- and c2.country = #{country} -->
+		where   ${strCondWhere}
+		and 	${strSVCType}
+		and 	${strWhere}
+		<!-- and 	lf.accnt_id = #{accountId} -->
+		and 	lf.flag  = 1
+		order by ${strOrderby}
+		${strEndPaging}
+	</select>
+	
+	<insert id="insertFaq" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqInsertReqDto" useGeneratedKeys="false">
+		insert into loy.loy_faq
+			(
+				 rid
+				,faq_nm
+				,faq_detail
+				<!-- ,accnt_id
+				,app_service_type
+				,country -->
+				,flag
+				,mod_num
+				,create_date
+				,create_by
+				,modify_date
+				,modify_by
+				,faq_lang
+				,faq_master_rid
+				,lang
+			)
+		values(
+				 com.getNewID('A')
+				,#{faqName}
+				,#{faqDesc}
+				<!-- ,#{accountId}
+				,#{appServiceId}
+				,#{country} -->
+				,1
+				,0
+				,getdate()
+				,#{createBy}
+				,getdate()
+				,#{modifyBy}
+				,#{faqLang}
+				,#{faqId}
+				,#{lang}
+		)
+	</insert>
+	
+	<update id="updateFaq" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqInsertReqDto">
+		update loy.loy_faq
+		set faq_nm = #{faqName}
+			,faq_detail = #{faqDesc}
+			,modify_by = #{modifyBy}
+			,modify_date = getdate()
+			,lang = #{faqLang}
+<!-- 			,seq =#{dpSeq} -->
+		where ${strSVCType}
+		and  rid = #{faqSubId}
+	</update>
+	
+	<update id="increaseFaqCount" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqDetailReqDto">
+		update loy.loy_faq
+		set hit_cnt = hit_cnt + 1
+		where ${strSVCType}
+		and rid = #{faqId}
+	</update>
+	
+	<select id="selectFaqDetail" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqDetailReqDto" resultType="com.icignal.loyalty.faq.dto.response.LoyFaqDetailResDto">
+	/* LOYFaq.selectFaqDetail */
+	 select  lf.faq_nm as faqTitle
+				,lf.faq_detail as faqDesc
+				,lf.rid as faqSubId
+		from loy.loy_faq lf WITH (NOLOCK) 
+		where ${strSVCType}
+		and faq_master_rid = #{faqId}
+		and faq_lang = #{faqLang}
+	</select>
+	
+	<insert id="insertMasterFaq" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqInsertReqDto" useGeneratedKeys="false">
+		/* LoyFaqMapper.insertMasterFaq */
+		<selectKey keyProperty="faqMasterId" resultType="java.lang.String" order="BEFORE">
+        	select com.getNewID('A')
+    	</selectKey>
+		insert into loy.loy_faq_master
+			(
+				rid
+				,faq_master_name
+				,exposure_yn
+				,open_date
+				,hit_cnt
+				<!-- ,accnt_id
+				,app_service_type
+				,country -->
+				,lang
+				,flag
+				,create_date
+				,create_by
+				,modify_date
+				,modify_by
+				,FAQ_TYPE
+				,seq
+			)
+		values(
+				#{faqMasterId}
+				,#{faqName}
+				,#{faqStatus}
+				,#{openDate}
+				,0
+				<!-- ,#{accountId}
+				,#{appServiceId}
+				,#{country} -->
+				,#{lang}
+				,1
+				,getdate()
+				,#{createBy}
+				,getdate()
+				,#{modifyBy}
+				,#{faqType}
+				,#{seq}
+		)
+	</insert>
+	
+	<update id="updateMasterFaq" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqInsertReqDto">
+		/* LoyFaqMapper.updateMasterFaq */
+		update loy.loy_faq_master
+		set		faq_master_name = #{faqName}
+				,exposure_yn = #{faqStatus}
+				,open_date = #{openDate}
+				,modify_date = getdate()
+				,modify_by = #{modifyBy}
+				,FAQ_TYPE=#{faqType}
+				,seq=#{seq}
+		where ${strSVCType}
+		and rid = #{faqId}
+	</update>
+	
+	<select id="selectFaqMasterDetail" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqDetailReqDto" resultType="com.icignal.loyalty.faq.dto.response.LoyFaqDetailResDto">
+		/* LoyFaqMapper.selectFaqMasterDetail */
+		select  lfm.faq_master_name as faqTitle
+				,lfm.exposure_yn as faqStatus
+				,substring(lfm.open_date,0, 4)+'-'+substring(lfm.open_date,5, 2)+'-'+substring(lfm.open_date,7, 2) as openDate
+				,lfm.FAQ_TYPE   as faqType
+				,seq 			as seq
+		from loy.loy_faq_master lfm WITH (NOLOCK) 
+		where ${strSVCType}
+		and rid = #{faqId}
+	</select>
+	
+	<update id="removeMainFaq" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqInsertReqDto">
+	UPDATE loy.loy_faq_master
+	   SET modify_date = getdate()
+	     , modify_by = #{modifyBy}
+	     , flag = flag + 1
+	 where rid = #{rid}
+	</update>
+	
+	<update id="removeSubFaq" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqInsertReqDto">
+	UPDATE loy.loy_faq
+	   SET modify_date = getdate()
+	     , modify_by = #{modifyBy}
+	     , flag = flag + 1
+	 where FAQ_MASTER_RID = #{rid}
+	</update>
+	
+	<update id="updateFaqGrid" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqUploadReqDto">
+		UPDATE loy.LOY_FAQ
+  		   SET flag = flag + 1
+	</update>
+
+	<update id="updateFaqMasterGrid" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqUploadReqDto">
+		UPDATE loy.LOY_FAQ_MASTER
+  		   SET flag = flag + 1
+	</update>
+	
+	<select id="selectFaqDetailList" parameterType="com.icignal.loyalty.faq.dto.request.LoyFaqUploadReqDto" resultType="com.icignal.loyalty.faq.dto.response.LoyFaqUploadResDto">
+	/* LOYFaq.selectFaqDetailList */
+	 SELECT  lfm.FAQ_TYPE as faqType,
+			lfm.SEQ AS seq,  
+			lf.FAQ_NM as faqNm, 
+			lf.faq_detail AS faqDesc, 
+			lfm.OPEN_DATE AS openDt,
+			lfm.exposure_yn as faqStatus,
+			${strColumn}
+	from    loy.loy_faq_master lfm WITH (NOLOCK) 
+	LEFT OUTER JOIN loy.LOY_FAQ lf WITH (NOLOCK) 
+ 		ON lf.FAQ_MASTER_RID = lfm.RID
+	left join com.crm_user us WITH (NOLOCK) 
+	on lfm.create_by = us.rid
+	left outer join com.employee e WITH (NOLOCK) 
+	on   	e.id = us.id_employee
+	LEFT OUTER JOIN com.comm_code c1 WITH (NOLOCK) ON lfm.FAQ_TYPE = c1.code_name and c1.flag = 1 and c1.group_code = 'FAQ_TYPE'and c1.lang = #{lang}  <!-- and c1.country = #{country} -->
+	LEFT OUTER JOIN com.comm_code c2 WITH (NOLOCK) ON lfm.exposure_yn = c2.code_name and c2.flag = 1 and c2.group_code = 'LOY_FAQ_EXP_TYPE' and c2.lang = #{lang}  <!-- and c2.country = #{country} -->
+	where   ${strCondWhere}
+	and 	${strWhere}
+	and 	lfm.flag  = 1
+	order by ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+</mapper>

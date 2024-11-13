@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Wed Sep 16 14:06:40 KST 2020-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icignal.systemmanagement.dataset.mapper.SystemDatasetMapper">
+
+	<select id="selectDataSetMasterList" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+										 resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetListResDto">  
+	/* LoyTiersMapper.selectDataSetMasterList */
+	SELECT      ld.CATA_CD				AS cateCd
+			  , ld.DS_NM				AS dsNm
+		      , ld.OBJ_NM				AS objNm
+		      , em.NAME					AS name
+		      , CONVERT(VARCHAR, ld.CREATE_DATE, 120<!-- 'YYYY-MM-DD HH24:Mi:SS' -->)			As createDate
+		      , ld.RID					AS rid
+		      , ${strColumn}
+	FROM   LOY.LOY_DATASET ld WITH (NOLOCK)
+	LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) ON ld.create_by = us.rid AND us.FLAG = 1
+	LEFT OUTER JOIN com.employee em WITH (NOLOCK) ON us.id_employee = em.id AND em.FLAG = 1
+	WHERE 	${strCondWhere}
+		AND ${strWhere}
+		AND ld.FLAG = 1
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	 <update id="deleteDataSet" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">
+	/* LoyTiersMapper.deleteDataSet */
+	UPDATE LOY.LOY_DATASET ld
+	SET MODIFY_DATE = GETDATE()
+		    , MODIFY_BY = #{modifyBy}
+		    , flag = flag + 1
+	WHERE RID = #{rid}
+    </update>
+	
+	<select id="selectDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+										 resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetItemListResDto">  
+	/* LoyTiersMapper.selectDataSetItem */
+	SELECT  ldi.FIELD_NM			AS fieldNm
+		      , ldi.FIELD_DESC			AS fieldDesc
+		      , em.NAME					AS name
+		      , CONVERT(VARCHAR, ldi.CREATE_DATE, 120<!-- 'YYYY-MM-DD HH24:Mi:SS' -->)			As createDate
+		      , ldi.RID					AS rid
+		      , ${strColumn}
+	FROM   LOY.LOY_DATASET_ITEM ldi WITH (NOLOCK)
+	LEFT OUTER JOIN com.crm_user us WITH (NOLOCK) ON ldi.create_by = us.rid AND us.FLAG = 1
+	LEFT OUTER JOIN com.employee em WITH (NOLOCK) ON us.id_employee = em.id AND em.FLAG = 1
+	WHERE ldi.FLAG = 1
+	AND   ldi.RID_DS = #{dataSetRid} 	
+	AND ${strCondWhere}
+	AND ${strWhere}
+	ORDER BY ${strOrderby}
+	${strEndPaging}
+	</select>
+	
+	<select id="selectDataSetDetail" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+										 resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetListResDto">  
+	/* LoyTiersMapper.selectDataSetDetail */
+	SELECT  ld.DS_NM				AS dsNm
+		      , ld.OBJ_NM				AS objNm
+		      , ld.CATE_CD				AS cateCd
+		      , ld.RID					AS rid
+	FROM   LOY.LOY_DATASET ld WITH (NOLOCK)
+	WHERE ld.RID = #{rid}
+	AND   ld.FLAG = 1
+	</select>
+	
+	<insert id="insertDataSet" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">  
+		/* LoyTiersMapper.selectDataSetDetail */
+		INSERT INTO LOY.LOY_DATASET
+		(
+			  RID
+ 			, CREATE_BY
+ 			, MODIFY_BY
+ 			, DS_NM
+ 			, OBJ_NM
+		)
+		VALUES
+		(
+			  #{rid}
+			, #{createBy}
+			, #{modifyBy}
+			, #{dsNm}
+			, #{objNm}
+		)
+	</insert>
+	
+	<insert id="updateDataSet" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">  
+	/* LoyTiersMapper.updateDataSet */
+	UPDATE LOY.LOY_DATASET
+	SET   DS_NM  = #{dsNm}
+			, OBJ_NM = #{objNm}
+			, MODIFY_BY = #{modifyBy}
+			, MODIFY_DATE = GETDATE()
+	WHERE rid = #{rid}
+	</insert>
+	
+	<select id="selectDataSetItemDetail" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto"
+										 resultType="com.icignal.systemmanagement.dataset.dto.response.SystemDatasetItemListResDto">  
+	/* LoyTiersMapper.selectDataSetItemDetail */
+	SELECT  ldi.FIELD_NM				AS fieldNm
+		      , ldi.FIELD_DESC				AS fieldDesc
+		      , ldi.RID						AS rid
+	FROM   LOY.LOY_DATASET_ITEM ldi WITH (NOLOCK)
+	WHERE ldi.RID = #{rid}
+	AND   ldi.FLAG = 1
+	</select>
+	
+	<insert id="insertDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetItemReqDto">  
+		/* LoyTiersMapper.insertDataSetItem */
+		INSERT INTO LOY.LOY_DATASET_ITEM
+		(
+			  RID
+ 			, CREATE_BY
+ 			, MODIFY_BY
+ 			, RID_DS
+ 			, FIELD_NM
+ 			, FIELD_DESC
+		)
+		VALUES
+		(
+			  #{rid}
+			, #{createBy}
+			, #{modifyBy}
+			, #{dataSetRid}
+			, #{fieldNm}
+			, #{fieldDesc}
+		)
+	</insert>
+	
+	<insert id="updateDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetMasterReqDto">  
+	/* LoyTiersMapper.updateDataSetItem */
+	UPDATE LOY.LOY_DATASET_ITEM
+	SET   RID_DS      = #{dataSetRid}
+			, FIELD_NM    = #{fieldNm}
+			, FIELD_DESC      = #{fieldDesc}
+			, MODIFY_BY   = #{modifyBy}
+			, MODIFY_DATE = GETDATE()
+	WHERE rid = #{rid}
+	</insert>
+	
+	<update id="deleteDataSetItem" parameterType="com.icignal.systemmanagement.dataset.dto.request.SystemDatasetItemReqDto">
+    /* LoyTiersMapper.deleteDataSetItem */
+    UPDATE LOY.LOY_DATASET_ITEM
+	SET MODIFY_DATE = GETDATE()
+	     , MODIFY_BY = #{modifyBy}
+	     , flag = flag + 1
+	WHERE RID = #{rid}
+    </update>
+
+</mapper>
