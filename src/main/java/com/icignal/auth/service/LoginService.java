@@ -905,8 +905,8 @@ public class LoginService {
 	 *   @param reqDto
 	 *   @return	
 	 */
-	public String getLastLoginDate(LoginReqDto reqDto) {
-		return loginMapper.checkLastLoginDate(reqDto);
+	public Optional<String> getLastLoginDate(LoginReqDto reqDto) {
+		return Optional.ofNullable(loginMapper.checkLastLoginDate(reqDto));
 	}
 
 	 /*

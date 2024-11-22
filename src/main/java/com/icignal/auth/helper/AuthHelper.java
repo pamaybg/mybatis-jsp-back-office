@@ -12,14 +12,9 @@
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+ import java.util.*;
 
-import javax.servlet.http.Cookie;
+ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -268,7 +263,8 @@ import net.sf.ehcache.CacheManager;
          String strIpAdress = inetAddress2.getHostAddress();
          lr.setIp(strIpAdress);
 
-         lr.setLastLoginDate(loginService.getLastLoginDate(lr));
+         Optional<String> lastLoginDate = loginService.getLastLoginDate(lr);
+         lr.setLastLoginDate(lastLoginDate.orElse(null));
 
          String deviceInfo = null;
          if(StringUtil.isNotEmpty(session.getAttribute("deviceInfo"))) {

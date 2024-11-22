@@ -712,16 +712,13 @@
     <select id="checkLastLoginDate" parameterType="com.icignal.auth.dto.request.LoginReqDto"
     													resultType="java.lang.String">
     /* LoginMapper.checkLastLoginDate */
-    SELECT A.MODIFY_DATE
-	FROM (
-				SELECT TO_CHAR(MODIFY_DATE, 'YYYYMMDD') AS MODIFY_DATE
-				FROM com.LOGIN_HISTORY
-				WHERE FLAG = 1
-				AND LOGIN_SUCCESS_YN = 'Y'
-				AND LOGIN_USER_ID = #{email}
-				ORDER BY MODIFY_DATE DESC
-			) A
-	WHERE ROWNUM = 1
+        SELECT DATE_FORMAT(MODIFY_DATE, '%Y%m%d') AS MODIFY_DATE
+        FROM com.LOGIN_HISTORY
+        WHERE FLAG = 1
+          AND LOGIN_SUCCESS_YN = 'Y'
+          AND LOGIN_USER_ID = ?email
+        ORDER BY MODIFY_DATE DESC
+            LIMIT 1
     </select>
     
     <update id="updateUserStat" parameterType="com.icignal.auth.dto.request.LoginReqDto">
@@ -756,6 +753,34 @@
 	AND   flag = 1
 	order by create_date desc ) t
         WHERE rownum=1
+    </select>
+
+    <select id="selectOperationPolicyInitPwYn" parameterType="com.icignal.auth.dto.request.InitPasswordReqDto"
+            resultType="java.lang.String">
+        /* LoginMapper.selectOperationPolicyYn  */
+        SELECT lop.USE_YN  FROM com.LOY_OPR_PLCY lop
+        WHERE 1=1
+          AND PLCY_CD = #{plcyCd}
+          AND FLAG = 1
+    </select>
+
+    <select id="selectOperationPolicyDetailInitPw" parameterType="com.icignal.auth.dto.request.InitPasswordReqDto"
+            resultType="com.icignal.loyalty.operationpolicymgt.dto.response.OperationPolicyDetailResDto">
+        /* LoginMapper.selectOperationPolicyDetailInitPw  */
+        SELECT lopd.RID AS rid
+          , lop.RID AS ridOpr
+          , lopd.USE_YN AS useYn
+          ,lopd.DATA_TYPE AS dataTypeNm
+          , lopd.DATA_VAL AS dataVal
+        FROM com.LOY_OPR_PLCY lop
+                 JOIN com.LOY_OPR_PLCY_DTL lopd ON lopd.RID_OPR = lop.RID
+        WHERE 1=1
+          AND lop.PLCY_CD = 'A33'
+          AND lop.FLAG = 1
+          AND lop.USE_YN = 'Y'
+          AND lopd.USE_YN = 'Y'
+          AND lopd.FLAG = 1
+          AND lopd.DATA_TYPE = 'CODE'
     </select>
     
     <select id="managerCheck" parameterType="com.icignal.auth.dto.request.LoginReqDto"
